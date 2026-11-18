@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-run-selection
+feature: vector.agent.premises
+intent: A step that acts on the selection an earlier step of the same run made (select.set, then symbol.breakLink without on) rests on what that step selects; another program's redefinition of the symbol of the selected instance refuses the run, an unrelated fill does not.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: independent}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

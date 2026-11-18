@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-id-values
+feature: vector.agent.premises
+intent: A value that is no object id where a command takes one (a string, a numeric string or a fraction in id, parent, layer, or among ids) is refused as invalid parameters for every command and caller, never dropped so the command acts on its default (the current layer, the selection, the top level); an effect's catalogue name in effect.apply's id and a plug-in id stay strings.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: id_values}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-agent-layer
+feature: vector.agent.premises
+intent: An agent's new art or paste is refused, naming the layer, when the current layer is locked or hidden, instead of going to another layer; a person's editor keeps putting it on the topmost layer that takes art.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: agent_layer}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

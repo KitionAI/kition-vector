@@ -1,0 +1,14 @@
+format: 1
+id: regressions/issue-c8-join
+feature: vector.agent.premises
+intent: Premises a call states on one object are joined before the guard sees them (the pinned SDK keeps only the last); a layer renamed without ids, which is also the insertion layer, still holds the name it sets, so a colleague's rename of that layer refuses it.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-5, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: places}
+  - cargo-test: {package: kition-vector, test: outside}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

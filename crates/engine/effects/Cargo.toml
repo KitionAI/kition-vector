@@ -1,0 +1,22 @@
+[package]
+name = "kition-vector-effects"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector live effects evaluated to geometry"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-three-d = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-pathops = { workspace = true }
+kition-vector-text = { workspace = true }
+kition-vector-plugins = { workspace = true }
+kurbo = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+kition-vector-color = { workspace = true }

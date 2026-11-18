@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-read
+feature: vector.agent.premises
+intent: Every write command holds, with basis, what an independent reading of its handler says it reads or replaces (895 rows over all 508 write commands, written before the declarations were looked at; 47 pinned after review, each saying why); no row holds less than its reading, and every row that still holds more is listed with its excess (HELD_MORE).
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-read, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: declarations_independent}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

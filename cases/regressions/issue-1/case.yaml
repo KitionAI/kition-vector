@@ -1,0 +1,22 @@
+format: 1
+id: regressions/issue-1
+feature: vector.object.envelope
+intent: >-
+  The Arc warp bends a shape into an arc in the shape's own proportions: a 400 by 100 band becomes
+  a band of about the same width bent into concentric arcs, arching up for a positive bend (as
+  Arch and Arc Upper do) and sagging for a negative one. Before, the arc was computed on the
+  normalised square and stretched back, so a wide band turned into a fan about 30 percent wider
+  than itself.
+layer: gate
+source:
+  kind: issue
+  from: Kition Vector regression suite
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: arc_warp }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

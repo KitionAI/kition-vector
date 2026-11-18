@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-names
+feature: vector.agent.premises
+intent: A file holding a name twice in a table opens with each name once (the first keeps it), so a write by name names one object; a character or paragraph style write rests on that style, not on the whole table.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-4, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: names}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

@@ -1,0 +1,20 @@
+format: 1
+id: regressions/issue-3
+feature: vector.agent.observe
+intent: >-
+  inspect reports a compound path's fill, stroke and stroke width (the compound's appearance,
+  which it is painted with) on the compound and on each member path. Before, the compound had no
+  fill field and its members said None although the shape rendered filled.
+layer: gate
+source:
+  kind: issue
+  from: Kition Vector regression suite
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: compound_inspect }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

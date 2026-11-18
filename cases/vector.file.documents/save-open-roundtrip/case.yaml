@@ -1,0 +1,19 @@
+format: 1
+id: vector.file.documents/save-open-roundtrip
+feature: vector.file.documents
+intent: >-
+  A drawing with shapes, text, styles, symbols, masks, effects, variables and data sets saved with
+  document.save and opened again with document.open is the same document (numbers to 1e-12) and
+  still passes every structural invariant.
+layer: unit
+source:
+  kind: synthetic
+  from: crates/support/testkit/src/fixtures.rs (rich_session)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-engine, test: model_based, filter: save_open_via_commands_roundtrips }
+expected:
+  - actual: out:exit
+    compare: exit
+since: "2026-11-17"

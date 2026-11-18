@@ -1,0 +1,55 @@
+/**
+ * Tessera icons for the Vector engine's commands that kit-editor's rules cannot read (they draw
+ * the neutral command mark otherwise): its own vocabulary, by command id. Registered once, when the
+ * editor loads (`main.tsx`); ribbons and menus built from engine commands draw them.
+ */
+import { registerCommandIcons } from '@kition/kit-editor'
+import { ArrayPolarIcon, BlendIcon, BookmarkIcon, CheckIcon, CircleDotIcon, CodeIcon, DropletsIcon, EyeOffIcon, Grid3x3Icon, HighlighterIcon, LibraryIcon, LockIcon, LogOutIcon, MapPinIcon, MousePointer2Icon, Move3dIcon, PaletteIcon, ParallelogramIcon, PenLineIcon, PuzzleIcon, RotateCcwIcon, ScalingIcon, ScanEyeIcon, SettingsIcon, SlidersHorizontalIcon, SquareDashedIcon, SquareDashedMousePointerIcon, SquaresExcludeIcon, SquaresIntersectIcon, SquaresSubtractIcon, SquaresUniteIcon, SwatchBookIcon, UnlinkIcon, WandSparklesIcon, WaypointsIcon } from '@kition/tessera-icons/react'
+
+registerCommandIcons({
+  "appearance.reduceToBasic": RotateCcwIcon,
+  "appearance.setItem": SwatchBookIcon,
+  "appearance.targetContents": SwatchBookIcon,
+  "attributes.set": SlidersHorizontalIcon,
+  "css.generate": CodeIcon,
+  "edit.assignProfile": PaletteIcon,
+  "library.use": LibraryIcon,
+  "object.clippingMask.release": UnlinkIcon,
+  "object.envelope.release": UnlinkIcon,
+  "object.exitIsolation": LogOutIcon,
+  "object.hide.above": EyeOffIcon,
+  "object.isolate": ScanEyeIcon,
+  "object.liquify": DropletsIcon,
+  "object.lock.above": LockIcon,
+  "object.pathfinder.exclude": SquaresExcludeIcon,
+  "object.pathfinder.intersect": SquaresIntersectIcon,
+  "object.pathfinder.minusBack": SquaresSubtractIcon,
+  "object.pathfinder.minusFront": SquaresSubtractIcon,
+  "object.pathfinder.unite": SquaresUniteIcon,
+  "object.pattern.done": CheckIcon,
+  "object.pinWarp": WaypointsIcon,
+  "object.pinWarp.pins": MapPinIcon,
+  "object.rasterize": Grid3x3Icon,
+  "object.repeat.radial": ArrayPolarIcon,
+  "object.repeat.release": UnlinkIcon,
+  "object.setBounds": ScalingIcon,
+  "object.setProps": SlidersHorizontalIcon,
+  "object.shear": ParallelogramIcon,
+  "perspective.plane.set": Move3dIcon,
+  "perspective.release": UnlinkIcon,
+  "plugin.install": PuzzleIcon,
+  "plugin.run": PuzzleIcon,
+  "prefs.set": SettingsIcon,
+  "select.all": SquareDashedMousePointerIcon,
+  "select.magicWand": WandSparklesIcon,
+  "select.object.clippingMasks": SquareDashedIcon,
+  "select.object.strayPoints": CircleDotIcon,
+  "select.same.appearance": MousePointer2Icon,
+  "select.same.appearanceAttribute": MousePointer2Icon,
+  "select.same.blendingMode": MousePointer2Icon,
+  "select.savedList": BookmarkIcon,
+  "stroke.widthProfile.set": PenLineIcon,
+  "transparency.set": BlendIcon,
+  "variable.highlight": HighlighterIcon,
+  "variable.unbind": UnlinkIcon,
+})

@@ -1,0 +1,74 @@
+[
+  {
+    "code": "vector.missing-image",
+    "fixture": "check-missing-image.kvector",
+    "severity": "error",
+    "summary": "An image shows pixels the drawing does not hold, so it draws nothing."
+  },
+  {
+    "code": "vector.missing-symbol",
+    "fixture": "check-missing-symbol.kvector",
+    "severity": "error",
+    "summary": "A symbol instance names a symbol the drawing does not define, so it draws nothing."
+  },
+  {
+    "code": "vector.no-artboard",
+    "fixture": "check-no-artboard.kvector",
+    "severity": "warning",
+    "summary": "The drawing has no artboard, so nothing is placed on a page for export or print."
+  },
+  {
+    "code": "vector.missing-graphic-style",
+    "fixture": "check-missing-graphic-style.kvector",
+    "severity": "warning",
+    "summary": "An object is linked to a graphic style the drawing no longer has."
+  },
+  {
+    "code": "vector.missing-link",
+    "fixture": "check-missing-link.kvector",
+    "severity": "warning",
+    "summary": "A linked file was not read, because it is missing or lies outside the workspace, so the drawing shows its saved preview or a placeholder."
+  },
+  {
+    "code": "vector.off-artboard",
+    "fixture": "check-off-artboard.kvector",
+    "severity": "warning",
+    "summary": "Art lies outside every artboard, so exports and prints leave it out."
+  },
+  {
+    "code": "vector.missing-glyphs",
+    "fixture": "check-missing-glyphs.kvector",
+    "severity": "warning",
+    "summary": "Text has characters no font here can draw, so they are left out until a font that has them is added."
+  },
+  {
+    "code": "vector.font-substituted",
+    "fixture": "check-font-substituted.kvector",
+    "severity": "info",
+    "summary": "A text font is not available here, so its text is drawn with a substitute."
+  },
+  {
+    "code": "vector.empty-group",
+    "fixture": "check-empty-group.kvector",
+    "severity": "info",
+    "summary": "A group holds nothing; removing it changes nothing on the artboard."
+  },
+  {
+    "code": "vector.empty-text",
+    "fixture": "check-empty-text.kvector",
+    "severity": "info",
+    "summary": "A text object has no text; removing it changes nothing on the artboard."
+  },
+  {
+    "code": "vector.stray-point",
+    "fixture": "check-stray-point.kvector",
+    "severity": "info",
+    "summary": "A path with a single point paints nothing; removing it changes nothing on the artboard."
+  },
+  {
+    "code": "vector.truncated",
+    "fixture": "check-truncated.kvector",
+    "severity": "info",
+    "summary": "One code was found more often than the check lists; the rest are counted in one diagnostic."
+  }
+]

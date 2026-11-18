@@ -1,0 +1,30 @@
+[package]
+name = "kition-vector-eps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector Encapsulated PostScript: a hand-written EPS writer (PostScript Level 2 and 3) with TIFF previews"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-effects = { workspace = true }
+kition-vector-brush = { workspace = true }
+kition-vector-text = { workspace = true }
+# Windows metafile previews, opened when a file's PostScript can't be read.
+kition-vector-metafile = { workspace = true }
+# Non-native art in Illustrator editing data (a placed PDF's content, kept as a PDF).
+kition-vector-pdf = { workspace = true }
+# The TIFF writer (previews) and PackBits, shared with raster export.
+kition-vector-render = { workspace = true }
+kurbo = { workspace = true }
+image = { workspace = true }
+flate2 = { workspace = true }
+ruzstd = { workspace = true }
+
+[dev-dependencies]
+kition-vector-testkit = { workspace = true }

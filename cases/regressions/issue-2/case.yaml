@@ -1,0 +1,23 @@
+format: 1
+id: regressions/issue-2
+feature: vector.text.edit
+intent: >-
+  A drawing draws only with the kit's bundled fonts and the fonts its host adds, never the
+  machine's installed fonts, so a render is the same on every machine: the font list holds no
+  installed family and a rescan finds none. Characters no font here can draw are reported
+  (text.fonts noGlyph, the check's vector.missing-glyphs) until the host adds a font that has
+  them. Before, the engine scanned the machine's fonts, CJK drew from a system font, and
+  text.fonts said exact with missingGlyphs while the check reported nothing.
+layer: gate
+source:
+  kind: issue
+  from: Kition Vector regression suite
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: kit_fonts }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

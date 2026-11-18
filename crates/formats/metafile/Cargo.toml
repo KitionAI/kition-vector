@@ -1,0 +1,19 @@
+[package]
+name = "kition-vector-metafile"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector Windows metafiles: hand-written EMF and WMF writers and readers"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-effects = { workspace = true }
+kition-vector-brush = { workspace = true }
+kition-vector-text = { workspace = true }
+kurbo = { workspace = true }
+image = { workspace = true }

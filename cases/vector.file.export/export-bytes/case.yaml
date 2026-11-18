@@ -1,0 +1,21 @@
+format: 1
+id: vector.file.export/export-bytes
+feature: vector.file.export
+intent: >-
+  document.exportBytes answers an SVG, a PDF, or a PNG of every artboard (one file each, by name)
+  in base64 `data` without writing a file or changing the drawing, so the editor's File › Export
+  and an agent's export hand the file to the host to write; an unknown format is refused.
+layer: gate
+source:
+  kind: synthetic
+  from: crates/engine/engine/src/cmd/fileio/tests_exportas.rs
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-engine, filter: export_bytes_answers_the_file_in_data_and_writes_none }
+expected:
+  - actual: out:exit
+    compare: exit
+    value: 0
+since: "2026-11-17"
+timeout_s: 60

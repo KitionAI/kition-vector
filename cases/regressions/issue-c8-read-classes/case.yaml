@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-read-classes
+feature: vector.agent.premises
+intent: For each class the independent reading found, another program rewrites the file between the agent's observe and its write; a change the write rests on refuses it (a group's member, a member's compound, the guides, a sibling's restack, another layer's visibility, an instance's symbol, a path moved under a Liquify brush, a batch step's object, a copied object's name, the artboard aligned to) and an unrelated one does not; and a write the guard refused for nothing now applies (a group after a member's fill, a fill by swatch name after the swatches were reordered, Unite after the back object was restacked, a fill after a style link was broken).
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-read, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: independent}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

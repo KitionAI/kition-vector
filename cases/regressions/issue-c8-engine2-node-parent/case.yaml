@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-node-parent
+feature: vector.agent.premises
+intent: A model batch that creates a node inside an object that holds none (a path, type, a mesh) is refused, naming the object, instead of being taken and dropped by the drawing on the next read (kit-env create receipt-differs); a node created in a layer is kept by the saved file.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: kit_env_creates}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

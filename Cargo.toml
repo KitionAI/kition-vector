@@ -1,0 +1,105 @@
+[workspace]
+resolver = "3"
+members = ["crates/*/*", "bindings/*", "tools/xtask"]
+default-members = ["crates/*/*", "bindings/headless", "tools/xtask"]
+
+[workspace.package]
+version = "0.9.0"
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.95"
+repository = "https://github.com/KitionAI/kition-vector"
+
+[workspace.dependencies]
+# kition-sdk, pinned by commit (one revision for every crate of it)
+kition-convergence = { git = "https://github.com/KitionAI/kition-sdk", rev = "f5ea478430d1e85069b6c6c9fac1de6b8e5c5d57" }
+kition-headless = { git = "https://github.com/KitionAI/kition-sdk", rev = "f5ea478430d1e85069b6c6c9fac1de6b8e5c5d57" }
+kition-kit-server = { git = "https://github.com/KitionAI/kition-sdk", rev = "f5ea478430d1e85069b6c6c9fac1de6b8e5c5d57" }
+kition-kit = { git = "https://github.com/KitionAI/kition-sdk", rev = "f5ea478430d1e85069b6c6c9fac1de6b8e5c5d57" }
+# The kits' MCP server's tools (kition-kits-mcp's library), for the headless kit's end-to-end tests.
+kition-kits = { git = "https://github.com/KitionAI/kition-sdk", rev = "f5ea478430d1e85069b6c6c9fac1de6b8e5c5d57" }
+
+# internal
+kition-vector-geom = { path = "crates/support/geom" }
+kition-vector-color = { path = "crates/support/color" }
+kition-vector-doc = { path = "crates/engine/doc" }
+kition-vector-pathops = { path = "crates/engine/pathops" }
+kition-vector-brush = { path = "crates/engine/brush" }
+kition-vector-trace = { path = "crates/engine/trace" }
+kition-vector-text = { path = "crates/support/text" }
+kition-vector-effects = { path = "crates/engine/effects" }
+kition-vector-three-d = { path = "crates/engine/three-d" }
+kition-vector-render = { path = "crates/render/render" }
+kition-vector-svg = { path = "crates/formats/svg" }
+kition-vector-pdf = { path = "crates/formats/pdf" }
+kition-vector-format = { path = "crates/formats/format" }
+kition-vector-tools = { path = "crates/engine/tools" }
+kition-vector-engine = { path = "crates/engine/engine" }
+kition-vector-testkit = { path = "crates/support/testkit" }
+kition-vector-cad = { path = "crates/formats/cad" }
+kition-vector-eps = { path = "crates/formats/eps" }
+kition-vector-metafile = { path = "crates/formats/metafile" }
+kition-vector-plugins = { path = "crates/engine/plugins" }
+kition-vector-affinity = { path = "crates/formats/affinity" }
+# The `kit.vector` KDM bridge (Kition's own).
+kdm-model = { path = "crates/kdm/kdm-model" }
+
+# foundation
+kurbo = { version = "0.13", features = ["serde"] }
+peniko = "0.6"
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+log = "0.4"
+proptest = "1"
+crc32fast = "1.5"
+# tests: a TCP port bound without listening (connections to it are refused)
+socket2 = "0.6"
+# Sandboxed WebAssembly plug-ins: a pure-Rust interpreter (Apache-2.0) that builds for wasm32
+# too. Without `wat` (text parsing is test-only) and memory64; `validate` keeps full module
+# validation on; the portable dispatcher can't overflow the host stack on long-running modules.
+wasmi = { version = "2.0.0", default-features = false, features = ["std", "validate", "stable", "portable-dispatch"] }
+# Tests: WebAssembly text -> binary for the plug-in fixtures (Apache-2.0 WITH LLVM-exception).
+wat = "1.228"
+
+# rendering / formats
+vello_cpu = { version = "0.2", features = ["f32_pipeline"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "tiff", "bmp"] }
+usvg = "0.48"
+krilla = "0.8"
+skrifa = "0.47"
+harfrust = "0.13"
+linesweeper = "0.5"
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+# Zstandard decoder (pure Rust, builds for wasm32 too): the editing copy an EPS carries of its art.
+ruzstd = { version = "0.9", default-features = false, features = ["std"] }
+jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
+gif = { version = "0.14", default-features = false, features = ["std", "raii_no_panic"] }
+# CMYK image samples (kition-vector-doc's cmyk module): the image crate's own TIFF and JPEG
+# decoders, read directly (the image crate converts CMYK to RGB).
+tiff = "0.11"
+zune-jpeg = "0.5"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+# Kition Vector never crashes: shipped code returns `Result`/`Option` instead of panicking (see
+# AGENTS.md › Robustness). Tests may unwrap (.clippy.toml).
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

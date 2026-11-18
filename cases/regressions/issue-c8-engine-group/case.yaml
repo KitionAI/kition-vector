@@ -1,0 +1,14 @@
+format: 1
+id: regressions/issue-c8-engine-group
+feature: vector.agent.premises
+intent: A group rests on where its objects are (their parent and stacking), not on their fields; after another's rename, refill or move of a member the group applies and the saved drawing holds the group with the other's edit; a member moved into another group refuses it. The mixed table's structure form follows that rule.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: independent}
+  - cargo-test: {package: kition-vector, test: outside}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

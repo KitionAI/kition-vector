@@ -1,0 +1,176 @@
+/* The Vector editor's own layout; colors and shapes come from @kition/kit-editor's tokens. */
+
+.vector-rail {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-height: 0;
+  border-right: 1px solid var(--kit-border);
+  background: var(--kit-surface-muted);
+}
+
+.vector-rail .kui-tool-rail {
+  flex: 1;
+  border-right: 0;
+}
+
+.vector-proxies {
+  position: relative;
+  width: 44px;
+  height: 68px;
+  flex: none;
+  /* A hairline that shows a white (or paper-colored) swatch against the rail and the canvas. */
+  --vector-proxy-edge: color-mix(in srgb, var(--kit-text) 28%, transparent);
+}
+
+.vector-proxy {
+  position: absolute;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.vector-proxy-fill {
+  top: 4px;
+  left: 6px;
+  z-index: 1;
+  border: 1px solid var(--vector-proxy-edge);
+}
+
+.vector-proxy-stroke {
+  top: 14px;
+  left: 16px;
+  border: 4px solid;
+  /* The hairline outside the stroke's ring and inside it, so a white stroke still reads as a ring. */
+  box-shadow:
+    0 0 0 1px var(--vector-proxy-edge),
+    inset 0 0 0 1px var(--vector-proxy-edge);
+  background: var(--kit-surface);
+}
+
+.vector-proxy[data-active='true'] {
+  z-index: 2;
+}
+
+/* Swap and reset, clear of the status bar below. */
+.vector-proxy-actions {
+  position: absolute;
+  bottom: 6px;
+  left: 2px;
+  display: flex;
+  transform: scale(0.75);
+  transform-origin: left bottom;
+}
+
+.vector-side {
+  width: 248px;
+}
+
+.vector-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+  padding: 0 12px;
+}
+
+.vector-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--kit-text-muted);
+}
+
+.vector-field > span {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.vector-field input[type='number'] {
+  width: 100%;
+  min-width: 0;
+}
+
+.vector-field input[type='color'] {
+  width: 32px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--kit-border);
+  border-radius: 4px;
+  background: none;
+}
+
+.vector-field-wide {
+  grid-column: span 2;
+}
+
+.vector-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.vector-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 18px);
+  gap: 3px;
+  padding: 0 12px;
+}
+
+.vector-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding-right: 8px;
+  font-size: 12px;
+}
+
+.vector-row[data-selected='true'] {
+  background: var(--kit-primary-soft);
+}
+
+.vector-row-indent {
+  width: 28px;
+  flex: none;
+}
+
+.vector-layer-color {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+}
+
+.vector-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.vector-empty {
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.vector-export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+}
+
+.vector-export-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}

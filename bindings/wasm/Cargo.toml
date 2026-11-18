@@ -1,0 +1,32 @@
+[package]
+name = "kition-vector-kit"
+description = "The Vector engine for Kition's in-page editor: open, render, edit, and save Kition Vector drawings from JavaScript (WebAssembly), on the Kition SDK."
+version.workspace = true
+edition.workspace = true
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-kit = { workspace = true, features = ["session"] }
+kdm-model = { workspace = true }
+kition-vector-engine = { workspace = true }
+kition-vector-format = { workspace = true }
+kition-vector-render = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-geom = { workspace = true }
+kition-vector-text = { workspace = true }
+kition-vector-tools = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+kition-vector-svg = { workspace = true }
+# The Kition platform convergence suite (L6), on the same kition-sdk revision.
+kition-convergence = { workspace = true }
+image = { workspace = true }

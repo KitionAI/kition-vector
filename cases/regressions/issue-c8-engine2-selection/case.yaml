@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-selection
+feature: vector.agent.premises
+intent: "A command that picks among the selected objects does not guess: a repeat selected with other art is not re-kinded while the other art is ignored, Edit Pattern takes the topmost selected pattern whatever the click order, trim marks around the selection go into its layer, and Rearrange Artboards moves the art on each artboard as moving that artboard does (fully inside it, sublayers included)."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: other_objects}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

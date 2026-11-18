@@ -1,0 +1,157 @@
+{
+  "kdm": 1,
+  "kit": "kit.vector",
+  "schemaVersion": 1,
+  "root": "Drawing",
+  "types": {
+    "Drawing": {
+      "batchOps": { "*": { "direct": true } },
+      "derived": {
+        "swatches": { "description": "a digest of the swatches, by name and content: what a write naming a swatch rests on" },
+        "swatchGroups": { "description": "a digest of the swatch groups" },
+        "graphicStyles": { "description": "a digest of the graphic styles, by name and content" },
+        "charStyles": { "description": "a digest of the character styles" },
+        "paraStyles": { "description": "a digest of the paragraph styles" },
+        "symbols": { "description": "a digest of the symbols, by name and art" },
+        "patterns": { "description": "a digest of the patterns" },
+        "artboards": { "description": "the artboards' ids in order: what a write by artboard index rests on" }
+      },
+      "fields": {
+        "settings": { "kind": "map" },
+        "nodes": { "kind": "tree", "of": "Node" },
+        "artboards": { "kind": "list", "of": "Artboard" },
+        "swatches": { "kind": "list", "of": "Swatch" },
+        "swatchGroups": { "kind": "list", "of": "SwatchGroup" },
+        "graphicStyles": { "kind": "list", "of": "GraphicStyle" },
+        "charStyles": { "kind": "list", "of": "CharStyle" },
+        "paraStyles": { "kind": "list", "of": "ParaStyle" },
+        "symbols": { "kind": "list", "of": "Symbol" },
+        "patterns": { "kind": "list", "of": "Pattern" },
+        "slices": { "kind": "list", "of": "Slice" },
+        "assets": { "kind": "list", "of": "Asset" },
+        "images": { "kind": "list", "of": "Image" }
+      }
+    },
+    "Node": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "id" },
+      "label": "name",
+      "fields": {
+        "id": { "kind": "integer", "readOnly": true, "optional": true },
+        "name": { "kind": "json", "optional": true },
+        "visible": { "kind": "boolean", "optional": true, "label": "shown" },
+        "locked": { "kind": "boolean", "optional": true, "label": "locked" },
+        "appearance": { "kind": "json", "optional": true },
+        "props": { "kind": "json", "optional": true },
+        "data": { "kind": "json", "optional": true }
+      }
+    },
+    "Artboard": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "id", "prefix": "artboard:" },
+      "label": "props.name",
+      "fields": {
+        "id": { "kind": "integer", "readOnly": true, "optional": true },
+        "rect": { "kind": "json", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "Swatch": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "swatch:" },
+      "label": "name",
+      "readOnlyWhen": { "field": "role", "values": ["builtIn"] },
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "role": { "kind": "enum", "values": ["builtIn"], "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "SwatchGroup": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "swatchGroup:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "swatches": { "kind": "list", "of": "Swatch" }
+      }
+    },
+    "GraphicStyle": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "graphicStyle:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "CharStyle": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "charStyle:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "ParaStyle": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "paraStyle:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "Symbol": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "symbol:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "art": { "kind": "json", "optional": true }
+      }
+    },
+    "Pattern": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "key", "prefix": "pattern:" },
+      "label": "name",
+      "fields": {
+        "key": { "kind": "string", "readOnly": true, "optional": true },
+        "name": { "kind": "string", "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "Slice": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "id" },
+      "fields": {
+        "id": { "kind": "integer", "readOnly": true, "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "Asset": {
+      "batchOps": { "*": { "direct": true } },
+      "toolId": { "field": "id" },
+      "fields": {
+        "id": { "kind": "integer", "readOnly": true, "optional": true },
+        "props": { "kind": "json", "optional": true }
+      }
+    },
+    "Image": {
+      "readOnly": true,
+      "fields": {
+        "key": { "kind": "string", "optional": true },
+        "mime": { "kind": "string", "optional": true },
+        "blob": { "kind": "blob", "optional": true },
+        "proxy": { "kind": "blob", "optional": true }
+      }
+    }
+  }
+}

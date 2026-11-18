@@ -1,0 +1,23 @@
+[package]
+name = "kition-vector-cad"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector CAD interchange: a hand-written ASCII DXF writer (R12 to 2018)"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-effects = { workspace = true }
+kition-vector-brush = { workspace = true }
+kition-vector-pathops = { workspace = true }
+kition-vector-text = { workspace = true }
+kurbo = { workspace = true }
+image = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-pin-reread
+feature: vector.agent.premises
+intent: A clean drawing whose file another program saved is read again without losing its undo histories - only the file's difference is written, as an import that is no undo step, so the agent's own step still undoes and keeps the file's edit; an unchanged file writes nothing; an editor state selecting an object the file deleted is refused by name.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-pin, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: pin_reread}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

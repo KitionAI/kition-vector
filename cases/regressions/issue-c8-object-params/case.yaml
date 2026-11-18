@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-object-params
+feature: vector.agent.premises
+intent: Every object parameter declares its actual resolver type, and the tool IDs used by commands survive save and reopen.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-land-11-vector, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: object_params}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-contents
+feature: vector.agent.premises
+intent: "What a command reaches inside the objects it is given is what it says: a fill on a clip group leaves the clipping path unpainted, a blend is painted the same way whether it is reached directly or inside a group, and text.setFormat and type.fitHeadline format the text inside groups and layers as text.setStyle does."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: other_objects}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

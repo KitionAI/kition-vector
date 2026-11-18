@@ -1,0 +1,249 @@
+appearance.duplicateItem	to	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+appearance.moveItem	contents	a value, no object: count of items painting below the Contents row
+appearance.moveItem	from	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+appearance.moveItem	to	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+appearance.setActiveItem	index	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+appearance.setItem	index	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+appearance.setItem	opacity	a value, no object: an opacity percentage
+appearance.setItem	tint	a value, no object: a tint percentage
+artboard.rearrange	columns	a value, no object: a count of columns
+attributes.info	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+clipboard.conflicts	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
+clipboard.exportPng	scale	a value, no object: a scale factor
+clipboard.importEmf	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
+clipboard.importImage	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
+clipboard.importPdf	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
+clipboard.importPdf	page	a position inside the file being read (PDF pages (1-based))
+clipboard.importText	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
+color.harmony	amount	a value, no object: an amount
+color.harmony	steps	a value, no object: a count of steps
+document.activate	index	an open document tab, not drawing content
+document.export	artboard	an artboard a command that changes no drawing content reads
+document.export	depth	a value, no object: a bit depth or nesting depth
+document.export	ditherAmount	a value, no object: a dither percentage
+document.export	scale	a value, no object: a scale factor
+document.export	scans	a value, no object: a count of scans
+document.exportBytes	artboard	an artboard a command that changes no drawing content reads
+document.exportBytes	depth	a value, no object: a bit depth or nesting depth
+document.exportBytes	ditherAmount	a value, no object: a dither percentage
+document.exportBytes	scale	a value, no object: a scale factor
+document.exportBytes	scans	a value, no object: a count of scans
+document.exportDxf	colors	a value, no object: a colour count
+document.exportDxf	scale	a value, no object: a scale factor
+document.exportEps	level	a value, no object: a PostScript or compression level
+document.exportForOffice	artboard	an artboard a command that changes no drawing content reads
+document.exportForOffice	ppi	a value, no object: a resolution
+document.exportForWeb	colors	a value, no object: a colour count
+document.exportForWeb	ditherAmount	a value, no object: a dither percentage
+document.exportForWeb	lossy	a value, no object: a lossy amount
+document.exportForWeb	percent	a value, no object: a percentage
+document.exportForWeb	webSnap	a value, no object: a percentage
+document.exportForWeb.preview	slice	a slice's number in the export layout, read by a command that writes nothing
+document.exportPdf	advanced.fontSubsetPercent	a value, no object: a percentage
+document.exportPdf	compression.gray.abovePpi	a value, no object: a resolution
+document.exportPdf	compression.gray.ppi	a value, no object: a resolution
+document.exportPdf	compression.mono.abovePpi	a value, no object: a resolution
+document.exportPdf	compression.mono.ppi	a value, no object: a resolution
+document.exportPdf	marks.offset	a value, no object: a distance
+document.exportSelection	scale	a value, no object: a scale factor
+document.find	limit	a value, no object: a count of matches
+document.inspect	childLimit	a value, no object: a count of children shown
+document.inspect	depth	a value, no object: a bit depth or nesting depth
+document.node	childLimit	a value, no object: a count of children shown
+document.node	depth	a value, no object: a bit depth or nesting depth
+document.save	version	a value, no object: a file format version
+edit.colors.adjustBalance	gray	a value, no object: a grey level
+edit.colors.adjustBalance	k	a value, no object: a black percentage
+edit.colors.adjustBalance	tint	a value, no object: a tint percentage
+edit.colors.overprintBlack	percentage	a value, no object: a percentage
+edit.colors.saturate	intensity	a value, no object: an effect strength
+effect.apply	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.duplicate	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
+effect.duplicate	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.move	from	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, source list))
+effect.move	fromItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.move	to	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based position in destination list after th)
+effect.move	toItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.remove	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, in the list chosen by item: object-l)
+effect.remove	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.setParams	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
+effect.setParams	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+eyedropper.setOptions	sampleSize	a value, no object: a sample size in pixels
+file.close	index	an open document tab, not drawing content
+file.info	rating	a value, no object: a rating
+file.new	artboardLayout.columns	a value, no object: a count of columns
+file.new	artboards	a value, no object: read as a number
+file.new	rasterEffectsPpi	a value, no object: a resolution
+file.place	page	a position inside the file being read (pages/artboards of the placed file (1-based))
+file.place	text.replaceSpaces	a value, no object: a count of spaces
+file.place.info	page	a position inside the file being read (pages of the file (1-based))
+file.place.queue	page	a position inside the file being read (pages of the file (1-based))
+file.print	level	a value, no object: a PostScript or compression level
+file.saveAsTemplate	modified	a value, no object: a date (Unix seconds) or text
+file.saveAsTemplate	version	a value, no object: a file format version
+file.saveCopy	modified	a value, no object: a date (Unix seconds) or text
+gradient.selectStop	index	a position inside the target object's own geometry or paint, held by the target's premise (gradient stops (0-based, 0 = start) of the gradient be)
+graph.setData	rows	a value, no object: a count of rows
+graph.setType	categoryTickMarks	a value, no object: a count of tick marks
+graph.setType	rightTickMarks	a value, no object: a count of tick marks
+graph.setType	rightTicks	a value, no object: a count of ticks
+graph.setType	seriesIndexes	a position inside the target object's own geometry or paint, held by the target's premise (graph series (0-based, < series count = max row length)
+graph.setType	tickMarks	a value, no object: a count of tick marks
+graph.setType	ticks	a value, no object: a count of ticks
+graphicStyle.move	to	a position inside the target object's own geometry or paint, held by the target's premise (graphicStyles (0-based, clamped to last))
+guide.move	index	a ruler guide: guides are the drawing's settings, held by the drawing's own premise
+guide.remove	index	a ruler guide: guides are the drawing's settings, held by the drawing's own premise
+guide.setLayer	index	a ruler guide: guides are the drawing's settings, held by the drawing's own premise
+image.info	page	a page of the linked file being read, not drawing content
+layer.setProps	color	a layer colour preset (0..26), no object
+library.createGroup	items[].item	an item of a user library (its graphic number or name), not drawing content
+livePaint.fill	tint	a value, no object: a tint percentage
+livePaint.strokeEdge	tint	a value, no object: a tint percentage
+magicWand.set	fillTolerance	a value, no object: a colour tolerance
+magicWand.set	strokeTolerance	a value, no object: a colour tolerance
+object.blend.make	steps	a value, no object: a count of steps
+object.blend.options	steps	a value, no object: a count of steps
+object.blend.options	value	a value, no object: a blend option value
+object.blend.spine.moveAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.blend.spine.moveAnchor	subpath	a position inside the target blend's spine, held by the target's premise
+object.blend.spine.removeAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.envelope.makeWithMesh	cols	a value, no object: a count of columns
+object.envelope.makeWithMesh	rows	a value, no object: a count of rows
+object.envelope.options	fidelity	a value, no object: an envelope fidelity
+object.envelope.resetWithMesh	cols	a value, no object: a count of columns
+object.envelope.resetWithMesh	rows	a value, no object: a count of rows
+object.envelope.setMeshPoint	handle	a position inside the target object's own geometry or paint, held by the target's premise (handles of the point (0 right,1 left,2 down,3 up))
+object.envelope.setMeshPoint	index	a position inside the target object's own geometry or paint, held by the target's premise (envelope mesh points (0-based, flat list `points`))
+object.expand	steps	a value, no object: a count of steps
+object.flattenTransparency	balance	a value, no object: a raster/vector balance
+object.flattenTransparency	gradientPpi	a value, no object: a resolution
+object.flattenTransparency	lineArtPpi	a value, no object: a resolution
+object.liquify	complexity	a value, no object: a complexity level
+object.liquify	detail	a value, no object: a detail level
+object.mesh.create	cols	a value, no object: a count of columns
+object.mesh.create	rows	a value, no object: a count of rows
+object.mesh.deletePoint	index	a position inside the target object's own geometry or paint, held by the target's premise (mesh points (0-based))
+object.mesh.movePoint	handle	a position inside the target object's own geometry or paint, held by the target's premise (handles of point (0 right,1 left,2 down,3 up))
+object.mesh.movePoint	index	a position inside the target object's own geometry or paint, held by the target's premise (mesh points (0-based))
+object.mesh.setPointColor	index	a position inside the target object's own geometry or paint, held by the target's premise (gradient mesh points (0-based))
+object.nudge	dx	a value, no object: a distance
+object.nudge	dy	a value, no object: a distance
+object.path.offsetPath	miterLimit	a value, no object: a miter limit
+object.path.splitIntoGrid	columns	a value, no object: a count of columns
+object.path.splitIntoGrid	rows	a value, no object: a count of rows
+object.repeat.grid	cols	a value, no object: a count of columns
+object.repeat.grid	rows	a value, no object: a count of rows
+object.repeat.options	cols	a value, no object: a count of columns
+object.repeat.options	instances	a value, no object: a count of instances
+object.repeat.options	rows	a value, no object: a count of rows
+object.repeat.radial	instances	a value, no object: a count of instances
+object.setBounds	reference	a position inside the target object's own geometry or paint, held by the target's premise (9-point reference grid (0-based 0..8, default 4 = cent)
+object.setLiveShape	sides	a value, no object: a count of sides
+object.setOverprint	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+object.setProps	opacity	a value, no object: an opacity percentage
+object.slice.divide	columns	a value, no object: a count of columns
+object.slice.divide	rows	a value, no object: a count of rows
+object.transformEach	reference	a position inside the target object's own geometry or paint, held by the target's premise (9-point reference grid (0-based 0..8, 4 = centre))
+object.transformEach	seed	a value, no object: a random seed
+paint.editGradient	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.editGradient	stops[].tint	a value, no object: a tint percentage
+paint.freeform.addLine	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.freeform.addLine	points	a position inside the target object's own geometry or paint, held by the target's premise (freeform gradient points (0-based))
+paint.freeform.addPoint	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.freeform.deletePoint	index	a position inside the target object's own geometry or paint, held by the target's premise (freeform gradient points (0-based))
+paint.freeform.deletePoint	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.freeform.selectPoint	index	a position inside the target object's own geometry or paint, held by the target's premise (freeform gradient points (0-based) of the proxy gradie)
+paint.freeform.setPoint	index	a position inside the target object's own geometry or paint, held by the target's premise (freeform gradient points (0-based))
+paint.freeform.setPoint	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.freeform.splitLine	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.freeform.splitLine	line	a position inside the target object's own geometry or paint, held by the target's premise (freeform gradient lines (0-based))
+paint.freeform.splitLine	segment	a position inside the target object's own geometry or paint, held by the target's premise (points along that line (0-based; segment k = point k t)
+paint.sampleColor	stop	a position inside the target object's own geometry or paint, held by the target's premise (gradient stops (0-based) of the gradient behind the pr)
+paint.setFill	gradient.stops[].tint	a value, no object: a tint percentage
+paint.setFill	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.setFill	tint	a value, no object: a tint percentage
+paint.setGradientGeom	index	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.setGradientGeom	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.setStroke	gradient.stops[].tint	a value, no object: a tint percentage
+paint.setStroke	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+paint.setStroke	tint	a value, no object: a tint percentage
+path.convertAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based, required))
+path.convertAnchor	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths (0-based, default 0))
+path.curvatureEdit	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based; required for op move))
+path.curvatureEdit	segment	a position inside the target object's own geometry or paint, held by the target's premise (segments of subpath (0-based; required for op insert))
+path.curvatureEdit	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths of path (0-based, default 0))
+path.insertAnchor	segment	a position inside the target object's own geometry or paint, held by the target's premise (segments of subpath (0-based, required))
+path.insertAnchor	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths of path (0-based, default 0))
+path.rectCut	from	a coordinate, no object
+path.rectCut	to	a coordinate, no object
+path.removeAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based, required))
+path.removeAnchor	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths of path (0-based, default 0))
+path.reshapeSegment	segment	a position inside the target object's own geometry or paint, held by the target's premise (segments of subpath (0-based, required))
+path.reshapeSegment	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths (0-based, default 0))
+path.setHandle	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based, required))
+path.setHandle	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths of path id (0-based, default 0))
+path.split	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based))
+path.split	segment	a position inside the target object's own geometry or paint, held by the target's premise (segments of subpath (0-based))
+path.split	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths (0-based, default 0))
+pattern.options	copies	a value, no object: a count of copies
+perspective.grid.define	kind	a value, no object: a perspective grid kind (1, 2 or 3 points)
+perspective.grid.preset	kind	a value, no object: 1|2|3
+perspective.grid.set	kind	a value, no object: a perspective grid kind (1, 2 or 3 points)
+perspective.nudge	dy	a value, no object: a distance
+print.setup	settings.copies	a value, no object: a count of copies
+print.setup	settings.graphics.flatness	a value, no object: a flatness
+print.setup	settings.margin	a value, no object: a distance
+print.setup	settings.marks.offset	a value, no object: a distance
+print.setup	settings.overlap	a value, no object: a distance
+print.setup	settings.scale.height	a value, no object: a size
+print.setup	settings.scale.width	a value, no object: a size
+recolor.randomize	seed	a value, no object: a random seed
+recolor.reduce	colors	a value, no object: row count
+recolor.reduce	map	a colour mapping: keys and values are colours, no object
+select.allOnArtboard	artboard	an artboard a command that changes no drawing content reads
+select.same.appearanceAttribute	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+shape.flare	seed	a value, no object: a random seed
+shape.polarGrid	concentric	a value, no object: a count of rings
+shape.polarGrid	radial	a value, no object: a count of spokes
+shape.polygon	sides	a value, no object: a count of sides
+shape.spiral	segments	a value, no object: a count of segments
+stroke.set	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+stroke.setAdvanced	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+stroke.widthPoint.copy	index	a position inside the target object's own geometry or paint, held by the target's premise (width points of topmost stroke profile (0-based, requi)
+stroke.widthPoint.set	index	a position inside the target object's own geometry or paint, held by the target's premise (width points of the topmost stroke's width profile (0-)
+swatch.move	to	a destination position in the panel list the moved entries are named in by name
+swatch.new	tint	a value, no object: a tint percentage
+symbol.adjust	intensity	a value, no object: an effect strength
+symbol.adjust	radius	a value, no object: a distance
+symbol.spray	density	a value, no object: a density
+symbol.spray	radius	a value, no object: a distance
+symbol.spray	scale	a value, no object: a scale factor
+text.areaOptions	columns	a value, no object: a count of columns
+text.areaOptions	fitMinPercent	a value, no object: a percentage
+text.areaOptions	rows	a value, no object: a count of rows
+text.editRange	end	a value, no object: a number to end at
+text.editRange	start	a value, no object: a page or number to start from
+text.findFontFiles	maxSeconds	a value, no object: a time limit
+text.insertInline	at	a value, no object: read as a number
+text.setFormat	end	a position inside the target object's own geometry or paint, held by the target's premise (textBytes (0-based byte offset, exclusive))
+text.setFormat	start	a position inside the target object's own geometry or paint, held by the target's premise (textBytes (0-based UTF-8 byte offset into the text run)
+text.setRangeStyle	end	a value, no object: a number to end at
+text.setRangeStyle	start	a value, no object: a page or number to start from
+text.setStyle	end	a value, no object: a number to end at
+text.setStyle	start	a value, no object: a page or number to start from
+text.tabs.clear	end	a value, no object: a number to end at
+text.tabs.clear	start	a value, no object: a page or number to start from
+text.tabs.get	start	a value, no object: a page or number to start from
+text.tabs.set	end	a value, no object: a number to end at
+text.tabs.set	start	a value, no object: a page or number to start from
+transparency.set	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+transparency.set	opacity	a value, no object: an opacity percentage
+type.size.decrease	by	a value, no object: an amount to step by
+type.size.decrease	end	a value, no object: a character offset in the text
+type.size.decrease	start	a value, no object: a character offset in the text
+type.size.increase	by	a value, no object: an amount to step by
+type.size.increase	end	a value, no object: a character offset in the text
+type.size.increase	start	a value, no object: a character offset in the text
+type.step	by	a value, no object: an amount to step by
+type.step	end	a value, no object: a number to end at
+type.step	start	a value, no object: a page or number to start from

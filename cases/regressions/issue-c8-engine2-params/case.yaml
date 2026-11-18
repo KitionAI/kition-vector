@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-params
+feature: vector.agent.premises
+intent: "A parameter is used or refused, never dropped, and a call that changes nothing is refused or leaves no undo step: object.nudge copy with anchors selected, shaper.scribble ids it cannot take, stroke.setAdvanced with an unknown brush, appearance.setItem on objects without the item, imageTrace with both id and ids, edit.colors.* with an id that names nothing, node.move into or out of a locked container, object.expandShape with no live shape, path.average and path.deleteAnchors with nothing, variable.unbind with nothing targeted, swatch.new colors in a CMYK document, artboard default names."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: params_refused}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

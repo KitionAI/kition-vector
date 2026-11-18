@@ -1,0 +1,36 @@
+{
+  "name": "kition-vector-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Vector kit's own editor (Kition platform `docs/platform/kits/ui.md`), embedded by hosts over the Kit UI protocol.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "scripts": {
+    "engine": "sh scripts/build-engine.sh",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --test src/exporting.test.mjs",
+    "test:flow": "node tests/flow.mjs chromium && node tests/flow.mjs webkit",
+    "test:modes": "node tests/modes.mjs chromium && node tests/modes.mjs webkit",
+    "test:focus": "node tests/focus.mjs chromium && node tests/focus.mjs webkit"
+  },
+  "dependencies": {
+    "@kition/kit-editor": "^0.1.0",
+    "@kition/kit-host": "^0.1.0",
+    "@kition/kit-ui-protocol": "^0.1.0",
+    "@kition/kit-dev-host": "^0.1.0",
+    "@kition/tessera-icons": "^0.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "playwright": "1.59.1"
+  }
+}

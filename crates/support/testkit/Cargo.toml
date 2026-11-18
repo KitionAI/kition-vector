@@ -1,0 +1,23 @@
+[package]
+name = "kition-vector-testkit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector test helpers: fixtures, generators, render comparison, geometry assertions"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-engine = { workspace = true }
+kition-vector-render = { workspace = true }
+kition-vector-format = { workspace = true }
+kition-vector-svg = { workspace = true }
+kurbo = { workspace = true }
+serde_json = { workspace = true }
+proptest = { workspace = true }
+image = { workspace = true }

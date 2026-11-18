@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-context
+feature: vector.agent.premises
+intent: An agent's call context sets the selection without an edit, refuses what the drawing lacks, and the host puts the person's whole editing session back (selection, current layer, rows, isolation, tool, new-art paint).
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-land-11-vector, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: context}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

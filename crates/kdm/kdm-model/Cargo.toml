@@ -1,0 +1,19 @@
+[package]
+name = "kdm-model"
+description = "Bridges Kition Vector's Document to a kit.vector KDM replica (kition-sdk session)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-kit = { workspace = true, features = ["session"] }
+kition-vector-doc = { workspace = true }
+kition-vector-format = { workspace = true }
+kition-vector-svg = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

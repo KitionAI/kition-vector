@@ -1,0 +1,35 @@
+format: 1
+id: vector.agent.recover/off-artboard
+feature: vector.agent.recover
+intent: >-
+  The agent runs the kit's check, which reports an object outside every artboard and offers no fix,
+  and moves the object onto the artboard rather than deleting it (KHP Verify).
+layer: eval
+source:
+  kind: synthetic
+  from: repo:conformance/check-off-artboard.kvector
+  license: Apache-2.0
+  note: A copy of the conformance fixture for vector.off-artboard (a 40×24 rectangle at x 600 beside a 200×100 artboard), written by the vector engine.
+input: [input/stray.kvector]
+steps:
+  - task:
+      prompt: >-
+        Run the kit's check on stray.kvector and fix what it reports. Keep every object.
+      max_turns: 20
+  - inspect: { path: stray.kvector, as: after }
+  - check: { path: stray.kvector, as: diagnostics }
+expected:
+  - actual: out:diagnostics
+    compare: diagnostics
+    value: { absent: [vector.off-artboard], max_errors: 0 }
+  - actual: out:after
+    compare: values
+    collateral: true
+    value:
+      details.layers.0.children: { count: 3 }
+      details.artboards: { count: 1 }
+solution:
+  - tool: vector_run
+    args: { path: stray.kvector, steps: [{ command: select.set, params: { ids: [4] } }, { command: object.move, params: { dx: -500, dy: 0 } }] }
+since: "2026-11-17"
+timeout_s: 600

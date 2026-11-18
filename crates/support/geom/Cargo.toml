@@ -1,0 +1,19 @@
+[package]
+name = "kition-vector-geom"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector geom"
+
+[lints]
+workspace = true
+
+[dependencies]
+kurbo = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+kition-vector-testkit = { workspace = true }
+proptest = { workspace = true }
+serde_json = { workspace = true }

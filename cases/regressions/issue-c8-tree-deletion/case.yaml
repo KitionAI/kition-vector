@@ -1,0 +1,19 @@
+format: 1
+id: regressions/issue-c8-tree-deletion
+feature: vector.agent.act
+intent: >-
+  Deleting or ungrouping a container moves or deletes its children before deleting the parent,
+  preserving replica identity and collaboration under the SDK's child-first tree contract.
+layer: gate
+source:
+  kind: synthetic
+  from: C8-land-11-vector SDK adoption
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: tree_deletion }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

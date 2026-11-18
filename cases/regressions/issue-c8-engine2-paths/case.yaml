@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-paths
+feature: vector.agent.premises
+intent: "A command that edits paths acts on the paths it was given and on no part of another object: Make Compound Path refuses a group holding text instead of deleting it and frees a clipping path it takes in; Divide Objects Below, Add Anchor Points, Simplify and the area tools (knife, eraser, join, blob) leave blend keys, envelope content, clipping paths, compound members and locked or hidden members alone, and Simplify keeps a live shape it does not change; a path named by id is edited only when unlocked and shown; Cut of direct-selected anchors puts on the clipboard the segments it deletes; Align to Artboard refuses objects on no artboard."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: other_objects}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

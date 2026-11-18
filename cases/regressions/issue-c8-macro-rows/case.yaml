@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-macro-rows
+feature: vector.agent.premises
+intent: The macro-made charStyle.new and paraStyle.new read the interface language (a style made from nothing aligns on the em box in Japanese), so they declare Mode, and the editor state holds the interface language so a call puts it back.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-5, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: preferences}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-picks
+feature: vector.agent.premises
+intent: A command that picks its objects by a point or a stroke when nothing is selected (path.knife, path.eraseRegion, path.joinScrub, path.blob, shaper.select, shaper.scribble, symbol.adjust) declares that place and tells the guard what was under it at the agent's basis; a colleague's move of another object into the stroke or of the cut one out refuses the write, a move, recolour or new object elsewhere does not.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-5, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: outside}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

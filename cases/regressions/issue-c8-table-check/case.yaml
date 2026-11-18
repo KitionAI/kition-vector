@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-table-check
+feature: vector.agent.premises
+intent: The declaration rows of a seeded sample of 80 commands and of the families most likely to be wrong say what their handlers resolve, read again handler by handler.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-4, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: table_check}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

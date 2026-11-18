@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-structural
+feature: vector.agent.premises
+intent: A group, Pathfinder or clipping mask of objects a colleague moved into another group or restacked is refused as relocated; a delete or lock of a moved object is not.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-4, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: outside}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

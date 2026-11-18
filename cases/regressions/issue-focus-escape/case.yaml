@@ -1,0 +1,24 @@
+format: 1
+id: regressions/issue-focus-escape
+feature: vector.editor.display-modes
+intent: >-
+  Escape in Focus cancels first: it ends a pen path being drawn (the next clicks start a new one) or deselects, and
+  stays in Focus; only an Escape with nothing to cancel leaves it. Before, the pen took Escape only mid-drag, so an
+  Escape between clicks left Focus with the path still going on, and an Escape with a selection left Focus too.
+layer: gate
+source:
+  kind: probe
+  from: kit display modes work
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/focus.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 60
+since: "2026-11-17"

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-batch-write
+feature: vector.agent.premises
+intent: command.batch is registered as the write it is (journaled, so the kit's mutates and read-only documents treat it as one without a special case) and is journaled once with what its steps noted.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: batch_registration}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

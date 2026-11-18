@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-names
+feature: vector.agent.premises
+intent: "Renaming or deleting a pattern or a brush reaches every place that names it: layer art, symbol definitions, other patterns' tiles, graphic styles and text runs; before, only layer art followed and the rest kept naming a pattern or brush that was gone."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: loses_data}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

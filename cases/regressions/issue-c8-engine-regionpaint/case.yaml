@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-regionpaint
+feature: vector.agent.premises
+intent: "A Region Paint group is marked on the node, not by its name: renaming it keeps it live, a plain group named \"Region Paint 2\" is not one (livePaint.release refuses it and keeps its art), the mark survives a save and Expand clears it."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: named_targets}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

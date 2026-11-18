@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-places
+feature: vector.agent.premises
+intent: Each write holds what its handler reads or replaces - a property write the fields it sets, a fill the painted objects' appearance and the groups' membership, a move the geometry of what it moves, new art its layer, a write by artboard index that place.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-land-11-vector, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: places}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

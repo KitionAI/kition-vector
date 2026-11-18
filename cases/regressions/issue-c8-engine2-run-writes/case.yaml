@@ -1,0 +1,14 @@
+format: 1
+id: regressions/issue-c8-engine2-run-writes
+feature: vector.agent.premises
+intent: A step that acts on what an earlier write of the same run selected (a fill of the group object.group just made) rests on what that write leaves (the group's members), and an agent's new art rests on the layer it will go into, or none when the current layer is locked or hidden and the call will be refused.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: independent}
+  - cargo-test: {package: kition-vector-kit, test: places}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

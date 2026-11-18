@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-named-targets
+feature: vector.agent.premises
+intent: A command that takes its objects as ids (or an object id, or the agent's on, which the host writes into ids) runs on them with nothing selected, enabled as its menu item would be with those objects selected; the menu state the editor shows still reads the real selection.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: named_targets}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

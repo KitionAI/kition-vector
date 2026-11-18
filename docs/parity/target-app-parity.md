@@ -1,0 +1,82 @@
+# Target-app parity
+
+> **Last updated:** 2026-11-17 · **Source:** `features.yaml` (updated 2026-11-17) and the engine's command list
+
+Each feature in `features.yaml` records its status against what the feature promises and, where it
+has one, the target application it is compared with (Illustrator 2026 (30.x)).
+The difference column is the feature's recorded gap.
+
+| Feature | Priority | Status | Target | Difference |
+| --- | --- | --- | --- | --- |
+| `vector.agent.act` An agent adds artboards | P0 | has | — | — |
+| `vector.agent.observe` An agent reads the drawing and acts on what it finds | P0 | has | — | — |
+| `vector.agent.premises` Explicit object identities, editor context and write premises | P0 | partial | — | — |
+| `vector.agent.recover` An agent fixes what the check reports | P0 | has | — | — |
+| `vector.file.documents` Open, save, save as, save a copy, revert and close drawings | P0 | has | Illustrator 2026 (30.x) | — |
+| `vector.agent.draft` An agent works in a draft over a conversation | P1 | has | — | — |
+| `vector.artboard.manage` Artboards | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.clipboard.formats` Clipboard in SVG, PDF, PNG and text | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.color.recolor` Recolor Artwork, reduce and randomize colours | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.document.inspect` Document setup, units, colour mode and inspection | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.document.text` The drawing's words as plain text for search (document.text), artboard by artboard in reading order | P1 | has | — | — |
+| `vector.edit.colors` Edit Colors: blend, invert, adjust and convert artwork colours | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.edit.history` Undo, redo, cut, copy, paste and clear | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.edit.misc` Find and replace, spelling, keyboard shortcuts and other Edit menu commands | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.editor.display-modes` The editor in each display mode: Classic gives way before stepping down, Single line does not repeat the rail's tools, and Escape cancels first in Focus | P1 | has | — | — |
+| `vector.effect.live` Live effects | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.file.export` Export to PDF, DXF, EPS, screens, web and Office; format, PDF and print settings; package | P1 | partial | Illustrator 2026 (30.x) | File › Export writes SVG, PDF and PNG through the host (web/tests/flow.mjs). Export for Screens, Export Selection, Save for Office and Save as Template have no editor dialog that writes through the host, so the editor's menus leave them out; agents still run them. |
+| `vector.file.templates` Templates, new-document presets, placed files, file info and recovery data | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.graph.data` Graphs | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.guide.manage` Guides | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.image.trace` Image Trace | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.layer.panel` Layers and sublayers | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.links.placed` Placed images and links | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.arrange` Arrange objects in stacking order | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.blend` Blends | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.clipping-mask` Clipping masks | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.envelope` Envelope distort | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.mesh` Gradient meshes | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.path` Object ▸ Path: join, average, outline stroke, offset, simplify and clean up | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.pathfinder` Pathfinder: unite, minus front, intersect, exclude, divide and the other shape modes | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.pattern` Pattern editing mode | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.repeat` Repeat: radial, grid and mirror | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.slice` Slices | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.text-wrap` Text wrap around objects | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.transform` Transform, group, lock, hide, expand and other Object menu commands | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.output.web` Save for Web presets, asset export and CSS | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.appearance` Appearance panel: multiple fills and strokes | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.brushes` Brushes | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.color` Colour guide, colour profiles, colour conversion and gamut warning | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.fill-stroke` Fill and stroke, swatches applied to them, and freeform gradients | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.graphic-styles` Graphic styles | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.patterns` Pattern swatches | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.region-paint` Shape Builder and Region Paint | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.stroke` Stroke options and variable width profiles | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.swatches` Swatches, colour groups and swatch libraries | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.paint.transparency` Opacity, blending modes and opacity masks | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.path.edit` Draw paths with the Pen and edit anchors and direction handles | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.perspective.grid` Perspective grid and drawing on perspective planes | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.select.basic` Select all, none, inverse, next above or below, and saved selections | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.select.object` Select objects by kind (brush strokes, clipping masks, stray points, text objects …) | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.select.same` Select objects with the same fill, stroke, appearance or other attribute | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.shape.primitives` Draw rectangles, ellipses, polygons, stars, flares and line segments | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.symbol.manage` Symbols | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.text.edit` Create and edit point, area and path type; character and paragraph formats | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.text.styles` Character and paragraph styles | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.text.tabs` Tab stops | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.text.thread` Threaded text frames | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.type.convert` Type orientation, outlines, case, smart punctuation and type conversion | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.view.display` View modes, proofing, overprint and separations previews, views | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.app.preferences` Preferences, batch commands and plug-ins | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.data.variables` Variables and data sets | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.library.assets` Libraries | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.object.attributes` Object attributes (overprint, image map, URL) | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.output.flattener` Transparency flattener presets | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.output.pdf-presets` PDF presets | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.output.print` Print setup, preview and presets | P2 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+
+| Priority | has | partial | missing |
+| --- | ---: | ---: | ---: |
+| P0 | 4 | 1 | 0 |
+| P1 | 3 | 51 | 0 |
+| P2 | 0 | 7 | 0 |

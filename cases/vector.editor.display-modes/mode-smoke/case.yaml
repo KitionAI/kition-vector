@@ -1,0 +1,24 @@
+format: 1
+id: vector.editor.display-modes/mode-smoke
+feature: vector.editor.display-modes
+intent: >-
+  The editor shows each display mode it is asked for, enters and leaves Focus by key and from the mode menu, keeps
+  Classic at the widths Kition gives a kit (1165 and 749 px; its ribbon gives way instead), lets no Focus bar cover a
+  kit control, and fills Single line's Home row with Home's own commands, not the rail's tools (maintainer decision D3).
+layer: gate
+source:
+  kind: probe
+  from: kit display modes work
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/modes.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 60
+since: "2026-11-17"

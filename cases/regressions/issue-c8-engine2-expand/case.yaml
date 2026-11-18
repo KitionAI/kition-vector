@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-expand
+feature: vector.agent.premises
+intent: Object → Expand whose part fails (an effect whose expansion would leave the canvas, on a stroked path) is refused as a whole and changes nothing, no undo step: the stroke is not outlined while the effect stays live.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: loses_data}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

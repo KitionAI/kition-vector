@@ -1,0 +1,23 @@
+format: 1
+id: regressions/issue-unknown-params
+feature: vector.agent.recover
+intent: >-
+  Every command with a parameter schema refuses a key its schema does not name, saying which and
+  the parameter it resembles, before it changes anything (engine rule E7a, kit requirement AX15):
+  201 commands ran with a misspelled key and ignored it, and the Stroke panel's weight field sent
+  `width`, which stroke.set never read.
+layer: gate
+source:
+  kind: probe
+  from: unknown-parameter sweep (sweep of the pinned engines)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test:
+      package: kition-vector-kit
+      test: unknown_params
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

@@ -1,0 +1,20 @@
+format: 1
+id: regressions/issue-deterministic-save
+feature: vector.agent.act
+intent: >-
+  A drawing built by the same commands saves the same bytes when SOURCE_DATE_EPOCH is set (a
+  showcase sample, a gate case): the document's creation time is the epoch. Before, file.new
+  stamped the wall clock into metadata.created, so every build of a sample saved other bytes.
+layer: gate
+source:
+  kind: probe
+  from: kition-showcase round-2 rebuild (vector samples saved other bytes on every build)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: deterministic_save }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

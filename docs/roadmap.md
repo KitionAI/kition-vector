@@ -1,0 +1,10 @@
+# Roadmap
+
+> **Last updated:** 2026-11-17 · **Source:** `features.yaml` (updated 2026-11-17) and the engine's command list
+
+Open work on Kition Vector, in order. Each item names where its detail lives.
+
+1. **Prove the P0 features end to end:** `vector.agent.premises`: each needs a case that shows it working in the editor and surviving save and reopen before it is `has`. Detail in [gaps.md](gaps.md).
+2. **Then the P1 features:** `vector.artboard.manage`, `vector.clipboard.formats`, `vector.color.recolor`, `vector.document.inspect`, `vector.edit.colors`, `vector.edit.history`, `vector.edit.misc`, `vector.effect.live`, `vector.file.export`, `vector.file.templates`, `vector.graph.data`, `vector.guide.manage`, `vector.image.trace`, `vector.layer.panel`, `vector.links.placed`, `vector.object.arrange`, `vector.object.blend`, `vector.object.clipping-mask`, `vector.object.envelope`, `vector.object.mesh`, `vector.object.path`, `vector.object.pathfinder`, `vector.object.pattern`, `vector.object.repeat`, `vector.object.slice`, `vector.object.text-wrap`, `vector.object.transform`, `vector.output.web`, `vector.paint.appearance`, `vector.paint.brushes`, `vector.paint.color`, `vector.paint.fill-stroke`, `vector.paint.graphic-styles`, `vector.paint.patterns`, `vector.paint.region-paint`, `vector.paint.stroke`, `vector.paint.swatches`, `vector.paint.transparency`, `vector.path.edit`, `vector.perspective.grid`, `vector.select.basic`, `vector.select.object`, `vector.select.same`, `vector.shape.primitives`, `vector.symbol.manage`, `vector.text.edit`, `vector.text.styles`, `vector.text.tabs`, `vector.text.thread`, `vector.type.convert`, `vector.view.display`.
+3. **Then the P2 features:** `vector.app.preferences`, `vector.data.variables`, `vector.library.assets`, `vector.object.attributes`, `vector.output.flattener`, `vector.output.pdf-presets`, `vector.output.print`.
+4. **Keep the catalogue complete:** every new engine command joins a feature in `features.yaml` with a case.

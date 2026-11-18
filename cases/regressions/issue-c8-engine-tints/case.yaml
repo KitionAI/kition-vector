@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-tints
+feature: vector.agent.premises
+intent: An edit of a global swatch rests on the tint swatches made from it (they follow its colour), not on the whole swatch table; another program's rename of its tint refuses it, a rename of another swatch does not.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: independent}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

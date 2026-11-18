@@ -1,0 +1,39 @@
+format: 1
+id: vector.agent.act/back-artboard
+feature: vector.agent.act
+intent: >-
+  The agent adds an artboard of the same size as the first and names it, leaving the existing
+  artboard and artwork where they are.
+layer: eval
+source:
+  kind: synthetic
+  from: repo:conformance/basic.kvector
+  license: Apache-2.0
+  note: A copy of the conformance drawing the vector engine writes (one 200×100 artboard; an 80×50 rectangle and a 50×50 ellipse).
+input: [input/shapes.kvector]
+steps:
+  - task:
+      prompt: >-
+        In shapes.kvector, add a second artboard named Back, the same size as the first one, to the
+        right of it.
+      max_turns: 20
+  - inspect: { path: shapes.kvector, as: after }
+expected:
+  - actual: out:after
+    compare: values
+    value:
+      details.artboards: { count: 2 }
+      details.artboards.1.name: Back
+      details.artboards.1.width: 200
+      details.artboards.1.height: 100
+  - actual: out:after
+    compare: values
+    collateral: true
+    value:
+      details.artboards.0: { name: Artboard 1, width: 200, height: 100, x: 0, y: 0 }
+      details.layers.0.children: { count: 2 }
+solution:
+  - tool: vector_run
+    args: { path: shapes.kvector, steps: [{ command: artboard.new, params: { name: Back, width: 200, height: 100 } }] }
+since: "2026-11-17"
+timeout_s: 600

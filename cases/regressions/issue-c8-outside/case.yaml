@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-outside
+feature: vector.agent.premises
+intent: Another program rewrites the drawing between the agent's observe and its write - an unrelated change applies and others names only it, the same field or a deleted target refuses, a swatch name swapped or an artboard reordered refuses a write by that name or index; 50 unrelated rounds refuse none under premise and all under epoch; the seeded mixed table has no write applied wrongly and none refused falsely.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-land-11-vector, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector, test: outside}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

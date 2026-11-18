@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-env-creates
+feature: vector.agent.premises
+intent: An object a model batch creates with its scalar fields alone (as kit-env's create makes it) in every list of the drawing (swatches, colour groups, graphic, character and paragraph styles, symbols, patterns, artboards, slices, the layer tree) is taken, gets its tool id in the batch, and its receipt is what a read of the saved file tells; an export asset of no objects is refused; the built-in swatches and images are read-only.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-5, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: kit_env_creates}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

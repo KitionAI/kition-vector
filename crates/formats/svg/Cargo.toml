@@ -1,0 +1,38 @@
+[package]
+name = "kition-vector-svg"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector SVG import and export"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-effects = { workspace = true }
+kition-vector-brush = { workspace = true }
+kition-vector-text = { workspace = true }
+kurbo = { workspace = true }
+usvg = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+# Live effect params read from filters.
+serde_json = { workspace = true }
+# SVGZ (gzip, pure-Rust backend: builds for wasm).
+flate2 = { workspace = true }
+image = { workspace = true }
+# Colour / transform / length parsing for the <text> fallback (Apache-2.0; already used by usvg).
+svgtypes = "0.16"
+
+[dev-dependencies]
+# Reading embedded font subsets back.
+skrifa = { workspace = true }
+# A variable font built in code (no font file is committed).
+kition-vector-text = { workspace = true, features = ["test-fonts"] }
+resvg = { version = "0.45", default-features = false }
+kition-vector-testkit = { workspace = true }
+proptest = { workspace = true }
+image = { workspace = true }

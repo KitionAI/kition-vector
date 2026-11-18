@@ -1,0 +1,38 @@
+format: 1
+id: vector.agent.observe/wider-shape
+feature: vector.agent.observe
+intent: >-
+  The agent compares the shapes' bounds to find the wider one and recolours only that one, using
+  the object ids the kit reports.
+layer: eval
+source:
+  kind: synthetic
+  from: repo:conformance/basic.kvector
+  license: Apache-2.0
+  note: A copy of the conformance drawing the vector engine writes (one 200×100 artboard; an 80×50 rectangle and a 50×50 ellipse).
+input: [input/shapes.kvector]
+steps:
+  - task:
+      prompt: >-
+        In shapes.kvector, fill whichever shape is wider, the rectangle or the ellipse, with red
+        (#ff0000). Change nothing else.
+      max_turns: 20
+  - inspect: { path: shapes.kvector, as: after }
+expected:
+  - actual: out:after
+    compare: values
+    value:
+      details.layers.0.children: { any: { kind: Rectangle, fill: "#ff0000" } }
+  - actual: out:after
+    compare: values
+    collateral: true
+    value:
+      details.layers.0.children: { count: 2 }
+      details.layers.0.children.0.kind: Ellipse
+      details.layers.0.children.0.fill: "#ffffff"
+      details.layers.0.children.1.bounds: { x: 20, y: 20, width: 80, height: 50 }
+solution:
+  - tool: vector_run
+    args: { path: shapes.kvector, steps: [{ command: paint.setFill, params: { ids: [2], color: "#ff0000" } }] }
+since: "2026-11-17"
+timeout_s: 600

@@ -1,0 +1,45 @@
+[package]
+name = "kition-vector-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Kition Vector engine: sessions, history, selection, the command registry"
+
+[lints]
+workspace = true
+
+[dependencies]
+kition-vector-geom = { workspace = true }
+kition-vector-color = { workspace = true }
+kition-vector-doc = { workspace = true }
+kition-vector-tools = { workspace = true }
+kition-vector-text = { workspace = true }
+kition-vector-render = { workspace = true }
+kition-vector-pathops = { workspace = true }
+kition-vector-brush = { workspace = true }
+kition-vector-trace = { workspace = true }
+kition-vector-svg = { workspace = true }
+kition-vector-format = { workspace = true }
+kition-vector-pdf = { workspace = true }
+kition-vector-cad = { workspace = true }
+kition-vector-eps = { workspace = true }
+kition-vector-metafile = { workspace = true }
+kition-vector-plugins = { workspace = true }
+kition-vector-affinity = { workspace = true }
+kdm-model = { workspace = true }
+image = { workspace = true }
+flate2 = { workspace = true }
+kurbo = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+kition-vector-affinity = { workspace = true, features = ["synth"] }
+crc32fast = { workspace = true }
+kition-vector-testkit = { workspace = true }
+proptest = { workspace = true }
+wat = { workspace = true }
+# Zstandard streams for the Illustrator editing data fuzz tests.
+ruzstd = { workspace = true }

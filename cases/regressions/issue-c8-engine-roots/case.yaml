@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-roots
+feature: vector.agent.premises
+intent: Explicit ids of object.transform, object.distort, object.makePixelPerfect, object.pattern.make, object.repeat.*, symbol.new/update and transparency.makeOpacityMask are reduced to roots as the selection is (a group and its child act once, a compound member stands for its compound) and an unknown id or a layer is refused.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: named_targets}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

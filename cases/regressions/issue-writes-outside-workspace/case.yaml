@@ -1,0 +1,28 @@
+format: 1
+id: regressions/issue-writes-outside-workspace
+feature: vector.file.documents
+intent: >-
+  The headless kit writes, deletes and lists nothing outside its workspace (KHP A28, A29, section
+  10.6): whatever an agent runs, directly, in command.batch or as a model.batch command, nothing
+  appears in the process's current, home or temporary folder, and a folder outside is neither
+  changed nor listed. Preferences that name folders are refused, Data Recovery keeps no copies by
+  path, and a batch step may not run what the agent may not run directly. An audit found an agent
+  could set recoveryFolder and delete an unrelated file with file.recovery.discard inside a batch,
+  write exports, saves and templates anywhere through both batches, and list plug-in folders.
+layer: gate
+tags: [headless, security]
+source:
+  kind: probe
+  from: workspace escape audit (writes outside the workspace)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test:
+      package: kition-vector
+      test: workspace_only
+      filter: agent_commands_write_delete_and_list_nothing_outside_the_workspace
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

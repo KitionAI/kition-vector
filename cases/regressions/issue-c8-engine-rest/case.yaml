@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-rest
+feature: vector.agent.premises
+intent: "Smaller defects of the same kinds: envelope mesh point index validated, textWrap.options touches only wrap objects and only given fields, reflect/shear refuse unknown axes, charStyle.apply refuses a range without id and a non-text id, thread frames keep the path's props, type in a path refuses compound members and clipping paths, pattern rename refuses a swatch name, symbol.adjust refuses an unknown style, graphicStyle.addFromLibrary applies to the id given, graph.setData/setType refuse a non-graph id, edit.redo and text.tabs.clear errors name themselves."
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: named_targets}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

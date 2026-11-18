@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-regionpaint-files
+feature: vector.agent.premises
+intent: A Region Paint group goes through SVG with its mark (data-kition-region-paint, written when its hidden sources go with it) and comes back as one; a .kvector file written before the mark existed opens with its art as it was and the group a plain group (no reader for old files).
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: live_paint_files}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

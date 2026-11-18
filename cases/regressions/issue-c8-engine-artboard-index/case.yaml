@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine-artboard-index
+feature: vector.agent.premises
+intent: artboard.setProps edits the artboard its index names and refuses a missing or non-integer index (it edited artboard 1); Fit to Artwork Bounds and Fit to Selected Art refuse an agent's call without an index and keep artboard 1 as the person's menu default.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-kit, test: artboard_index}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

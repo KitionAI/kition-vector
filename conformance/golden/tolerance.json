@@ -1,0 +1,5 @@
+{
+  "maxChannelDelta": 2,
+  "maxDifferentPixels": 100,
+  "note": "The engine's own renderer draws the preview; anti-aliased edges may differ by a step between platforms, on at most 0.5% of the 200 x 100 picture's pixels."
+}

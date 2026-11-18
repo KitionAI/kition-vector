@@ -1,0 +1,21 @@
+format: 1
+id: vector.document.text/reading-order
+feature: vector.document.text
+intent: >-
+  document.text answers the words of a drawing's visible type objects: an SVG's two text lines top
+  to bottom, artboards in order as labelled parts read top to bottom then left to right, the
+  pasteboard last, hidden type left out; the limit truncates by Unicode scalar values, every part
+  lies inside the text, reading changes neither the revision, the dirty state nor the saved bytes,
+  and an empty drawing answers no text.
+layer: unit
+source:
+  kind: synthetic
+  from: examples/dusk-poster.svg and drawings made with text.create and artboard.new
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: document_text }
+expected:
+  - actual: out:exit
+    compare: exit
+since: "2026-11-17"

@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-trace
+feature: vector.agent.premises
+intent: An Image Trace object is the group that carries its trace (Node::trace), not any group named "Image Trace"; imageTrace.make traces one image at a time and refuses objects it would not trace, and release, expand and setView refuse an object named that is no Image Trace object.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: other_objects}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"

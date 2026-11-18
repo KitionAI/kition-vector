@@ -1,0 +1,8 @@
+*~
+plan/
+/target
+/corpus
+/log
+.DS_Store
+# A kition-fonts checkout for the optional KITION_FONTS_DIR build input
+/kition-fonts

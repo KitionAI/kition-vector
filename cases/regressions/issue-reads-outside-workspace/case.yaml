@@ -1,0 +1,29 @@
+format: 1
+id: regressions/issue-reads-outside-workspace
+feature: vector.links.placed
+intent: >-
+  A drawing's links are data: opening, pasting, rendering, checking, exporting and packaging a
+  drawing read no file outside the workspace and fetch nothing over the network (KHP A29, A37,
+  A42). Links resolve only through the host, by a path relative to the drawing inside the
+  workspace; file URLs, absolute, UNC and drive paths, `..` out of the workspace, links out of it,
+  hidden paths and remote URLs stay unresolved, and inspect and the check (vector.missing-link)
+  say so. XML entities, DTDs and stylesheets that name files are never read. An audit found that
+  a pasted SVG linking a file outside put its bytes in file.package's zip, and that opening a
+  drawing drew the files it linked to wherever they were.
+layer: gate
+tags: [headless, security]
+source:
+  kind: probe
+  from: workspace escape audit (reads outside the workspace)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test:
+      package: kition-vector
+      test: workspace_only
+      filter: documents_and_links_read_nothing_outside_the_workspace
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-17"

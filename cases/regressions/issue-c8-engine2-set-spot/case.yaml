@@ -1,0 +1,13 @@
+format: 1
+id: regressions/issue-c8-engine2-set-spot
+feature: vector.agent.premises
+intent: swatch.setSpot on a Lab swatch while the Spot Colors options use CMYK values relinks the art linked to it to the colour it now shows and prints from, as swatch.edit {spot} does; before, only the flags changed.
+layer: gate
+dimension: data-safety
+source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-engine, test: loses_data}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-17"
