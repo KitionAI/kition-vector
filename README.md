@@ -118,15 +118,15 @@ Nothing is compiled: you need neither Rust nor the Kition app. Install `kition`,
 agent in the folder:
 
 ```sh
-curl -fsSL https://github.com/KitionAI/kition-sdk/releases/latest/download/install.sh | sh
-# Claude Code, in the folder:
-claude mcp add kition -- ~/.kition/bin/kition mcp --workspace "$PWD"
+npm install -g @kition/cli        # Node.js 20 or later; gives the kition command
+kition agent add claude           # or codex, cursor: registers kition's MCP server
 ```
 
-On Windows, install it with
-`irm https://github.com/KitionAI/kition-sdk/releases/latest/download/install.ps1 | iex`. With
-Node.js 20 or later you can skip the install:
-`claude mcp add kition -- npx -y @kition/kits-mcp --workspace "$PWD"`.
+Without installing it:
+`claude mcp add kition -- npx -y @kition/cli mcp --workspace "$PWD"`. Without Node.js, install
+`kition` with `curl -fsSL https://github.com/KitionAI/kition-sdk/releases/latest/download/install.sh | sh`
+(Windows: `irm https://github.com/KitionAI/kition-sdk/releases/latest/download/install.ps1 | iex`)
+and run the same `kition agent add`.
 
 `kition` holds no kit. The first time the agent opens a `.kvector` file, through the `kit_inspect`
 tool the server offers until Vector is installed, `kition` downloads Vector's headless executable
