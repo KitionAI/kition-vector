@@ -1,18 +1,22 @@
 name: Package
 
-# Builds this kit's package on GitHub and publishes it as the `package-v<version>` Release of this
-# repository, with Kition's reusable workflow (KitionAI/kition, .github/workflows/kit-package.yml;
-# docs/kits.md, section 4b, there). Start it by hand: gh workflow run package.yml
+# Builds this kit's package on GitHub and publishes it on npm (@kition/kit-vector-ui and
+# @kition/kit-vector-<platform>), with Kition's reusable workflow (KitionAI/kition,
+# .github/workflows/kit-package.yml; docs/kits.md, section 4b, there). Start it by hand:
+# gh workflow run package.yml
 # A version is published once: bump `version` in kit.json to publish a change.
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  id-token: write
 
 jobs:
   package:
     uses: KitionAI/kition/.github/workflows/kit-package.yml@main
     with:
       kit: vector
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
