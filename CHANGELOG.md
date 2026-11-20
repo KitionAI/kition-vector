@@ -3,6 +3,14 @@
 Changes to Kition Vector, newest first. A version is the kit package version in `kit.json`;
 each package is published with a `package-v<version>` tag.
 
+## 0.1.1
+
+- `kit.json` declares the engine's editor state as `engine.editorState`, the same list as the
+  engine's `EDITOR_STATE`, so a host that does not run the engine reads `inspect()` without it.
+- The package is built and published on GitHub with Kition's `kit-package.yml`.
+- The README gives the kit to an agent with `kition`, no build: `npm install -g @kition/cli` and
+  `kition agent add`; it links KHP at `kitharness/kitharness`.
+
 ## 0.1.0
 
 First public release of the source, under the Apache License 2.0. It contains:

@@ -167,7 +167,7 @@ The agent read the landscape's five layers and their objects, then added a squar
 
 ## Maturity
 
-Version 0.1.0 · KHP 1.0, conformance level `basic`.
+Version 0.1.1 · KHP 1.0, conformance level `basic`.
 
 | Works today | Partly there | Not yet |
 | --- | --- | --- |
