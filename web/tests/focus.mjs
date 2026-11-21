@@ -4,6 +4,11 @@ import assert from 'node:assert/strict'
 import { chromium, webkit } from 'playwright'
 import { createServer } from 'vite'
 
+// Playwright's WebKit reports a Mac (navigator.platform MacIntel, from its Safari user agent) on
+// every operating system, so on Linux the editor (kit-editor's isMac) waits for Cmd while
+// ControlOrMeta presses Ctrl. Without the override the page reports the platform it runs on.
+process.env.PLAYWRIGHT_NO_UA_PLATFORM = '1'
+
 const which = process.argv[2] ?? 'chromium'
 const server = await createServer({ configFile: new URL('../vite.config.ts', import.meta.url).pathname, server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' })
 await server.listen()
