@@ -53,11 +53,14 @@ try {
   // The next click starts a new path rather than going on with the ended one.
   await page.mouse.click(region.x + region.width * 0.4, region.y + region.height * 0.85)
   await page.mouse.click(region.x + region.width * 0.5, region.y + region.height * 0.9)
-  await until('the next clicks start a new path', async () => (await paths()) === before + 2)
-  await page.keyboard.press('Escape')
-  // The editor's state follows the engine's answer to the click a moment later.
+  await until('the next clicks start a new path', async () => (await selected()) === 1 && (await paths()) === before + 2)
+  // The editor takes Escape only while its own state (the engine's answer to the clicks, which
+  // reaches it a moment after the engine has the path) shows a selection; nothing in Focus shows
+  // that state, so this waits as the first path does.
   await page.waitForTimeout(300)
+  await page.keyboard.press('Escape')
   await until('Escape ends that path too', async () => (await selected()) === 0)
+  assert.equal(await mode(), 'focus', 'an Escape that ended the second path does not leave Focus')
 
   // A selection is something to cancel: the first Escape deselects, the second leaves Focus.
   await page.keyboard.press('v')
