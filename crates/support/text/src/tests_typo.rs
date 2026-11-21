@@ -266,8 +266,9 @@ fn every_line_composer_is_more_even() {
 /// paragraph with a Japanese comma or full stop is composed line by line.
 #[test]
 fn burasagari_keeps_the_every_line_composer_for_latin_text() {
-    // A measure where the two composers break the copy differently.
-    let mut t = area(&COPY.repeat(2), style(12.0), Rect::new(0.0, 0.0, 300.0, 4000.0), Justify::JustifyLeft);
+    // A measure where the two composers break the copy differently (with the bundled Source Sans 3,
+    // 300 pt breaks it the same both ways at 12 pt; 330 pt does not).
+    let mut t = area(&COPY.repeat(2), style(12.0), Rect::new(0.0, 0.0, 330.0, 4000.0), Justify::JustifyLeft);
     let ends = |t: &TextObject, c: Composer| {
         let l = layout_with(db(), t, &LayoutOptions { composer: Some(c), ..Default::default() });
         l.lines.iter().map(|li| li.glyph_end).collect::<Vec<_>>()
