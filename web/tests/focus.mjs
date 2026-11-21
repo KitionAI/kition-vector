@@ -4,16 +4,15 @@ import assert from 'node:assert/strict'
 import { chromium, webkit } from 'playwright'
 import { createServer } from 'vite'
 
-// Playwright's WebKit reports a Mac (navigator.platform MacIntel, from its Safari user agent) on
-// every operating system, so on Linux the editor (kit-editor's isMac) waits for Cmd while
-// ControlOrMeta presses Ctrl. Without the override the page reports the platform it runs on.
-process.env.PLAYWRIGHT_NO_UA_PLATFORM = '1'
-
 const which = process.argv[2] ?? 'chromium'
 const server = await createServer({ configFile: new URL('../vite.config.ts', import.meta.url).pathname, server: { port: 0, host: '127.0.0.1' }, logLevel: 'error' })
 await server.listen()
 const browser = await (which === 'webkit' ? webkit : chromium).launch()
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+// The editor takes Cmd or Ctrl from navigator.platform (kit-editor's isMac); Playwright's
+// ControlOrMeta follows the operating system running the test, and the two disagree for WebKit on
+// Linux, which reports a Mac platform.
+const primaryKey = async () => ((await page.evaluate(() => /Mac|iPhone|iPad/i.test(navigator.platform))) ? 'Meta' : 'Control')
 const kit = page.frameLocator('#kit')
 const app = kit.locator('.kui-app')
 const origin = `http://127.0.0.1:${server.httpServer.address().port}`
@@ -39,7 +38,7 @@ try {
   await page.waitForFunction(() => document.getElementById('status')?.textContent?.includes(' open in '), null, { timeout: 60_000 })
   await page.waitForTimeout(800)
   await app.focus()
-  await page.keyboard.press('ControlOrMeta+Backslash')
+  await page.keyboard.press(`${await primaryKey()}+Backslash`)
   await until('Cmd+\\ enters Focus', async () => (await mode()) === 'focus')
   const region = await kit.getByTestId('vector-canvas-region').boundingBox()
   const before = await paths()
@@ -66,7 +65,7 @@ try {
 
   // A selection is something to cancel: the first Escape deselects, the second leaves Focus.
   await page.keyboard.press('v')
-  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.press(`${await primaryKey()}+a`)
   await until('Cmd+A selects everything', async () => (await selected()) > 1)
   await page.waitForTimeout(300)
   await page.keyboard.press('Escape')
