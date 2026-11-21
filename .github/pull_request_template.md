@@ -10,7 +10,7 @@ Describe the change and why it is useful.
 
 ## Verification
 
-- [ ] `cargo xtask ci` exits 0
+- [ ] `cargo fmt --all -- --check` exits 0
 - [ ] Added or updated a case (`cases/`) or a test, or explained why one was not needed; a bug fix
       starts with a failing case under `cases/regressions/`
 - [ ] A new feature has an entry in `features.yaml`
