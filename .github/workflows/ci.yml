@@ -1,0 +1,26 @@
+name: CI
+
+# Kition's kit CI (KitionAI/kition .github/workflows/kit-ci.yml): the engine build, the Rust
+# checks, and every test script as its own job. Written by Kition's scripts/kit-ci-install.mjs.
+# Developers push to ci/agent with Kition's scripts/kit-ci.sh and land on main when it passes.
+
+on:
+  push:
+    branches: ['ci/**']
+  pull_request:
+  schedule:
+    - cron: '45 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: KitionAI/kition/.github/workflows/kit-ci.yml@main
+    with:
+      kit: vector
