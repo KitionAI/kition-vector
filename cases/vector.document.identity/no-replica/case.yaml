@@ -1,0 +1,22 @@
+format: 1
+id: vector.document.identity/no-replica
+feature: vector.document.identity
+intent: >-
+  Through the real kition-vector process: a .kvector embeds no replica (the kit makes one under a
+  new id each time it opens a file), so document.identity answers no docId for a drawing the kit
+  made and edited, or for a byte copy of it; document.fork writes the same bytes to a new file
+  with no docId, leaves the source unchanged, and never replaces an existing file. The headless
+  kit lists the feature document.identity.
+layer: gate
+tags: [headless]
+source:
+  kind: synthetic
+  from: bindings/headless/tests/identity.rs (a_drawing_carries_no_identity_and_forks_as_the_same_bytes)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector, test: identity, filter: a_drawing_carries_no_identity_and_forks_as_the_same_bytes }
+expected:
+  - actual: out:exit
+    compare: exit
+since: "2026-11-20"

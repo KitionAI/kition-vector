@@ -1,6 +1,6 @@
 {
   "name": "kition-vector-ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "The Vector kit's own editor (Kition platform `docs/platform/kits/ui.md`), embedded by hosts over the Kit UI protocol.",
   "license": "Apache-2.0",

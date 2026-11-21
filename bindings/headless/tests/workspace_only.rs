@@ -137,7 +137,9 @@ impl Agent {
     fn new(workspace: &Path) -> Self {
         // What the headless kit's `main` does before it serves.
         kition_vector_kit::hosting::set_files_only();
-        let mut kit = Headless::<VectorDocument>::with_replica_port(KitInfo::from_manifest(include_str!("../../../kit.json"), &[], &[]).unwrap());
+        let mut kit = Headless::<VectorDocument>::with_replica_port(
+            KitInfo::from_manifest(include_str!("../../../kit.json"), &[], kition_vector_kit::EDITOR_STATE).unwrap(),
+        );
         let folder = HostFolder::new(workspace).unwrap();
         kit.set_host(folder.host());
         Self { kit, folder, seen: Vec::new(), problems: Vec::new() }

@@ -3,6 +3,15 @@
 Changes to Kition Vector, newest first. A version is the kit package version in `kit.json`;
 each package is published with a `package-v<version>` tag.
 
+## 0.1.2
+
+- A host asks what document a drawing file is (`document.identity`) and copies one as a new
+  document (`document.fork`), Kit Process Protocol section 5.6 (kition-sdk 6672663). A
+  `.kvector` embeds no replica (the kit makes one under a new id each time it opens a file), so a
+  drawing carries no document id and its fork is the same bytes.
+- The headless program speaks Kit Process Protocol version 1 (`headless.protocol` is
+  `kition-kit/1`), as hosts on kition-sdk from bb1b07b require.
+
 ## 0.1.1
 
 - `kit.json` declares the engine's editor state as `engine.editorState`, the same list as the

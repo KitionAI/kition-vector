@@ -1,6 +1,6 @@
 format: 1
 kit: vector
-updated: "2026-11-17"
+updated: "2026-11-20"
 gate_budget_s: 600
 protected: []
 features:
@@ -83,6 +83,14 @@ features:
     paths: [bindings/wasm/src/document_text.rs, bindings/wasm/src/lib.rs]
     cases: [vector.document.text/reading-order]
     since: "2026-11-17"
+  - id: vector.document.identity
+    title: "A host reads the document id a .kvector carries (none: it embeds no replica) and forks it as the same bytes (document.identity, document.fork; Kit Process Protocol 5.6)"
+    dimension: [platform, data-safety]
+    priority: P1
+    status: has
+    paths: [bindings/headless/src/main.rs, bindings/headless/tests/identity.rs, kit.json]
+    cases: [vector.document.identity/no-replica]
+    since: "2026-11-20"
   - id: vector.document.inspect
     title: "Document setup, units, colour mode and inspection"
     dimension: [function]

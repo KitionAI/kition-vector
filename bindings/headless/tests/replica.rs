@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 const NAME: &str = "Logo.kvector";
 
 fn kit() -> Headless<VectorDocument> {
-    Headless::with_replica_port(KitInfo::from_manifest(include_str!("../../../kit.json"), &[], &[]).unwrap())
+    Headless::with_replica_port(KitInfo::from_manifest(include_str!("../../../kit.json"), &[], kition_vector_kit::EDITOR_STATE).unwrap())
 }
 
 const BASE64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
