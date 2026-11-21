@@ -3,11 +3,6 @@ import { chromium, webkit } from 'playwright'
 import { createServer } from 'vite'
 import { runModeSmoke } from '@kition/kit-dev-host/mode-smoke'
 
-// Playwright's WebKit reports a Mac (navigator.platform MacIntel, from its Safari user agent) on
-// every operating system, so on Linux the editor (kit-editor's isMac) waits for Cmd while
-// ControlOrMeta presses Ctrl. Without the override the page reports the platform it runs on.
-process.env.PLAYWRIGHT_NO_UA_PLATFORM = '1'
-
 await runModeSmoke({
   kit: 'kit.vector',
   config: new URL('../vite.config.ts', import.meta.url).pathname,

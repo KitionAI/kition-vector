@@ -9,10 +9,6 @@ const server = await createServer({ configFile: new URL('../vite.config.ts', imp
 await server.listen()
 const browser = await (which === 'webkit' ? webkit : chromium).launch()
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-// The editor takes Cmd or Ctrl from navigator.platform (kit-editor's isMac); Playwright's
-// ControlOrMeta follows the operating system running the test, and the two disagree for WebKit on
-// Linux, which reports a Mac platform.
-const primaryKey = async () => ((await page.evaluate(() => /Mac|iPhone|iPad/i.test(navigator.platform))) ? 'Meta' : 'Control')
 const kit = page.frameLocator('#kit')
 const app = kit.locator('.kui-app')
 const origin = `http://127.0.0.1:${server.httpServer.address().port}`
@@ -38,7 +34,7 @@ try {
   await page.waitForFunction(() => document.getElementById('status')?.textContent?.includes(' open in '), null, { timeout: 60_000 })
   await page.waitForTimeout(800)
   await app.focus()
-  await page.keyboard.press(`${await primaryKey()}+Backslash`)
+  await page.keyboard.press('ControlOrMeta+Backslash')
   await until('Cmd+\\ enters Focus', async () => (await mode()) === 'focus')
   const region = await kit.getByTestId('vector-canvas-region').boundingBox()
   const before = await paths()
@@ -65,7 +61,7 @@ try {
 
   // A selection is something to cancel: the first Escape deselects, the second leaves Focus.
   await page.keyboard.press('v')
-  await page.keyboard.press(`${await primaryKey()}+a`)
+  await page.keyboard.press('ControlOrMeta+a')
   await until('Cmd+A selects everything', async () => (await selected()) > 1)
   await page.waitForTimeout(300)
   await page.keyboard.press('Escape')
