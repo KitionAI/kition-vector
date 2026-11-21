@@ -6,9 +6,13 @@
 - Tests are the spec. Read `docs/quality.md` and the feature catalogue (`features.yaml`)
   before changing behaviour. When code and a case disagree, the case wins unless a maintainer
   approves changing the case.
-- Before you finish any task, run `cargo xtask ci`. If it fails, the task is not done. Claude Code
+- Before you finish any task, run `cargo fmt --all -- --check`. If it fails, the task is not done. Claude Code
   runs it for you through the Stop hook; agents without hooks (Codex) run it by hand and
   report the real exit code.
+- Where the repository has `.github/workflows/ci.yml` (the kits), the full checks and tests run on
+  GitHub, not on your machine: a task is done only when HEAD has a passing CI run and is on
+  `origin/main`. Use Kition's `scripts/kit-ci.sh` (`push`, `wait`, `failures`, `land`; Kition's
+  `docs/kits.md`, section 4c). Compile only the crates you touched locally.
 - Never edit expected results to make a test pass: files under `cases/**/expected/`, paths
   listed under `protected` in `features.yaml`, and the `expected`, `tolerance`, `reference`,
   `input` and `steps` of an existing `case.yaml`. If you believe an expected result is wrong,

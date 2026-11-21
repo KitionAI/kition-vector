@@ -12,7 +12,7 @@
 
 set -uo pipefail
 
-CHECK_COMMAND='cargo xtask ci'
+CHECK_COMMAND='cargo fmt --all -- --check'
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_FILE="${TMPDIR:-/tmp}/kition-quality-gate-$(basename "$REPO_DIR").log"
 
