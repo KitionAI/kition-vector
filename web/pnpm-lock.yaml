@@ -11,8 +11,8 @@ importers:
   .:
     dependencies:
       '@kition/sdk':
-        specifier: npm:@kitionstage/sdk@0.5.2-stage.1
-        version: '@kitionstage/sdk@0.5.2-stage.1(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
+        specifier: npm:@kitionstage/sdk@0.5.2-stage.2
+        version: '@kitionstage/sdk@0.5.2-stage.2(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       '@kition/tessera':
         specifier: npm:@kitionstage/tessera@0.1.1-stage.2
         version: '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
@@ -314,8 +314,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kitionstage/sdk@0.5.2-stage.1':
-    resolution: {integrity: sha512-K9DMIPjvjorl+R7YFY9jqf6FVOfW9lj25w9dG9v7stDJEtqWx0eHCROZkO7fwdsy3kTtOInBjOFs+TM+WU2fYw==}
+  '@kitionstage/sdk@0.5.2-stage.2':
+    resolution: {integrity: sha512-mJ/p0VTsdt6VCVtEbQVA0wuq9TAsXsJTEHkd2ksG8E1wAx2tTQqzitEKSNWbXs9870WOJ805Sc2BEMcEpzY+0g==}
     hasBin: true
     peerDependencies:
       '@kition/tessera': 0.1.1-stage.2
@@ -1887,7 +1887,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@kitionstage/sdk@0.5.2-stage.1(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@kitionstage/sdk@0.5.2-stage.2(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       loro-crdt: 1.16.4
     optionalDependencies:
