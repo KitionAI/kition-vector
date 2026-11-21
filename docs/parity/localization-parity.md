@@ -22,7 +22,7 @@ Chinese by `imachus`). None is recorded as reviewed by a native speaker; the cat
 | Language | Code | UI strings translated | Dialogs / tooltips / messages | Script support | Native review | Status | To `full` (h) |
 |---|---|---|---|---|---|---|---|
 | English | `en` | source, 100% | all | Latin | — | full | — |
-| Simplified Chinese (Mandarin) | `zh-hans` | 3,647 rows; menus, panels, dialogs complete; 85% overall | messages in English (1 of 604) | interface text drawn by the browser; input methods compose in the editor's text field (`@kition/kit-editor`); vertical type partial ([type-parity.md](type-parity.md)) | no | partial | 2–3 |
+| Simplified Chinese (Mandarin) | `zh-hans` | 3,647 rows; menus, panels, dialogs complete; 85% overall | messages in English (1 of 604) | interface text drawn by the browser; input methods compose in the editor's text field (`@kition/sdk/editor`); vertical type partial ([type-parity.md](type-parity.md)) | no | partial | 2–3 |
 | Spanish | `es` | 4,009 / 4,020 (99.7%) | all (604 messages) | Latin | no | full | — (review) |
 | Hindi | `hi` | 0 | none | Devanagari: the document's text shapes (HarfRust), untested for Devanagari; interface text drawn by the browser | no | none | 20–30 |
 | Arabic | `ar` | 0 | none | document text: bidi layout and Paragraph Direction; interface: no right-to-left layout | no | none | 25–40 |

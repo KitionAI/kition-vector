@@ -1,5 +1,5 @@
-import { EyeIcon as Eye, EyeOffIcon as EyeOff, LockIcon as Lock, PlusIcon as Plus } from '@kition/tessera-icons/react'
-import { IconButton, PanelSection, useKitEditor, useReadOnly } from '@kition/kit-editor'
+import { EyeIcon as Eye, EyeOffIcon as EyeOff, LockIcon as Lock, PlusIcon as Plus } from '@kition/tessera/icons/react'
+import { IconButton, PanelSection, useKitEditor, useReadOnly } from '@kition/sdk/editor'
 import type { VectorInfo, VectorNode } from './vector'
 
 function Row({ node, depth, selected }: { node: VectorNode; depth: number; selected: ReadonlySet<number> }) {

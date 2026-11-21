@@ -3,8 +3,8 @@
  * the neutral command mark otherwise): its own vocabulary, by command id. Registered once, when the
  * editor loads (`main.tsx`); ribbons and menus built from engine commands draw them.
  */
-import { registerCommandIcons } from '@kition/kit-editor'
-import { ArrayPolarIcon, BlendIcon, BookmarkIcon, CheckIcon, CircleDotIcon, CodeIcon, DropletsIcon, EyeOffIcon, Grid3x3Icon, HighlighterIcon, LibraryIcon, LockIcon, LogOutIcon, MapPinIcon, MousePointer2Icon, Move3dIcon, PaletteIcon, ParallelogramIcon, PenLineIcon, PuzzleIcon, RotateCcwIcon, ScalingIcon, ScanEyeIcon, SettingsIcon, SlidersHorizontalIcon, SquareDashedIcon, SquareDashedMousePointerIcon, SquaresExcludeIcon, SquaresIntersectIcon, SquaresSubtractIcon, SquaresUniteIcon, SwatchBookIcon, UnlinkIcon, WandSparklesIcon, WaypointsIcon } from '@kition/tessera-icons/react'
+import { registerCommandIcons } from '@kition/sdk/editor'
+import { ArrayPolarIcon, BlendIcon, BookmarkIcon, CheckIcon, CircleDotIcon, CodeIcon, DropletsIcon, EyeOffIcon, Grid3x3Icon, HighlighterIcon, LibraryIcon, LockIcon, LogOutIcon, MapPinIcon, MousePointer2Icon, Move3dIcon, PaletteIcon, ParallelogramIcon, PenLineIcon, PuzzleIcon, RotateCcwIcon, ScalingIcon, ScanEyeIcon, SettingsIcon, SlidersHorizontalIcon, SquareDashedIcon, SquareDashedMousePointerIcon, SquaresExcludeIcon, SquaresIntersectIcon, SquaresSubtractIcon, SquaresUniteIcon, SwatchBookIcon, UnlinkIcon, WandSparklesIcon, WaypointsIcon } from '@kition/tessera/icons/react'
 
 registerCommandIcons({
   "appearance.reduceToBasic": RotateCcwIcon,

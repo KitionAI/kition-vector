@@ -12,7 +12,7 @@ How to build and test this repository. The rules that come first are in [`AGENTS
 | `crates/` | The engine (Rust), in groups: `engine/`, `formats/`, `render/`, `support/` and `kdm/` |
 | `bindings/wasm` | `kition-vector-kit`: the engine compiled to WebAssembly for the in-page editor |
 | `bindings/headless` | `kition-vector`: the headless kit executable that Kition's agent drives |
-| `web/` | The kit's editor (React, on `@kition/kit-editor`), which a host shows in an iframe |
+| `web/` | The kit's editor (React, on `@kition/sdk/editor`), which a host shows in an iframe |
 | `tools/` | Repository tooling: `tools/xtask` (`cargo xtask <command>`) |
 | `examples/` | Sample `.kvector` drawings |
 | `cases/`, `features.yaml` | The feature catalogue and its cases ([`quality.md`](quality.md)) |
@@ -94,13 +94,14 @@ The editor only runs inside a host: `web/index.html` opened on its own says so a
 The browser tests start the Vite dev server themselves; they need the engine built (`pnpm engine`) and
 Playwright's browsers installed.
 
-By default the editor's dependencies come from npm: `pnpm install` installs the published `@kition/*`
-packages at the versions the committed `web/pnpm-lock.yaml` pins, so no other checkout is needed. To
-develop against local checkouts instead, run `KITION_LINK=1 pnpm install` in `web/`: `web/.pnpmfile.cjs`
-then links `@kition/kit-editor`, `@kition/kit-host`, `@kition/kit-ui-protocol` and `@kition/kit-dev-host`
-from a kition-sdk checkout, and `@kition/tessera-icons` from a kition-tessera checkout (by default
-`../kition-sdk` and `../kition-tessera` beside this repository; `KITION_SDK` and `KITION_TESSERA` name
-others). A package whose folder is not there stays on npm. The linked install rewrites
+By default the editor's dependencies come from npm: `pnpm install` installs the published `@kition/sdk`
+and `@kition/tessera` packages at the versions the committed `web/pnpm-lock.yaml` pins, so no other
+checkout is needed. To develop against local checkouts instead, run `KITION_LINK=1 pnpm install` in
+`web/`: `web/.pnpmfile.cjs` then links `@kition/sdk` from a kition-sdk checkout (`packages/sdk`) and
+`@kition/tessera` from a kition-tessera checkout (`packages/tessera`) (by default `../kition-sdk` and
+`../kition-tessera` beside this repository; `KITION_SDK` and `KITION_TESSERA` name others). Both
+packages' `exports` point at their built `dist/`, so run `pnpm build` in those two package folders
+first. A package whose folder is not there stays on npm. The linked install rewrites
 `web/pnpm-lock.yaml`; a lockfile changed that way must not be committed.
 
 ## Run the headless kit for an agent

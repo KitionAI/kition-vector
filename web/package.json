@@ -17,11 +17,8 @@
     "test:focus": "node tests/focus.mjs chromium && node tests/focus.mjs webkit"
   },
   "dependencies": {
-    "@kition/kit-editor": "^0.1.0",
-    "@kition/kit-host": "^0.1.0",
-    "@kition/kit-ui-protocol": "^0.1.0",
-    "@kition/kit-dev-host": "^0.1.0",
-    "@kition/tessera-icons": "^0.1.0",
+    "@kition/sdk": "npm:@kitionstage/sdk@0.5.2-stage.1",
+    "@kition/tessera": "npm:@kitionstage/tessera@0.1.1-stage.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

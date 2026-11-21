@@ -1,5 +1,5 @@
-import { AlignCenterHorizontalIcon as AlignCenterHorizontal, AlignCenterVerticalIcon as AlignCenterVertical, AlignEndHorizontalIcon as AlignEndHorizontal, AlignEndVerticalIcon as AlignEndVertical, AlignStartHorizontalIcon as AlignStartHorizontal, AlignStartVerticalIcon as AlignStartVertical, CombineIcon as Combine, SquircleIcon as Squircle, SquaresExcludeIcon as SquaresExclude, SquaresIntersectIcon as SquaresIntersect, SquaresSubtractIcon as SquaresSubtract, SquareSplitHorizontalIcon as SquareSplitHorizontal } from '@kition/tessera-icons/react'
-import { IconButton, PanelSection, useEngineQuery, useKitEditor, useReadOnly } from '@kition/kit-editor'
+import { AlignCenterHorizontalIcon as AlignCenterHorizontal, AlignCenterVerticalIcon as AlignCenterVertical, AlignEndHorizontalIcon as AlignEndHorizontal, AlignEndVerticalIcon as AlignEndVertical, AlignStartHorizontalIcon as AlignStartHorizontal, AlignStartVerticalIcon as AlignStartVertical, CombineIcon as Combine, SquircleIcon as Squircle, SquaresExcludeIcon as SquaresExclude, SquaresIntersectIcon as SquaresIntersect, SquaresSubtractIcon as SquaresSubtract, SquareSplitHorizontalIcon as SquareSplitHorizontal } from '@kition/tessera/icons/react'
+import { IconButton, PanelSection, useEngineQuery, useKitEditor, useReadOnly } from '@kition/sdk/editor'
 import { LayersSection } from './LayersSection'
 import type { Swatch, VectorInfo } from './vector'
 

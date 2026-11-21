@@ -150,7 +150,7 @@ Layers panel (`web/src/SidePanel.tsx`, `web/src/LayersSection.tsx`), in the host
 
 ## Look and feel
 
-The editor in `web/` takes its look from the host's theme tokens and `@kition/kit-editor`'s components; no
+The editor in `web/` takes its look from the host's theme tokens and `@kition/sdk/editor`'s components; no
 measurement of it is recorded here.
 
 ## Revision history

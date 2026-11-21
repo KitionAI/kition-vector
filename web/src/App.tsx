@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { ArrowLeftRightIcon as ArrowLeftRight, RotateCcwIcon as RotateCcw } from '@kition/tessera-icons/react'
+import { ArrowLeftRightIcon as ArrowLeftRight, RotateCcwIcon as RotateCcw } from '@kition/tessera/icons/react'
 import {
   EditorFrame,
   EngineToolRail,
@@ -18,7 +18,7 @@ import {
   type KitCanvasHandle,
   type Phrases,
   type RasterView,
-} from '@kition/kit-editor'
+} from '@kition/sdk/editor'
 import { engineManifest } from './engine'
 import { CATALOGS } from './strings'
 import { FILE_WRITERS, HIDDEN_TOOLS, HOST_FILE_COMMANDS, MENU_ORDER, VECTOR_PRIMARY, describe } from './vector'

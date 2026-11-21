@@ -1,4 +1,4 @@
-import type { KitEngineInfo } from '@kition/kit-editor'
+import type { KitEngineInfo } from '@kition/sdk/editor'
 
 /** One row of the Layers panel: a layer or an object in it. */
 export type VectorNode = {

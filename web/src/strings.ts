@@ -1,4 +1,4 @@
-import type { Catalog } from '@kition/kit-editor'
+import type { Catalog } from '@kition/sdk/editor'
 
 /** The editor's own strings (`en-US` is required; others fall back to it). */
 const enUS: Catalog = {

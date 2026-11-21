@@ -5,7 +5,7 @@
 What hardware Illustrator uses against what the kit uses: the editor in `web/`, which runs in a browser, and the
 engine. Illustrator's side is from its public documentation (GPU Performance, touch workspace, pen pressure pages);
 ours from the code (`crates/render/render`, `bindings/wasm`, and the editor's canvas: `KitCanvas` and
-`rasterViewport` in `@kition/kit-editor`). Part of [target-app-parity.md](target-app-parity.md).
+`rasterViewport` in `@kition/sdk/editor`). Part of [target-app-parity.md](target-app-parity.md).
 
 ## Summary
 
@@ -18,7 +18,7 @@ pointer events.
 |---|---|---|---|
 | GPU-accelerated canvas (GPU Performance, GPU Preview, GPU anti-aliasing) | Metal, DirectX | CPU raster, drawn on a 2D canvas | partial; a GPU renderer spike is pending (M5): 15–25 h |
 | Multithreaded rendering off the UI thread | partial | off the page's thread (the engine runs in a Web Worker), single-threaded in WebAssembly; multithreaded in native builds | beyond Illustrator |
-| Pen pressure | yes (Wacom, Windows Ink, macOS tablet events) | from the browser's pointer events (`@kition/kit-editor` passes a pen's pressure to the engine) | partial: 4–8 h |
+| Pen pressure | yes (Wacom, Windows Ink, macOS tablet events) | from the browser's pointer events (`@kition/sdk/editor` passes a pen's pressure to the engine) | partial: 4–8 h |
 | Pen tilt, bearing, barrel rotation (6D Art Pen) | yes, drives brushes | no | missing: 4–8 h after the input layer |
 | Pen eraser end | yes | no | missing |
 | Touch gestures (pinch zoom, two-finger pan, rotate view, Touch workspace) | yes (Windows touch, Surface) | a finger acts as a pointer; no multi-touch gestures | partial: touch workspace and rotate gesture missing, 3–5 h |

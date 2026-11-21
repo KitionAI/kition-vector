@@ -42,7 +42,7 @@ several as one undo step.
 
 The canvas is rasterized on the CPU by `vello_cpu`, with caches per object and per effect: multithreaded in
 native builds, single-threaded in the WebAssembly build, which the editor runs in a Web Worker, off the page's
-thread. The editor draws the rendered pixels on a 2D canvas (`@kition/kit-editor`). Raster effects are rendered
+thread. The editor draws the rendered pixels on a 2D canvas (`@kition/sdk/editor`). Raster effects are rendered
 offscreen per object and cached while panning. See [hardware-parity.md](parity/hardware-parity.md).
 
 ## Files

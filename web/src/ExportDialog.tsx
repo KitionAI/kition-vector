@@ -5,7 +5,7 @@
  * drawing; success is shown only once the host answers.
  */
 import { useState } from 'react'
-import { Button, Checkbox, Choice, Dialog, toast, useKitEditor } from '@kition/kit-editor'
+import { Button, Checkbox, Choice, Dialog, toast, useKitEditor } from '@kition/sdk/editor'
 import type { VectorInfo } from './vector'
 import { exportFiles, writeExports, type ExportAnswer, type ExportFormat } from './exporting'
 

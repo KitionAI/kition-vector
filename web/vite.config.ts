@@ -7,14 +7,14 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   resolve: {
-    // KITION_LINK=1 may link @kition/kit-editor from a kition-sdk checkout (.pnpmfile.cjs); one React for the page.
+    // KITION_LINK=1 may link @kition/sdk from a kition-sdk checkout (.pnpmfile.cjs); one React for the page.
     dedupe: ['react', 'react-dom'],
   },
   optimizeDeps: {
-    exclude: ['@kition/kit-editor', '@kition/kit-host', '@kition/kit-ui-protocol', '@kition/kit-dev-host'],
+    exclude: ['@kition/sdk'],
     // The published kit editor reaches a CommonJS shim (through its UI library); excluded above, it
     // is not scanned, so the shim is named here to be converted for the browser.
-    include: ['@kition/kit-editor > use-sync-external-store/shim'],
+    include: ['@kition/sdk > use-sync-external-store/shim'],
   },
   worker: { format: 'es' },
   // The development host (dev.html) and the kition-sdk and Tessera checkouts KITION_LINK=1 links.

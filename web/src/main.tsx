@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client'
-import { connectHost, createKitStrings, loadPhrases, withPhrases } from '@kition/kit-editor'
-import '@kition/kit-editor/styles.css'
+import { connectHost, createKitStrings, loadPhrases, withPhrases } from '@kition/sdk/editor'
+import '@kition/sdk/editor/styles.css'
 import './app.css'
 import { App } from './App'
 import { CATALOGS, PHRASES } from './strings'

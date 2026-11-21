@@ -4,27 +4,18 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-pnpmfileChecksum: sha256-I2X5WqAJLcDE3enOg+E+YSiTtmbLlnxm9uPp/2GTUAc=
+pnpmfileChecksum: sha256-K9arqgGLCertyVl0Oy0Fxuw8aeMcfMXTbiaQzxsnfPA=
 
 importers:
 
   .:
     dependencies:
-      '@kition/kit-dev-host':
-        specifier: ^0.1.0
-        version: 0.1.0
-      '@kition/kit-editor':
-        specifier: ^0.1.0
-        version: 0.1.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@kition/kit-host':
-        specifier: ^0.1.0
-        version: 0.1.0
-      '@kition/kit-ui-protocol':
-        specifier: ^0.1.0
-        version: 0.1.0
-      '@kition/tessera-icons':
-        specifier: ^0.1.0
-        version: 0.1.0(react@19.3.0)
+      '@kition/sdk':
+        specifier: npm:@kitionstage/sdk@0.5.2-stage.1
+        version: '@kitionstage/sdk@0.5.2-stage.1(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
+      '@kition/tessera':
+        specifier: npm:@kitionstage/tessera@0.1.1-stage.2
+        version: '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       react:
         specifier: ^19.2.5
         version: 19.3.0
@@ -323,43 +314,31 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kition/kdm@0.1.0':
-    resolution: {integrity: sha512-st/3ZOkElVALIgejYyoYIYb+FVmaAVeTurKuQYf0py1mQLqMv312fKUTLqaQOZVIOh/uWsIhGC1r/d5iUN3ofA==}
+  '@kitionstage/sdk@0.5.2-stage.1':
+    resolution: {integrity: sha512-K9DMIPjvjorl+R7YFY9jqf6FVOfW9lj25w9dG9v7stDJEtqWx0eHCROZkO7fwdsy3kTtOInBjOFs+TM+WU2fYw==}
+    hasBin: true
+    peerDependencies:
+      '@kition/tessera': 0.1.1-stage.2
+      react: '>=19'
+      react-dom: '>=19'
+    peerDependenciesMeta:
+      '@kition/tessera':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
-  '@kition/kit-dev-host@0.1.0':
-    resolution: {integrity: sha512-6DbAPbj7DZUf+VmDZw8rFkkhS6gqtUqHcEFj7ngO+1h2tH+wOlXBxXDPA5PDK0A1aqXEkRKQ6d2n/Hz+urMBQA==}
-
-  '@kition/kit-editor@0.1.0':
-    resolution: {integrity: sha512-mshRnhnRh057a5Optgzakh0lMiRBXqSQTehUsCoVpgyUL7FJIGyOesWuAygAij7Vhdj3tbkesmmW9kFOTNk6FQ==}
+  '@kitionstage/tessera@0.1.1-stage.2':
+    resolution: {integrity: sha512-Po8buX/njFQ3zChRNNYh2qXs+RKW6CHUhqp1JM4l2KwfWhuofosvPygl8h7YRxCf5UR0qxEnYVDe7Lu2MiK2Uw==}
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
-
-  '@kition/kit-engine@0.1.0':
-    resolution: {integrity: sha512-GF7l9dQfE+qgtxwG9XSsYcmwShBFdXMnjsTe7acbkaySLliAm4lUeFdIEpTr8SfWWaELsqoH3rdeai9owJYp7w==}
-
-  '@kition/kit-host@0.1.0':
-    resolution: {integrity: sha512-w3edEErQ2DTE4qYsM0tv3Mm/MvtY34c3zxR1tIN8rOcClD27ZOA3mr1k4z66gp3WaJvN05AxIJYlT5LiFgstSg==}
-
-  '@kition/kit-ui-protocol@0.1.0':
-    resolution: {integrity: sha512-4E3a32Qk3leGiQPhxS3J7yfbJnJZRQZGdfRSRExVTgGNw/b5xduymixy409UV8UrzExbR79qaor781Xi1qj+bA==}
-
-  '@kition/tessera-icons@0.1.0':
-    resolution: {integrity: sha512-UpEAusz6dbipn9hcGvzY5ywsPyNOKLWa9y4Lo7WW2Z07USBHqcrHwj08TVe/QkWZ7gopnxQWqlF2rT+YOGAWgw==}
-    peerDependencies:
-      react: '>=18'
     peerDependenciesMeta:
       react:
         optional: true
-
-  '@kition/tessera-tokens@0.1.0':
-    resolution: {integrity: sha512-KNk1p+q6GBEedeRAmaFeF08geszxbCn5fajHjTRrznRLK6L6sx9j2xlq1vw9zPUtzw0wtYABgt/edtUYD9+IsQ==}
-
-  '@kition/tessera-ui@0.1.0':
-    resolution: {integrity: sha512-NOLdPgHX5QTCsJwj5tvjFKrL2Aqext5QM6PtHUdFlsGFUrBMAq5HNAATDHQaxATnqrkrdk66bFPlG3GiaUaZgg==}
-    peerDependencies:
-      react: '>=19'
-      react-dom: '>=19'
+      react-dom:
+        optional: true
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     resolution: {integrity: sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==}
@@ -1908,50 +1887,19 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@kition/kdm@0.1.0':
+  '@kitionstage/sdk@0.5.2-stage.1(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       loro-crdt: 1.16.4
-
-  '@kition/kit-dev-host@0.1.0':
-    dependencies:
-      '@kition/kit-host': 0.1.0
-
-  '@kition/kit-editor@0.1.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
-    dependencies:
-      '@kition/kdm': 0.1.0
-      '@kition/kit-engine': 0.1.0
-      '@kition/kit-ui-protocol': 0.1.0
-      '@kition/tessera-icons': 0.1.0(react@19.3.0)
-      '@kition/tessera-tokens': 0.1.0
-      '@kition/tessera-ui': 0.1.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+    optionalDependencies:
+      '@kition/tessera': '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
 
-  '@kition/kit-engine@0.1.0':
+  '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@kition/kdm': 0.1.0
-
-  '@kition/kit-host@0.1.0':
-    dependencies:
-      '@kition/kit-ui-protocol': 0.1.0
-
-  '@kition/kit-ui-protocol@0.1.0': {}
-
-  '@kition/tessera-icons@0.1.0(react@19.3.0)':
-    optionalDependencies:
-      react: 19.3.0
-
-  '@kition/tessera-tokens@0.1.0': {}
-
-  '@kition/tessera-ui@0.1.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
-    dependencies:
-      '@kition/tessera-icons': 0.1.0(react@19.3.0)
-      '@kition/tessera-tokens': 0.1.0
       cmdk: 1.1.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       radix-ui: 1.4.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+    optionalDependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
     transitivePeerDependencies:

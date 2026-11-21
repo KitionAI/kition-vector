@@ -1,4 +1,4 @@
-import type { KitModuleManifest } from '@kition/kit-editor'
+import type { KitModuleManifest } from '@kition/sdk/editor'
 
 /** The engine, from this package's own folder. */
 export function engineManifest(): KitModuleManifest {
