@@ -102,7 +102,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Create Object Mosaic…",
             ["Object"],
             None,
-            "{columns=10, rows=10, width?, height? (new size in pt; default the image's), spacingX=0, spacingY=0 (pt between tiles), gray?: bool, deleteRaster?: bool} a group of rectangles coloured by the selected image's average tile colours → {id, tiles}",
+            "{columns?: 10, rows?: 10, width?, height? (new size in pt; default the image's), spacingX?: pt=0, spacingY?: pt=0 (between tiles), gray?: bool, deleteRaster?: bool} a group of rectangles coloured by the selected image's average tile colours → {id, tiles}",
             has_image,
             object_mosaic
         ),

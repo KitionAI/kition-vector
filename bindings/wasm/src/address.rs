@@ -49,6 +49,7 @@ const UNREAD: &[(&str, &str)] = &[
 
 /// Parameters that take a string the handler looks up as a name or catalogue id, never a number.
 const STRINGS: &[(&str, &str, &str)] = &[
+    ("appearance.addEffect", "effect", "the effect's catalogue id (`stylize.dropShadow`)"),
     ("effect.apply", "effect", "the effect's catalogue id (`stylize.dropShadow`)"),
     ("plugin.info", "id", "the plug-in's id"),
     ("plugin.remove", "id", "the plug-in's id"),

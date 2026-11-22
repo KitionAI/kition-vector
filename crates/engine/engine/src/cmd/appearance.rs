@@ -90,7 +90,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Add Effect",
             [],
             None,
-            "same as effect.apply (an alias): {effect: id, params?: {…}, item?: appearance item index|null, ids?, target?} → {ids, index, item}",
+            "{effect: id (see effect.list, e.g. \"stylize.dropShadow\", \"distort.roughen\", \"warp.arc\", or \"plugin.<id>\" for an installed effect plug-in), params?: {…} (missing keys take the dialog defaults), item?: appearance item index|null (apply to that fill/stroke only; omitted: the Appearance panel's active item, else the whole object), ids?: [..] (layers too), target?: \"object\"|\"contents\" (contents: the objects inside groups and layers)} the same as effect.apply (an alias) → {ids, index, item}",
             has_doc,
             super::effectcmd::apply
         ),

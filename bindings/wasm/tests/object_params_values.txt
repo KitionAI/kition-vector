@@ -8,6 +8,8 @@ appearance.setItem	opacity	a value, no object: an opacity percentage
 appearance.setItem	tint	a value, no object: a tint percentage
 artboard.rearrange	columns	a value, no object: a count of columns
 attributes.info	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+charStyle.apply	end	a value, no object: a byte offset in the text to end at
+charStyle.apply	start	a value, no object: a byte offset in the text to start from
 clipboard.conflicts	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
 clipboard.exportPng	scale	a value, no object: a scale factor
 clipboard.importEmf	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
@@ -19,14 +21,16 @@ color.harmony	amount	a value, no object: an amount
 color.harmony	steps	a value, no object: a count of steps
 document.activate	index	an open document tab, not drawing content
 document.export	artboard	an artboard a command that changes no drawing content reads
+document.export	colors	a value, no object: a colour count
 document.export	depth	a value, no object: a bit depth or nesting depth
 document.export	ditherAmount	a value, no object: a dither percentage
-document.export	scale	a value, no object: a scale factor
+document.export	quality	a value, no object: a JPEG or WebP quality
 document.export	scans	a value, no object: a count of scans
 document.exportBytes	artboard	an artboard a command that changes no drawing content reads
+document.exportBytes	colors	a value, no object: a colour count
 document.exportBytes	depth	a value, no object: a bit depth or nesting depth
 document.exportBytes	ditherAmount	a value, no object: a dither percentage
-document.exportBytes	scale	a value, no object: a scale factor
+document.exportBytes	quality	a value, no object: a JPEG or WebP quality
 document.exportBytes	scans	a value, no object: a count of scans
 document.exportDxf	colors	a value, no object: a colour count
 document.exportDxf	scale	a value, no object: a scale factor
@@ -37,6 +41,7 @@ document.exportForWeb	colors	a value, no object: a colour count
 document.exportForWeb	ditherAmount	a value, no object: a dither percentage
 document.exportForWeb	lossy	a value, no object: a lossy amount
 document.exportForWeb	percent	a value, no object: a percentage
+document.exportForWeb	quality	a value, no object: a JPEG quality
 document.exportForWeb	webSnap	a value, no object: a percentage
 document.exportForWeb.preview	slice	a slice's number in the export layout, read by a command that writes nothing
 document.exportPdf	advanced.fontSubsetPercent	a value, no object: a percentage
@@ -107,6 +112,8 @@ object.blend.options	value	a value, no object: a blend option value
 object.blend.spine.moveAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
 object.blend.spine.moveAnchor	subpath	a position inside the target blend's spine, held by the target's premise
 object.blend.spine.removeAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.createObjectMosaic	columns	a value, no object: a count of columns
+object.createObjectMosaic	rows	a value, no object: a count of rows
 object.envelope.makeWithMesh	cols	a value, no object: a count of columns
 object.envelope.makeWithMesh	rows	a value, no object: a count of rows
 object.envelope.options	fidelity	a value, no object: an envelope fidelity
@@ -167,6 +174,8 @@ paint.setGradientGeom	item	an appearance item (fill, stroke) inside the target; 
 paint.setStroke	gradient.stops[].tint	a value, no object: a tint percentage
 paint.setStroke	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 paint.setStroke	tint	a value, no object: a tint percentage
+paraStyle.apply	end	a value, no object: a byte offset in the text to end at
+paraStyle.apply	start	a value, no object: a byte offset in the text to start from
 path.convertAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based, required))
 path.convertAnchor	subpath	a position inside the target object's own geometry or paint, held by the target's premise (subpaths (0-based, default 0))
 path.curvatureEdit	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of subpath (0-based; required for op move))
@@ -202,11 +211,16 @@ recolor.reduce	colors	a value, no object: row count
 recolor.reduce	map	a colour mapping: keys and values are colours, no object
 select.allOnArtboard	artboard	an artboard a command that changes no drawing content reads
 select.same.appearanceAttribute	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+shape.flare	rays	a value, no object: a count of rays
+shape.flare	rings	a value, no object: a count of rings
 shape.flare	seed	a value, no object: a random seed
 shape.polarGrid	concentric	a value, no object: a count of rings
 shape.polarGrid	radial	a value, no object: a count of spokes
 shape.polygon	sides	a value, no object: a count of sides
+shape.rectangularGrid	columns	a value, no object: a count of columns
+shape.rectangularGrid	rows	a value, no object: a count of rows
 shape.spiral	segments	a value, no object: a count of segments
+shape.star	points	a value, no object: a count of points
 stroke.set	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 stroke.setAdvanced	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 stroke.widthPoint.copy	index	a position inside the target object's own geometry or paint, held by the target's premise (width points of topmost stroke profile (0-based, requi)

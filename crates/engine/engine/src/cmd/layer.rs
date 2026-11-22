@@ -35,7 +35,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "New Sublayer…",
             ["Window", "Layers"],
             None,
-            "{parent?: layer id (default: the highlighted row's layer, else the current layer), name?, options as layer.new} a sublayer on top of the parent's contents → {id}",
+            "{parent?: layer id (default: the highlighted row's layer, else the current layer), name?, color?, template?, locked?, visible?, printable?, preview?, dimImages?} a sublayer on top of the parent's contents. Options as layer.new → {id}",
             has_doc,
             new_sublayer
         ),

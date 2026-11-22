@@ -26,7 +26,7 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("document.activate", "Activate Document", [], None, "{index}", always, doc_activate),
         cmd!(query "document.inspect", "Inspect Document", [], None, "{depth?, childLimit?} → layer tree, artboards, selection, history (a sliced tree reports childCount)", has_doc, |s, p| Ok(inspect::document_opts(s, slice_opts(p, "document.inspect")?))),
         cmd!(query "document.node", "Inspect Object", [], None, "{id, summary?: compact summary, depth?: child levels in the summary (default all), childLimit?: children shown per node (default all; a level that shows fewer reports childCount)} → one object", has_doc, doc_node),
-        cmd!(query "document.find", "Find Objects", [], None, "{name?: substring of the Layers panel name, kind?: panel label such as Group, Path, Type or Image (exact), text?: substring of type content, limit?: max matches (default 100, 0 counts only)} → {matches: [{id, name, kind, path}], total}", has_doc, doc_find),
+        cmd!(query "document.find", "Find Objects", [], None, "{name?: substring of the Layers panel name, kind?: string (the exact panel label, such as Group, Path, Type or Image), text?: substring of type content, limit?: max matches (default 100, 0 counts only)} → {matches: [{id, name, kind, path}], total}", has_doc, doc_find),
         cmd!(query "document.json", "Document JSON", [], None, "{} → complete document model", has_doc, |s, _| Ok(serde_json::to_value(&*s.doc()?.doc).unwrap_or(Value::Null))),
         cmd!(
             "document.setUnits",

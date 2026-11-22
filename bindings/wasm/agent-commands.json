@@ -1093,46 +1093,14 @@
    "background": {
     "type": "string"
    },
-   "bmp": {
-    "additionalProperties": true,
-    "type": "object"
-   },
    "interlaced": {
     "type": "boolean"
-   },
-   "jpg": {
-    "additionalProperties": true,
-    "type": "object"
    },
    "matte": {
     "type": "string"
    },
-   "psd": {
-    "additionalProperties": true,
-    "type": "object"
-   },
-   "raster": {
-    "additionalProperties": true,
-    "type": "object"
-   },
    "selectionOnly": {
     "type": "boolean"
-   },
-   "tga": {
-    "additionalProperties": true,
-    "type": "object"
-   },
-   "tiff": {
-    "additionalProperties": true,
-    "type": "object"
-   },
-   "txt": {
-    "additionalProperties": true,
-    "type": "object"
-   },
-   "webp": {
-    "additionalProperties": true,
-    "type": "object"
    }
   }
  },
@@ -1246,10 +1214,6 @@
  "document.exportForWeb": {
   "description": "Writes an optimised GIF, JPEG or PNG for the web with a preset and settings (colours, dither, quality, size), or answers the data.",
   "params": {
-   "jpg": {
-    "additionalProperties": true,
-    "type": "object"
-   },
    "matte": {
     "type": "string"
    },
@@ -2278,10 +2242,6 @@
       "type": "null"
      }
     ]
-   },
-   "native": {
-    "additionalProperties": true,
-    "type": "object"
    },
    "pdfCompatible": {
     "type": "boolean"

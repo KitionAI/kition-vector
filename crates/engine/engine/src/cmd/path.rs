@@ -99,7 +99,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Reshape",
             [],
             None,
-            "{id, x, y, dx, dy, tol=3, radius?} Reshape tool: grab the path at (x, y) (adding an anchor there unless one is within tol) and drag it by (dx, dy); nearby anchors follow with a smooth falloff over radius (default: half the subpath's size)",
+            "{id, x, y, dx, dy, tol?: pt=3, radius?} Reshape tool: grab the path at (x, y) (adding an anchor there unless one is within tol) and drag it by (dx, dy); nearby anchors follow with a smooth falloff over radius (default: half the subpath's size)",
             has_doc,
             reshape
         ),

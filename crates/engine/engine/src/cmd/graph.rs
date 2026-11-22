@@ -34,7 +34,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Data…",
             ["Object", "Graph"],
             None,
-            "{id?, series?, categories?, rows?, csv?: first row = series labels (first cell empty), then one row per category: label, values…; an empty cell or a null is a blank value, a quoted number a label} replace the graph's data; no data → the current {csv, series, categories, rows}",
+            "{id?, series?, categories?, rows?, csv?: string (first row: series labels, first cell empty; then one row per category: label, values…; an empty cell or a null is a blank value, a quoted number a label)} replace the graph's data; no data → the current {csv, series, categories, rows}",
             has_selection,
             set_data
         ),

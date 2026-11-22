@@ -34,7 +34,7 @@ features:
     priority: P0
     status: has
     requirements: [AX13]
-    cases: [vector.agent.recover/off-artboard, regressions/issue-unknown-params]
+    cases: [vector.agent.recover/off-artboard, regressions/issue-unknown-params, regressions/issue-param-notation]
     since: "2026-11-17"
   - id: vector.agent.draft
     title: An agent works in a draft over a conversation

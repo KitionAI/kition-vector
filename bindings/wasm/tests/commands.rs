@@ -23,6 +23,26 @@ fn every_command_says_what_it_does() {
     }
 }
 
+/// regressions/issue-param-notation: every entry of every command's parameter notation is a key
+/// the SDK's parser reads. `check_commands` compares only schemas that are the notation's, and
+/// this kit completes most schemas after converting the notation (agent text, extra keys,
+/// addresses), so an entry the parser could not read (`sides=6`, `jpg: quality?: 90`,
+/// `ids?|id + start?/end?`) left the command without that parameter, and a call passing it was
+/// refused as unknown; a notation that is no object (`same as effect.apply: {…}`) gave no schema.
+#[test]
+fn every_notation_entry_is_a_parameter() {
+    let mut problems = Vec::new();
+    for command in doc().commands() {
+        let Some(params) = command.params.as_deref() else { continue };
+        match kition_kit::schema::from_kit_params(params) {
+            Ok(converted) if converted.unreadable.is_empty() => {}
+            Ok(converted) => problems.push(format!("{}: entries with no key the parser reads: {:?}", command.id, converted.unreadable)),
+            Err(error) => problems.push(format!("{}: {error}", command.id)),
+        }
+    }
+    assert!(problems.is_empty(), "{} commands:\n{}", problems.len(), problems.join("\n"));
+}
+
 /// With `KITION_COMMANDS_OBSERVE` set to a file, runs every offered read command with no
 /// parameters on the conformance drawing (everything selected) and writes what each answered:
 /// the evidence the output schemas in `agent-commands.json` are written from.

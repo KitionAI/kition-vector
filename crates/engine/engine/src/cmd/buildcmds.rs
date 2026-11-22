@@ -129,7 +129,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Make and Expand",
             ["Object", "Image Trace"],
             None,
-            "same as imageTrace.make, then expand → {id, paths, anchors, colors}",
+            "{id?: image or Image Trace group (default: selection), ids?, preset?: name (imageTrace.presets), params?: {…} (as imageTrace.make), view?: as imageTrace.setView (default: the traced object's own, else tracingResult)} the same as imageTrace.make, then expand → {id, paths, anchors, colors}",
             has_selection_or_ids,
             |s, p| trace_make(s, p, true)
         ),

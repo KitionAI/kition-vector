@@ -66,7 +66,7 @@ macro_rules! style_cmds {
                 concat!($p, ".apply"),
                 concat!("Apply ", $what, " Style"),
                 &[],
-                "{name, clearOverrides?, ids?|id + start?/end? (a Type tool range: character styles style it, paragraph styles apply to the paragraphs it touches)} → {count}",
+                "{name, clearOverrides?, ids?, id?, start?: integer, end?: integer (byte offsets: a Type tool range of one text object; character styles style it, paragraph styles apply to the paragraphs it touches)} → {count}",
                 |s, p| apply(s, p, $kind),
                 true,
             ),

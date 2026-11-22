@@ -19,22 +19,22 @@ pub fn specs() -> Vec<CommandSpec> {
             rectangle
         ),
         cmd!("shape.ellipse", "Ellipse", [], None, "{x, y, width, height, rotation?: deg (about centre)} → {id}", has_doc, ellipse),
-        cmd!("shape.polygon", "Polygon", [], None, "{cx, cy, radius, sides=6, rotation?: deg} → {id}", has_doc, polygon),
-        cmd!("shape.star", "Star", [], None, "{cx, cy, radius1, radius2, points=5, rotation?: deg} → {id}", has_doc, star),
+        cmd!("shape.polygon", "Polygon", [], None, "{cx, cy, radius, sides?: 6, rotation?: deg} → {id}", has_doc, polygon),
+        cmd!("shape.star", "Star", [], None, "{cx, cy, radius1, radius2, points?: 5, rotation?: deg} → {id}", has_doc, star),
         cmd!(
             "shape.flare",
             "Flare",
             [],
             None,
-            "{cx, cy, diameter=100, opacity=50 (%), brightness=30 (%), growth=20 (%), fuzziness=50 (%), rays=15, longest=300 (%), rayFuzziness=100 (%), x2?, y2? (ring end; else pathLength at direction), pathLength=300, rings=10, largest=50 (%), direction=45 (deg), seed?} → {id}",
+            "{cx, cy, diameter?: pt=100, opacity?: percent=50, brightness?: percent=30, growth?: percent=20, fuzziness?: percent=50, rays?: 15, longest?: percent=300, rayFuzziness?: percent=100, x2?, y2? (ring end; else pathLength at direction), pathLength?: pt=300, rings?: 10, largest?: percent=50, direction?: deg=45, seed?} → {id}",
             has_doc,
             flare
         ),
         cmd!("shape.line", "Line Segment", [], None, "{x1, y1, x2, y2} → {id}", has_doc, line),
-        cmd!("shape.spiral", "Spiral", [], None, "{cx, cy, radius, decay=80 (%), segments=10, clockwise?} → {id}", has_doc, spiral),
+        cmd!("shape.spiral", "Spiral", [], None, "{cx, cy, radius, decay?: percent=80, segments?: 10, clockwise?} → {id}", has_doc, spiral),
         cmd!("shape.arc", "Arc", [], None, "{x1, y1, x2, y2, closed?} → {id}", has_doc, arc),
-        cmd!("shape.rectangularGrid", "Rectangular Grid", [], None, "{x, y, width, height, rows=5, columns=5} → {id}", has_doc, rect_grid),
-        cmd!("shape.polarGrid", "Polar Grid", [], None, "{x, y, width, height, concentric=5, radial=5} → {id}", has_doc, polar_grid),
+        cmd!("shape.rectangularGrid", "Rectangular Grid", [], None, "{x, y, width, height, rows?: 5, columns?: 5} → {id}", has_doc, rect_grid),
+        cmd!("shape.polarGrid", "Polar Grid", [], None, "{x, y, width, height, concentric?: 5, radial?: 5} → {id}", has_doc, polar_grid),
         cmd!(
             "path.create",
             "Create Path",

@@ -96,7 +96,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Slice Options…",
             ["Object", "Slice"],
             None,
-            "{kind?: \"image\"|\"noImage\"|\"htmlText\" (object slices of type only), name?, url?, target?, message?, alt?: (image), text?: cell text, HTML allowed (noImage), background?: \"\"|\"matte\"|\"#rrggbb\", hAlign?: \"default\"|\"left\"|\"center\"|\"right\", vAlign?: \"default\"|\"top\"|\"middle\"|\"baseline\"|\"bottom\"} set the selected slices' options as one undo step; no options: read them → the first slice's {kind, name, url, target, message, alt, text, background, hAlign, vAlign, htmlText: whether HTML Text applies}",
+            "{kind?: \"image\"|\"noImage\"|\"htmlText\" (object slices of type only), name?, url?, target?, message?, alt?: (image), text?: string (cell text, HTML allowed; noImage), background?: \"\"|\"matte\"|\"#rrggbb\", hAlign?: \"default\"|\"left\"|\"center\"|\"right\", vAlign?: \"default\"|\"top\"|\"middle\"|\"baseline\"|\"bottom\"} set the selected slices' options as one undo step; no options: read them → the first slice's {kind, name, url, target, message, alt, text, background, hAlign, vAlign, htmlText: whether HTML Text applies}",
             slices_targeted,
             options
         ),

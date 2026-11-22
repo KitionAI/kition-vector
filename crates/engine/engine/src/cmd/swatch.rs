@@ -46,7 +46,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Swatch Options",
             ["Window", "Swatches"],
             None,
-            "{name, newName?, color? (e.g. {l, a, b} for a Lab colour), mode?: \"gray\"|\"rgb\"|\"hsb\"|\"lab\"|\"cmyk\"|\"web\" (convert the colour), global?, spot? (spot colours are always global), paint?: paint.setFill params ({color}, {gradient}, {swatch} or {pattern}) replacing the swatch's colour, gradient or pattern with one of the same kind} edit a swatch in any colour group, as one undo step. Fills, strokes, text, gradient stops and tint swatches linked to a global swatch take its new colour (at their own tint) and name; turning Global off unlinks them (they keep their colour). Colour, mode and spot apply to solid colours only; a tint swatch only takes a new name (edit its base) → {name, relinked: paints changed}",
+            "{name, newName?, color? (e.g. {l, a, b} for a Lab colour), mode?: \"gray\"|\"rgb\"|\"hsb\"|\"lab\"|\"cmyk\"|\"web\" (convert the colour), global?, spot? (spot colours are always global), paint?: {…paint.setFill params} ({color}, {gradient}, {swatch} or {pattern}, replacing the swatch's colour, gradient or pattern with one of the same kind)} edit a swatch in any colour group, as one undo step. Fills, strokes, text, gradient stops and tint swatches linked to a global swatch take its new colour (at their own tint) and name; turning Global off unlinks them (they keep their colour). Colour, mode and spot apply to solid colours only; a tint swatch only takes a new name (edit its base) → {name, relinked: paints changed}",
             has_doc,
             swatch_edit
         ),
