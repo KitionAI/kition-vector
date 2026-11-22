@@ -515,14 +515,39 @@ fn build(shapes: &[Shape]) -> Option<(Vec<Region>, Vec<Shape>)> {
             points.len() - 1
         })
     };
-    let mut edges: Vec<Edge> = Vec::new();
-    let mut between: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
-    let outlines = Outlines::new(&inputs, eps);
+    let mut swept: Vec<(Vec<Seg>, [usize; 2])> = Vec::new();
     for idx in top.segment_indices() {
         let half = idx.first_half();
         let segs: Vec<Seg> = positions[idx].path.segments().map(to_seg).collect();
         let ends = [vertex_id(top.point(half).to_kurbo()), vertex_id(top.point(idx.second_half()).to_kurbo())];
-        if segs.is_empty() || ends[0] == ends[1] {
+        if !segs.is_empty() && ends[0] != ends[1] {
+            swept.push((segs, ends));
+        }
+    }
+    // The sweep can also leave one meeting point as two points a few `eps` apart, joined by a
+    // speck of an edge: a line crossing two coincident edges crosses each a rounding error from
+    // the other, a line through a corner passes it beside the corner. They are one vertex too.
+    // Kept apart, the speck came back as a piece of its own, and the two passes of an open path
+    // leaving there were two edges (one from each point) whose far end, the path's loose end,
+    // then looked like a point the path runs through: its end piece came back out and back, and
+    // erasing that piece took the whole path.
+    let speck = 16.0 * eps;
+    let mut joined: Vec<usize> = (0..points.len()).collect();
+    for (segs, ends) in &swept {
+        let start = segs.first().map_or(Point::ZERO, |s| s.c.p0);
+        if segs.iter().flat_map(|s| [s.c.p1, s.c.p2, s.c.p3]).all(|p| p.distance(start) <= speck) {
+            let (a, b) = (find(&mut joined, ends[0]), find(&mut joined, ends[1]));
+            if let Some(p) = joined.get_mut(a) {
+                *p = b;
+            }
+        }
+    }
+    let mut edges: Vec<Edge> = Vec::new();
+    let mut between: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
+    let outlines = Outlines::new(&inputs, eps);
+    for (segs, ends) in swept {
+        let ends = ends.map(|v| find(&mut joined, v));
+        if ends[0] == ends[1] {
             continue;
         }
         let Some(source) = mid(&segs).and_then(|m| outlines.source_at(m)) else { continue };

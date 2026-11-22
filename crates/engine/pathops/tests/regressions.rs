@@ -214,7 +214,11 @@ fn shape_builder_pieces_cut_out_only_themselves() {
     let arr = shape_builder(&shapes, true);
     let all: Vec<String> = arr.edges.iter().chain(&arr.lines).map(describe).collect();
     let all = all.join("\n  ");
-    assert!(!arr.lines.is_empty(), "the line comes back in pieces:\n  {all}");
+    // Cut at the corner (20, 40), at the second rectangle's side (30, 60) and at the shared top
+    // edge (35, 70), each run once, open; the sweep's specks where it crosses are no pieces.
+    assert_eq!(arr.lines.len(), 4, "the line in four runs:\n  {all}");
+    assert!(arr.lines.iter().all(|e| !e.path.is_closed() && e.path.subpaths.len() == 1), "{all}");
+    assert!(arr.edges.iter().chain(&arr.lines).all(|e| e.path.length() > 0.05), "no specks:\n  {all}");
     for e in arr.edges.iter().chain(&arr.lines) {
         let (s, piece) = (&shapes[e.key as usize], &e.path.subpaths[0]);
         let len = e.path.length();
