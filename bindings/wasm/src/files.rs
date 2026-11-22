@@ -66,7 +66,7 @@ mod tests {
 
     /// Parameters whose names read like files but are not: ids, property paths, directions,
     /// folders of the kit's own panels, in-memory data.
-    const NOT_FILES: &[(&str, &str)] = &[("document.find", "Path"), ("text.createInPath", "path"), ("file.place.queue", "files")];
+    const NOT_FILES: &[(&str, &str)] = &[("text.createInPath", "path"), ("file.place.queue", "files")];
 
     #[test]
     fn every_file_parameter_is_declared() {
