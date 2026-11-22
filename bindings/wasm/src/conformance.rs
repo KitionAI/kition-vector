@@ -1,6 +1,6 @@
 //! The KHP conformance fixtures (`conformance/`) and the check catalogue (`agent/checks.json`,
 //! from [`crate::check::CATALOGUE`]): `basic.kvector` (no diagnostics), `edit.json` (steps that
-//! change it), one `check-<code>.kvector` per catalogue code, and `golden/` previews of `basic`.
+//! change it), one `check-<code>.kvector` per catalogue code, and `expected/` previews of `basic`.
 //! Each fixture starts from a new drawing made with the engine's own commands; the broken
 //! references a file can hold but the commands never make (an image without its pixels, a symbol or
 //! a graphic style the drawing lost, a font that is not installed) are made by editing the
@@ -179,18 +179,18 @@ fn every_fixture_reports_its_code_and_basic_is_clean() {
     let basic = basic();
     assert_eq!(codes(&basic), Vec::<String>::new(), "basic.kvector is clean");
     if write {
-        std::fs::create_dir_all(out.join("golden")).expect("conformance/golden");
+        std::fs::create_dir_all(out.join("expected")).expect("conformance/expected");
         std::fs::create_dir_all(repo().join("agent")).expect("agent");
         std::fs::write(out.join("basic.kvector"), basic.save(None).expect("save")).expect("basic");
         std::fs::write(out.join("edit.json"), format!("{:#}\n", edit())).expect("edit.json");
-        std::fs::write(out.join("golden/basic.png"), png(&basic, 1.0)).expect("golden");
-        std::fs::write(out.join("golden/basic-scale-2.png"), png(&basic, 2.0)).expect("golden scale 2");
+        std::fs::write(out.join("expected/basic.png"), png(&basic, 1.0)).expect("expected preview");
+        std::fs::write(out.join("expected/basic-scale-2.png"), png(&basic, 2.0)).expect("expected preview scale 2");
         let tolerance = json!({
             "maxChannelDelta": 2,
             "maxDifferentPixels": 100,
             "note": "The engine's own renderer draws the preview; anti-aliased edges may differ by a step between platforms, on at most 0.5% of the 200 x 100 picture's pixels."
         });
-        std::fs::write(out.join("golden/tolerance.json"), format!("{tolerance:#}\n")).expect("tolerance");
+        std::fs::write(out.join("expected/tolerance.json"), format!("{tolerance:#}\n")).expect("tolerance");
         std::fs::write(repo().join("agent/checks.json"), format!("{:#}\n", catalogue_json())).expect("checks.json");
     }
     for entry in CATALOGUE {
