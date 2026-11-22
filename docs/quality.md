@@ -46,8 +46,9 @@ shell.
 
 This check is the fast local part. The full checks and tests run on GitHub, not on your machine,
 in the kit's CI run: `.github/workflows/ci.yml` calls Kition's `kit-ci.yml`, which runs fmt,
-clippy, `cargo test --workspace`, the kit's `cargo xtask ci` and every `test:*` script of
-`web/`. A task is done only when HEAD has a passing CI run and is on `origin/main`: push it
+clippy, `cargo test --workspace`, the kit's `cargo xtask ci` and every `test`
+and `test:*` script of `web/` (and of the root, when it has a pnpm lockfile).
+A task is done only when HEAD has a passing CI run and is on `origin/main`: push it
 with Kition's `scripts/kit-ci.sh` (`push`, `wait`, `failures`, `land`; Kition's
 `docs/kits.md`, section 4c). Locally, compile only the crates you touched.
 
@@ -289,4 +290,8 @@ kition-sdk's `tools/check-expected.mjs` lists, for a range of commits, every add
 deleted expected result and every weakened test (deleted assertions or tests, added
 `#[ignore]`, `.skip`, `.only` or `.todo`). Reviewers run it on every candidate;
 anything it lists goes to the maintainers and is never merged automatically.
+It also warns about every tracked file whose name says it is an expected result
+(`expected_*`, `*_expected.*`, `*.expected.*`, `*fingerprints*`, `*.snap`) that is neither in an
+`expected/` folder nor matched by `protected`, such as a single expected file next to its test:
+list such a file under `protected` in `features.yaml`.
 <!-- kition-quality:end -->

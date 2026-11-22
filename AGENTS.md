@@ -25,7 +25,8 @@
 - Put the task id and the case ids in the commit message.
 - Stage only your own files: `git add` them by name; never `git commit -a` or `git add -A`.
   Other sessions may have uncommitted work in the same checkout.
-- Work on `kition-slide` only in its main checkout; never change, build, or commit in its worktrees (`kition-slide-wt/*`, `kition-*-wt`, `kition-naming-work`).
+- Commit on `main` in the repository's main checkout: no git worktrees, and one agent per
+  repository at a time.
 - Never start `cargo xtask eval` (the real-model `layer: eval` cases): only a maintainer starts it (F-QA-16). Write eval cases and check them with `--dry-run`, which calls no model.
 - No compatibility layers: no aliases, old names, old file suffixes, migrations, or readers for
   old formats. Delete a replaced path in the same change.
