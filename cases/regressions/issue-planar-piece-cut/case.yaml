@@ -1,0 +1,17 @@
+format: 1
+id: regressions/issue-planar-piece-cut
+feature: vector.paint.region-paint
+intent: >-
+  Every Shape Builder piece (an outline or a line cut wherever another path meets it) comes back
+  as the run it is, so erasing it takes only its own length out of its path: a line through a
+  rectangle's corner, across a second rectangle sharing that rectangle's top and right edges,
+  came back with a 22.4 pt piece that erasing took the whole 89.4 pt line with. Found by the
+  property test planar::tests::pieces_cut_out_of_their_inputs, which failed on it now and then.
+layer: gate
+source: {kind: issue, from: Kition Vector regression suite, license: owned}
+input: []
+steps:
+  - cargo-test: {package: kition-vector-pathops, test: regressions, filter: shape_builder_pieces_cut_out_only_themselves}
+expected:
+  - {actual: exit, compare: exit, value: 0}
+since: "2026-11-22"

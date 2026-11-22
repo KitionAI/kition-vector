@@ -522,6 +522,7 @@ features:
     paths: [crates/engine/engine/src/cmd/buildcmds.rs, crates/engine/engine/src/cmd/shaper.rs, crates/engine/tools/src/builder.rs, crates/engine/tools/src/extra.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
+    cases: [regressions/issue-planar-piece-cut]
     since: "2026-11-17"
   - id: vector.image.trace
     title: "Image Trace"

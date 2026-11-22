@@ -184,3 +184,47 @@ fn self_crossing_quad_fills_both_loops() {
     let got = area(&poly(&[p0, p1, p2, p3].map(|p| (p.x, p.y))), NZ);
     assert!(close(got, want, 1e-9), "area {got}, want {want}");
 }
+
+/// One Shape Builder piece, compactly: its input, whether it is closed, its anchors.
+fn describe(e: &Shape) -> String {
+    let sps: Vec<String> = e
+        .path
+        .subpaths
+        .iter()
+        .map(|sp| {
+            let pts: Vec<String> = sp.anchors.iter().map(|a| format!("({:.4}, {:.4})", a.p.x, a.p.y)).collect();
+            format!("{}[{}]", if sp.closed { "closed " } else { "" }, pts.join(" "))
+        })
+        .collect();
+    format!("key {}: {}", e.key, sps.join(", "))
+}
+
+/// `pieces_cut_out_of_their_inputs` (planar.rs) found this: a line through a rectangle's corner
+/// and across a second rectangle that shares the first one's top and right edges. Every Shape
+/// Builder piece, cut out of the input it is keyed by, must take its own length out of it and
+/// nothing else; one 22.4 pt piece took the whole 89.4 pt line.
+#[test]
+fn shape_builder_pieces_cut_out_only_themselves() {
+    let line = PathData::single(SubPath::polyline(&[(0.0, 0.0).into(), (40.0, 80.0).into()], false));
+    let shapes = [
+        Shape::new(line, NZ, 0),
+        Shape::new(poly(&[(20.0, 40.0), (50.0, 40.0), (50.0, 70.0), (20.0, 70.0)]), NZ, 0),
+        Shape::new(poly(&[(30.0, 50.0), (50.0, 50.0), (50.0, 70.0), (30.0, 70.0)]), NZ, 0),
+    ];
+    let arr = shape_builder(&shapes, true);
+    let all: Vec<String> = arr.edges.iter().chain(&arr.lines).map(describe).collect();
+    let all = all.join("\n  ");
+    assert!(!arr.lines.is_empty(), "the line comes back in pieces:\n  {all}");
+    for e in arr.edges.iter().chain(&arr.lines) {
+        let (s, piece) = (&shapes[e.key as usize], &e.path.subpaths[0]);
+        let len = e.path.length();
+        let cut = cut_out(&s.path, piece, false, 0.05);
+        if len <= 0.05 {
+            assert!(cut.is_none(), "a speck cuts nothing: {}\n  {all}", describe(e));
+            continue;
+        }
+        let cut = cut.unwrap_or_else(|| panic!("{} is not on its input\n  {all}", describe(e)));
+        let lost = s.path.length() - cut.length();
+        assert!((lost - len).abs() <= 0.05 + 1e-3 * len, "lost {lost} for a piece {len} long: {}\n  {all}", describe(e));
+    }
+}
