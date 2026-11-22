@@ -1,5 +1,5 @@
 //! A drawing built by the same commands saves the same bytes when `SOURCE_DATE_EPOCH` is set, as
-//! a showcase sample or a gate case builds it: the document's creation time is the epoch, not
+//! a showcase sample or a gating test builds it: the document's creation time is the epoch, not
 //! the clock. Each build runs in a process of its own: this test starts itself several times.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 

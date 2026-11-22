@@ -3,7 +3,7 @@ id: regressions/issue-deterministic-save
 feature: vector.agent.act
 intent: >-
   A drawing built by the same commands saves the same bytes when SOURCE_DATE_EPOCH is set (a
-  showcase sample, a gate case): the document's creation time is the epoch. Before, file.new
+  showcase sample, a gating test): the document's creation time is the epoch. Before, file.new
   stamped the wall clock into metadata.created, so every build of a sample saved other bytes.
 layer: gate
 source:
