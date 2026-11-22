@@ -39,6 +39,10 @@ Before you open a pull request, run the check; it must exit 0:
 cargo fmt --all -- --check
 ```
 
+The full checks and tests run on GitHub, in the kit's CI run, for your pull request too
+(`.github/workflows/ci.yml`: fmt, clippy, `cargo test --workspace`, `cargo xtask ci` and the
+editor's tests); it must pass before the pull request merges.
+
 ## Rules
 
 The full rules are in [AGENTS.md](../AGENTS.md), and [docs/quality.md](../docs/quality.md) is the
@@ -47,7 +51,7 @@ matter:
 
 - **Tests are the spec.** The feature catalogue (`features.yaml`) and each case's `intent` say how
   this repository must behave. A new feature adds an entry to `features.yaml` and at least one
-  gate case; a bug fix starts with a failing case under `cases/regressions/issue-<n>/`.
+  gating test; a bug fix starts with a failing case under `cases/regressions/issue-<n>/`.
 - **Expected results are protected.** Never change files under `cases/**/expected/`, or the
   `expected`, `tolerance`, `reference`, `input` or `steps` of an existing case, to make a test
   pass, and never weaken a test. Only a maintainer approves an expected-result change.
