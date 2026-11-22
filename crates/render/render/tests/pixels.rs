@@ -1,4 +1,4 @@
-//! Pixel-sample "golden" tests on small fixtures: gradients, blend modes, clip groups, stroke
+//! Pixel-sample tests on small fixtures: gradients, blend modes, clip groups, stroke
 //! alignment/dashes/arrowheads, effects, text, and opacity folding vs layer compositing.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]

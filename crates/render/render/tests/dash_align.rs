@@ -50,7 +50,7 @@ fn fitted_dashes_wrap_every_corner_of_a_rectangle() {
             assert!(!dark(&img, x, y), "gap after corner {c:?} along ({dx}, {dy})");
         }
     }
-    // Exact dashes keep their lengths instead (the exact golden covers how they look).
+    // Exact dashes keep their lengths instead (`dashed_line_alternates` in `tests/pixels.rs` covers how they look).
     assert_ne!(render(&rect_doc(false)).rgba, img.rgba);
 }
 

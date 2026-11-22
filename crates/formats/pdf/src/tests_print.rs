@@ -324,7 +324,7 @@ fn turns_mirror_and_negative() {
 }
 
 #[test]
-fn golden_page_one() {
+fn expected_page_one() {
     // 300 × 200: red left half, blue right half, a black frame; on Letter, turned landscape,
     // centred at 100%, with trim marks and registration targets.
     let mut d =

@@ -321,7 +321,7 @@ mod tests {
         let trim = Rect::new(0.0, 0.0, 200.0, 100.0);
         let m = all(MarkStyle::Roman);
         let lay = m.layout(trim, [0.0; 4], &[]);
-        // Golden positions: the band starts at the 6 pt offset and is 18 pt deep.
+        // Expected positions: the band starts at the 6 pt offset and is 18 pt deep.
         assert_eq!(lay.lines[0], (Point::new(-6.0, 0.0), Point::new(-24.0, 0.0)), "top-left trim mark");
         assert_eq!(lay.rings[..2], [(Point::new(100.0, -15.0), 6.0), (Point::new(100.0, -15.0), 3.0)], "top target");
         assert_eq!(lay.lines[8..10], [(Point::new(91.0, -15.0), Point::new(109.0, -15.0)), (Point::new(100.0, -24.0), Point::new(100.0, -6.0))]);
