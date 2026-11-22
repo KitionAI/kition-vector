@@ -1,6 +1,6 @@
 # Development
 
-> **Last updated:** 2026-11-17
+> **Last updated:** 2026-11-21
 
 How to build and test this repository. The rules that come first are in [`AGENTS.md`](../AGENTS.md) and
 [`quality.md`](quality.md); how the crates fit together is in [architecture.md](architecture.md).
@@ -32,8 +32,15 @@ pnpm; [`.github/CONTRIBUTING.md`](../.github/CONTRIBUTING.md) gives the exact ve
 ```sh
 cargo test --workspace                    # every crate, both bindings and xtask
 cargo build --release -p kition-vector    # the headless kit executable (bindings/headless)
-cargo xtask ci                            # the gate: run it before every commit
+cargo xtask ci                            # the full checks, which the kit's CI run runs (below)
 ```
+
+On a developer machine run only the fast checks: `cargo fmt --all -- --check`, `cargo check -p
+<touched crates> --all-targets`, `cargo xtask wasm` and `pnpm typecheck` in `web/`. The full checks
+run on GitHub in the kit's CI run: `.github/workflows/ci.yml` calls Kition's reusable kit CI, which
+runs clippy, `cargo test --workspace`, `cargo xtask ci` and every `test:*` script of `web/`. A
+change is done when the CI run of its commit is green and the commit is on `origin/main` (Kition's
+`scripts/kit-ci.sh` `push`, `wait`, `land`).
 
 `cargo xtask ci` runs these steps in order and stops at the first failure:
 

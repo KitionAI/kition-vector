@@ -52,7 +52,7 @@ Kition reads and writes only `.kvector` files tagged `"format": "kvector"`.
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)`. Colours come from `theme::Tokens`.
 - **Rust only** (no handwritten JS/TS). **Never break wasm** (`cargo xtask wasm`).
 - **Shared test corpora.** Never commit large binary fixtures to this repo; fetch them pinned by commit and sha256-verified (see `cargo xtask corpus`).
-- **Quality gates** before every commit: `cargo xtask ci` (fmt, clippy -D warnings including the no-panic lints, tests, layers, wasm). One task id per commit (`M2.1: pen tool`).
+- **Checks and CI.** On this machine run only the fast checks: `cargo fmt --all -- --check`, `cargo check -p <touched crates> --all-targets`, the wasm `cargo check` (`cargo xtask wasm`) and `pnpm typecheck` in `web/`. The full checks run in the kit's CI run on GitHub (`.github/workflows/ci.yml` calls Kition's reusable kit CI): clippy, `cargo test --workspace`, `cargo xtask ci` (fmt, clippy -D warnings including the no-panic lints, tests, layers, wasm) and every `test:*` script of `web/`. A task is done when the CI run of HEAD is green and HEAD is on `origin/main` (Kition's `scripts/kit-ci.sh` `push`, `wait`, `land`). Do not add other workflows, and do not start the Package workflow: releasing is the owner's step. One task id per commit (`M2.1: pen tool`).
 
 ## Running and looking at the app
 - There is no desktop app, CLI or control channel in this repository (Kition does not use
