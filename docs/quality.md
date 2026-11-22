@@ -41,7 +41,7 @@ cargo fmt --all -- --check
 
 Run it before you finish any task; the task is not done until it exits 0. Report the real exit
 code, not the exit code of a wrapper shell. When the gate runner arrives, this section
-names `cargo xtask gate --affected` (the gate cases of the features you touched) as well.
+names `cargo xtask gate --affected` (the gating tests of the features you touched) as well.
 
 Claude Code runs this command through the Stop hook in `.claude/settings.json`
 (`.claude/hooks/quality-gate.sh`). For an emergency bypass in one session only, start it with
@@ -118,7 +118,7 @@ Tool tokens: `WPS`, `WORD`, `EXCEL`, `POWERPOINT`, `ACROBAT`, `PHOTOSHOP`, `M365
 | `intent` | string | yes | One or two sentences: what this case guarantees and why it matters. The most important line; the reviewer and the AI read it before touching the behaviour |
 | `layer` | enum `unit` \| `gate` \| `corpus` \| `eval` | yes | When it runs (see Four layers). Regression cases are `gate` unless a maintainer moves them |
 | `dimension` | enum, see `features.yaml` | no | Defaults to the feature's first dimension; set it when this case tests another one |
-| `source` | map | yes | Where the case comes from: `kind` (enum `synthetic` \| `golden-sample` \| `corpus` \| `issue` \| `probe` \| `user-file`), `from` (string: sample path, corpus file, issue `<owner>/<repo>#<n>`, report path), `license` (SPDX id or `owned`), `note` (string, optional). A `user-file` needs the file owner's consent recorded in `note`; files that cannot be published are rebuilt as `synthetic` instead |
+| `source` | map | yes | Where the case comes from: `kind` (enum `synthetic` \| `reference-sample` \| `corpus` \| `issue` \| `probe` \| `user-file`), `from` (string: sample path, corpus file, issue `<owner>/<repo>#<n>`, report path), `license` (SPDX id or `owned`), `note` (string, optional). A `user-file` needs the file owner's consent recorded in `note`; files that cannot be published are rebuilt as `synthetic` instead |
 | `input` | list<string> | yes (may be empty) | Input files. Paths relative to the case directory (`input/…`); `repo:<path>` for a file elsewhere in the repository (for example `repo:conformance/basic.docx`); `corpus:<set>/<glob>` only in `corpus` cases |
 | `steps` | list<step> | yes | What to do, in order (see Steps). Each step is a map with one key |
 | `expected` | list<expectation> | yes | What must hold afterwards (see Expectations). At least one entry |
@@ -215,7 +215,7 @@ Larger files belong to the corpus.
 ### The 10-minute budget
 
 - Gate inputs are small: a few pages, a few hundred cells, images under 512 × 512, timelines under 3 seconds at 320 × 180. Large files belong to the corpus.
-- Gate cases run in-process by default; the headless executable is exercised by the conformance suite and a few `gate` cases tagged `headless`.
+- Gating tests run in-process by default; the headless executable is exercised by the conformance suite and a few gating tests tagged `headless`.
 - At most about ten `flow` cases per kit are `gate`; the rest are `corpus` (weekly).
 - No `gate` case measures performance against a tight time budget on this shared machine; performance budgets (Q9) use generous limits in `gate` and the real numbers in the weekly report.
 - Film exports in `gate` are a few frames, not a full export.
@@ -234,7 +234,7 @@ Top level:
 | `updated` | string, `YYYY-MM-DD` | yes | Last edit |
 | `gate_budget_s` | int | yes | Wall-clock cap for all `gate` cases of the kit on a maintainer's machine; default and maximum `600` |
 | `sources` | map<string, string> | no | Files the catalogue was generated from (`commands: crates/engine/engine/src/catalog.rs`, `parity: web/parity/photo-status.json`) |
-| `protected` | list<string> | no | Extra globs treated like `cases/**/expected/` (see Expected results are protected): committed goldens and floors that live next to existing tests |
+| `protected` | list<string> | no | Extra globs treated like `cases/**/expected/` (see Expected results are protected): committed expected results and floors that live next to existing tests |
 | `features` | list<feature> | yes | The catalogue |
 
 Each feature:
@@ -261,8 +261,9 @@ Rules: a `P0` feature with `status: has` needs 1–3 `gate` cases (requirement Q
 ## Expected results are protected
 
 - Only a maintainer approves changes to expected results. "Expected results" are:
-  1. every file under `cases/**/expected/` (added, changed, deleted or renamed);
-  2. every path matched by `protected` in `features.yaml` (committed goldens and floors next to existing tests);
+  1. every file under `cases/**/expected/` and under any other `expected/` folder, such as a kit's
+     `conformance/expected/` (the expected previews `khp check` compares) (added, changed, deleted or renamed);
+  2. every path matched by `protected` in `features.yaml` (committed expected results and floors next to existing tests);
   3. in an existing `case.yaml`: any change to `expected`, `tolerance`, `reference`, `input`, or `steps`, a move from `gate` to another layer, and deleting or moving the case directory;
   4. in `features.yaml`: removing a feature that has cases, or lowering its priority.
 - Never change an expected result to make a test pass. If you believe one is wrong, stop and explain why in the task's findings.
