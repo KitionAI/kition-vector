@@ -868,7 +868,7 @@ impl<'w, 'tx> Writer<'w, 'tx> {
             let first = before
                 .iter()
                 .enumerate()
-                .position(|(i, b)| !taken.get(i).copied().unwrap_or(true) && frames.first().is_some() && b.first() == frames.first());
+                .position(|(i, b)| !taken.get(i).copied().unwrap_or(true) && !frames.is_empty() && b.first() == frames.first());
             let found = first.or_else(|| {
                 before.iter().enumerate().position(|(i, b)| !taken.get(i).copied().unwrap_or(true) && b.iter().any(|f| frames.contains(f)))
             });

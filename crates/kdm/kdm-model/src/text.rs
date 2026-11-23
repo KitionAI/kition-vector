@@ -207,7 +207,7 @@ pub(crate) fn decode(delta: &[Delta], locals: &Locals) -> KdmResult<Story> {
             names_in(&mut value, locals);
             if key == INLINE {
                 inline = serde_json::from_value::<InlineArt>(value).ok();
-            } else if let Some(field) = key.strip_prefix(PARA) {
+            } else if let Some(field) = key.strip_prefix(PARA).filter(|field| PARA_KEYS.contains(field)) {
                 para.insert(field.to_owned(), value);
             } else if CHAR_KEYS.contains(&key.as_str()) {
                 chars.insert(key.clone(), value);

@@ -472,7 +472,7 @@ impl KitDocument for VectorDocument {
             std::path::Path::new(target).extension().map(|extension| extension.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
         let state = self.active()?;
         if extension.is_empty() || kition_vector_format::is_native_ext(&extension) {
-            return Ok(kition_vector_format::save(&state.doc, false));
+            return Ok(kition_vector_format::save_file(&state.doc));
         }
         Err(format!("saving as .{extension} is an export; save the drawing as .kvector"))
     }

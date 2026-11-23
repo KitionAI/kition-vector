@@ -56,7 +56,6 @@ document.inspect	childLimit	a value, no object: a count of children shown
 document.inspect	depth	a value, no object: a bit depth or nesting depth
 document.node	childLimit	a value, no object: a count of children shown
 document.node	depth	a value, no object: a bit depth or nesting depth
-document.save	version	a value, no object: a file format version
 edit.colors.adjustBalance	gray	a value, no object: a grey level
 edit.colors.adjustBalance	k	a value, no object: a black percentage
 edit.colors.adjustBalance	tint	a value, no object: a tint percentage
@@ -85,7 +84,6 @@ file.place.info	page	a position inside the file being read (pages of the file (1
 file.place.queue	page	a position inside the file being read (pages of the file (1-based))
 file.print	level	a value, no object: a PostScript or compression level
 file.saveAsTemplate	modified	a value, no object: a date (Unix seconds) or text
-file.saveAsTemplate	version	a value, no object: a file format version
 file.saveCopy	modified	a value, no object: a date (Unix seconds) or text
 gradient.selectStop	index	a position inside the target object's own geometry or paint, held by the target's premise (gradient stops (0-based, 0 = start) of the gradient be)
 graph.setData	rows	a value, no object: a count of rows

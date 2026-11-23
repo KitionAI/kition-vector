@@ -67,6 +67,9 @@ struct Tree {
     local: Vec<Option<NodeId>>,
 }
 
+/// A tree as the replica lists it: its entries in pre-order, each one's children, the roots.
+type Shape = (Vec<TreeEntry>, Vec<Vec<usize>>, Vec<usize>);
+
 struct Reader<'r> {
     replica: &'r Replica,
     known: &'r Known,
@@ -590,7 +593,7 @@ impl Reader<'_> {
 
     /// The tree `owner.nodes` as the replica lists it: its entries in pre-order, each one's
     /// children, and the roots.
-    fn shape(&self, owner: &ObjectId) -> KdmResult<(Vec<TreeEntry>, Vec<Vec<usize>>, Vec<usize>)> {
+    fn shape(&self, owner: &ObjectId) -> KdmResult<Shape> {
         let entries = self.replica.tree(owner, "nodes")?;
         let mut children = vec![Vec::new(); entries.len()];
         let mut roots = Vec::new();
