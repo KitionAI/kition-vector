@@ -193,10 +193,6 @@ fn the_preview_is_saved_so_the_document_shows_it_without_its_file() {
     assert!(png["warnings"].to_string().contains("output as their previews"), "{png}");
     let [r, g, b, _] = image::load_from_memory(&decode(&png)).unwrap().to_rgba8().get_pixel(200, 150).0;
     assert!(near([r, g, b], RED), "{:?}", [r, g, b]);
-    // Saved for older apps: the art it shows (here its preview), as plain objects.
-    let old: Value = serde_json::from_slice(&decode(&s.execute("document.serialize", &json!({"format": "kvector", "version": 2})).unwrap())).unwrap();
-    let old = old["document"]["layers"][0]["kind"]["children"][0].to_string();
-    assert!(old.contains("\"image\"") && !old.contains("placeddocument"), "{old}");
 }
 
 #[test]
@@ -372,10 +368,6 @@ fn a_placed_documents_resources_stay_its_own() {
     // Nor its saves.
     let saved = String::from_utf8(decode(&s.execute("document.serialize", &json!({"format": "kvector"})).unwrap())).unwrap();
     assert!(!saved.contains(prefix), "{saved}");
-    // Saved for older apps: the art and its resources, as plain objects.
-    let old = kition_vector_format::load(&decode(&s.execute("document.serialize", &json!({"format": "kvector", "version": 2})).unwrap())).unwrap();
-    assert!(!old.has_placed());
-    assert!(near(centre_colour(&old), BLUE));
 }
 
 #[test]

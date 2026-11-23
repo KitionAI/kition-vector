@@ -1,7 +1,6 @@
-//! The native format's options: compression, the version to write (older apps read older
-//! versions), an embedded preview, and the save options native and `.ai` files share: each
-//! artboard to a separate file, Include Linked Files, Embed ICC Profiles and Create
-//! PDF-Compatible File.
+//! The native format's options: compression, an embedded preview, and the save options native and
+//! `.ai` files share: each artboard to a separate file, Include Linked Files, Embed ICC Profiles
+//! and Create PDF-Compatible File.
 
 use std::collections::BTreeMap;
 
@@ -21,12 +20,6 @@ pub const OPTIONS: &[FormatOption] = &[
         ty: "boolean",
         default: "false",
         description: "gzip the file: smaller, not readable as text (saves default to Preferences → File Handling → Use Compression)",
-    },
-    FormatOption {
-        name: "version",
-        ty: "integer",
-        default: "3",
-        description: "the format version to write: 3 (current), or 2 or 1 for older Kition Vector versions (not compressed; newer features they don't know are lost there)",
     },
     FormatOption {
         name: "preview",
@@ -96,7 +89,6 @@ pub const AI_OPTIONS: &[FormatOption] = &[
 #[serde(default, rename_all = "camelCase")]
 struct NativeOptions {
     compress: Option<bool>,
-    version: Option<u32>,
     preview: bool,
     include_linked: bool,
     embed_profiles: Option<bool>,
@@ -111,28 +103,20 @@ pub(super) struct Extras {
 
 /// The options in `p` for saving `doc`, checked, with the profiles to embed (the preview and PDF
 /// are left to [`encode`]).
-pub(super) fn save_options(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result<(SaveOptions, Extras)> {
+pub(super) fn save_options(f: &Format, doc: &Document, p: &Value) -> Result<(SaveOptions, Extras)> {
     let o: NativeOptions = super::encode::options(f, p)?;
-    let mut so = SaveOptions::for_doc(doc);
-    so.compress = o.compress.unwrap_or(false);
-    so.version = o.version.unwrap_or(kition_vector_format::VERSION);
-    so.include_linked = o.include_linked;
+    let mut so = SaveOptions { compress: o.compress.unwrap_or(false), include_linked: o.include_linked, ..SaveOptions::default() };
     if o.embed_profiles.unwrap_or(true) {
         so.profiles = embedded_profiles(doc);
     }
-    so.check().map_err(|e| bad(cmd, e.to_string()))?;
     Ok((so, Extras { preview: o.preview, pdf: o.pdf_compatible }))
 }
 
 /// The `.kvector` file of `doc` with the options in `p`.
 pub(super) fn encode(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result<Vec<u8>> {
-    let (mut so, extras) = save_options(cmd, f, doc, p)?;
-    // Include Linked Files keeps placed documents' files; older versions get their art.
-    let full = if so.include_linked || so.version < kition_vector_format::VERSION {
-        crate::cmd::place::document::full_documents(doc).0
-    } else {
-        std::borrow::Cow::Borrowed(doc)
-    };
+    let (mut so, extras) = save_options(f, doc, p)?;
+    // Include Linked Files keeps placed documents' files.
+    let full = if so.include_linked { crate::cmd::place::document::full_documents(doc).0 } else { std::borrow::Cow::Borrowed(doc) };
     let doc = &*full;
     if extras.preview {
         so.preview = preview_png(doc)?;
@@ -177,9 +161,9 @@ pub(super) fn install_profiles(profiles: BTreeMap<String, Vec<u8>>) -> Vec<Strin
 pub(super) fn ai_native(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result<Vec<u8>> {
     let mut q = p.clone();
     if let Some(o) = q.as_object_mut() {
-        o.retain(|k, _| !matches!(k.as_str(), "compress" | "version" | "preview" | "pdfCompatible"));
+        o.retain(|k, _| !matches!(k.as_str(), "compress" | "preview" | "pdfCompatible"));
     }
-    let (mut so, _) = save_options(cmd, f, doc, &q)?;
+    let (mut so, _) = save_options(f, doc, &q)?;
     so.pretty = false;
     kition_vector_format::save_with(doc, &so).map_err(|e| bad(cmd, e.to_string()))
 }
@@ -201,8 +185,6 @@ pub fn with_compression_pref(prefs: &crate::Prefs, p: &Value) -> Value {
     let mut q = if p.is_object() { p.clone() } else { Value::Object(Default::default()) };
     if let Some(o) = q.as_object_mut()
         && o.get("compress").is_none_or(Value::is_null)
-        // Older versions can't read compressed files: those saves stay plain.
-        && o.get("version").and_then(Value::as_u64).is_none_or(|v| v >= u64::from(kition_vector_format::COMPRESSED_SINCE))
     {
         o.insert("compress".into(), Value::Bool(prefs.use_compression));
     }

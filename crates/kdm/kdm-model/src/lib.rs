@@ -14,33 +14,49 @@
 //!   object: opacity, blending, the opacity mask with its art, attributes, perspective…). So
 //!   moving one object and recolouring another, or one object moved and recoloured by two peers,
 //!   both survive a merge;
+//! - a type object's characters, their attributes and its paragraphs' attributes are its
+//!   `Node.text`, a rich text field ([`text`]): two peers typing in one text, or one typing while
+//!   another formats, both keep theirs. Its geometry (kind, transform, area and path options)
+//!   stays in `data`;
+//! - threaded text (Type → Threaded Text) is a `Thread` in `Drawing.threads`: its `frames` list
+//!   names the area-type frames in order and its `text` holds the whole story, so the story is
+//!   one text however it flows. The frames' own `text` stays empty; a read flows the story through
+//!   the frames again (as the engine does after every edit);
+//! - a symbol's art is the `Symbol.nodes` tree of `Node` objects, like the drawing's own, so two
+//!   peers editing different objects of one symbol both keep theirs;
+//! - guides are `Guide` objects in `Drawing.guides` (their layer and artboard `ref` fields);
 //! - artboards, swatches (and swatch groups), graphic styles, character and paragraph styles,
 //!   symbols, patterns, slices, export assets and images are objects in lists of the `Drawing`;
 //!   image bytes are blobs, content-addressed through [`BlobSink`]/[`BlobSource`];
-//! - every other key of the document (setup, guides, threads, views, saved selections,
-//!   variables, metadata, foreign `unknown` data, keys a newer version wrote…) is one entry of the
-//!   `Drawing.settings` map, so two peers changing different settings both keep theirs and
-//!   nothing is lost on a round trip.
+//! - every other key of the document (setup, views, saved selections, variables, metadata,
+//!   foreign `unknown` data, keys a newer version wrote…) is one entry of the `Drawing.settings`
+//!   map, so two peers changing different settings both keep theirs and nothing is lost on a
+//!   round trip.
 //!
 //! **Ids.** Engine ids (`NodeId` from the document's counter, artboard and graphic style ids,
-//! slice and asset ids) are never replicated: [`read_document`] mints them (keeping, through
-//! [`Known`], the ones a session's view already gave an object), and [`Ids`] maps them to object
-//! ids. Every id stored as data — a node's graphic style, text threads, guides' layers and
-//! artboards, saved selections, variable bindings, export assets, the pattern-editing layer — is
-//! written as the object id it names and translated back on read; a reference to nothing is not
-//! replicated (it means nothing). References by **name** to a swatch, a pattern or a symbol
-//! (paints, gradient stops, tints, symbol instances, inline graphics, pattern editing) are written
-//! as `{"ref": <object id>, "name": <name>}`: they follow a rename by another peer, and read back
-//! as the name they had if the object is gone.
+//! slice and asset ids) are written in each object's read-only `id` field, the object's tool id,
+//! and [`Ids`] maps them to object ids. A read keeps an object's written id unless another object
+//! of the read holds it already (two peers that each made an object with the next id of their
+//! counter): that one gets a fresh id above every id the view used, and [`Known`] keeps the id a
+//! session's view already gave an object. A symbol's art nodes have no `id` (see [`Ids`]). Every
+//! id stored as data — a node's graphic style, saved selections, variable bindings, export
+//! assets — is written as the object id it names and translated back on read, and so are a
+//! guide's layer and artboard and a thread's frames; a reference to nothing is not replicated (it
+//! means nothing). References by **name** to a swatch, a pattern or a symbol (paints, gradient
+//! stops, tints, symbol instances, inline graphics) are written as `{"ref": <object id>, "name":
+//! <name>}`: they follow a rename by another peer, and read back as the name they had if the
+//! object is gone.
 //!
-//! **Per person.** The opacity-mask editing layer and warp pins are the editing person's
-//! own (see [`shared_part`]): never written. The saved view and the open Layers rows are view
-//! state the engine keeps outside the document.
+//! **Per person.** The opacity-mask and pattern editing modes (their editing layers and state),
+//! the active data set and warp pins are the editing person's own (see [`shared_part`]): never
+//! written. The saved view and the open Layers rows are view state the engine keeps outside the
+//! document.
 //!
 //! **Repair.** [`KitModel::validate`] clears what a merge left dangling: a symbol instance of a
 //! deleted symbol is deleted (as `symbol.delete` without expanding does), a graphic style link to
-//! a deleted style is dropped, threads, guides, saved selections, variable bindings, assets and
-//! pattern editing let go of deleted objects, and list entries naming deleted objects go.
+//! a deleted style is dropped, saved selections, variable bindings and assets let go of deleted
+//! objects, a guide on a deleted layer or artboard goes, a thread lets go of deleted frames (and
+//! goes with the last), and list entries naming deleted objects go.
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -51,6 +67,7 @@ mod list;
 mod read;
 mod refs;
 mod session;
+mod text;
 mod validate;
 mod write;
 
@@ -110,16 +127,29 @@ pub(crate) type ImageCache = HashMap<String, Arc<Vec<u8>>>;
 
 /// The part of `doc` a replica holds: without the opacity-mask editing layer (the editing
 /// person's working copy of art the mask already holds, which the engine syncs into the mask
-/// after every edit). Borrowed when no mask is being edited. warp pins and the mask
+/// after every edit), without pattern editing (its tile layer and state: the person's unapplied
+/// edits, which Done writes into the pattern) and without the active data set (which data set
+/// the person last applied). Borrowed when there is none of these. Warp pins and the mask
 /// editing mode itself are never serialized, so they are not written either.
 pub fn shared_part(doc: &Document) -> Cow<'_, Document> {
-    doc.without_edit_modes()
+    let personal = doc.pattern_edit.is_some() || doc.variables.active_dataset.is_some();
+    let shared = doc.without_edit_modes();
+    if !personal {
+        return shared;
+    }
+    let mut d = shared.into_owned();
+    if let Some(edit) = d.pattern_edit.take() {
+        d.layers.retain(|l| l.id != edit.layer);
+    }
+    d.variables.active_dataset = None;
+    Cow::Owned(d)
 }
 
 /// A file's drawing, as [`KitModel::import`] reads it: `.kvector` (by content), else SVG
 /// (by content or `name`'s extension), without the view state a file keeps for its editor (the
-/// saved view and the open Layers rows) and with duplicate ids renumbered (a replica needs every
-/// object, slice, asset and artboard id unique).
+/// saved view and the open Layers rows) and the person's own state ([`shared_part`]), and with
+/// duplicate ids renumbered (a replica needs every object, slice, asset and artboard id unique,
+/// and a symbol's art ids unique in it).
 pub fn decode(name: &str, bytes: &[u8]) -> Result<Document> {
     let lower = name.to_ascii_lowercase();
     let svg = lower.ends_with(".svg") || lower.ends_with(".svgz") || kition_vector_svg::is_svgz(bytes) || looks_like_svg(bytes);
@@ -133,7 +163,7 @@ pub fn decode(name: &str, bytes: &[u8]) -> Result<Document> {
     };
     doc.last_view = None;
     doc.layers_open = None;
-    doc.drop_edit_modes();
+    let mut doc = shared_part(&doc).into_owned();
     doc.settle_uids(None);
     ids::dedupe(&mut doc);
     Ok(doc)

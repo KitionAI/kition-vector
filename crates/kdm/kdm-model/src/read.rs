@@ -1,8 +1,10 @@
-//! Replica -> `Document`, in two passes: the first walks every list and the tree (skipping
+//! Replica -> `Document`, in two passes: the first walks every list and the trees (skipping
 //! entries whose object is gone, with what is under them, and every object after its first
-//! listing) and gives each object its local id — the one [`Known`] remembers for it, else a fresh
-//! one above every id the view ever used — so the second can translate every reference stored as
-//! data while it reads the fields.
+//! listing) and gives each object its local id — the one [`Known`] remembers for it, else the one
+//! it was written with if no other object of the read has it, else a fresh one above every id the
+//! view ever used — so the second can translate every reference stored as data while it reads the
+//! fields. Last, each thread's story flows through its area-type frames
+//! ([`kition_vector_text::thread::distribute`], as the engine flows it after every edit).
 //!
 //! With a [`Reuse`] view, a node whose object did not change keeps the view's own node (its
 //! caches, and its `Arc` identity when its children did not change either), unless a named thing
@@ -13,12 +15,13 @@ use std::sync::Arc;
 
 use kition_kit::kdm::{KdmError, ObjectId, Replica, TreeEntry};
 use kition_kit::session::{BlobRef, BlobSource};
-use kition_vector_doc::{Document, FORMAT_VERSION, ImageBlob, Node, NodeId};
+use kition_vector_doc::{Document, FORMAT_VERSION, Guide, ImageBlob, Node, NodeId, NodeKind, TextObject};
 use serde_json::{Map, Value, json};
 
-use crate::ids::{Ids, Known, index};
+use crate::ids::{Ids, Known, TreeIds, index};
 use crate::refs::{Locals, Mapper, SETTINGS_WITH_IDS, map_asset_nodes, map_setting, names_in};
-use crate::write::children_key_of;
+use crate::text::decode;
+use crate::write::{TEXT_KEYS, area_text, children_key_of};
 use crate::{ImageCache, KdmResult, MAX_DEPTH, kdm_err, root_id};
 
 /// Reads the whole drawing with fresh local ids.
@@ -146,6 +149,12 @@ pub(crate) fn read_with(
         artboards.push((object, id));
     }
     let tree = r.tree(&root)?;
+    let mut art_trees = Vec::with_capacity(r.ids.symbols.len());
+    for object in r.ids.symbols.clone() {
+        let (art, ids) = r.art_tree(&object)?;
+        art_trees.push(art);
+        r.ids.symbol_trees.push(ids);
+    }
     let mut slices = Vec::new();
     for object in r.live(&root, "slices")? {
         let stored = replica.get(&object, "id")?.as_u64();
@@ -161,6 +170,8 @@ pub(crate) fn read_with(
         assets.push((object, id));
     }
     let images = r.live(&root, "images")?;
+    let guide_objects = r.live(&root, "guides")?;
+    let thread_objects = r.live(&root, "threads")?;
 
     // Pass 2: fields.
     let locals = std::mem::take(&mut r.locals);
@@ -180,9 +191,6 @@ pub(crate) fn read_with(
                 doc.remove(*key);
             }
         }
-    }
-    if let Some(edit) = doc.get_mut("pattern_edit") {
-        names_in(edit, &locals);
     }
     for key in crate::write::MODELLED {
         doc.remove(*key);
@@ -213,11 +221,11 @@ pub(crate) fn read_with(
     }
     let chars: Vec<Value> = r.ids.char_styles.iter().map(|o| named(o, &[])).collect::<KdmResult<_>>()?;
     let paras: Vec<Value> = r.ids.para_styles.iter().map(|o| named(o, &[])).collect::<KdmResult<_>>()?;
+    // The art is read with the nodes, below.
+    let placeholder = serde_json::to_value(empty_group()).map_err(kdm_err)?;
     let mut symbols = Vec::new();
     for object in &r.ids.symbols {
-        let mut art = replica.get(object, "art")?;
-        names_in(&mut art, &locals);
-        symbols.push(json!({ "uid": string(replica.get(object, "key")?), "name": string(replica.get(object, "name")?), "art": art }));
+        symbols.push(json!({ "uid": string(replica.get(object, "key")?), "name": string(replica.get(object, "name")?), "art": placeholder }));
     }
     let patterns: Vec<Value> = r.ids.patterns.iter().map(|o| named(o, &[])).collect::<KdmResult<_>>()?;
     let mut boards = Vec::new();
@@ -270,6 +278,80 @@ pub(crate) fn read_with(
         }
     }
     document.layers = layers;
+    for (symbol, art) in document.symbols.iter_mut().zip(&art_trees) {
+        let builder = Builder { replica, tree: art, locals: &locals, old: None };
+        let mut first = None;
+        for &i in &art.roots {
+            if let Some(n) = builder.build(i, 0)? {
+                first = Some(n);
+                break;
+            }
+        }
+        symbol.art = first.unwrap_or_else(|| Arc::new(empty_group()));
+    }
+
+    // Guides: one on a layer or artboard that is gone goes with it.
+    for object in guide_objects {
+        let on = |field: &str| -> KdmResult<Option<Option<ObjectId>>> {
+            Ok(match replica.get(&object, field)? {
+                Value::String(id) => Some(Some(ObjectId::from_string(id))),
+                Value::Null => Some(None),
+                _ => None,
+            })
+        };
+        let (Some(artboard), Some(layer)) = (on("artboard")?, on("layer")?) else { continue };
+        let artboard = match artboard {
+            Some(a) => match locals.artboards.get(&a) {
+                Some(id) => Some(*id),
+                None => continue,
+            },
+            None => None,
+        };
+        let layer = match layer {
+            Some(l) => match locals.nodes.get(&l) {
+                Some(id) => Some(*id),
+                None => continue,
+            },
+            None => None,
+        };
+        let vertical = replica.get(&object, "vertical")?.as_bool().unwrap_or(false);
+        let pos = replica.get(&object, "pos")?.as_f64().unwrap_or(0.0);
+        document.guides.push(Guide { vertical, pos, artboard, layer });
+        r.ids.guides.push(object);
+    }
+
+    // Threads: each frame in the first that lists it; the story flows through the area-type ones.
+    let mut claimed = HashSet::new();
+    for object in thread_objects {
+        let frames: Vec<NodeId> = replica
+            .list(&object, "frames")?
+            .iter()
+            .filter_map(|o| locals.nodes.get(o).copied())
+            .filter(|id| document.node(*id).is_some() && claimed.insert(*id))
+            .collect();
+        if frames.is_empty() {
+            continue;
+        }
+        let delta = replica.text_delta(&object, "text")?;
+        let area: Vec<NodeId> = frames.iter().copied().filter(|id| document.node(*id).is_some_and(|n| area_text(n).is_some())).collect();
+        if !area.is_empty() && !delta.is_empty() {
+            let story = decode(&delta, &locals)?;
+            let texts: Vec<TextObject> = area.iter().filter_map(|id| document.node(*id).and_then(area_text).cloned()).collect();
+            let refs: Vec<&TextObject> = texts.iter().collect();
+            let parts = kition_vector_text::thread::distribute(kition_vector_text::FontDb::global(), &refs, &story.runs, &story.paras);
+            for (id, part) in area.iter().zip(parts) {
+                let same = document.node(*id).and_then(area_text).is_some_and(|t| t.runs == part.runs && t.paragraph_styles() == part.paras);
+                if !same && let Some(NodeKind::Text(t)) = document.node_mut(*id).map(|n| &mut n.kind) {
+                    t.runs = part.runs;
+                    t.set_paragraph_styles(part.paras);
+                    t.cached_bounds = None;
+                    t.cached_baselines.clear();
+                }
+            }
+        }
+        document.text_threads.push(frames);
+        r.ids.threads.push(object);
+    }
 
     // Images.
     let mut out_cache = ImageCache::new();
@@ -292,6 +374,11 @@ pub(crate) fn read_with(
     document.images = taken;
     document.fix_next_id();
     Ok((document, r.ids, out_cache))
+}
+
+/// What a symbol without art (or whose art is gone) reads as: an empty group.
+fn empty_group() -> Node {
+    Node::new(NodeId(1), NodeKind::Group { children: Vec::new(), clip: false })
 }
 
 /// The bytes a blob reference names (from the view's cache when it already holds them).
@@ -320,14 +407,32 @@ fn blob(v: Value, blobs: &dyn BlobSource, cache: &ImageCache, out: &mut ImageCac
 fn names_changed(replica: &Replica, reuse: &Reuse<'_>) -> bool {
     const NAMED: &[&str] = &["Swatch", "SwatchGroup", "Symbol", "Pattern", "GraphicStyle"];
     let ids = reuse.ids;
+    let was_art = |o: &ObjectId| ids.symbol_trees.iter().any(|t| t.nodes.local(o).is_some());
     let was_named = |o: &ObjectId| {
         ids.swatches.contains(o)
             || ids.swatch_groups.iter().any(|(g, members)| g == o || members.contains(o))
             || ids.graphic_styles.contains(o)
             || ids.symbols.contains(o)
             || ids.patterns.contains(o)
+            || was_art(o)
+    };
+    // A node of a symbol's art: the symbol's instances show it.
+    let mut art: Option<BTreeSet<ObjectId>> = None;
+    let mut is_art = |o: &ObjectId| {
+        if was_art(o) {
+            return true;
+        }
+        if ids.nodes.local(o).is_some() {
+            return false;
+        }
+        let all = art.get_or_insert_with(|| {
+            let symbols = replica.list(&root_id(), "symbols").unwrap_or_default();
+            symbols.iter().flat_map(|s| replica.tree(s, "nodes").unwrap_or_default()).map(|entry| entry.object).collect()
+        });
+        all.contains(o)
     };
     reuse.changed.iter().any(|object| match replica.object_type(object) {
+        Ok(ty) if ty == "Node" => is_art(object),
         Ok(ty) => NAMED.contains(&ty.as_str()),
         Err(_) => was_named(object),
     })
@@ -405,11 +510,27 @@ impl Builder<'_> {
         if let Some(key) = data.get("type").and_then(Value::as_str).and_then(children_key_of) {
             data.insert(key.into(), Value::Array(Vec::new()));
         }
+        let text = data.get("type").and_then(Value::as_str) == Some("text");
+        if text {
+            // The characters and paragraphs are the `text` field's.
+            for key in TEXT_KEYS {
+                data.remove(*key);
+            }
+            data.insert("runs".into(), Value::Array(Vec::new()));
+        }
         map.insert("kind".into(), Value::Object(data));
         map.insert("id".into(), Value::from(id.0));
         let mut v = Value::Object(map);
         names_in(&mut v, self.locals);
-        serde_json::from_value(v).map_err(|error| kdm_err(format!("object {object}: {error}")))
+        let mut node: Node = serde_json::from_value(v).map_err(|error| kdm_err(format!("object {object}: {error}")))?;
+        if let NodeKind::Text(t) = &mut node.kind {
+            let story = decode(&self.replica.text_delta(object, "text")?, self.locals)?;
+            t.runs = story.runs;
+            if !story.paras.is_empty() {
+                t.set_paragraph_styles(story.paras);
+            }
+        }
+        Ok(node)
     }
 }
 
@@ -467,11 +588,10 @@ impl Reader<'_> {
         Ok(items.into_iter().filter(|o| self.replica.exists(o) && self.seen.insert(o.clone())).collect())
     }
 
-    /// The layer tree, with local ids for the nodes read: in pre-order, skipping a node whose
-    /// object is gone or was already read (with everything under it) and what nests deeper than
-    /// the bridge goes.
-    fn tree(&mut self, root: &ObjectId) -> KdmResult<Tree> {
-        let entries = self.replica.tree(root, "nodes")?;
+    /// The tree `owner.nodes` as the replica lists it: its entries in pre-order, each one's
+    /// children, and the roots.
+    fn shape(&self, owner: &ObjectId) -> KdmResult<(Vec<TreeEntry>, Vec<Vec<usize>>, Vec<usize>)> {
+        let entries = self.replica.tree(owner, "nodes")?;
         let mut children = vec![Vec::new(); entries.len()];
         let mut roots = Vec::new();
         // Pre-order: a node's parent is on the stack of its ancestors.
@@ -494,13 +614,35 @@ impl Reader<'_> {
             }
             stack.push(i);
         }
-        let mut local = vec![None; entries.len()];
+        Ok((entries, children, roots))
+    }
+
+    /// The entries to read, in pre-order: skipping a node whose object is gone or was already
+    /// read (with everything under it) and what nests deeper than the bridge goes.
+    fn readable(&mut self, entries: &[TreeEntry], children: &[Vec<usize>], roots: &[usize]) -> Vec<usize> {
+        let mut out = Vec::new();
         let mut pending: Vec<(usize, usize)> = roots.iter().rev().map(|&i| (i, 0)).collect();
         while let Some((i, depth)) = pending.pop() {
             let Some(entry) = entries.get(i) else { continue };
             if depth > MAX_DEPTH || !self.replica.exists(&entry.object) || !self.seen.insert(entry.object.clone()) {
                 continue;
             }
+            out.push(i);
+            if let Some(list) = children.get(i) {
+                for &c in list.iter().rev() {
+                    pending.push((c, depth + 1));
+                }
+            }
+        }
+        out
+    }
+
+    /// The layer tree, with local ids for the nodes read ([`Reader::readable`]).
+    fn tree(&mut self, root: &ObjectId) -> KdmResult<Tree> {
+        let (entries, children, roots) = self.shape(root)?;
+        let mut local = vec![None; entries.len()];
+        for i in self.readable(&entries, &children, &roots) {
+            let Some(entry) = entries.get(i) else { continue };
             let stored = self.replica.get(&entry.object, "id")?.as_u64();
             let id = NodeId(self.mint(self.known.nodes.get(&entry.object).map(|n| n.0).or(stored)));
             if let Some(slot) = local.get_mut(i) {
@@ -509,12 +651,38 @@ impl Reader<'_> {
             self.ids.nodes.insert(entry.object.clone(), id);
             self.ids.tree.insert(entry.object.clone(), entry.node.clone());
             self.locals.nodes.insert(entry.object.clone(), id);
-            if let Some(list) = children.get(i) {
-                for &c in list.iter().rev() {
-                    pending.push((c, depth + 1));
-                }
-            }
         }
         Ok(Tree { entries, children, roots, local })
+    }
+
+    /// A symbol's art tree, with local ids for the nodes read: the one [`Known`] remembers for each,
+    /// else a fresh one unique in the symbol (the art's ids are its own: [`crate::ids`]).
+    fn art_tree(&mut self, symbol: &ObjectId) -> KdmResult<(Tree, TreeIds)> {
+        let (entries, children, roots) = self.shape(symbol)?;
+        let order = self.readable(&entries, &children, &roots);
+        let known: Vec<Option<NodeId>> =
+            order.iter().map(|&i| entries.get(i).and_then(|e| self.known.symbol_nodes.get(&e.object).copied())).collect();
+        let mut next = known.iter().flatten().map(|n| n.0).max().unwrap_or(0);
+        let mut used = HashSet::new();
+        let mut local = vec![None; entries.len()];
+        let mut ids = TreeIds::default();
+        for (k, &i) in order.iter().enumerate() {
+            let Some(entry) = entries.get(i) else { continue };
+            let id = match known.get(k).copied().flatten() {
+                Some(id) if id.0 > 0 && used.insert(id) => id,
+                _ => loop {
+                    next = next.saturating_add(1);
+                    if used.insert(NodeId(next)) || next == u64::MAX {
+                        break NodeId(next);
+                    }
+                },
+            };
+            if let Some(slot) = local.get_mut(i) {
+                *slot = Some(id);
+            }
+            ids.nodes.insert(entry.object.clone(), id);
+            ids.tree.insert(entry.object.clone(), entry.node.clone());
+        }
+        Ok((Tree { entries, children, roots, local }, ids))
     }
 }

@@ -1,5 +1,5 @@
-//! `.kvector` v3: compression, pruning unused images, keys from newer versions, colour
-//! profiles as a document field, saving for older versions and the embedded preview.
+//! `.kvector`: compression, pruning unused images, keys from newer releases, colour profiles as a
+//! document field, the embedded preview and pretty-printed output.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -7,10 +7,10 @@ use std::io::Write as _;
 use std::sync::Arc;
 
 use kition_vector_doc::{ColorProfiles, Composer, Document, ImageBlob, ImageObject, Node, NodeKind, OpacityMask, Symbol};
-use kition_vector_format::{FormatError, SaveOptions, VERSION, is_compressed, load, preview, save, save_with, sniff};
+use kition_vector_format::{SaveOptions, VERSION, is_compressed, load, preview, save, save_with, sniff};
 use kition_vector_geom::Affine;
 use kition_vector_testkit::fixtures;
-use kition_vector_testkit::invariants::{check_native_roundtrip, doc_json, json_approx_eq};
+use kition_vector_testkit::invariants::{check_native_roundtrip, doc_json};
 use serde_json::{Value, json};
 
 fn rich_doc() -> Document {
@@ -37,10 +37,6 @@ fn image_node(d: &mut Document, key: &str) -> Node {
         id,
         NodeKind::Image(ImageObject { key: key.into(), width: 2, height: 2, xf: Affine::IDENTITY, link: None, placement: Default::default() }),
     )
-}
-
-fn opts(version: u32, compress: bool) -> SaveOptions {
-    SaveOptions { version, compress, ..SaveOptions::default() }
 }
 
 #[test]
@@ -93,13 +89,10 @@ fn compressed_files_load() {
     assert_eq!(doc_json(&load(&packed).unwrap()), doc_json(&load(&plain).unwrap()));
     // Compressed files are compact even when pretty was asked for.
     assert!(!flate2_unpack(&packed).contains(&b'\n'));
-    // An older (v2) file compressed by hand opens too.
-    let text = String::from_utf8(plain.clone()).unwrap();
-    let legacy = text.replacen(&format!("\"format\":\"kvector\",\"version\":{VERSION}"), "\"format\":\"kvector\",\"version\":2", 1);
-    assert_ne!(legacy, text);
-    let legacy = gzip(legacy.as_bytes());
-    assert!(sniff(&legacy));
-    assert_eq!(doc_json(&load(&legacy).unwrap()), doc_json(&load(&plain).unwrap()));
+    // A file compressed by hand opens too.
+    let by_hand = gzip(&plain);
+    assert!(sniff(&by_hand));
+    assert_eq!(doc_json(&load(&by_hand).unwrap()), doc_json(&load(&plain).unwrap()));
     // Other gzip data (an SVGZ) is not a native file.
     assert!(!sniff(&gzip(b"<svg xmlns=\"http://www.w3.org/2000/svg\"/>")));
     assert!(load(&packed[..packed.len() / 2]).is_err(), "a truncated file is an error");
@@ -188,8 +181,9 @@ fn text_composer_round_trips() {
     assert!(!String::from_utf8_lossy(&save(&d2, false)).contains("composer"));
 }
 
-/// A document as the first version wrote it (format name `kvector`, anchors as maps).
-const V1_FILE: &str = r#"{"format":"kvector","version":1,"generator":"KitionVector 0.1.0","document":{"version":1,"title":"Old","artboards":[{"id":1,"name":"Artboard 1","rect":{"x0":0.0,"y0":0.0,"x1":100.0,"y1":80.0}}],
+/// A document with anchors as maps and its colour profiles in `unknown` (the document model still
+/// reads both forms).
+const MAP_ANCHORS_FILE: &str = r#"{"format":"kvector","version":1,"generator":"KitionVector 0.1.0","document":{"version":1,"title":"Old","artboards":[{"id":1,"name":"Artboard 1","rect":{"x0":0.0,"y0":0.0,"x1":100.0,"y1":80.0}}],
 "layers":[{"id":1,"name":"Layer 1","visible":true,"locked":false,"opacity":1.0,"kind":{"type":"layer","children":[
 {"id":2,"visible":true,"locked":false,"opacity":1.0,"kind":{"type":"path","path":{"subpaths":[{"anchors":[
 {"p":{"x":10.0,"y":10.0},"in":{"x":10.0,"y":10.0},"out":{"x":30.0,"y":0.0},"kind":"Smooth"},
@@ -197,8 +191,8 @@ const V1_FILE: &str = r#"{"format":"kvector","version":1,"generator":"KitionVect
 "next_id":3,"unknown":{"colorProfiles":{"rgb":"sRGB IEC61966-2.1","cmyk":null}}},"images":{}}"#;
 
 #[test]
-fn version_1_files_load() {
-    let d = load(V1_FILE.as_bytes()).unwrap();
+fn map_anchors_and_profiles_in_unknown_load() {
+    let d = load(MAP_ANCHORS_FILE.as_bytes()).unwrap();
     assert_eq!(d.title, "Old");
     let NodeKind::Path { path, .. } = &d.layers[0].children().unwrap()[0].kind else { panic!("not a path") };
     let a = &path.subpaths[0].anchors;
@@ -209,32 +203,19 @@ fn version_1_files_load() {
 }
 
 #[test]
-fn saves_down_to_older_versions() {
+fn saves_version_1_with_profiles_as_a_document_field() {
     let mut d = rich_doc();
     d.color_profiles = ColorProfiles { rgb: None, cmyk: Some("Coated".into()) };
-    let current = doc_json(&load(&save(&d, false)).unwrap());
-    for version in [1, 2] {
-        let bytes = save_with(&d, &opts(version, false)).unwrap();
-        let v = json_of(&bytes);
-        assert_eq!((v["format"].as_str(), v["version"].as_u64()), (Some("kvector"), Some(version as u64)), "older versions keep today's format name");
-        // Profiles where those versions keep them.
-        assert_eq!(v["document"]["unknown"]["colorProfiles"], json!({"rgb": null, "cmyk": "Coated"}));
-        assert!(v["document"].get("color_profiles").is_none());
-        let back = load(&bytes).unwrap();
-        assert!(json_approx_eq(&doc_json(&back), &current, 1e-12), "v{version} loses nothing it can hold");
-        let text = String::from_utf8(bytes).unwrap();
-        // v1 anchors are maps with every member; v2 anchors are compact.
-        assert_eq!(text.contains("\"p\":{\"x\""), version == 1);
-        assert_eq!(text.contains("\"p\":["), version == 2);
-    }
-    let v3 = json_of(&save(&d, false));
-    assert_eq!((v3["format"].as_str(), v3["version"].as_u64()), (Some("kvector"), Some(VERSION as u64)));
-    assert_eq!(v3["document"]["color_profiles"], json!({"cmyk": "Coated"}));
-    assert!(v3["document"]["unknown"].get("colorProfiles").is_none());
-    // Out of range, and compression older apps can't read.
-    assert!(matches!(save_with(&d, &opts(0, false)), Err(FormatError::BadVersion(0))));
-    assert!(matches!(save_with(&d, &opts(VERSION + 1, false)), Err(FormatError::BadVersion(_))));
-    assert!(matches!(save_with(&d, &opts(2, true)), Err(FormatError::CompressedTooOld(2))));
+    let bytes = save(&d, false);
+    let v = json_of(&bytes);
+    assert_eq!((v["format"].as_str(), v["version"].as_u64()), (Some("kvector"), Some(VERSION as u64)));
+    assert_eq!(VERSION, 1);
+    assert_eq!(v["document"]["color_profiles"], json!({"cmyk": "Coated"}));
+    assert!(v["document"]["unknown"].get("colorProfiles").is_none());
+    // Anchors are compact.
+    let text = String::from_utf8(bytes.clone()).unwrap();
+    assert!(text.contains("\"p\":[") && !text.contains("\"p\":{\"x\""));
+    assert_eq!(load(&bytes).unwrap().color_profiles, d.color_profiles);
 }
 
 #[test]

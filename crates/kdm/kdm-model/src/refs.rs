@@ -2,14 +2,14 @@
 //!
 //! - **By name**, to a swatch (`"swatch"`: solid paints, gradient stops, tints, gradient paints),
 //!   a symbol (`"symbol"`: symbol instances, inline graphics in text) or a pattern (`"pattern"` of
-//!   a `{"type": "pattern"}` paint, and pattern editing): written as `{"ref": <object id>,
-//!   "name": <name>}` when the name names one of the drawing's, so they follow a rename, and read
-//!   back as the object's current name (or the name they had, if the object is gone). A name that
-//!   names nothing stays the plain string it was.
-//! - **By local id**, in the document's settings ([`map_setting`]): text threads, guides' layers
-//!   and artboards, saved selections, variable bindings and the pattern-editing layer; and a
-//!   node's graphic style and an asset's objects (in their own registers). Written as object ids;
-//!   a reference to nothing is not written.
+//!   a `{"type": "pattern"}` paint): written as `{"ref": <object id>, "name": <name>}` when the
+//!   name names one of the drawing's, so they follow a rename, and read back as the object's
+//!   current name (or the name they had, if the object is gone). A name that names nothing stays
+//!   the plain string it was. Text marks hold them the same way ([`crate::text`]).
+//! - **By local id**, in the document's settings ([`map_setting`]): saved selections and variable
+//!   bindings; a node's graphic style and an asset's objects (in their own registers); and a
+//!   guide's layer and artboard and a thread's frames, which are `ref` fields and list entries of
+//!   their own objects. Written as object ids; a reference to nothing is not written.
 
 use std::collections::HashMap;
 
@@ -149,11 +149,15 @@ pub(crate) struct Mapper<'a> {
 }
 
 /// The settings keys [`map_setting`] rewrites.
-pub(crate) const SETTINGS_WITH_IDS: &[&str] = &["text_threads", "guides", "saved_selections", "variables", "pattern_edit"];
+pub(crate) const SETTINGS_WITH_IDS: &[&str] = &["saved_selections", "variables"];
 
-/// Rewrites the local ids inside the document setting `key` with `m`. A guide on a layer or
-/// artboard that is gone goes (as it would with the layer or artboard), and pattern editing on a
-/// layer that is gone ends (`v` becomes `null`).
+/// The serialized document's keys [`map_setting`] rewrites when comparing views
+/// ([`crate::normalize`]): the settings', and the guides and threads, which have objects of their
+/// own in a replica.
+pub(crate) const KEYS_WITH_IDS: &[&str] = &["text_threads", "guides", "saved_selections", "variables"];
+
+/// Rewrites the local ids inside the serialized document's `key` with `m`. A guide on a layer or
+/// artboard that is gone goes (as it would with the layer or artboard).
 pub(crate) fn map_setting(key: &str, v: &mut Value, m: &Mapper<'_>) {
     match key {
         "text_threads" => {
@@ -206,15 +210,6 @@ pub(crate) fn map_setting(key: &str, v: &mut Value, m: &Mapper<'_>) {
                     };
                     bindings.insert(mapped, names);
                 }
-            }
-        }
-        "pattern_edit" => {
-            let layer = v.get("layer").cloned().and_then(|l| (m.node)(&l));
-            match (layer, v.as_object_mut()) {
-                (Some(layer), Some(edit)) => {
-                    edit.insert("layer".into(), layer);
-                }
-                _ => *v = Value::Null,
             }
         }
         _ => {}

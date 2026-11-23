@@ -1,5 +1,5 @@
-//! `.kvector` v4: large data after the JSON (images, the PDF, profiles), small files still plain
-//! JSON, older versions inline, damaged offsets refused.
+//! `.kvector`: large data after the JSON (images, the PDF, profiles), small files still plain JSON,
+//! damaged offsets refused.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -45,23 +45,18 @@ fn large_data_goes_after_the_json_and_reads_back() {
 }
 
 #[test]
-fn small_files_stay_plain_json_and_older_versions_inline() {
+fn small_files_stay_plain_json() {
     let small = save_with(&doc_with_image("small", 100), &SaveOptions::default()).unwrap();
     assert!(!has_tail(&small));
     let v: Value = serde_json::from_slice(&small).unwrap();
-    assert_eq!(v["version"], 4);
-    let big = doc_with_image("big", INLINE_MAX + 10);
-    let v3 = save_with(&big, &SaveOptions { version: 3, ..SaveOptions::default() }).unwrap();
-    assert!(!has_tail(&v3), "version 3 keeps everything in the JSON");
-    let v: Value = serde_json::from_slice(&v3).unwrap();
-    assert_eq!((v["format"].as_str(), v["version"].as_u64()), (Some("kvector"), Some(3)));
-    assert_eq!(load(&v3).unwrap().images["big"].bytes, big.images["big"].bytes);
+    assert_eq!(v["version"], 1);
+    assert_eq!(load(&small).unwrap().images["small"].bytes.len(), 100);
 }
 
 #[test]
 fn damaged_offsets_are_refused_not_a_crash() {
     let d = doc_with_image("big", INLINE_MAX + 10);
-    let bytes = save_with(&d, &SaveOptions::default()).unwrap();
+    let bytes = save_with(&d, &SaveOptions { pretty: false, ..SaveOptions::default() }).unwrap();
     // The data cut short.
     let cut = &bytes[..bytes.len() - 100];
     assert!(matches!(load_file(cut), Err(FormatError::BadImage(_))));

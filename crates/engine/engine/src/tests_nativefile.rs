@@ -1,5 +1,6 @@
-//! Native files: `document.save {compress, version, preview}`, the Use Compression preference,
-//! atomic writes, unused images left out, keys from newer versions and colour profiles kept.
+//! Native files: `document.save {compress, preview}`, the one format version, pretty output, the
+//! Use Compression preference, atomic writes, unused images left out, keys from newer releases and
+//! colour profiles kept.
 
 use std::path::PathBuf;
 
@@ -67,9 +68,6 @@ fn use_compression_preference_sets_the_default() {
     s.execute("prefs.set", &json!({"key": "useCompression", "value": true})).unwrap();
     assert!(is_compressed(&saved(&mut s, json!({}))));
     assert!(!is_compressed(&saved(&mut s, json!({"compress": false}))), "the param wins");
-    // Older versions can't read compressed files: those saves stay plain.
-    assert!(!is_compressed(&saved(&mut s, json!({"version": 2}))));
-    assert!(s.execute("document.save", &json!({"version": 2, "compress": true})).is_err());
     assert!(is_compressed(&bytes_of(&s.execute("file.saveAsTemplate", &json!({})).unwrap())));
     // Exports write what they're told.
     let r = s.execute("document.serialize", &json!({"format": "kvector"})).unwrap();
@@ -77,23 +75,31 @@ fn use_compression_preference_sets_the_default() {
 }
 
 #[test]
-fn saves_for_older_versions() {
+fn saves_write_version_1_pretty_printed() {
     let mut s = session();
-    for v in [1, 2] {
-        let bytes = saved(&mut s, json!({"version": v}));
-        let j = json_of(&bytes);
-        assert_eq!((j["format"].as_str(), j["version"].as_u64()), (Some("kvector"), Some(v)));
-        open(&mut s, "old.kvector", &bytes);
-        assert_eq!(s.doc().unwrap().doc.node_count(), 2);
-    }
-    for bad in [json!({"version": 0}), json!({"version": 9}), json!({"version": "two"})] {
-        assert!(s.execute("document.save", &bad).is_err(), "{bad}");
+    let bytes = saved(&mut s, json!({}));
+    let j = json_of(&bytes);
+    assert_eq!((j["format"].as_str(), j["version"].as_u64()), (Some("kvector"), Some(1)));
+    let text = String::from_utf8(bytes.clone()).unwrap();
+    assert!(text.starts_with("{\n  \"format\": \"kvector\",\n  \"version\": 1,"), "{text}");
+    open(&mut s, "again.kvector", &bytes);
+    assert_eq!(s.doc().unwrap().doc.node_count(), 2);
+    // Files of any other version are refused.
+    for v in [0, 2, 4] {
+        let mut other = j.clone();
+        other["version"] = json!(v);
+        let r = s.execute(
+            "document.open",
+            &json!({"name": "other.kvector", "dataBase64": kition_vector_format::base64_encode(&serde_json::to_vec(&other).unwrap())}),
+        );
+        assert!(r.is_err(), "version {v}");
     }
     let formats = s.execute("document.formats", &json!({})).unwrap();
     let native = formats["formats"].as_array().unwrap().iter().find(|f| f["id"] == "kvector").unwrap();
-    for o in ["compress", "version", "preview"] {
+    for o in ["compress", "preview"] {
         assert!(native["options"].get(o).is_some(), "{o} documented");
     }
+    assert!(native["options"].get("version").is_none(), "no version to choose");
 }
 
 #[test]
@@ -145,7 +151,7 @@ fn unused_images_are_left_out_of_saves() {
 #[test]
 fn newer_keys_and_legacy_profiles_survive_open_and_save() {
     let mut s = session();
-    let mut j = json_of(&saved(&mut s, json!({"version": 2})));
+    let mut j = json_of(&saved(&mut s, json!({})));
     j["document"]["fromTheFuture"] = json!({"x": 1});
     j["document"]["unknown"] = json!({"colorProfiles": {"rgb": "sRGB IEC61966-2.1", "cmyk": null}});
     open(&mut s, "old.kvector", &serde_json::to_vec(&j).unwrap());
@@ -156,7 +162,5 @@ fn newer_keys_and_legacy_profiles_survive_open_and_save() {
     let again = json_of(&saved(&mut s, json!({})));
     assert_eq!(again["document"]["fromTheFuture"], json!({"x": 1}));
     assert_eq!(again["document"]["color_profiles"]["rgb"], "sRGB IEC61966-2.1");
-    // Saved for v2 again: back where v2 apps read them.
-    let v2 = json_of(&saved(&mut s, json!({"version": 2})));
-    assert_eq!(v2["document"]["unknown"]["colorProfiles"]["rgb"], "sRGB IEC61966-2.1");
+    assert!(again["document"]["unknown"].get("colorProfiles").is_none());
 }

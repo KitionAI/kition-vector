@@ -849,7 +849,8 @@ mod tests {
     fn rejects_foreign_native_format_tags_even_under_the_native_extension() {
         let ours = fixture();
         let text = String::from_utf8(ours.clone()).unwrap();
-        let foreign = text.replacen("\"format\":\"kvector\"", "\"format\":\"otherapp\"", 1);
+        // Saved pretty-printed (`"format": "kvector"`).
+        let foreign = text.replacen("\"format\": \"kvector\"", "\"format\": \"otherapp\"", 1);
         assert_ne!(foreign, text);
         for name in ["Drawing.otherapp", "Drawing.kvector"] {
             assert!(VectorDocument::open(name, foreign.as_bytes()).is_err(), "{name}");

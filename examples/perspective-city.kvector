@@ -1,6 +1,6 @@
 {
   "format": "kvector",
-  "version": 3,
+  "version": 1,
   "generator": "Kition Vector 0.4.0",
   "document": {
     "version": 1,

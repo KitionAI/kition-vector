@@ -79,8 +79,8 @@ fn an_export_without_the_sources_is_a_plain_group() {
 }
 
 /// A `.kvector` file written before the mark existed (the same file without `region_paint`): the
-/// art is all there, the group named "Region Paint Group" is a plain group, the document is not
-/// "[Converted]" (its format version is today's), and Region Paint's Release refuses it.
+/// art is all there, the group named "Region Paint Group" is a plain group, and Region Paint's
+/// Release refuses it.
 #[test]
 fn a_file_from_before_the_mark_opens_as_a_plain_group() {
     let mut s = session();
@@ -106,7 +106,6 @@ fn a_file_from_before_the_mark_opens_as_a_plain_group() {
     let mut plain = marked.clone();
     plain.region_paint = false;
     assert!(n == plain, "the art came back as it was, the mark aside");
-    assert!(!s.doc().unwrap().converted);
     assert!(s.execute("livePaint.release", &json!({"id": n.id.0})).is_err());
 }
 

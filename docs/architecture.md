@@ -1,6 +1,6 @@
 # Architecture
 
-> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-17 · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-22 · **Target:** Adobe Illustrator 2026 (30.x)
 
 How the Vector engine is built. Day-to-day rules (clean-room, never crash, quality gates) are in
 [`AGENTS.md`](../AGENTS.md) and [development.md](development.md).
@@ -24,7 +24,7 @@ nothing below L6 depends on a UI toolkit (egui, eframe, winit, rfd). Table: `too
 | L2 | `pathops`, `brush`, `trace`, `text`, `effects`, `plugins`, `three-d` | booleans/Shape Builder/offset/outline; brushes; Image Trace; fonts, shaping (HarfRust, skrifa), bidi and layout; live effects and the pixel-filter pipeline; sandboxed WebAssembly plug-ins (wasmi); 3D surfaces of revolution, projection and shading (`three-d`, on `geom` only) |
 | L3 | `render`, `svg`, `pdf`, `format`, `eps`, `cad`, `metafile` | document to pixels (`vello_cpu`, multithreaded); SVG, PDF, native JSON, EPS/PostScript (with its own interpreter), DXF, EMF/WMF readers and writers |
 | L4 | `tools` | tool state machines: pointer events in, commands and overlays out (Pen, Direct Selection, smart guides…) |
-| L4 | `kdm-model` | Kition's own: the drawing as a `kit.vector` KDM replica (layer tree, per-object registers, named lists, settings, image blobs), its reader, diff writer and post-merge repair, and `VectorSession` for the engine's command bridge |
+| L4 | `kdm-model` | Kition's own: the drawing as a `kit.vector` KDM replica (layer tree, per-object registers, type objects' and threaded stories' rich text, symbols' art trees, named lists, guides, settings, image blobs), its reader, diff writer and post-merge repair, and `VectorSession` for the engine's command bridge |
 | L5 | `engine` | sessions, history (unlimited undo by structural sharing), selection, the command registry (~710 commands), file I/O, the panic guard |
 | L6 | `kition-vector-kit` | Kition's in-page Vector engine, compiled to WebAssembly |
 | L7 | `bindings/headless`, `xtask` | the headless kit executable for Kition's agent; build tooling |
@@ -47,8 +47,9 @@ offscreen per object and cached while panning. See [hardware-parity.md](parity/h
 
 ## Files
 
-The native `.kvector` format is versioned, compressed JSON with embedded images, saved atomically, readable
-down to v1. The `FORMATS` table in `crates/engine/engine/src/cmd/fileio/mod.rs`
+The native `.kvector` format is pretty-printed JSON (gzip-compressed with Use Compression) with
+embedded images, saved atomically. It has one format version, 1: files of any other version are
+refused, and there is no saving for older versions. The `FORMATS` table in `crates/engine/engine/src/cmd/fileio/mod.rs`
 lists every format read or written; importers are fuzzed (`crates/engine/engine/tests/import_fuzz.rs`). See
 [file-format-parity.md](parity/file-format-parity.md).
 

@@ -1,9 +1,9 @@
 //! The native `.kvector` format.
 //!
 //! A `.kvector` file is UTF-8 JSON, gzip-compressed when saved with Use Compression (told apart
-//! by its magic bytes on open, whatever the version):
+//! by its magic bytes on open):
 //! ```json
-//! { "format": "kvector", "version": 3, "generator": "Kition Vector 0.1.0",
+//! { "format": "kvector", "version": 1, "generator": "Kition Vector 0.1.0",
 //!   "preview": { "mime": "image/png", "data": "<base64>" },
 //!   "profiles": { "<profile name>": { "mime": "application/vnd.iccprofile", "data": "<base64>" } },
 //!   "pdf": { "mime": "application/pdf", "data": "<base64>" },
@@ -20,21 +20,20 @@
 //! show is saved as its low-resolution preview (`"proxy": true`), unless saved with Include Linked
 //! Files; the engine reads the linked file again when the document opens.
 //!
-//! Versions: v1 wrote anchors as `{p: {x, y}, in: {x, y}, out: {x, y}, kind}`; v2 as
-//! `{p: [x, y], in?, out?, kind?}` with default-valued fields left out; v3 keeps the assigned colour
-//! profiles in `document.color_profiles` (before: `document.unknown.colorProfiles`) and may be
-//! compressed; v4 may keep large data (images, placed documents, the PDF, profiles of at least
-//! [`INLINE_MAX`] bytes) after the JSON instead of in it: the JSON is followed by [`BLOB_MAGIC`] and
-//! the bytes, and such an entry says where they are (`"blob": [offset, length]`) instead of giving
-//! `data`. Every version loads, and [`save_with`] writes any of them for older Kition Vector
-//! releases. Readers reject files whose `version` is newer than they support.
+//! Large data (images, placed documents, the PDF, profiles of at least [`INLINE_MAX`] bytes) goes
+//! after the JSON instead of in it: the JSON is followed by [`BLOB_MAGIC`] and the bytes, and such
+//! an entry says where they are (`"blob": [offset, length]`) instead of giving `data`.
+//!
+//! The format has one version, [`VERSION`] (1): it is the only one written and the only one read.
+//! A file with any other `version` is refused ([`FormatError::TooNew`] for a newer one,
+//! [`FormatError::Unsupported`] otherwise). Saving writes indented JSON with a stable member order
+//! (readable, diffable); compressed files are compact.
 //!
 //! Native files must carry Kition Vector's own format tag. Other product tags are rejected.
 #![forbid(unsafe_code)]
 
 #[cfg(not(target_arch = "wasm32"))]
 mod atomic;
-mod legacy;
 
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
@@ -46,16 +45,12 @@ use serde::{Deserialize, Serialize};
 #[cfg(not(target_arch = "wasm32"))]
 pub use atomic::{write_atomic, write_atomic_with, write_new_with};
 
-/// v4: large data after the JSON (v1 to v3 files still load).
-pub const VERSION: u32 = 4;
-/// Data this large or larger goes after the JSON (v4), not into it as base64.
+/// The format version: the only one written and read.
+pub const VERSION: u32 = 1;
+/// Data this large or larger goes after the JSON, not into it as base64.
 pub const INLINE_MAX: usize = 8 << 10;
-/// What separates the JSON from the data after it (v4).
+/// What separates the JSON from the data after it.
 pub const BLOB_MAGIC: &[u8] = b"\n\0VCBLOBS\0";
-/// The oldest version [`save_with`] writes.
-pub const MIN_VERSION: u32 = 1;
-/// The first version whose readers open compressed files.
-pub const COMPRESSED_SINCE: u32 = 3;
 /// Most pixels on the longer side of an embedded preview.
 pub const PREVIEW_MAX: u32 = 256;
 pub const EXTENSION: &str = "kvector";
@@ -78,12 +73,10 @@ pub enum FormatError {
     NotKitionVector(String),
     #[error("file version {0} is newer than this Kition Vector supports ({VERSION})")]
     TooNew(u32),
+    #[error("file version {0} isn't a Kition Vector format version (only {VERSION} is)")]
+    Unsupported(u32),
     #[error("invalid image data for `{0}`")]
     BadImage(String),
-    #[error("can't save version {0}: Kition Vector writes versions {MIN_VERSION} to {VERSION}")]
-    BadVersion(u32),
-    #[error("version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files")]
-    CompressedTooOld(u32),
     #[error("the compressed file unpacks to more than {} MB", MAX_UNPACKED >> 20)]
     TooBig,
     #[error("can't encode the document: {0}")]
@@ -96,7 +89,7 @@ struct Image {
     /// The bytes as base64, unless they come after the JSON (`blob`).
     #[serde(default, skip_serializing_if = "String::is_empty")]
     data: String,
-    /// Where the bytes are in the data after the JSON (v4): `[offset, length]`.
+    /// Where the bytes are in the data after the JSON: `[offset, length]`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     blob: Option<[u64; 2]>,
     /// `data` is a linked image's preview ([`ImageBlob::proxy`]), not the file's bytes.
@@ -118,16 +111,14 @@ impl Image {
     }
 }
 
-/// Entries written for one file: large bytes go to the data after the JSON when the version keeps
-/// them there.
+/// Entries written for one file: large bytes go to the data after the JSON.
 struct Blobs {
     tail: Vec<u8>,
-    outside: bool,
 }
 
 impl Blobs {
     fn image(&mut self, mime: &str, bytes: &[u8], proxy: bool) -> Image {
-        if self.outside && bytes.len() >= INLINE_MAX {
+        if bytes.len() >= INLINE_MAX {
             let at = self.tail.len() as u64;
             self.tail.extend_from_slice(bytes);
             return Image { mime: mime.into(), data: String::new(), blob: Some([at, bytes.len() as u64]), proxy };
@@ -141,7 +132,7 @@ fn preview_mime(bytes: &[u8]) -> &'static str {
     if bytes.starts_with(&[0xff, 0xd8]) { "image/jpeg" } else { kition_vector_doc::links::PROXY_MIME }
 }
 
-/// The JSON of a file and the data after it (v4), split at [`BLOB_MAGIC`] after the first JSON
+/// The JSON of a file and the data after it, split at [`BLOB_MAGIC`] after the first JSON
 /// value.
 fn split_tail(text: &[u8]) -> (&[u8], &[u8]) {
     let mut values = serde_json::Deserializer::from_slice(text).into_iter::<serde::de::IgnoredAny>();
@@ -170,12 +161,11 @@ struct File {
 /// How [`save_with`] writes a document.
 #[derive(Clone, Debug)]
 pub struct SaveOptions {
-    /// Indented JSON (readable, diffable); compact otherwise. Compressed files are always compact.
+    /// Indented JSON (readable, diffable; the default); compact otherwise, for a native document
+    /// carried inside another file. Compressed files are always compact.
     pub pretty: bool,
-    /// gzip the file (Use Compression), for version [`COMPRESSED_SINCE`] and later.
+    /// gzip the file (Use Compression).
     pub compress: bool,
-    /// The version to write ([`MIN_VERSION`]`..=`[`VERSION`]): older ones for older apps.
-    pub version: u32,
     /// A PNG preview to embed (at most [`PREVIEW_MAX`] pixels on its longer side).
     pub preview: Option<Vec<u8>>,
     /// Include Linked Files: linked images keep the file's own bytes, not just their preview.
@@ -188,79 +178,38 @@ pub struct SaveOptions {
 
 impl Default for SaveOptions {
     fn default() -> Self {
-        Self { pretty: false, compress: false, version: VERSION, preview: None, include_linked: false, profiles: BTreeMap::new(), pdf: None }
+        Self { pretty: true, compress: false, preview: None, include_linked: false, profiles: BTreeMap::new(), pdf: None }
     }
 }
 
 /// The MIME type of embedded ICC profiles.
 pub const ICC_MIME: &str = "application/vnd.iccprofile";
 
-impl SaveOptions {
-    /// Can a file be written this way (a version [`save_with`] writes, compressed only for readers
-    /// that open compressed files)?
-    pub fn check(&self) -> Result<(), FormatError> {
-        if !(MIN_VERSION..=VERSION).contains(&self.version) {
-            return Err(FormatError::BadVersion(self.version));
-        }
-        if self.compress && self.version < COMPRESSED_SINCE {
-            return Err(FormatError::CompressedTooOld(self.version));
-        }
-        Ok(())
-    }
-
-    /// The defaults for saving `doc` to disk: pretty when small (see [`PRETTY_MAX_OBJECTS`]).
-    pub fn for_doc(doc: &Document) -> Self {
-        let objects: usize = doc.layers.iter().map(|l| l.count()).sum();
-        Self { pretty: objects <= PRETTY_MAX_OBJECTS, ..Self::default() }
-    }
-}
-
-/// Serialize a document (pretty = human-diffable) in the current version. Editing-mode working
-/// copies are left out ([`Document::without_edit_modes`]).
+/// Serialize a document (pretty = human-diffable). Editing-mode working copies are left out
+/// ([`Document::without_edit_modes`]).
 pub fn save(doc: &Document, pretty: bool) -> Vec<u8> {
     save_with(doc, &SaveOptions { pretty, ..SaveOptions::default() }).unwrap_or_default()
 }
 
-/// Documents up to this many objects are saved pretty-printed (readable, diffable); larger ones
-/// compact, where indentation would multiply the file size and slow opening down.
-pub const PRETTY_MAX_OBJECTS: usize = 2000;
-
-/// Serialize for saving to disk: pretty when small, compact when large.
+/// Serialize for saving to disk: pretty-printed, whatever the document's size.
 pub fn save_file(doc: &Document) -> Vec<u8> {
-    save_with(doc, &SaveOptions::for_doc(doc)).unwrap_or_default()
+    save_with(doc, &SaveOptions::default()).unwrap_or_default()
 }
 
-/// Serialize a document as `o` says: the version, compression, layout and preview. Editing-mode
-/// working copies and images nothing uses are left out.
+/// Serialize a document as `o` says: compression, layout and preview. Editing-mode working copies,
+/// resources only exporting adds and images nothing uses are left out.
 pub fn save_with(doc: &Document, o: &SaveOptions) -> Result<Vec<u8>, FormatError> {
-    o.check()?;
     let pretty = o.pretty && !o.compress;
     let mut d = doc.without_edit_modes().into_owned();
-    // Older apps don't know placed documents: they get the art the objects show, with its
-    // resources. Otherwise resources only exporting adds are never saved.
-    if o.version < VERSION && d.has_placed() {
-        d = d.with_placed_art().into_owned();
-        d.placed_as_groups();
-    } else {
-        d.drop_placed_resources();
-    }
+    d.drop_placed_resources();
     let linked = d.linked_only_images();
     // The blobs go in the file's `images` (only those the document uses).
     let blobs = std::mem::take(&mut d.images);
-    if o.version < 3 {
-        d.store_legacy_color_profiles();
-    }
-    let body = if o.version == 1 {
-        let mut v = serde_json::to_value(&d).map_err(encode_err)?;
-        legacy::anchors_to_v1(&mut v);
-        to_json(&v, pretty)?
-    } else {
-        to_json(&d, pretty)?
-    };
+    let body = to_json(&d, pretty)?;
     // Images are only referenced by image objects' `key` (wherever the objects are: layers,
     // symbols, patterns, masks, or foreign data).
     let used = if blobs.is_empty() { HashSet::new() } else { string_members(&body, "key") };
-    let mut out_blobs = Blobs { tail: vec![], outside: o.version >= 4 };
+    let mut out_blobs = Blobs { tail: vec![] };
     let images: BTreeMap<&str, Image> = blobs
         .iter()
         .filter(|(k, _)| used.contains(k.as_str()))
@@ -281,7 +230,7 @@ pub fn save_with(doc: &Document, o: &SaveOptions) -> Result<Vec<u8>, FormatError
     let size = body.len() + images.values().map(|i| i.data.len()).sum::<usize>() + carried + 256;
     let mut w = Envelope { out: Vec::with_capacity(size), pretty };
     w.field("format", &EXTENSION)?;
-    w.field("version", &o.version)?;
+    w.field("version", &VERSION)?;
     w.field("generator", &format!("Kition Vector {}", env!("CARGO_PKG_VERSION")))?;
     if let Some(png) = &o.preview {
         w.field("preview", &blob("image/png", png))?;
@@ -395,35 +344,15 @@ fn unpack(bytes: &[u8]) -> Result<Cow<'_, [u8]>, FormatError> {
 }
 
 pub fn load(bytes: &[u8]) -> Result<Document, FormatError> {
-    load_info(bytes).map(|(doc, _)| doc)
+    load_file(bytes).map(|f| f.doc)
 }
 
-/// A native file read: its document, what it says about itself and the colour profiles it carries.
+/// A native file read: its document and the colour profiles it carries.
 #[derive(Debug)]
 pub struct NativeFile {
     pub doc: Document,
-    pub info: FileInfo,
     /// ICC files by profile name (saved with Embed ICC Profiles; undecodable ones are left out).
     pub profiles: BTreeMap<String, Vec<u8>>,
-}
-
-/// What a native file says about itself besides its document.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FileInfo {
-    /// The file's format version (see [`VERSION`]).
-    pub version: u32,
-}
-
-impl FileInfo {
-    /// Written by an older Kition Vector version: saving rewrites it in today's format.
-    pub fn is_old(&self) -> bool {
-        self.version < VERSION
-    }
-}
-
-/// [`load`], also telling the file's version and name.
-pub fn load_info(bytes: &[u8]) -> Result<(Document, FileInfo), FormatError> {
-    load_file(bytes).map(|f| (f.doc, f.info))
 }
 
 /// [`load`], with everything else the file carries.
@@ -436,6 +365,9 @@ pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
     }
     if f.version > VERSION {
         return Err(FormatError::TooNew(f.version));
+    }
+    if f.version != VERSION {
+        return Err(FormatError::Unsupported(f.version));
     }
     let mut doc = f.document;
     for (k, img) in f.images {
@@ -459,7 +391,7 @@ pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
     // Untrusted: capped, named and pointing at objects the file has.
     doc.tidy_saved_selections();
     let profiles = f.profiles.into_iter().filter_map(|(name, icc)| Some((name, icc.bytes(tail)?))).collect();
-    Ok(NativeFile { doc, info: FileInfo { version: f.version }, profiles })
+    Ok(NativeFile { doc, profiles })
 }
 
 /// The members of a native file besides its document (which is skipped, not decoded).
@@ -560,15 +492,37 @@ mod tests {
     }
 
     #[test]
-    fn file_info_tells_old_files() {
+    fn only_version_1_is_written_and_read() {
         let d = Document::new(10.0, 10.0);
         let current = save(&d, false);
-        assert_eq!(load_info(&current).unwrap().1, FileInfo { version: VERSION });
-        assert!(!load_info(&current).unwrap().1.is_old());
+        let v: serde_json::Value = serde_json::from_slice(&current).unwrap();
+        assert_eq!((VERSION, v["version"].as_u64()), (1, Some(1)));
+        assert!(load(&current).is_ok());
         let text = String::from_utf8(current).unwrap();
-        let v1 = text.replacen(&format!("\"version\":{VERSION}"), "\"version\":1", 1);
-        assert_eq!(load_info(v1.as_bytes()).unwrap().1, FileInfo { version: 1 });
-        assert!(load_info(v1.as_bytes()).unwrap().1.is_old());
+        for other in [0, 2, 3, 4] {
+            let changed = text.replacen("\"version\":1", &format!("\"version\":{other}"), 1);
+            let r = load(changed.as_bytes());
+            assert!(matches!(r, Err(FormatError::Unsupported(n) | FormatError::TooNew(n)) if n == other), "version {other}: {r:?}");
+        }
+        assert!(matches!(load(text.replacen("\"version\":1", "\"version\":0", 1).as_bytes()), Err(FormatError::Unsupported(0))));
+    }
+
+    #[test]
+    fn saving_to_disk_is_pretty_printed() {
+        let mut d = Document::new(10.0, 10.0);
+        let l = d.layers[0].id;
+        for _ in 0..3000 {
+            let id = d.alloc_id();
+            d.insert(Some(l), 0, Node::path(id, shapes::ellipse(Rect::new(0.0, 0.0, 1.0, 1.0)), Appearance::default_art())).unwrap();
+        }
+        let text = String::from_utf8(save_file(&d)).unwrap();
+        assert!(text.starts_with("{\n  \"format\": \"kvector\",\n  \"version\": 1,"), "{}", &text[..80]);
+        assert_eq!(load(text.as_bytes()).unwrap().node_count(), d.node_count());
+        // Compressed files stay compact inside.
+        let packed = save_with(&d, &SaveOptions { compress: true, ..SaveOptions::default() }).unwrap();
+        let mut inner = Vec::new();
+        std::io::Read::read_to_end(&mut flate2::read::GzDecoder::new(&packed[..]), &mut inner).unwrap();
+        assert!(inner.starts_with(b"{\"format\":\"kvector\",\"version\":1,"));
     }
     use kition_vector_doc::{Appearance, ImageObject, Node, NodeKind};
     use kition_vector_geom::{Affine, Rect, shapes};

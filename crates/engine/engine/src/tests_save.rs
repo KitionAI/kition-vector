@@ -197,32 +197,33 @@ fn templates_suggest_a_name_in_the_templates_folder_and_open_untitled() {
     let _ = std::fs::remove_dir_all(d);
 }
 
-/// A native file as an older version wrote it (format version 1).
-fn old_file() -> Vec<u8> {
+/// A native file whose top-level `version` is `version` (the format has only version 1).
+fn file_of_version(version: u32) -> Vec<u8> {
     let text = String::from_utf8(kition_vector_format::save(&kition_vector_doc::Document::new(50.0, 50.0), false)).unwrap();
-    text.replacen(&format!("\"version\":{}", kition_vector_format::VERSION), "\"version\":1", 1).into_bytes()
+    let other = text.replacen("\"version\":1", &format!("\"version\":{version}"), 1);
+    assert_eq!(other == text, version == 1);
+    other.into_bytes()
 }
 
 #[test]
-fn older_native_files_open_converted_and_save_under_a_new_name() {
-    let d = dir("converted");
-    let v1 = path(&d, "badge.kvector");
-    std::fs::write(&v1, old_file()).unwrap();
+fn native_files_open_under_their_name_and_other_versions_are_refused() {
+    let d = dir("versions");
+    let file = path(&d, "badge.kvector");
+    std::fs::write(&file, file_of_version(1)).unwrap();
     let mut s = Session::new();
-    // Save doesn't overwrite the old file: it asks for a .kvector name.
-    let r = s.execute("document.open", &json!({"path": v1})).unwrap();
-    assert_eq!(r["title"], "badge [Converted]");
+    // A version 1 file opens as itself, and Save writes it back.
+    let r = s.execute("document.open", &json!({"path": file})).unwrap();
+    assert_eq!(r["title"], "badge.kvector");
+    assert_eq!(s.execute("document.save", &json!({})).unwrap()["path"].as_str(), Some(file.as_str()));
     let saved = path(&d, "badge2.kvector");
     s.execute("file.saveAs", &json!({"path": saved})).unwrap();
     assert_eq!(s.doc().unwrap().title(), "badge2.kvector");
-    assert!(!s.doc().unwrap().converted);
-    // A current file isn't converted; with the preference off old files open as they are.
-    s.execute("document.open", &json!({"path": saved})).unwrap();
-    assert_eq!(s.doc().unwrap().title(), "badge2.kvector");
-    s.prefs.append_converted = false;
-    s.execute("document.open", &json!({"path": v1})).unwrap();
-    assert_eq!(s.doc().unwrap().title(), "badge.kvector");
-    assert_eq!(s.execute("document.save", &json!({})).unwrap()["path"].as_str(), Some(v1.as_str()));
+    // Any other version is refused, older or newer.
+    for version in [0, 2, 3, 4] {
+        let other = path(&d, &format!("v{version}.kvector"));
+        std::fs::write(&other, file_of_version(version)).unwrap();
+        assert!(s.execute("document.open", &json!({"path": other})).is_err(), "version {version}");
+    }
     let _ = std::fs::remove_dir_all(d);
 }
 

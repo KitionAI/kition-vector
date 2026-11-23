@@ -28,21 +28,23 @@ const SOURCES: &[(&str, &str)] = &[
 
 /// `file: field` for every field whose type names an id, and how the bridge handles it.
 const HANDLED: &[&str] = &[
-    // Definitions: each is an object's own identity, minted by the reader (never replicated).
+    // Definitions: each is an object's own identity, written in its object's read-only `id` (its
+    // tool id) and kept by a read unless another object of it holds it (then minted afresh).
     "node.rs: id: NodeId",
     "slices.rs: id: NodeId",
-    // Explicit translations (refs::map_setting, refs::map_asset_nodes, the node `props` register).
+    // Explicit translations (refs::map_setting, refs::map_asset_nodes, the node `props` register;
+    // a guide's `layer` and `artboard` refs and a thread's `frames` list).
     "assets.rs: nodes: Vec<NodeId>",
     "lib.rs: objects: Vec<NodeId>",
     "lib.rs: layer: Option<NodeId>",
     "lib.rs: artboard: Option<u32>",
     "lib.rs: text_threads: Vec<Vec<NodeId>>",
-    "pattern.rs: layer: NodeId",
     "variables.rs: bindings: BTreeMap<NodeId, BTreeSet<String>>",
     "node.rs: graphic_style: Option<u32>",
-    // Per person or derived, never in the replica: opacity-mask editing (`MaskEdit`, never
-    // serialized), the open Layers rows (view state), warp pins, the selection, hit tests
-    // and laid-out slices.
+    // Per person or derived, never in the replica: opacity-mask and pattern editing (`MaskEdit`,
+    // never serialized; `PatternEdit`, left out by `shared_part`), the open Layers rows (view
+    // state), warp pins, the selection, hit tests and laid-out slices.
+    "pattern.rs: layer: NodeId",
     "lib.rs: object: NodeId",
     "lib.rs: layer: NodeId",
     "lib.rs: layers_open: Option<Vec<NodeId>>",

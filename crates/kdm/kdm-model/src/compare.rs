@@ -8,21 +8,37 @@ use std::sync::Arc;
 use kition_vector_doc::Document;
 use serde_json::{Map, Value};
 
-use crate::refs::{Mapper, SETTINGS_WITH_IDS, map_asset_nodes, map_setting};
+use crate::refs::{KEYS_WITH_IDS, Mapper, map_asset_nodes, map_setting};
 use crate::write::{children_key_of, safe_ids};
 
 /// The id-blind JSON of `d`: every node id renumbered from 1 in tree order (slices and asset ids
-/// after them), artboards and graphic styles numbered by position, every reference to one
-/// rewritten to match and a reference to nothing left out (a replica does not keep those), the
-/// id counter and the editor's view state (saved view, open Layers rows) left out, and each
-/// image's bytes as a digest. Two drawings with the same content normalize to the same value
-/// whatever ids either holds. Ids inside art that is data (symbols, opacity masks, patterns) are
-/// kept as they are: they are that art's own. Numbers are compared as KDM keeps them: a double
-/// holding a whole number is that integer (raw JSON such as `unknown` reads back so), and ids
-/// inside art that is data as a replica takes them (see [`safe_ids`]).
+/// after them), each symbol's art numbered from 1 in its own tree order, artboards and graphic
+/// styles numbered by position, every reference to one rewritten to match and a reference to
+/// nothing left out (a replica does not keep those), the id counter and the editor's view state
+/// (saved view, open Layers rows) left out, each type object's runs as a read gives them back
+/// (neighbours with one look merged, see [`crate::text`]), and each image's bytes as a digest.
+/// Two drawings with the same content normalize to the same value whatever ids either holds. Ids
+/// inside art that is data (opacity masks, patterns) are kept as they are: they are that art's
+/// own. Numbers are compared as KDM keeps them: a double holding a whole number is that integer
+/// (raw JSON such as `unknown` reads back so), and ids inside art that is data as a replica takes
+/// them (see [`safe_ids`]).
 pub fn normalize(d: &Document) -> Value {
     let Ok(mut whole) = serde_json::to_value(d) else { return Value::Null };
     whole_numbers(&mut whole, 0);
+    text_runs(&mut whole, 0);
+    if let Some(Value::Array(symbols)) = whole.get_mut("symbols") {
+        for symbol in symbols {
+            if let Some(art) = symbol.get_mut("art") {
+                let mut list = Value::Array(vec![std::mem::take(art)]);
+                number_nodes(&mut list, &mut HashMap::new(), &mut 0, 0);
+                if let Value::Array(mut one) = list
+                    && let Some(back) = one.pop()
+                {
+                    *art = back;
+                }
+            }
+        }
+    }
     let Value::Object(mut v) = whole else { return Value::Null };
     let mut nodes: HashMap<u64, u64> = HashMap::new();
     let mut next = 0u64;
@@ -56,6 +72,19 @@ pub fn normalize(d: &Document) -> Value {
     if let Some(layers) = v.get_mut("layers") {
         restyle(layers, &styles, 0);
     }
+    if let Some(Value::Array(symbols)) = v.get_mut("symbols") {
+        for symbol in symbols {
+            if let Some(art) = symbol.get_mut("art") {
+                let mut list = Value::Array(vec![std::mem::take(art)]);
+                restyle(&mut list, &styles, 0);
+                if let Value::Array(mut one) = list
+                    && let Some(back) = one.pop()
+                {
+                    *art = back;
+                }
+            }
+        }
+    }
     for key in ["slices", "assets"] {
         if let Some(Value::Array(list)) = v.get_mut(key) {
             for item in list {
@@ -74,7 +103,7 @@ pub fn normalize(d: &Document) -> Value {
             map_asset_nodes(asset, &node);
         }
     }
-    for key in SETTINGS_WITH_IDS {
+    for key in KEYS_WITH_IDS {
         if let Some(x) = v.get_mut(*key) {
             map_setting(key, x, &m);
             if x.is_null() {
@@ -99,6 +128,28 @@ pub fn normalize(d: &Document) -> Value {
     let mut v = Value::Object(v);
     safe_ids(&mut v, 0);
     v
+}
+
+/// Puts every type object's runs inside `v` in the form a read gives them
+/// ([`crate::text::canonical_runs`]).
+fn text_runs(v: &mut Value, depth: usize) {
+    if depth > crate::MAX_DEPTH * 4 {
+        return;
+    }
+    match v {
+        Value::Object(map) => {
+            if map.get("type").and_then(Value::as_str) == Some("text")
+                && let Some(Value::Array(runs)) = map.get_mut("runs")
+            {
+                crate::text::canonical_runs(runs);
+            }
+            for item in map.values_mut() {
+                text_runs(item, depth + 1);
+            }
+        }
+        Value::Array(items) => items.iter_mut().for_each(|item| text_runs(item, depth + 1)),
+        _ => {}
+    }
 }
 
 /// Renumbers the nodes of a serialized child list (depth first), answering old id -> new id.

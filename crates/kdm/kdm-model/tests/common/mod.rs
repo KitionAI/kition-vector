@@ -285,9 +285,21 @@ pub fn assert_replica_clean(replica: &Replica) {
     let gone =
         |v: Option<&serde_json::Value>| matches!(v, Some(serde_json::Value::String(id)) if !replica.exists(&ObjectId::from_string(id.as_str())));
     let root = ObjectId::from_string("drawing");
-    for field in
-        ["artboards", "swatches", "swatchGroups", "graphicStyles", "charStyles", "paraStyles", "symbols", "patterns", "slices", "assets", "images"]
-    {
+    for field in [
+        "artboards",
+        "swatches",
+        "swatchGroups",
+        "graphicStyles",
+        "charStyles",
+        "paraStyles",
+        "symbols",
+        "patterns",
+        "slices",
+        "assets",
+        "images",
+        "guides",
+        "threads",
+    ] {
         for item in replica.list(&root, field).unwrap_or_default() {
             assert!(replica.exists(&item), "drawing.{field} lists deleted {item}");
         }
@@ -306,9 +318,17 @@ pub fn assert_replica_clean(replica: &Replica) {
             assert!(!gone(Some(n)), "asset {asset} names a deleted object");
         }
     }
-    let threads = replica.map_get(&root, "settings", "text_threads").unwrap_or_default();
-    for frame in threads.as_array().into_iter().flatten().flat_map(|t| t.as_array().into_iter().flatten()) {
-        assert!(!gone(Some(frame)), "a text thread names a deleted object");
+    for thread in replica.objects_of_type("Thread") {
+        let frames = replica.list(&thread, "frames").unwrap_or_default();
+        assert!(!frames.is_empty(), "thread {thread} has no frames left");
+        for frame in frames {
+            assert!(replica.exists(&frame), "thread {thread} names deleted {frame}");
+        }
+    }
+    for guide in replica.objects_of_type("Guide") {
+        for field in ["layer", "artboard"] {
+            assert!(!gone(Some(&replica.get(&guide, field).unwrap_or_default())), "guide {guide} is on a deleted {field}");
+        }
     }
     let saved = replica.map_get(&root, "settings", "saved_selections").unwrap_or_default();
     for o in saved.as_array().into_iter().flatten().flat_map(|s| s.get("objects").and_then(|o| o.as_array()).into_iter().flatten()) {

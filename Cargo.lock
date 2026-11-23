@@ -1223,6 +1223,7 @@ dependencies = [
  "kition-vector-doc",
  "kition-vector-format",
  "kition-vector-svg",
+ "kition-vector-text",
  "serde",
  "serde_json",
 ]

@@ -67,8 +67,8 @@ impl SaveMode {
 #[derive(Clone, Debug)]
 pub struct SavePlan {
     pub mode: SaveMode,
-    /// Where to write. `None` when no path is known (never saved, converted from an older version,
-    /// restored by Data Recovery, or a format other than the document's own): the caller asks for one or takes the bytes.
+    /// Where to write. `None` when no path is known (never saved, restored by Data Recovery, or a
+    /// format other than the document's own): the caller asks for one or takes the bytes.
     pub path: Option<String>,
     pub format: &'static Format,
     /// The format's options (only those its encoder reads).
@@ -219,7 +219,7 @@ pub fn save_plan(s: &Session, mode: SaveMode, p: &Value) -> Result<SavePlan> {
         given = svg;
     } else {
         // So do PDF options (as the Save PDF dialog and document.exportPdf name them) and the
-        // native ones (compress, version, preview).
+        // native ones (compress, preview).
         if let Some(o) = p.as_object() {
             given.extend(
                 o.iter().filter(|(k, v)| !v.is_null() && k.as_str() != "path" && reads_option(format, k)).map(|(k, v)| (k.clone(), v.clone())),
@@ -229,8 +229,7 @@ pub fn save_plan(s: &Session, mode: SaveMode, p: &Value) -> Result<SavePlan> {
     // None given: the ones the document was last saved with in this format.
     let options = if given.is_empty() && format.id == st.format { st.save_options.clone() } else { given };
     // Save writes the document's own file; the other modes only where they are told to.
-    let path =
-        path.or_else(|| (mode == SaveMode::Save && !st.converted && !st.recovered && format.id == st.format).then(|| st.path.clone()).flatten());
+    let path = path.or_else(|| (mode == SaveMode::Save && !st.recovered && format.id == st.format).then(|| st.path.clone()).flatten());
     let stem = file_stem(st.path.as_deref().unwrap_or(&st.doc.title));
     let ext = format.extensions[0];
     let name = match mode {
@@ -428,7 +427,7 @@ pub(crate) fn job_for(s: &Session, st: &DocState, plan: SavePlan) -> Result<Save
     if matches!(plan.format.id, "kvector" | "template") {
         // Not remembered with the options: the preference decides each time it isn't given.
         params = with_compression_pref(&s.prefs, &params);
-        super::native::save_options(cmd, plan.format, &doc, &params)?;
+        super::native::save_options(plan.format, &doc, &params)?;
     }
     let boards = separate_boards(cmd, plan.format, &doc, &params)?;
     let mut params = super::pdf::expand_preset(s, cmd, &params)?.into_owned();
@@ -514,7 +513,6 @@ impl SaveJob {
             st.path = Some(path);
             st.format = self.plan.format.id;
             st.save_options = self.plan.options;
-            st.converted = false;
             st.recovered = false;
             st.mark_saved_as(&self.snapshot);
         }
@@ -607,7 +605,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save Document",
             [],
             None,
-            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (SVG options may also be given flat; an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), compress?: bool (native: gzip, default: the useCompression preference; .ai: compression.compressText, default true), version?: 3 (native; 2 or 1: for older Kition Vector versions, never compressed), preview?: false (native: embed a PNG of the first artboard, at most 256 px), separateArtboards?: false (native and .ai: also save each artboard of range to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: string (the artboards separateArtboards saves, like \"1-3, 5\" or \"all\"; default all), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which document.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, converted from an older version, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
+            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (SVG options may also be given flat; an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), compress?: bool (native: gzip, default: the useCompression preference; .ai: compression.compressText, default true), preview?: false (native: embed a PNG of the first artboard, at most 256 px), separateArtboards?: false (native and .ai: also save each artboard of range to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: string (the artboards separateArtboards saves, like \"1-3, 5\" or \"all\"; default all), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which document.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
             has_doc,
             |s, p| save(s, SaveMode::Save, p)
         ),
@@ -634,7 +632,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save as Template…",
             ["File"],
             None,
-            "{path?, compress?, version?, preview? (as document.save)} a native template (.vctemplate) that opens as a new untitled document; the document is unchanged → {path, format, bytes, warnings}; no path → {dataBase64, format, name: \"<name> template.vctemplate\", folder: the Templates folder (preference templatesFolder), warnings}",
+            "{path?, compress?, preview? (as document.save)} a native template (.vctemplate) that opens as a new untitled document; the document is unchanged → {path, format, bytes, warnings}; no path → {dataBase64, format, name: \"<name> template.vctemplate\", folder: the Templates folder (preference templatesFolder), warnings}",
             has_doc,
             |s, p| save(s, SaveMode::Template, p)
         ),

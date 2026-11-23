@@ -403,7 +403,7 @@ fn packaging_nested_files_preserves_embedded_preview_pdf_and_compression() {
     let doc = kition_vector_format::load(&original).unwrap();
     let preview = png(8, 8, BLUE);
     let pdf = b"%PDF-1.7\n%Embedded client preview\n".to_vec();
-    let mut opts = kition_vector_format::SaveOptions::for_doc(&doc);
+    let mut opts = kition_vector_format::SaveOptions::default();
     opts.preview = Some(preview.clone());
     opts.pdf = Some(pdf.clone());
     opts.compress = true;

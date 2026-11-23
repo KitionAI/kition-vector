@@ -18,9 +18,6 @@ pub struct Loaded {
     pub warnings: Vec<String>,
     /// The document is the native one the file carries (SVG or PDF saved with Preserve Editing).
     pub restored: bool,
-    /// A native file in an older format version: saving it again
-    /// rewrites it in today's format.
-    pub converted: bool,
     /// Only a stand-in picture of the file (an Affinity document whose native data couldn't be
     /// read): Open shows it with its warning; Place, templates and libraries refuse it.
     pub preview_only: bool,
@@ -111,7 +108,7 @@ fn restore_or_import(
     if let Some((intact, bytes)) = editing {
         let native = if intact { bytes() } else { None };
         match native.and_then(|b| native_file(&b).ok()) {
-            Some((doc, _, warnings)) => return Ok((doc, warnings, true)),
+            Some((doc, warnings)) => return Ok((doc, warnings, true)),
             None => fallback = Some(if intact { EDITING_DAMAGED } else { EDITING_STALE }),
         }
     }
@@ -122,12 +119,12 @@ fn restore_or_import(
     Ok((doc, warnings, false))
 }
 
-/// A native file's document and details, the colour profiles it carries installed where missing
+/// A native file's document, the colour profiles it carries installed where missing
 /// (with a warning for each that can't be used).
-pub(crate) fn native_file(bytes: &[u8]) -> Result<(Document, kition_vector_format::FileInfo, Vec<String>)> {
+pub(crate) fn native_file(bytes: &[u8]) -> Result<(Document, Vec<String>)> {
     let f = kition_vector_format::load_file(bytes).map_err(err)?;
     let warnings = super::native::install_profiles(f.profiles);
-    Ok((f.doc, f.info, warnings))
+    Ok((f.doc, warnings))
 }
 
 /// Read a file of any readable format (`name`: its file name or path, for the extension and title;
@@ -175,7 +172,6 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
         None => err(format!("can't open `{name}`: not a format Kition Vector reads (see document.formats)")),
     })?;
     let title = file_name(name);
-    let mut converted = false;
     let mut preview_only = false;
     let (mut doc, warnings, restored) = match format.id {
         // EPS and PostScript .ai: the document our EPS files carry, else the PostScript read.
@@ -188,8 +184,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
             })?
         }
         "kvector" | "template" => {
-            let (d, info, warnings) = native_file(bytes)?;
-            converted = info.is_old();
+            let (d, warnings) = native_file(bytes)?;
             (d, warnings, false)
         }
         "svg" | "svgz" => {
@@ -249,7 +244,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
     if !matches!(format.id, "kvector" | "template") || doc.title.is_empty() {
         doc.title = title;
     }
-    Ok(Loaded { doc, format, warnings, restored, converted, preview_only })
+    Ok(Loaded { doc, format, warnings, restored, preview_only })
 }
 
 /// Import SVG text, reading the files its images link to (relative links from `folder`, the SVG's
@@ -297,7 +292,7 @@ pub fn open_template(s: &mut Session, name: &str, bytes: &[u8], path: Option<&st
 
 /// Make a loaded file the new active document; `opts` are the options it was read with.
 fn open_loaded(s: &mut Session, loaded: Loaded, path: Option<String>, opts: &LoadOptions, as_template: bool) -> Result<Value> {
-    let Loaded { mut doc, format, warnings, restored, converted, .. } = loaded;
+    let Loaded { mut doc, format, warnings, restored, .. } = loaded;
     // What reading the file left out of the document, if anything.
     let losses: Vec<String> = warnings.iter().filter(|w| is_loss(w)).cloned().collect();
     let source_path = path.clone().filter(|_| !losses.is_empty());
@@ -316,13 +311,11 @@ fn open_loaded(s: &mut Session, loaded: Loaded, path: Option<String>, opts: &Loa
     let lossy_ai = format.id == "ai" && !restored;
     let path = path.filter(|_| !template && !partial && !lossy_ai && SAVE_FORMATS.contains(&format.id));
     let saves_back = path.is_some();
-    let converted = saves_back && converted && s.prefs.append_converted;
     let index = s.add_document(doc, path);
     let st = s.doc_mut()?;
     if saves_back {
         st.format = format.id;
     }
-    st.converted = converted;
     st.imported_from = source_path;
     st.import_losses = losses;
     let title = s.documents()[index].title();

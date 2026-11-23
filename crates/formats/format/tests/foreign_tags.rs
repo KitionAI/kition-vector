@@ -18,14 +18,18 @@ fn drawing(len: usize) -> Document {
     d
 }
 
-/// `bytes` (a plain, uncompressed file) with its format tag replaced by `tag`.
+/// `bytes` (a plain, uncompressed file, compact or pretty) with its format tag replaced by `tag`.
 fn retag(bytes: &[u8], tag: &str) -> Vec<u8> {
-    let from = format!("\"format\":\"{EXTENSION}\"");
-    let at = bytes.windows(from.len()).position(|w| w == from.as_bytes()).expect("the tag");
-    let mut out = bytes[..at].to_vec();
-    out.extend_from_slice(format!("\"format\":\"{tag}\"").as_bytes());
-    out.extend_from_slice(&bytes[at + from.len()..]);
-    out
+    for sep in [":", ": "] {
+        let from = format!("\"format\"{sep}\"{EXTENSION}\"");
+        if let Some(at) = bytes.windows(from.len()).position(|w| w == from.as_bytes()) {
+            let mut out = bytes[..at].to_vec();
+            out.extend_from_slice(format!("\"format\"{sep}\"{tag}\"").as_bytes());
+            out.extend_from_slice(&bytes[at + from.len()..]);
+            return out;
+        }
+    }
+    panic!("the tag")
 }
 
 fn gzip(bytes: &[u8]) -> Vec<u8> {
@@ -36,9 +40,9 @@ fn gzip(bytes: &[u8]) -> Vec<u8> {
 
 #[test]
 fn rejects_foreign_tags_in_all_supported_encodings() {
-    for (version, len) in [(1, 100), (2, 100), (3, 100), (4, 100), (4, INLINE_MAX + 10)] {
+    for (pretty, len) in [(false, 100), (true, 100), (false, INLINE_MAX + 10), (true, INLINE_MAX + 10)] {
         let d = drawing(len);
-        let ours = save_with(&d, &SaveOptions { version, ..SaveOptions::default() }).unwrap();
+        let ours = save_with(&d, &SaveOptions { pretty, ..SaveOptions::default() }).unwrap();
         for bytes in [ours.clone(), gzip(&ours)] {
             assert!(sniff(&bytes));
             assert_eq!(load_file(&bytes).unwrap().doc.images["img"].bytes, d.images["img"].bytes);
@@ -47,8 +51,8 @@ fn rejects_foreign_tags_in_all_supported_encodings() {
             let foreign = retag(&ours, tag);
             assert_ne!(ours, foreign);
             for bytes in [foreign.clone(), gzip(&foreign)] {
-                assert!(!sniff(&bytes), "v{version}, {tag}");
-                assert!(matches!(load_file(&bytes), Err(FormatError::NotKitionVector(_))), "v{version}, {tag}");
+                assert!(!sniff(&bytes), "pretty {pretty}, {len} bytes, {tag}");
+                assert!(matches!(load_file(&bytes), Err(FormatError::NotKitionVector(_))), "pretty {pretty}, {len} bytes, {tag}");
             }
         }
     }

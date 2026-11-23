@@ -270,8 +270,24 @@ pub(crate) fn under(editor: &Editor<'_>, command: &str, params: &Value) -> Optio
         // New art goes into the insertion layer, which has to stay there, shown and unlocked.
         under.premises.push(Premise::on(layer.0).fields(["visible", "locked", "data.type"]).positions(no_position()));
     }
+    with_text(doc, &mut under);
     join_premises(&mut under);
     Some(under)
+}
+
+/// A type object's characters and their attributes are its `text` field, not `data` (kdm-model's
+/// `text`): a premise on what it shows (`data`) holds its text too.
+fn with_text(doc: &Document, under: &mut Under) {
+    for premise in &mut under.premises {
+        let text = premise.id.as_u64().and_then(|id| doc.node(NodeId(id))).is_some_and(|node| matches!(node.kind, NodeKind::Text(_)));
+        if text
+            && let Some(fields) = premise.fields.as_mut()
+            && fields.iter().any(|field| field == "data")
+            && !fields.iter().any(|field| field == "text")
+        {
+            fields.push("text".to_owned());
+        }
+    }
 }
 
 /// A premise on node `id`: `fields` of it (`None`: every field), and where it is when `at`.
@@ -795,6 +811,7 @@ fn batch(editor: &Editor<'_>, params: &Value) -> Under {
             under.covers = one.covers;
         }
     }
+    with_text(editor.doc, &mut under);
     join_premises(&mut under);
     under
 }
@@ -935,9 +952,10 @@ fn then(node: &Node, before: &serde_json::Map<String, Value>) -> Option<Node> {
         match field.as_str() {
             "data" => {
                 let mut kind = was.clone();
-                // The register holds the kind without its children: keep the node's.
+                // The register holds the kind without its children (and a type object's without
+                // its characters, its `text`): keep the node's.
                 if let (Some(kind), Some(now)) = (kind.as_object_mut(), value.get("kind").and_then(Value::as_object)) {
-                    for key in ["children", "content", "source"] {
+                    for key in ["children", "content", "source", "runs", "para", "paras"] {
                         if let Some(children) = now.get(key) {
                             kind.insert(key.to_owned(), children.clone());
                         }

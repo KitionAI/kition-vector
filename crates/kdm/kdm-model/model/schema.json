@@ -29,7 +29,9 @@
         "patterns": { "kind": "list", "of": "Pattern" },
         "slices": { "kind": "list", "of": "Slice" },
         "assets": { "kind": "list", "of": "Asset" },
-        "images": { "kind": "list", "of": "Image" }
+        "images": { "kind": "list", "of": "Image" },
+        "guides": { "kind": "list", "of": "Guide" },
+        "threads": { "kind": "list", "of": "Thread" }
       }
     },
     "Node": {
@@ -38,12 +40,62 @@
       "label": "name",
       "fields": {
         "id": { "kind": "integer", "readOnly": true, "optional": true },
-        "name": { "kind": "json", "optional": true },
+        "name": { "kind": "string", "optional": true },
         "visible": { "kind": "boolean", "optional": true, "label": "shown" },
         "locked": { "kind": "boolean", "optional": true, "label": "locked" },
         "appearance": { "kind": "json", "optional": true },
         "props": { "kind": "json", "optional": true },
-        "data": { "kind": "json", "optional": true }
+        "data": { "kind": "json", "optional": true },
+        "text": {
+          "kind": "text",
+          "marks": {
+            "font_family": { "expand": "after" },
+            "font_style": { "expand": "after" },
+            "font_version": { "expand": "after" },
+            "size": { "expand": "after" },
+            "leading": { "expand": "after" },
+            "tracking": { "expand": "after" },
+            "kerning": { "expand": "after" },
+            "baseline_shift": { "expand": "after" },
+            "h_scale": { "expand": "after" },
+            "v_scale": { "expand": "after" },
+            "rotation": { "expand": "after" },
+            "fill": { "expand": "after" },
+            "stroke": { "expand": "after" },
+            "stroke_width": { "expand": "after" },
+            "underline": { "expand": "after" },
+            "strikethrough": { "expand": "after" },
+            "all_caps": { "expand": "after" },
+            "features": { "expand": "after" },
+            "style_name": { "expand": "after" },
+            "overprint_fill": { "expand": "after" },
+            "overprint_stroke": { "expand": "after" },
+            "stroke_cap": { "expand": "after" },
+            "stroke_join": { "expand": "after" },
+            "stroke_miter_limit": { "expand": "after" },
+            "stroke_dash": { "expand": "after" },
+            "position": { "expand": "after" },
+            "small_caps": { "expand": "after" },
+            "charAlign": { "expand": "after" },
+            "para_justify": { "expand": "none" },
+            "para_justify_auto": { "expand": "none" },
+            "para_left_indent": { "expand": "none" },
+            "para_right_indent": { "expand": "none" },
+            "para_first_line_indent": { "expand": "none" },
+            "para_space_before": { "expand": "none" },
+            "para_space_after": { "expand": "none" },
+            "para_hyphenate": { "expand": "none" },
+            "para_composer": { "expand": "none" },
+            "para_tabs": { "expand": "none" },
+            "para_style_name": { "expand": "none" },
+            "para_mojikumi": { "expand": "none" },
+            "para_direction": { "expand": "none" },
+            "para_leading_model": { "expand": "none" },
+            "para_burasagari": { "expand": "none" },
+            "para_kinsoku": { "expand": "none" },
+            "inline": { "expand": "none" }
+          }
+        }
       }
     },
     "Artboard": {
@@ -115,7 +167,7 @@
       "fields": {
         "key": { "kind": "string", "readOnly": true, "optional": true },
         "name": { "kind": "string", "optional": true },
-        "art": { "kind": "json", "optional": true }
+        "nodes": { "kind": "tree", "of": "Node" }
       }
     },
     "Pattern": {
@@ -131,18 +183,12 @@
     "Slice": {
       "batchOps": { "*": { "direct": true } },
       "toolId": { "field": "id" },
-      "fields": {
-        "id": { "kind": "integer", "readOnly": true, "optional": true },
-        "props": { "kind": "json", "optional": true }
-      }
+      "fields": { "id": { "kind": "integer", "readOnly": true, "optional": true }, "props": { "kind": "json", "optional": true } }
     },
     "Asset": {
       "batchOps": { "*": { "direct": true } },
       "toolId": { "field": "id" },
-      "fields": {
-        "id": { "kind": "integer", "readOnly": true, "optional": true },
-        "props": { "kind": "json", "optional": true }
-      }
+      "fields": { "id": { "kind": "integer", "readOnly": true, "optional": true }, "props": { "kind": "json", "optional": true } }
     },
     "Image": {
       "readOnly": true,
@@ -151,6 +197,71 @@
         "mime": { "kind": "string", "optional": true },
         "blob": { "kind": "blob", "optional": true },
         "proxy": { "kind": "blob", "optional": true }
+      }
+    },
+    "Guide": {
+      "batchOps": { "*": { "direct": true } },
+      "fields": {
+        "vertical": { "kind": "boolean", "optional": true },
+        "pos": { "kind": "number", "optional": true },
+        "artboard": { "kind": "ref", "of": "Artboard", "optional": true },
+        "layer": { "kind": "ref", "of": "Node", "optional": true }
+      }
+    },
+    "Thread": {
+      "batchOps": { "*": { "direct": true } },
+      "fields": {
+        "frames": { "kind": "list", "of": "Node" },
+        "text": {
+          "kind": "text",
+          "marks": {
+            "font_family": { "expand": "after" },
+            "font_style": { "expand": "after" },
+            "font_version": { "expand": "after" },
+            "size": { "expand": "after" },
+            "leading": { "expand": "after" },
+            "tracking": { "expand": "after" },
+            "kerning": { "expand": "after" },
+            "baseline_shift": { "expand": "after" },
+            "h_scale": { "expand": "after" },
+            "v_scale": { "expand": "after" },
+            "rotation": { "expand": "after" },
+            "fill": { "expand": "after" },
+            "stroke": { "expand": "after" },
+            "stroke_width": { "expand": "after" },
+            "underline": { "expand": "after" },
+            "strikethrough": { "expand": "after" },
+            "all_caps": { "expand": "after" },
+            "features": { "expand": "after" },
+            "style_name": { "expand": "after" },
+            "overprint_fill": { "expand": "after" },
+            "overprint_stroke": { "expand": "after" },
+            "stroke_cap": { "expand": "after" },
+            "stroke_join": { "expand": "after" },
+            "stroke_miter_limit": { "expand": "after" },
+            "stroke_dash": { "expand": "after" },
+            "position": { "expand": "after" },
+            "small_caps": { "expand": "after" },
+            "charAlign": { "expand": "after" },
+            "para_justify": { "expand": "none" },
+            "para_justify_auto": { "expand": "none" },
+            "para_left_indent": { "expand": "none" },
+            "para_right_indent": { "expand": "none" },
+            "para_first_line_indent": { "expand": "none" },
+            "para_space_before": { "expand": "none" },
+            "para_space_after": { "expand": "none" },
+            "para_hyphenate": { "expand": "none" },
+            "para_composer": { "expand": "none" },
+            "para_tabs": { "expand": "none" },
+            "para_style_name": { "expand": "none" },
+            "para_mojikumi": { "expand": "none" },
+            "para_direction": { "expand": "none" },
+            "para_leading_model": { "expand": "none" },
+            "para_burasagari": { "expand": "none" },
+            "para_kinsoku": { "expand": "none" },
+            "inline": { "expand": "none" }
+          }
+        }
       }
     }
   }

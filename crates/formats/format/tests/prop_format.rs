@@ -1,4 +1,4 @@
-//! `.kvector` format: round trips, robustness against garbage, versioning, unknown fields.
+//! `.kvector` format: round trips, robustness against garbage, the one format version, unknown fields.
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
@@ -83,16 +83,16 @@ proptest! {
         }
     }
 
-    /// Compressed and older-version saves of random documents load to the same document.
+    /// Compressed, pretty and compact saves of random documents load to the same document.
     #[test]
-    fn compressed_and_older_saves_roundtrip(ops in arb_ops(5..30)) {
+    fn compressed_and_pretty_saves_roundtrip(ops in arb_ops(5..30)) {
         let mut s = fixtures::session();
         for op in &ops {
             let _ = op.apply(&mut s);
         }
         let d = s.doc().unwrap().doc.clone();
         let want = doc_json(&load(&save(&d, false)).unwrap());
-        for o in [SaveOptions { compress: true, ..SaveOptions::default() }, SaveOptions { version: 2, ..SaveOptions::default() }, SaveOptions { version: 1, pretty: true, ..SaveOptions::default() }] {
+        for o in [SaveOptions { compress: true, ..SaveOptions::default() }, SaveOptions { pretty: false, ..SaveOptions::default() }, SaveOptions::default()] {
             let back = load(&save_with(&d, &o).unwrap()).unwrap();
             prop_assert!(json_approx_eq(&doc_json(&back), &want, 1e-12), "{:?} differs", o);
         }
@@ -160,6 +160,8 @@ fn rejects_newer_versions_and_other_formats() {
     let mut v: Value = serde_json::from_slice(&save(&Document::new(1.0, 1.0), false)).unwrap();
     v["version"] = json!(kition_vector_format::VERSION + 1);
     assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(kition_vector_format::FormatError::TooNew(_))));
+    v["version"] = json!(0);
+    assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(kition_vector_format::FormatError::Unsupported(0))));
     v["version"] = json!(kition_vector_format::VERSION);
     v["format"] = json!("other");
     assert!(matches!(load(&serde_json::to_vec(&v).unwrap()), Err(kition_vector_format::FormatError::NotKitionVector(_))));

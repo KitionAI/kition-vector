@@ -214,7 +214,7 @@ impl<'a> Collector<'a> {
                                 self.collect(&mut nested, found_path, &destination_file, depth + 1)?;
                                 if self.opts.relink {
                                     // Preserve auxiliary native-file content when rewriting.
-                                    let mut options = kition_vector_format::SaveOptions::for_doc(&nested);
+                                    let mut options = kition_vector_format::SaveOptions::default();
                                     options.preview = preview;
                                     options.pdf = pdf;
                                     options.profiles = saved.profiles;

@@ -4,8 +4,12 @@
 //!
 //! Node, slice and asset ids share the document's id counter (`Document::alloc_id`); artboard and
 //! graphic style ids have their own. Swatches, swatch groups, graphic styles, text styles,
-//! symbols and patterns have no id of their own in the model: their objects are kept in the
-//! view's order, and paired between two versions of a list by content ([`crate::list::align`]).
+//! symbols, patterns, guides and text threads have no id of their own in the model: their objects
+//! are kept in the view's order, and paired between two versions of a list by content
+//! ([`crate::list::align`]; a thread by its frames). A symbol's art has node ids of its own, which
+//! are the art's (data: they get fresh ones when the art is used), not the drawing's: they are
+//! not written, and a read gives each art node the id the view gave its object, else a fresh one
+//! unique in that symbol.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
@@ -15,6 +19,15 @@ use kition_kit::session::IdMap;
 use kition_vector_doc::{Document, Node, NodeId};
 
 use crate::{KdmResult, MAX_DEPTH, kdm_err};
+
+/// The objects of one tree of nodes (the drawing's layers, or a symbol's art) by node id, and
+/// each one's tree node, so a later write can move it or put children under it (a transaction
+/// cannot read the replica's tree back).
+#[derive(Clone, Debug, Default)]
+pub(crate) struct TreeIds {
+    pub nodes: IdMap<NodeId>,
+    pub tree: HashMap<ObjectId, NodeRef>,
+}
 
 /// The objects behind a view's nodes, artboards, slices, assets, images and named lists.
 #[derive(Clone, Debug, Default)]
@@ -35,7 +48,12 @@ pub struct Ids {
     pub(crate) char_styles: Vec<ObjectId>,
     pub(crate) para_styles: Vec<ObjectId>,
     pub(crate) symbols: Vec<ObjectId>,
+    /// Each symbol's art, parallel to `symbols`.
+    pub(crate) symbol_trees: Vec<TreeIds>,
     pub(crate) patterns: Vec<ObjectId>,
+    pub(crate) guides: Vec<ObjectId>,
+    /// Parallel to the document's `text_threads`.
+    pub(crate) threads: Vec<ObjectId>,
 }
 
 impl Ids {
@@ -73,6 +91,8 @@ pub struct Known {
     pub(crate) assets: HashMap<ObjectId, u64>,
     pub(crate) artboards: HashMap<ObjectId, u32>,
     pub(crate) styles: HashMap<ObjectId, u32>,
+    /// Symbols' art nodes.
+    pub(crate) symbol_nodes: HashMap<ObjectId, NodeId>,
     /// The highest node, slice or asset id ever handed out (or below the counter seen), so fresh
     /// ids never reuse one.
     pub(crate) max: u64,
@@ -114,6 +134,13 @@ impl Known {
             if style.id != 0 {
                 self.styles.insert(object.clone(), style.id);
             }
+        }
+        for (symbol, tree) in doc.symbols.iter().zip(&ids.symbol_trees) {
+            walk(std::slice::from_ref(&symbol.art), 0, &mut |n| {
+                if let Some(object) = tree.nodes.object(n.id) {
+                    self.symbol_nodes.insert(object.clone(), n.id);
+                }
+            });
         }
     }
 }
@@ -179,6 +206,18 @@ pub(crate) fn check_unique(doc: &Document) -> KdmResult<()> {
         }
         Ok(())
     }
+    for symbol in &doc.symbols {
+        let art = std::slice::from_ref(&symbol.art);
+        if depth_of(art, 0) > MAX_DEPTH {
+            return Err(kdm_err(format!("symbol {} nests groups deeper than {MAX_DEPTH}; refusing to write it", symbol.name)));
+        }
+        let mut seen = HashSet::new();
+        let mut twice = false;
+        walk(art, 0, &mut |n| twice |= !seen.insert(n.id));
+        if twice {
+            return Err(kdm_err(format!("symbol {} holds an object id twice; refusing to write it", symbol.name)));
+        }
+    }
     unique("a slice id", doc.slices.iter().map(|s| s.id))?;
     unique("an asset id", doc.assets.iter().map(|a| a.id))?;
     unique("an artboard id", doc.artboards.iter().map(|a| a.id))?;
@@ -218,6 +257,21 @@ pub(crate) fn dedupe(doc: &mut Document) {
         renumber(&mut layers, &mut HashSet::new(), doc, 0);
         doc.layers = layers;
     }
+    // A symbol's art ids are its own (see the module docs): unique within it.
+    let mut symbols = std::mem::take(&mut doc.symbols);
+    for symbol in &mut symbols {
+        let mut seen = HashSet::new();
+        let mut twice = false;
+        walk(std::slice::from_ref(&symbol.art), 0, &mut |n| twice |= !seen.insert(n.id));
+        if twice {
+            let mut one = vec![symbol.art.clone()];
+            renumber(&mut one, &mut HashSet::new(), doc, 0);
+            if let Some(art) = one.pop() {
+                symbol.art = art;
+            }
+        }
+    }
+    doc.symbols = symbols;
     let mut seen = HashSet::new();
     for i in 0..doc.slices.len() {
         if doc.slices.get(i).is_some_and(|s| !seen.insert(s.id)) {

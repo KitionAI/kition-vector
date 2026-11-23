@@ -96,6 +96,11 @@ fn text_object(doc: &VectorDocument) -> Option<(u64, String)> {
     })
 }
 
+/// The byte offset of character `at` of `text` (its end past the last).
+fn byte_at(text: &str, at: usize) -> usize {
+    text.char_indices().nth(at).map_or(text.len(), |(byte, _)| byte)
+}
+
 fn color(value: u64) -> String {
     format!("#{:06x}", (value.wrapping_mul(0x9E37_79B9)) & 0xff_ffff)
 }
@@ -294,10 +299,36 @@ impl KitAdapter for VectorKit {
                 let data = kition_vector_format::base64_encode(&png(*seed));
                 exec(doc, "file.place", json!({ "name": format!("picture-{seed}.png"), "dataBase64": data }))?;
             }
+            // Typing in the first text object, as the Type tool edits it (`text.editRange`, in
+            // bytes of its plain text): its characters are its `Node.text`, which merges by
+            // character.
+            Script::InsertText { at, text } => {
+                let Some((id, now)) = text_object(doc) else { return Ok(false) };
+                let at = byte_at(&now, *at);
+                exec(doc, "text.editRange", json!({ "id": id, "start": at, "end": at, "insert": text }))?;
+            }
+            Script::DeleteText { at, len } => {
+                let Some((id, now)) = text_object(doc) else { return Ok(false) };
+                exec(doc, "text.editRange", json!({ "id": id, "start": byte_at(&now, *at), "end": byte_at(&now, at + len), "insert": "" }))?;
+            }
+            Script::SplitParagraph { at } => {
+                let Some((id, now)) = text_object(doc) else { return Ok(false) };
+                let at = byte_at(&now, *at);
+                exec(doc, "text.editRange", json!({ "id": id, "start": at, "end": at, "insert": "\n" }))?;
+            }
+            Script::MergeParagraph { at } => {
+                let Some((id, now)) = text_object(doc) else { return Ok(false) };
+                exec(doc, "text.editRange", json!({ "id": id, "start": byte_at(&now, *at), "end": byte_at(&now, at + 1), "insert": "" }))?;
+            }
             _ => return Ok(false),
         }
         exec(doc, "select.none", json!({}))?;
         Ok(true)
+    }
+
+    /// The first text object's text (its paragraphs joined by `\n`).
+    fn text(&self, doc: &mut VectorDocument) -> Result<Option<String>> {
+        Ok(text_object(doc).map(|(_, text)| text))
     }
 
     /// The view matches a fresh replica of the same state: the same layer tree (ids aside, as

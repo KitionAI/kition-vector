@@ -17,7 +17,8 @@
 //! for the step), the editor state it reads (`selection`, `active`, `mode`), and for each object
 //! what the write rests on: the fields it reads or replaces (`*` every field, `-` none: only that
 //! it is there; `name`, `visible`, `locked`, `appearance`, `data`, `data.<key>`, `props.<key>` of a
-//! node; `settings.<key>` of the drawing) and whether where it is matters (its place among its
+//! node, where `data` of a type object holds its `text` too (its characters, kdm-model's `text`);
+//! `settings.<key>`, `guides` and `threads` of the drawing) and whether where it is matters (its place among its
 //! parent's children, or an artboard's index). Besides objects: `children:$G` (which objects `$G`
 //! holds), `slot:$G[a..b]` (a place in `$G`'s children), `picks` (the objects under a point or a
 //! stroke, told by asking the kit), `$ALL` (every object that is not a layer). What is held is
@@ -379,8 +380,19 @@ fn expected(row: &Row, roles: &[(&str, u64)]) -> Holds {
         }
         explicit.insert(*object);
     }
+    // A type object's characters are its `text`, which what reads its `data` reads too.
+    for object in TYPE_OBJECTS {
+        if let Some((Some(fields), _)) = holds.get_mut(*object)
+            && fields.contains("data")
+        {
+            fields.insert("text".to_owned());
+        }
+    }
     holds
 }
+
+/// The fixture's type objects.
+const TYPE_OBJECTS: &[&str] = &["$T", "$TA"];
 
 /// Whether `held` (a field, or every field) covers `wanted`.
 fn covers(held: &Option<BTreeSet<String>>, wanted: &str) -> bool {
@@ -573,7 +585,7 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
         "object.path.cleanUp",
         r#"{"unpaintedObjects":false,"emptyTextPaths":false}"#,
         "",
-        r#"$B held (appearance,data,locked,visible), not read; $B1 held (appearance,data,locked,visible), not read; $B2 held (appearance,data,locked,visible), not read; $C1.appearance held, not read; $C2.appearance held, not read; $CA.appearance held, not read; $CG held (appearance,data,locked,visible), not read; $CK held (appearance,data,locked,visible), not read; $CP held (appearance,data,locked,visible), not read; $E.appearance held, not read; $G held (appearance,data,locked,visible), not read; $K1.appearance held, not read; $K1.locked held, not read; $K1.visible held, not read; $K2.appearance held, not read; $K2.locked held, not read; $K2.visible held, not read; $P.appearance held, not read; $PR.appearance held, not read; $R.appearance held, not read; $R2.appearance held, not read; $S held (appearance,data,locked,visible), not read; $T held (appearance,data,locked,visible), not read; $TA held (appearance,data,locked,visible), not read"#,
+        r#"$B held (appearance,data,locked,visible), not read; $B1 held (appearance,data,locked,visible), not read; $B2 held (appearance,data,locked,visible), not read; $C1.appearance held, not read; $C2.appearance held, not read; $CA.appearance held, not read; $CG held (appearance,data,locked,visible), not read; $CK held (appearance,data,locked,visible), not read; $CP held (appearance,data,locked,visible), not read; $E.appearance held, not read; $G held (appearance,data,locked,visible), not read; $K1.appearance held, not read; $K1.locked held, not read; $K1.visible held, not read; $K2.appearance held, not read; $K2.locked held, not read; $K2.visible held, not read; $P.appearance held, not read; $PR.appearance held, not read; $R.appearance held, not read; $R2.appearance held, not read; $S held (appearance,data,locked,visible), not read; $T held (appearance,data,locked,text,visible), not read; $TA held (appearance,data,locked,text,visible), not read"#,
     ),
     ("object.path.divideObjectsBelow", r#"{}"#, "$R", r#"$L1 held (locked,visible), not read"#),
     (
@@ -582,9 +594,9 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
         "$E",
         r#"$R: holds every field, reads data; $R: where it is held, not read"#,
     ),
-    ("object.textWrap.make", r#"{}"#, "$E", r#"$T held (data), not read; $TA held (data), not read"#),
-    ("object.textWrap.make", r#"{"offset":4}"#, "$CG", r#"$CA held (data), not read; $T held (data), not read"#),
-    ("object.textWrap.make", r#"{"ids":["$E"]}"#, "", r#"$T held (data), not read; $TA held (data), not read"#),
+    ("object.textWrap.make", r#"{}"#, "$E", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
+    ("object.textWrap.make", r#"{"offset":4}"#, "$CG", r#"$CA held (data), not read; $T held (data,text), not read"#),
+    ("object.textWrap.make", r#"{"ids":["$E"]}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
     (
         "object.ungroup",
         r#"{}"#,
@@ -645,8 +657,8 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
         r#"$B1.locked held, not read; $B1.visible held, not read; $B2.locked held, not read; $B2.visible held, not read; $C1.locked held, not read; $C1.visible held, not read; $C2.locked held, not read; $C2.visible held, not read; $CA.locked held, not read; $CA.visible held, not read; $CK.locked held, not read; $CK.visible held, not read; $K1.locked held, not read; $K1.visible held, not read; $K2.locked held, not read; $K2.visible held, not read"#,
     ),
     ("artboard.reorder", r#"{"index":1,"to":0}"#, "", r#"artboard:0 held (*), not read"#),
-    ("document.setup", r#"{"bleed":3}"#, "", r#"$T held (data), not read; $TA held (data), not read"#),
-    ("document.setup", r#"{"flattenerPreset":"Low Resolution"}"#, "", r#"$T held (data), not read; $TA held (data), not read"#),
+    ("document.setup", r#"{"bleed":3}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
+    ("document.setup", r#"{"flattenerPreset":"Low Resolution"}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
     ("file.place", r#"{"path":"/tmp/a.png"}"#, "", r#"$L1: where it is held, not read"#),
     ("file.place", r#"{"path":"/tmp/a.svg","at":[100,100]}"#, "", r#"$L1: where it is held, not read"#),
     ("transparency.set", r#"{"ids":["$R"],"opacity":50}"#, "", r#"drawing held (settings.mask_edit), not read"#),
@@ -676,8 +688,8 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
         "",
         r#"$B held (data), not read; $B1 held (data), not read; $B2 held (data), not read; $C1 held (data), not read; $C2 held (data), not read; $CA held (data), not read; $CG held (data), not read; $CK held (data), not read; $CP held (data), not read; $E held (data), not read; $G held (data), not read; $K1 held (data), not read; $K2 held (data), not read; $P held (data), not read; $PR held (data), not read; $R held (data), not read; $S held (data), not read"#,
     ),
-    ("text.areaOptions", r#"{"ids":["$TA","$T"],"columns":2}"#, "", r#"$T.data held, not read"#),
-    ("text.fitHeadline", r#"{}"#, "$TA,$T", r#"$T.data held, not read"#),
+    ("text.areaOptions", r#"{"ids":["$TA","$T"],"columns":2}"#, "", r#"$T.data held, not read; $T.text held, not read"#),
+    ("text.fitHeadline", r#"{}"#, "$TA,$T", r#"$T.data held, not read; $T.text held, not read"#),
     (
         "text.setStyle",
         r#"{"ids":["$L1"],"tracking":50}"#,
@@ -1546,7 +1558,7 @@ const ROWS: &[Row] = &[
     // Pinned after review: `on` takes objects, not slices (the host refuses `$SL` there); the row acts on the slice selection, empty in the fixture.
     p("object.slice.duplicate", r#"{}"#, &[], "selection", &[]),
     // object.slice.fromGuides: the ruler guides cut the union of all artboards; replaces every user slice.
-    r("object.slice.fromGuides", r#"{}"#, &[], "", &[("drawing", "settings.guides,~artboards", false), ("$SL", "*", false)]),
+    r("object.slice.fromGuides", r#"{}"#, &[], "", &[("drawing", "guides,~artboards", false), ("$SL", "*", false)]),
     // object.slice.fromSelection: ids/id or raw selection; a user slice over their visual bounds.
     r("object.slice.fromSelection", r#"{}"#, &["$R"], "selection", &[("$R", "data,appearance", false)]),
     r(
@@ -2567,7 +2579,7 @@ const ROWS: &[Row] = &[
     ),
     // document.setUnits: compares and sets the document's units.
     r("document.setUnits", r#"{"units":"Millimeters"}"#, &[], "", &[("drawing", "settings.units", false)]),
-    // document.open: reads a file into a new document (prefs updateLinks, appendConverted; Untitled-N for templates); no open document read.
+    // document.open: reads a file into a new document (prefs updateLinks; Untitled-N for templates); no open document read.
     r("document.open", r#"{"path":"/tmp/in.kvector"}"#, &[], "mode", &[]),
     // document.exportForScreens: renders the chosen artboards (default all) / assets / whole document and stores the params whole as the document's export settings (not an undo step).
     r(
@@ -2796,7 +2808,7 @@ const ROWS: &[Row] = &[
         r#"{"ids":["$L2"]}"#,
         &[],
         "",
-        &[("$L2", "*", false), ("children:$L2", "-", false), ("$R2", "*", false), ("drawing", "settings.guides", false)],
+        &[("$L2", "*", false), ("children:$L2", "-", false), ("$R2", "*", false), ("drawing", "guides", false)],
     ),
     r(
         "layer.delete",
@@ -2829,7 +2841,7 @@ const ROWS: &[Row] = &[
             ("$C1", "*", false),
             ("$E", "*", false),
             ("$R", "*", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     // layer.duplicate: rows as layer.delete; each copied (all fields, children too) just above its original; a layer's copy is named '<name> copy' and gets copies of its guides.
@@ -2840,7 +2852,7 @@ const ROWS: &[Row] = &[
         r#"{"ids":["$L2"]}"#,
         &[],
         "",
-        &[("$L2", "*", true), ("children:$L2", "-", false), ("$R2", "*", false), ("drawing", "settings.guides", false)],
+        &[("$L2", "*", true), ("children:$L2", "-", false), ("$R2", "*", false), ("drawing", "guides", false)],
     ),
     // layer.setProps: rows as layer.delete; sets the given fields; template compares data.template and then also sets locked and dimImages; deselects what became hidden/locked.
     r("layer.setProps", r#"{"ids":["$R"],"name":"Box"}"#, &[], "selection", &[("$R", "name", false)]),
@@ -2882,9 +2894,9 @@ const ROWS: &[Row] = &[
     r("artboard.new", r#"{}"#, &[], "", &[("artboard:1", "rect", true), ("~artboards", "*", false)]),
     r("artboard.new", r#"{"x":0,"y":900,"width":100,"height":100,"name":"New"}"#, &[], "", &[("~artboards", "*", false)]),
     // artboard.delete: removes artboard `index` (positional) and the guides of that artboard.
-    r("artboard.delete", r#"{"index":1}"#, &[], "", &[("artboard:1", "*", true), ("drawing", "settings.guides", false)]),
+    r("artboard.delete", r#"{"index":1}"#, &[], "", &[("artboard:1", "*", true), ("drawing", "guides", false)]),
     // artboard.setProps: index (default 0); rect from params over the old rect, name; a move takes its artboard guides; moveArt/scaleArt move/scale the art fully inside it (prefs moveLockedWithArtboard, scale strokes...).
-    r("artboard.setProps", r#"{"index":0,"name":"Front"}"#, &[], "", &[("artboard:0", "rect,props", true), ("drawing", "settings.guides", false)]),
+    r("artboard.setProps", r#"{"index":0,"name":"Front"}"#, &[], "", &[("artboard:0", "rect,props", true), ("drawing", "guides", false)]),
     // UNSURE: which fixture objects lie fully inside Artboard 1 is geometry the fixture does not give; assumed: every top-level object of both layers.
     r(
         "artboard.setProps",
@@ -2893,7 +2905,7 @@ const ROWS: &[Row] = &[
         "mode",
         &[
             ("artboard:0", "rect", true),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
             ("$L1", "locked,visible", false),
             ("$L2", "locked,visible", false),
             ("children:$L1", "-", false),
@@ -2941,7 +2953,7 @@ const ROWS: &[Row] = &[
             ("children:$CP", "-", false),
             ("children:$CG", "-", false),
             ("children:$G", "-", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     // artboard.fitToSelection: visual bounds of the selected objects → artboard.setProps of index (default 0).
@@ -2950,7 +2962,7 @@ const ROWS: &[Row] = &[
         r#"{"index":0}"#,
         &["$R"],
         "selection",
-        &[("artboard:0", "rect", true), ("$R", "data,appearance", false), ("drawing", "settings.guides", false)],
+        &[("artboard:0", "rect", true), ("$R", "data,appearance", false), ("drawing", "guides", false)],
     ),
     r(
         "artboard.fitToSelection",
@@ -2963,7 +2975,7 @@ const ROWS: &[Row] = &[
             ("children:$G", "-", false),
             ("$C1", "data,appearance", false),
             ("$C2", "data,appearance", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     // layer.clippingMask.toggle: id, else the one highlighted layer/group row, else the one selected group, else the current layer; clipping → release (first child unclipped); else top child becomes the clipping path (paint dropped) and moves to the bottom.
@@ -2997,7 +3009,7 @@ const ROWS: &[Row] = &[
             ("$R2", "-", false),
             ("$L1", "-", false),
             ("children:$L1", "-", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     r(
@@ -3005,7 +3017,7 @@ const ROWS: &[Row] = &[
         r#"{"ids":["$R","$L2"]}"#,
         &[],
         "",
-        &[("$R", "-", true), ("$L2", "-", false), ("children:$L2", "-", false), ("drawing", "settings.guides", false)],
+        &[("$R", "-", true), ("$L2", "-", false), ("children:$L2", "-", false), ("drawing", "guides", false)],
     ),
     // layer.flatten: into = top-level layer of id, else of the last highlighted row, else the current layer; other visible non-template top-level layers merge into it, hidden ones are deleted (with their guides).
     r(
@@ -3019,7 +3031,7 @@ const ROWS: &[Row] = &[
             ("$L2", "*", false),
             ("children:$L2", "-", false),
             ("$R2", "-", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     r(
@@ -3043,7 +3055,7 @@ const ROWS: &[Row] = &[
             ("$G", "-", false),
             ("$E", "-", false),
             ("$R", "-", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
         ],
     ),
     // layer.releaseToLayers: id (layer or group), else the one highlighted row, else the current layer; each non-layer child into its own new sublayer (a group's into its layer where the group was, the group deleted); names/colours from all layers.
@@ -3104,13 +3116,13 @@ const ROWS: &[Row] = &[
     // layer.unlockAll: unlocks every layer and sublayer.
     r("layer.unlockAll", r#"{}"#, &[], "selection", &[("$L1", "locked", false), ("$L2", "locked", false)]),
     // artboard.move: artboard index moves by dx,dy with its guides; moveArt moves the art fully inside it (prefs moveLockedWithArtboard, scale strokes); copy adds a copy instead.
-    r("artboard.move", r#"{"index":0,"dx":10,"dy":0}"#, &[], "", &[("artboard:0", "rect", true), ("drawing", "settings.guides", false)]),
+    r("artboard.move", r#"{"index":0,"dx":10,"dy":0}"#, &[], "", &[("artboard:0", "rect", true), ("drawing", "guides", false)]),
     r(
         "artboard.move",
         r#"{"index":0,"dx":10,"dy":0,"copy":true}"#,
         &[],
         "",
-        &[("artboard:0", "*", true), ("~artboards", "*", false), ("drawing", "settings.guides", false)],
+        &[("artboard:0", "*", true), ("~artboards", "*", false), ("drawing", "guides", false)],
     ),
     // UNSURE: art fully inside Artboard 1 assumed to be every top-level object (geometry not in the fixture).
     r(
@@ -3120,7 +3132,7 @@ const ROWS: &[Row] = &[
         "mode",
         &[
             ("artboard:0", "rect", true),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
             ("$L1", "locked,visible", false),
             ("$L2", "locked,visible", false),
             ("children:$L1", "-", false),
@@ -3169,7 +3181,7 @@ const ROWS: &[Row] = &[
         "mode",
         &[
             ("~artboards", "*", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
             ("$L1", "locked,visible", false),
             ("$L2", "locked,visible", false),
             ("children:$L1", "-", false),
@@ -3200,7 +3212,7 @@ const ROWS: &[Row] = &[
             ("children:$G", "-", false),
         ],
     ),
-    r("artboard.rearrange", r#"{"moveArtwork":false}"#, &[], "", &[("~artboards", "*", false), ("drawing", "settings.guides", false)]),
+    r("artboard.rearrange", r#"{"moveArtwork":false}"#, &[], "", &[("~artboards", "*", false), ("drawing", "guides", false)]),
     // document.rasterEffectsSettings: copies ppi and the raster settings, applies the given keys, writes both back whole when they differ; colorModel reads the colour mode. No params: query.
     // Pinned after review: C8-vector-engine-2: rasterfx.rs:114-125 now writes only the keys given (resolution: settings.raster_effects_ppi).
     p("document.rasterEffectsSettings", r#"{"resolution":"high"}"#, &[], "", &[("drawing", "settings.raster_effects_ppi", false)]),
@@ -3251,7 +3263,7 @@ const ROWS: &[Row] = &[
         &[],
         "",
         &[
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
             ("$ALL", "data", false),
             ("children:$L1", "-", false),
             ("children:$L2", "-", false),
@@ -3262,25 +3274,25 @@ const ROWS: &[Row] = &[
         ],
     ),
     // guide.add: appends a guide; artboard index → that artboard's id; layer = given, else the insertion layer (isolation / current layer if shown and unlocked, else the default layer).
-    r("guide.add", r#"{"vertical":true,"pos":200}"#, &[], "active", &[("drawing", "settings.guides", false), ("$L1", "visible,locked", false)]),
+    r("guide.add", r#"{"vertical":true,"pos":200}"#, &[], "active", &[("drawing", "guides", false), ("$L1", "visible,locked", false)]),
     r(
         "guide.add",
         r#"{"vertical":false,"pos":50,"artboard":1,"layer":"$L2"}"#,
         &[],
         "",
-        &[("drawing", "settings.guides", false), ("artboard:1", "-", true), ("$L2", "-", false)],
+        &[("drawing", "guides", false), ("artboard:1", "-", true), ("$L2", "-", false)],
     ),
     // guide.select: selects guides by positional index (selection only).
     // Pinned after review: without `indexes` the command reads the guides selected now (the earlier table check, tests/table_check.rs).
-    p("guide.select", r#"{"indexes":[0]}"#, &[], "selection", &[("drawing", "settings.guides", false)]),
+    p("guide.select", r#"{"indexes":[0]}"#, &[], "selection", &[("drawing", "guides", false)]),
     // guide.remove: guide index (positional), else the selected guides; removed from the list.
-    r("guide.remove", r#"{"index":0}"#, &[], "", &[("drawing", "settings.guides", false)]),
+    r("guide.remove", r#"{"index":0}"#, &[], "", &[("drawing", "guides", false)]),
     // guide.move: index → pos set; else the selected guides moved (copy appends copies).
-    r("guide.move", r#"{"index":0,"pos":150}"#, &[], "", &[("drawing", "settings.guides", false)]),
+    r("guide.move", r#"{"index":0,"pos":150}"#, &[], "", &[("drawing", "guides", false)]),
     // UNSURE: the selected-guides path needs a guide selection, which `on` cannot give; on the fixture it fails.
-    r("guide.move", r#"{"dx":10}"#, &[], "selection", &[("drawing", "settings.guides", false)]),
+    r("guide.move", r#"{"dx":10}"#, &[], "selection", &[("drawing", "guides", false)]),
     // guide.setLayer: guide index / indexes, else the selected guides, onto layer `layer` (a layer id).
-    r("guide.setLayer", r#"{"index":0,"layer":"$L1"}"#, &[], "", &[("drawing", "settings.guides", false), ("$L1", "-", false)]),
+    r("guide.setLayer", r#"{"index":0,"layer":"$L1"}"#, &[], "", &[("drawing", "guides", false), ("$L1", "-", false)]),
     // file.closeAll: closes every open document without asking.
     r(
         "file.closeAll",
@@ -3338,7 +3350,7 @@ const ROWS: &[Row] = &[
         r#"{"index":0,"art":false}"#,
         &[],
         "",
-        &[("artboard:0", "*", true), ("~artboards", "*", false), ("drawing", "settings.guides", false)],
+        &[("artboard:0", "*", true), ("~artboards", "*", false), ("drawing", "guides", false)],
     ),
     // UNSURE: art fully inside Artboard 1 assumed to be every top-level object (geometry not in the fixture); the tool's active artboard and moveArt are session state.
     r(
@@ -3349,7 +3361,7 @@ const ROWS: &[Row] = &[
         &[
             ("artboard:0", "*", true),
             ("~artboards", "*", false),
-            ("drawing", "settings.guides", false),
+            ("drawing", "guides", false),
             ("$L1", "locked,visible", false),
             ("$L2", "locked,visible", false),
             ("children:$L1", "-", false),
@@ -3385,7 +3397,7 @@ const ROWS: &[Row] = &[
     p("artboard.copy", r#"{"index":0,"art":false}"#, &[], "mode", &[("artboard:0", "*", true)]),
     // artboard.cut: artboard.copy, then deletes the artboard, its guides and that art (not the only artboard).
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
-    p("artboard.cut", r#"{"index":1,"art":false}"#, &[], "mode", &[("artboard:1", "*", true), ("drawing", "settings.guides", false)]),
+    p("artboard.cut", r#"{"index":1,"art":false}"#, &[], "mode", &[("artboard:1", "*", true), ("drawing", "guides", false)]),
     // document.exportPdf: encodes the whole document (preset from prefs; preserveEditing carries the native document); no write to the document.
     r(
         "document.exportPdf",
@@ -4158,19 +4170,13 @@ const ROWS: &[Row] = &[
         ],
     ),
     // text.thread.create: selection roots in paint order (needs 2+); closed paths replaced by empty area frames (same id); existing threads merged; the story reflows.
-    r(
-        "text.thread.create",
-        r#"{}"#,
-        &["$TA", "$R"],
-        "selection",
-        &[("$TA", "data", true), ("$R", "*", true), ("drawing", "settings.text_threads", false)],
-    ),
+    r("text.thread.create", r#"{}"#, &["$TA", "$R"], "selection", &[("$TA", "data", true), ("$R", "*", true), ("drawing", "threads", false)]),
     // text.thread.releaseSelection: selection roots taken out of their threads; story into the first kept frame. Fixture has no thread: disabled.
     // UNSURE: no thread in the fixture (the command is disabled); row shows what it would rest on
-    r("text.thread.releaseSelection", r#"{}"#, &["$TA"], "selection", &[("drawing", "settings.text_threads", false), ("$TA", "data", false)]),
+    r("text.thread.releaseSelection", r#"{}"#, &["$TA"], "selection", &[("drawing", "threads", false), ("$TA", "data", false)]),
     // text.thread.remove: threads containing a selected root dropped. Fixture has no thread: disabled.
     // UNSURE: no thread in the fixture (the command is disabled)
-    r("text.thread.remove", r#"{}"#, &["$TA"], "selection", &[("drawing", "settings.text_threads", false)]),
+    r("text.thread.remove", r#"{}"#, &["$TA"], "selection", &[("drawing", "threads", false)]),
     // transparency.editOpacityMask: id, else the first selection subject with a mask; copies the mask art to an editing layer, isolates it. Fixture has no mask: errors.
     // UNSURE: the fixture has no opacity mask; rows assume $E carries one
     r("transparency.editOpacityMask", r#"{"id":"$E"}"#, &[], "", &[("$E", "props.mask", false), ("drawing", "settings.mask_edit", false)]),

@@ -185,9 +185,6 @@ pub struct DocState {
     /// That format's options as last saved (SVG options for SVG, the Save PDF settings for PDF;
     /// empty for native files): Save reuses them and `file.formatOptions` reads them back.
     pub save_options: serde_json::Map<String, Value>,
-    /// Opened from a native file in an older format version: the title says
-    /// "[Converted]" and Save asks for a new name instead of overwriting it.
-    pub converted: bool,
     /// The view saved into native files (`Document::last_view`); the UI keeps it current before a
     /// save and restores it when the document opens.
     pub view: Option<kition_vector_doc::SavedView>,
@@ -294,7 +291,6 @@ impl DocState {
             transparency_grid: false,
             format: "kvector",
             save_options: Default::default(),
-            converted: false,
             view,
             recovered: false,
             recovery: None,
@@ -368,13 +364,7 @@ impl DocState {
             .and_then(|p| std::path::Path::new(p).file_name())
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| self.doc.title.clone());
-        if self.converted {
-            format!("{} [Converted]", cmd::fileio::file_stem(&name))
-        } else if self.recovered {
-            format!("{} [Recovered]", cmd::fileio::file_stem(&name))
-        } else {
-            name
-        }
+        if self.recovered { format!("{} [Recovered]", cmd::fileio::file_stem(&name)) } else { name }
     }
     /// Where new art is inserted: the isolation container, else the active layer.
     /// The current layer, if the remembered id still names a layer (ids are reused after undo).
@@ -668,8 +658,6 @@ pub struct Prefs {
     // File Handling (continued)
     /// Where Save as Template and New from Template start ("" = `Documents/Kition Vector Templates`).
     pub templates_folder: String,
-    /// Open older native files as "<name> [Converted]" so Save asks for a new name.
-    pub append_converted: bool,
     /// File Handling → Use Compression: native saves are gzip-compressed (`document.save
     /// {compress}` overrides it).
     pub use_compression: bool,
@@ -841,7 +829,6 @@ impl Default for Prefs {
             recent_new_docs: vec![],
             pdf_presets: vec![],
             templates_folder: String::new(),
-            append_converted: true,
             use_compression: false,
             web_export_presets: vec![],
             web_export_settings: None,
@@ -1148,7 +1135,6 @@ impl Session {
         st.revision = old.revision + 1;
         st.format = old.format;
         st.save_options = old.save_options.clone();
-        st.converted = old.converted;
         st.imported_from = old.imported_from.clone();
         st.import_losses = old.import_losses.clone();
         st.view = old.view.clone();

@@ -1183,9 +1183,9 @@ proptest! {
     }
 }
 
-// ---------- native files: compressed, and saved for older versions ----------
+// ---------- native files: compressed, compact and pretty ----------
 
-/// The rich document saved compressed, as v1 and as v2 (pretty).
+/// The rich document saved compressed, compact and pretty.
 fn native_samples() -> &'static [Vec<u8>] {
     use kition_vector_format::{SaveOptions, save_with};
     static SAMPLES: std::sync::OnceLock<Vec<Vec<u8>>> = std::sync::OnceLock::new();
@@ -1193,8 +1193,8 @@ fn native_samples() -> &'static [Vec<u8>] {
         let d = rich_doc();
         [
             SaveOptions { compress: true, ..SaveOptions::default() },
-            SaveOptions { version: 1, ..SaveOptions::default() },
-            SaveOptions { version: 2, pretty: true, ..SaveOptions::default() },
+            SaveOptions { pretty: false, ..SaveOptions::default() },
+            SaveOptions { pretty: true, ..SaveOptions::default() },
         ]
         .iter()
         .map(|o| save_with(&d, o).unwrap())
@@ -1212,8 +1212,8 @@ fn gzip(bytes: &[u8]) -> Vec<u8> {
 proptest! {
     #![proptest_config(config())]
 
-    /// Damaged native files of every kind: flipped bytes and cuts in the compressed stream, in v1
-    /// and v2 text, and in the text inside an intact compressed stream.
+    /// Damaged native files of every kind: flipped bytes and cuts in the compressed stream, in
+    /// compact and pretty text, and in the text inside an intact compressed stream.
     #[test]
     fn native_mutated_files_never_panic(which in 0usize..4, cut in 0usize..80_000, edits in prop::collection::vec((0usize..80_000, any::<u8>()), 0..10)) {
         let samples = native_samples();

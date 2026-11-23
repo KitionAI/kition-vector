@@ -3378,9 +3378,6 @@
    },
    "preview": {
     "type": "boolean"
-   },
-   "version": {
-    "type": "integer"
    }
   }
  },
@@ -7205,9 +7202,6 @@
       "antiAliasedBitmaps": {
        "type": "boolean"
       },
-      "appendConverted": {
-       "type": "boolean"
-      },
       "autoCollapseIconPanels": {
        "type": "boolean"
       },
@@ -7660,9 +7654,6 @@
        "type": "boolean"
       },
       "antiAliasedBitmaps": {
-       "type": "boolean"
-      },
-      "appendConverted": {
        "type": "boolean"
       },
       "autoCollapseIconPanels": {

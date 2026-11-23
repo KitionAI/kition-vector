@@ -834,7 +834,7 @@ fn restore_one(s: &mut Session, store: &Arc<dyn RecoveryStore>, file: &str) -> R
     let bytes = store.read(&format!("{file}{DOC_EXT}")).map_err(EngineError::Other)?;
     let meta_bytes = store.read(&format!("{file}{META_EXT}")).unwrap_or_default();
     let meta: Meta = serde_json::from_slice(&meta_bytes).unwrap_or_default();
-    let (mut doc, _, warnings) = fileio::native_file(&bytes).map_err(|e| EngineError::Other(format!("recovery copy `{file}`: {e}")))?;
+    let (mut doc, warnings) = fileio::native_file(&bytes).map_err(|e| EngineError::Other(format!("recovery copy `{file}`: {e}")))?;
     let area = claim(s, store)?;
     let mut taken: Vec<String> = copies_in(&store.list().map_err(EngineError::Other)?).into_iter().map(|(_, f)| f).collect();
     taken.extend(open_copies(s));

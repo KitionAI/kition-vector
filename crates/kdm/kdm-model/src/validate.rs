@@ -4,9 +4,9 @@
 //! - A symbol instance of a deleted symbol (one peer deleted the symbol while another placed an
 //!   instance) is deleted, as `symbol.delete` without expanding deletes instances.
 //! - A node's graphic style link to a deleted style is dropped (the node keeps its look).
-//! - Text threads, saved selections, variable bindings and export assets let go of deleted
-//!   objects (an asset left with none goes); a guide on a deleted layer or artboard goes; pattern
-//!   editing on a deleted layer ends.
+//! - Saved selections, variable bindings and export assets let go of deleted objects (an asset
+//!   left with none goes); a guide on a deleted layer or artboard goes; a thread lets go of
+//!   deleted frames, and goes with the last (its story was theirs).
 //! - List entries naming deleted objects are removed. An object listed twice is left alone: the
 //!   reader reads it once, at its first place.
 //!
@@ -21,7 +21,7 @@
 use std::collections::BTreeSet;
 
 use kition_kit::kdm::{ObjectId, Tx};
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 use crate::refs::{Mapper, SETTINGS_WITH_IDS, map_asset_nodes, map_setting};
 use crate::{KdmResult, kdm_err, root_id};
@@ -53,6 +53,23 @@ pub(crate) fn validate(tx: &mut Tx<'_>, _changed: &BTreeSet<ObjectId>) -> KdmRes
         {
             map.remove("graphic_style");
             tx.set(&node, "props", props)?;
+            wrote = true;
+        }
+    }
+
+    // Guides on what is gone.
+    for guide in tx.objects_of_type("Guide") {
+        if gone(tx, Some(&tx.get(&guide, "layer")?)) || gone(tx, Some(&tx.get(&guide, "artboard")?)) {
+            tx.delete(&guide)?;
+            wrote = true;
+        }
+    }
+
+    // Threads.
+    for thread in tx.objects_of_type("Thread") {
+        wrote |= clean_dangling(tx, &thread, "frames")?;
+        if tx.list_items(&thread, "frames")?.is_empty() {
+            tx.delete(&thread)?;
             wrote = true;
         }
     }
@@ -104,9 +121,21 @@ pub(crate) fn validate(tx: &mut Tx<'_>, _changed: &BTreeSet<ObjectId>) -> KdmRes
     wrote |= settle_keys(tx, false)?;
 
     // Dangling list entries.
-    for field in
-        ["artboards", "swatches", "swatchGroups", "graphicStyles", "charStyles", "paraStyles", "symbols", "patterns", "slices", "assets", "images"]
-    {
+    for field in [
+        "artboards",
+        "swatches",
+        "swatchGroups",
+        "graphicStyles",
+        "charStyles",
+        "paraStyles",
+        "symbols",
+        "patterns",
+        "slices",
+        "assets",
+        "images",
+        "guides",
+        "threads",
+    ] {
         wrote |= clean_dangling(tx, &root, field)?;
     }
     for group in tx.objects_of_type("SwatchGroup") {
@@ -236,7 +265,6 @@ pub(crate) fn follow_renames(tx: &mut Tx<'_>) -> KdmResult<bool> {
         ("GraphicStyle", &["props"][..]),
         ("CharStyle", &["props"][..]),
         ("ParaStyle", &["props"][..]),
-        ("Symbol", &["art"][..]),
         ("Pattern", &["props"][..]),
     ] {
         for object in tx.objects_of_type(ty) {
@@ -249,22 +277,14 @@ pub(crate) fn follow_renames(tx: &mut Tx<'_>) -> KdmResult<bool> {
             }
         }
     }
-    let root = root_id();
-    if tx.exists(&root) {
-        let mut edit = tx.map_get(&root, "settings", "pattern_edit")?;
-        if !edit.is_null() && walk(&mut edit, &names, 0) {
-            tx.map_set(&root, "settings", "pattern_edit", edit)?;
-            wrote = true;
-        }
-    }
     Ok(wrote)
 }
 
 /// Gives a named entry that is no complete entry (a model batch created it with a name alone:
 /// a swatch has no paint, a symbol no art) the content a new one of its kind has: a swatch of
-/// black, a graphic style of no appearance, a text style that sets nothing, a symbol of an empty
-/// group, a pattern of no art. A read could not read it otherwise, and the drawing would refuse
-/// it (C8-vector-5). Answers whether it wrote.
+/// black, a graphic style of no appearance, a text style that sets nothing, a symbol an empty
+/// group as its art, a pattern of no art. A read could not read it otherwise, and the drawing
+/// would refuse it (C8-vector-5). Answers whether it wrote.
 pub(crate) fn complete_entries(tx: &mut Tx<'_>) -> KdmResult<bool> {
     use kition_vector_doc::color::{Color, Paint, Swatch};
     use kition_vector_doc::pattern::PatternDef;
@@ -284,18 +304,30 @@ pub(crate) fn complete_entries(tx: &mut Tx<'_>) -> KdmResult<bool> {
         map.insert("name".into(), Value::String(String::new()));
         serde_json::from_value::<T>(Value::Object(map)).is_ok()
     }
-    let empty_group = || Node::new(NodeId(0), NodeKind::Group { children: Vec::new(), clip: false });
     let mut wrote = false;
-    for ty in ["Swatch", "GraphicStyle", "CharStyle", "ParaStyle", "Pattern", "Symbol"] {
+    for symbol in tx.objects_of_type("Symbol") {
+        if tx.tree(&symbol, "nodes")?.iter().any(|entry| tx.exists(&entry.object)) {
+            continue;
+        }
+        let group = Node::new(NodeId(0), NodeKind::Group { children: Vec::new(), clip: false });
+        let fields: Map<String, Value> = crate::write::node_fields(&group, &crate::refs::Names::default())?
+            .into_iter()
+            .filter(|(field, v)| *field != "id" && !v.is_null())
+            .map(|(k, v)| (k.to_owned(), v))
+            .collect();
+        let art = tx.create("Node", fields)?;
+        tx.tree_create(&symbol, "nodes", None, &art)?;
+        wrote = true;
+    }
+    for ty in ["Swatch", "GraphicStyle", "CharStyle", "ParaStyle", "Pattern"] {
         for object in tx.objects_of_type(ty) {
-            let field = if ty == "Symbol" { "art" } else { "props" };
+            let field = "props";
             let value = tx.get(&object, field)?;
             let fine = match ty {
                 "Swatch" => reads::<Swatch>(&value),
                 "GraphicStyle" => reads::<GraphicStyle>(&value),
                 "CharStyle" | "ParaStyle" => reads::<TextStyleDef>(&value),
-                "Pattern" => reads::<PatternDef>(&value),
-                _ => serde_json::from_value::<Node>(value.clone()).is_ok(),
+                _ => reads::<PatternDef>(&value),
             };
             // A text style reads without its props, but the file stores them (`attrs: {}`).
             if fine && !value.is_null() {
@@ -307,14 +339,11 @@ pub(crate) fn complete_entries(tx: &mut Tx<'_>) -> KdmResult<bool> {
                 }
                 "GraphicStyle" => props_of(&GraphicStyle::new("", Appearance::default())),
                 "CharStyle" | "ParaStyle" => props_of(&TextStyleDef { uid: Default::default(), name: String::new(), attrs: Default::default() }),
-                "Pattern" => props_of(&PatternDef::new("", Vec::new())),
-                _ => serde_json::to_value(empty_group()).unwrap_or(Value::Null),
+                _ => props_of(&PatternDef::new("", Vec::new())),
             };
             // What the batch gave stays where it reads; the rest is the default's.
             let mut merged = default;
-            if ty != "Symbol"
-                && let (Some(into), Some(given)) = (merged.as_object_mut(), value.as_object())
-            {
+            if let (Some(into), Some(given)) = (merged.as_object_mut(), value.as_object()) {
                 for (k, v) in given {
                     into.insert(k.clone(), v.clone());
                 }
@@ -365,19 +394,28 @@ pub(crate) fn complete_objects(tx: &mut Tx<'_>) -> KdmResult<bool> {
         }
         Ok(wrote)
     };
+    // Only the drawing's nodes have ids: a symbol's art nodes have none (`crate::ids`).
+    let root = root_id();
+    let in_drawing: std::collections::HashSet<ObjectId> =
+        if tx.exists(&root) { tx.tree(&root, "nodes")?.into_iter().map(|entry| entry.object).collect() } else { Default::default() };
     for object in tx.objects_of_type("Node") {
-        if !tx.get(&object, "data")?.is_null() && number(tx, &object).is_some() {
+        let art = !in_drawing.contains(&object);
+        if !tx.get(&object, "data")?.is_null() && (art || number(tx, &object).is_some()) {
             continue;
         }
         let id = match number(tx, &object) {
             Some(id) => id,
+            None if art => 0,
             None => {
                 next = next.saturating_add(1);
                 next
             }
         };
         let node = Node::new(NodeId(id), NodeKind::Group { children: Vec::new(), clip: false });
-        let fields = crate::write::node_fields(&node, &crate::refs::Names::default())?;
+        let mut fields = crate::write::node_fields(&node, &crate::refs::Names::default())?;
+        if art && let Some(slot) = fields.iter_mut().find(|(field, _)| *field == "id") {
+            slot.1 = Value::Null;
+        }
         wrote |= fill(tx, &object, fields)?;
     }
     let boards = tx.objects_of_type("Artboard");
@@ -424,7 +462,6 @@ pub(crate) fn complete_objects(tx: &mut Tx<'_>) -> KdmResult<bool> {
     // A node goes only into one that holds others (a layer, group, compound path, blend, envelope or
     // repeat): the drawing has nowhere to keep one inside a path, type or mesh, and dropped it on
     // the next read (C8-vector-engine-2, kit-env's create).
-    let root = root_id();
     if tx.exists(&root) {
         let entries = tx.tree(&root, "nodes")?;
         for entry in &entries {

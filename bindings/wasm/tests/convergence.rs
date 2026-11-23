@@ -15,9 +15,11 @@ fn converges() {
     println!("{}", report.render());
     report.save_if_requested().unwrap();
     assert!(report.level6(), "{}", report.render());
-    // Vector keeps a text object's characters in one register (`Node.data`), not a KDM `text`
-    // field, so the adapter offers no text to type into concurrently: the text scenarios skip.
-    assert!(matches!(report.outcome("text-position"), Some(Outcome::Skipped(_))));
+    // A text object's characters are its `Node.text`, a KDM text field: the adapter types into
+    // it, and every text scenario runs and passes.
+    for id in ["text-position", "text-delete-insert", "text-split", "text-merge"] {
+        assert!(matches!(report.outcome(id), Some(Outcome::Passed)), "{id}: {:?}", report.outcome(id));
+    }
 }
 
 /// Native and WebAssembly engines reach one state from one change log. Set `KITION_WASM_ENGINE`

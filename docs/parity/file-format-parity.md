@@ -1,6 +1,6 @@
 # File format parity
 
-> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-17 · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-22 · **Target:** Adobe Illustrator 2026 (30.x)
 
 Every format Illustrator opens, places, saves or exports, against Kition Vector's format table (`FORMATS`,
 `OPEN_EXTS`, `PLACE_EXTS` in `crates/engine/engine/src/cmd/fileio/mod.rs`). Illustrator's list comes from its public
@@ -50,7 +50,7 @@ the app's own editing copy of a file (an EPS after its `%%EOF`, a `.ai`'s `AIPri
 
 | Format | Illustrator | Ours: open/place | Ours: save/export | Fidelity and tests |
 |---|---|---|---|---|
-| Kition Vector `.kvector` / `.vctemplate` | — | yes | yes | lossless JSON, versioned, save down to v1; property-tested round trips (`format/tests/prop_format.rs`) |
+| Kition Vector `.kvector` / `.vctemplate` | — | yes | yes | lossless pretty-printed JSON (optionally gzip), one format version (1): other versions are refused, no saving for older versions; property-tested round trips (`format/tests/prop_format.rs`) |
 | Illustrator `.ai` | open, save | yes (PDF-compatible + editing-data structure) | PDF-compatible only | see above; no real-file corpus |
 | Illustrator template `.ait` | open, save | yes | no (save as `.vctemplate`) | |
 | PDF | open, place, save | yes (layers, masks, editable text, security) | yes (presets, PDF/X-1a/3/4, layers, marks and bleed, ICC, fast web view, 1.3+) | fuzzed import; PDF text placement issues in some files |

@@ -20,8 +20,8 @@
 //! snapshot when the replica holds just that (no collaborator's edit came in). A step the history drops from the top (a command merging two steps into one, a
 //! cancelled undo group, discarded empty type) hands its replica steps to the step under it, so
 //! undoing that one undoes them too. The selection, the current layer, isolation, the tool, the
-//! clipboard, the view and the opacity-mask editing layer (and warp pins) are this
-//! person's own: never written ([`kdm_model::shared_part`]), kept across imports, undo and redo.
+//! clipboard, the view, the opacity-mask and pattern editing layers, the active data set (and warp
+//! pins) are this person's own: never written ([`kdm_model::shared_part`]), kept across imports, undo and redo.
 //!
 //! A replica that refuses a write or an undo is left ([`Session::kdm_resets`]): the document keeps
 //! working from its own history snapshots, and the next edit makes a fresh replica.
@@ -99,9 +99,26 @@ fn shared(doc: &Arc<Document>) -> Arc<Document> {
 }
 
 /// Puts the editing person's own state from `from` into `to`, a view of the replica: the
-/// opacity-mask editing layer (while the masked object is still there) and warp pins (while
-/// their objects are).
+/// opacity-mask editing layer (while the masked object is still there), pattern editing (its tile
+/// layer, while the pattern is still there), the active data set (while it is still there) and
+/// warp pins (while their objects are).
 fn carry_local(from: &Document, to: &mut Document) {
+    if let Some(edit) = &from.pattern_edit
+        && to.pattern_edit.is_none()
+        && to.node(edit.layer).is_none()
+        && to.patterns.iter().any(|p| p.name == edit.pattern)
+        && let Some(at) = from.layers.iter().position(|l| l.id == edit.layer)
+        && let Some(layer) = from.layers.get(at)
+    {
+        to.layers.insert(at.min(to.layers.len()), layer.clone());
+        to.pattern_edit = Some(edit.clone());
+    }
+    if let Some(active) = &from.variables.active_dataset
+        && to.variables.active_dataset.is_none()
+        && to.variables.datasets.iter().any(|d| &d.name == active)
+    {
+        to.variables.active_dataset = Some(active.clone());
+    }
     if let Some(me) = from.mask_edit
         && to.mask_edit.is_none()
         && to.node(me.object).is_some()

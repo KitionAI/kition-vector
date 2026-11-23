@@ -50,5 +50,5 @@ fn the_same_commands_save_the_same_bytes() {
         assert!(first == again, "build {build} saved other bytes than build 0");
     }
     std::fs::remove_dir_all(&dir).ok();
-    assert!(String::from_utf8_lossy(&first).contains("\"created\":1794182400"), "created at the epoch");
+    assert!(String::from_utf8_lossy(&first).contains("\"created\": 1794182400"), "created at the epoch");
 }
