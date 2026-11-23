@@ -200,6 +200,36 @@ fn a_threaded_story_is_one_text_and_edits_in_two_frames_merge() {
 }
 
 #[test]
+fn adding_a_frame_while_the_other_types_in_the_story_keeps_both() {
+    let (blobs, mut a, mut b) = pair(&with_thread());
+    // A threads a third frame "F3" onto the story; B types at the story's end.
+    edit(&mut a, &blobs, |d| {
+        let layer = d.layers[0].id;
+        let f3 = area_type(d, "F3", 400.0, "");
+        let id = f3.id;
+        d.insert(Some(layer), usize::MAX, f3).unwrap();
+        d.text_threads[0].push(id);
+    });
+    edit(&mut b, &blobs, |d| {
+        let last = *d.text_threads[0].last().unwrap();
+        if let Some(NodeKind::Text(t)) = d.node_mut(last).map(|n| &mut n.kind) {
+            let text = t.plain_text();
+            t.runs = vec![TextRun::new(format!("{text} four"), CharStyle::default())];
+        }
+    });
+    sync(&mut a, &mut b);
+    assert_converged(&a, &b);
+    let d = a.model().document();
+    assert_eq!(d.text_threads.len(), 1);
+    let frames: Vec<String> = d.text_threads[0].iter().map(|id| d.node(*id).and_then(|n| n.name.clone()).unwrap_or_default()).collect();
+    assert_eq!(frames, vec!["F1", "F2", "F3"], "A's frame is threaded, in order");
+    assert_eq!(story(d), "One two three four", "B's typing is in the story");
+    let root = ObjectId::from_string("drawing");
+    let thread = a.replica().list(&root, "threads").unwrap()[0].clone();
+    assert_eq!(a.replica().list(&thread, "frames").unwrap().len(), 3);
+}
+
+#[test]
 fn unthreading_gives_each_frame_its_own_text_again() {
     let (blobs, mut a, mut b) = pair(&with_thread());
     let shown: Vec<String> = a.model().document().text_threads[0].iter().map(|id| text_of_id(a.model().document(), *id)).collect();
