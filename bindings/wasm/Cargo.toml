@@ -26,6 +26,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+# Counted ids for the tests and the showcase sample builder that build the same document twice
+# (KITION_REPRODUCIBLE_IDS); never in [dependencies]: a shipped engine draws its ids at random.
+kition-kit = { workspace = true, features = ["session", "reproducible-ids"] }
 kition-vector-svg = { workspace = true }
 # The Kition platform convergence suite (L6), on the same kition-sdk revision.
 kition-convergence = { workspace = true }

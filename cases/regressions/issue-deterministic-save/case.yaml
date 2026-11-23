@@ -2,9 +2,12 @@ format: 1
 id: regressions/issue-deterministic-save
 feature: vector.agent.act
 intent: >-
-  A drawing built by the same commands saves the same bytes when SOURCE_DATE_EPOCH is set (a
-  showcase sample, a gating test): the document's creation time is the epoch. Before, file.new
-  stamped the wall clock into metadata.created, so every build of a sample saved other bytes.
+  A drawing built by the same commands saves the same bytes in a reproducible build (a showcase
+  sample, a gating test): the document's creation time is SOURCE_DATE_EPOCH, and with kition-kit's
+  reproducible-ids feature (dev-dependencies only) and KITION_REPRODUCIBLE_IDS set, the document
+  id, the replica's actor and new objects' ids are counted from that seed (kition-sdk 8d56412;
+  SOURCE_DATE_EPOCH alone no longer changes ids). Before, file.new stamped the wall clock into
+  metadata.created, so every build of a sample saved other bytes.
 layer: gate
 source:
   kind: probe
