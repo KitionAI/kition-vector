@@ -214,12 +214,14 @@ impl<'a> Collector<'a> {
                                 self.collect(&mut nested, found_path, &destination_file, depth + 1)?;
                                 if self.opts.relink {
                                     // Preserve auxiliary native-file content when rewriting.
-                                    let mut options = kition_vector_format::SaveOptions::default();
-                                    options.preview = preview;
-                                    options.pdf = pdf;
-                                    options.profiles = saved.profiles;
-                                    options.compress = compressed;
-                                    options.include_linked = include_linked;
+                                    let options = kition_vector_format::SaveOptions {
+                                        preview,
+                                        pdf,
+                                        profiles: saved.profiles,
+                                        compress: compressed,
+                                        include_linked,
+                                        ..Default::default()
+                                    };
                                     match kition_vector_format::save_with(&nested, &options) {
                                         Ok(rewritten) => bytes = rewritten,
                                         Err(e) => self.warn(
