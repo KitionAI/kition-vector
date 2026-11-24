@@ -3,7 +3,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use kition_vector_doc::{Document, ImageBlob, ImageObject, Node, NodeId, NodeKind};
-use kition_vector_format::{SaveOptions, base64_decode, base64_encode, load, load_file, pdf_content, preview, save, save_with, sniff};
+use kition_vector_format::{SaveOptions, base64_decode, base64_encode, load, load_file, pdf_content, save, save_with, sniff};
 use kition_vector_geom::Affine;
 use kition_vector_testkit::fixtures;
 use kition_vector_testkit::invariants::{check_document, check_native_roundtrip, check_native_roundtrip_exact, doc_json, json_approx_eq};
@@ -108,7 +108,7 @@ proptest! {
         }
         bytes.truncate(cut.min(bytes.len()));
         let _ = sniff(&bytes);
-        let _ = preview(&bytes);
+        let _ = pdf_content(&bytes);
         if let Ok(d) = load(&bytes) {
             check_document(&d).map_err(TestCaseError::fail)?;
         }
