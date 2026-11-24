@@ -3375,9 +3375,6 @@
   "params": {
    "compress": {
     "type": "boolean"
-   },
-   "preview": {
-    "type": "boolean"
    }
   }
  },

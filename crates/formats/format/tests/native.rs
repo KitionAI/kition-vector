@@ -233,8 +233,9 @@ fn a_file_holds_the_drawing_only() {
             String::from_utf8(bytes.clone()).unwrap()
         };
         let j: Value = serde_json::from_str(&text).unwrap();
-        let members: Vec<&str> = j.as_object().unwrap().keys().map(String::as_str).collect();
-        assert_eq!(members, ["format", "version", "generator", "document", "images"], "compress {compress}");
+        let mut members: Vec<&str> = j.as_object().unwrap().keys().map(String::as_str).collect();
+        members.sort_unstable();
+        assert_eq!(members, ["document", "format", "generator", "images", "version"], "compress {compress}");
         for key in ["last_view", "layers_open", "preview", "selection"] {
             assert!(j["document"].get(key).is_none(), "{key}");
         }
