@@ -14,10 +14,11 @@
     "test:unit": "node --test src/exporting.test.mjs",
     "test:flow": "node tests/flow.mjs chromium && node tests/flow.mjs webkit",
     "test:modes": "node tests/modes.mjs chromium && node tests/modes.mjs webkit",
-    "test:focus": "node tests/focus.mjs chromium && node tests/focus.mjs webkit"
+    "test:focus": "node tests/focus.mjs chromium && node tests/focus.mjs webkit",
+    "test:replica": "node tests/replica.mjs chromium && node tests/replica.mjs webkit"
   },
   "dependencies": {
-    "@kition/sdk": "npm:@kitionstage/sdk@0.5.2-stage.16",
+    "@kition/sdk": "npm:@kitionstage/sdk@0.5.2-stage.19",
     "@kition/tessera": "npm:@kitionstage/tessera@0.1.1-stage.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
