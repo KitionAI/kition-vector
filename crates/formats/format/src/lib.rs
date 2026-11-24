@@ -4,21 +4,22 @@
 //! by its magic bytes on open):
 //! ```json
 //! { "format": "kvector", "version": 1, "generator": "Kition Vector 0.1.0",
-//!   "preview": { "mime": "image/png", "data": "<base64>" },
 //!   "profiles": { "<profile name>": { "mime": "application/vnd.iccprofile", "data": "<base64>" } },
 //!   "pdf": { "mime": "application/pdf", "data": "<base64>" },
 //!   "document": { …kition_vector_doc::Document… },
 //!   "images": { "<key>": { "mime": "image/png", "data": "<base64>" } } }
 //! ```
 //! It is lossless for everything in the document model; foreign data lives in `document.unknown`
-//! and document keys a newer version added are kept (`Document::extra`). Only the images the
-//! document uses are written. `preview` (optional) is a PNG of the first artboard, at most
-//! [`PREVIEW_MAX`] pixels on its longer side, for file browsers. `profiles` (optional, Embed ICC
-//! Profiles) holds the ICC files of colour profiles the document is tagged with, for machines that
-//! don't have them ([`load_file`] returns them). `pdf` (optional, Create PDF-Compatible File) is a
-//! PDF of every artboard for apps that read PDF ([`pdf_content`]). An image only linked images
-//! show is saved as its low-resolution preview (`"proxy": true`), unless saved with Include Linked
-//! Files; the engine reads the linked file again when the document opens.
+//! and document keys a newer version added are kept (`Document::extra`) and written back; a
+//! top-level member it does not know is ignored and not written back. Only the images the
+//! document uses are written. A file holds the drawing only: nothing of one person's editing
+//! (the view, the open Layers rows, the selection) and no thumbnail; a PNG of the drawing is an
+//! export. `profiles` (optional, Embed ICC Profiles) holds the ICC files of colour profiles the
+//! document is tagged with, for machines that don't have them ([`load_file`] returns them). `pdf`
+//! (optional, Create PDF-Compatible File) is a PDF of every artboard for apps that read PDF
+//! ([`pdf_content`]). An image only linked images show is saved as its low-resolution preview
+//! (`"proxy": true`), unless saved with Include Linked Files; the engine reads the linked file
+//! again when the document opens.
 //!
 //! Large data (images, placed documents, the PDF, profiles of at least [`INLINE_MAX`] bytes) goes
 //! after the JSON instead of in it: the JSON is followed by [`BLOB_MAGIC`] and the bytes, and such
@@ -51,8 +52,6 @@ pub const VERSION: u32 = 1;
 pub const INLINE_MAX: usize = 8 << 10;
 /// What separates the JSON from the data after it.
 pub const BLOB_MAGIC: &[u8] = b"\n\0VCBLOBS\0";
-/// Most pixels on the longer side of an embedded preview.
-pub const PREVIEW_MAX: u32 = 256;
 pub const EXTENSION: &str = "kvector";
 /// Most bytes a compressed file may unpack to (a guard against decompression bombs).
 const MAX_UNPACKED: u64 = 512 << 20;
@@ -166,8 +165,6 @@ pub struct SaveOptions {
     pub pretty: bool,
     /// gzip the file (Use Compression).
     pub compress: bool,
-    /// A PNG preview to embed (at most [`PREVIEW_MAX`] pixels on its longer side).
-    pub preview: Option<Vec<u8>>,
     /// Include Linked Files: linked images keep the file's own bytes, not just their preview.
     pub include_linked: bool,
     /// Embed ICC Profiles: ICC files by profile name.
@@ -178,7 +175,7 @@ pub struct SaveOptions {
 
 impl Default for SaveOptions {
     fn default() -> Self {
-        Self { pretty: true, compress: false, preview: None, include_linked: false, profiles: BTreeMap::new(), pdf: None }
+        Self { pretty: true, compress: false, include_linked: false, profiles: BTreeMap::new(), pdf: None }
     }
 }
 
@@ -196,7 +193,7 @@ pub fn save_file(doc: &Document) -> Vec<u8> {
     save_with(doc, &SaveOptions::default()).unwrap_or_default()
 }
 
-/// Serialize a document as `o` says: compression, layout and preview. Editing-mode working copies,
+/// Serialize a document as `o` says: compression and layout. Editing-mode working copies,
 /// resources only exporting adds and images nothing uses are left out.
 pub fn save_with(doc: &Document, o: &SaveOptions) -> Result<Vec<u8>, FormatError> {
     let pretty = o.pretty && !o.compress;
@@ -225,16 +222,12 @@ pub fn save_with(doc: &Document, o: &SaveOptions) -> Result<Vec<u8>, FormatError
         .collect();
     let profiles: BTreeMap<&str, Image> = o.profiles.iter().map(|(name, icc)| (name.as_str(), out_blobs.image(ICC_MIME, icc, false))).collect();
     let pdf = o.pdf.as_deref().map(|p| out_blobs.image("application/pdf", p, false));
-    let blob = |mime: &str, bytes: &[u8]| Image { mime: mime.into(), data: base64_encode(bytes), blob: None, proxy: false };
     let carried = profiles.values().chain(&pdf).map(|i| i.data.len()).sum::<usize>();
     let size = body.len() + images.values().map(|i| i.data.len()).sum::<usize>() + carried + 256;
     let mut w = Envelope { out: Vec::with_capacity(size), pretty };
     w.field("format", &EXTENSION)?;
     w.field("version", &VERSION)?;
     w.field("generator", &format!("Kition Vector {}", env!("CARGO_PKG_VERSION")))?;
-    if let Some(png) = &o.preview {
-        w.field("preview", &blob("image/png", png))?;
-    }
     if !profiles.is_empty() {
         w.field("profiles", &profiles)?;
     }
@@ -397,7 +390,6 @@ pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
 /// The members of a native file besides its document (which is skipped, not decoded).
 #[derive(Deserialize)]
 struct Head {
-    preview: Option<Image>,
     pdf: Option<Image>,
 }
 
@@ -406,12 +398,6 @@ fn head(bytes: &[u8]) -> Option<(Head, Vec<u8>)> {
     let text = unpack(bytes).ok()?;
     let (json, tail) = split_tail(&text);
     Some((serde_json::from_slice(json).ok()?, tail.to_vec()))
-}
-
-/// The preview PNG embedded in a native file (`None`: it has none, or isn't a native file).
-pub fn preview(bytes: &[u8]) -> Option<Vec<u8>> {
-    let (h, tail) = head(bytes)?;
-    h.preview?.bytes(&tail)
 }
 
 /// The PDF a native file saved with Create PDF-Compatible File carries (`None`: it has none, or

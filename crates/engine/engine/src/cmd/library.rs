@@ -768,9 +768,23 @@ fn graphic_of(s: &Session, p: &Value, cmd: &str) -> Result<LibraryGraphic> {
         _ => String::new(),
     };
     let name = if name.trim().is_empty() || name.starts_with('<') { "Graphic".to_string() } else { name };
-    let thumbnail = super::fileio::preview_png(&doc)?.map(|b| kition_vector_format::base64_encode(&b)).unwrap_or_default();
+    let thumbnail = thumbnail_png(&doc)?.map(|b| kition_vector_format::base64_encode(&b)).unwrap_or_default();
     let data = kition_vector_format::base64_encode(&kition_vector_format::save(&doc, false));
     Ok(LibraryGraphic { id: String::new(), name, width: bounds.width(), height: bounds.height(), data, thumbnail })
+}
+
+/// Most pixels on the longer side of a library graphic's thumbnail.
+const THUMBNAIL_MAX: u32 = 256;
+
+/// The first artboard (else the art) as a PNG fitted into [`THUMBNAIL_MAX`] pixels (`None`:
+/// nothing to show): a library graphic's thumbnail in the Libraries panel.
+fn thumbnail_png(doc: &kition_vector_doc::Document) -> Result<Option<Vec<u8>>> {
+    let Some(r) = doc.artboards.first().map(|a| a.rect).or_else(|| kition_vector_render::encode::art_bounds(doc)) else { return Ok(None) };
+    let scale = f64::from(THUMBNAIL_MAX) / r.width().max(r.height());
+    if kition_vector_render::raster_size(r, scale).is_err() {
+        return Ok(None);
+    }
+    kition_vector_render::Renderer::new().render_region(doc, r, scale, false).to_png().map(Some).map_err(EngineError::Other)
 }
 
 /// The first selected object's solid fill (`stroke`: stroke) colour, else the default one, with a

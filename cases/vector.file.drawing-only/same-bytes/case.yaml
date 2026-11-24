@@ -1,0 +1,20 @@
+format: 1
+id: vector.file.drawing-only/same-bytes
+feature: vector.file.drawing-only
+intent: >-
+  A .kvector holds the drawing only: no view, no open Layers rows, no selection and no embedded
+  preview (owner decision 2026-11-23; a PNG is an export). Two sessions that open the same file
+  and save without editing write byte-identical files, though one of them selected and looked
+  around.
+layer: gate
+source:
+  kind: synthetic
+  from: bindings/wasm/tests/deterministic_save.rs (two_sessions_that_open_the_same_file_and_save_without_editing_write_identical_files)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: deterministic_save, filter: two_sessions_that_open_the_same_file_and_save_without_editing_write_identical_files }
+expected:
+  - actual: out:exit
+    compare: exit
+since: "2026-11-23"

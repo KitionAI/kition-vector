@@ -224,7 +224,6 @@ Defaults the engine states in its schemas (other defaults are named in the param
 | `document.exportForOffice` | `transparent` | `false` |
 | `document.save` | `embedProfiles` | `true` |
 | `document.save` | `includeLinked` | `false` |
-| `document.save` | `preview` | `false` |
 | `document.save` | `version` | `3` |
 | `text.create` | `vertical` | `false` |
 | `object.setLiveShape` | `invertPie` | `true` |
@@ -382,7 +381,6 @@ Defaults the engine states in its schemas (other defaults are named in the param
 - `file.saveAsTemplate` (writes): Writes the document as a native template that opens as a new untitled document; the document itself is unchanged.
   - `compress` boolean
   - `path` file
-  - `preview` boolean
   - `version` integer
 - `file.newFromTemplate` (writes): Opens a template (or any readable file) as a new untitled document, leaving the template file untouched.
   - `path` file
@@ -532,7 +530,6 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `options` object
   - `path` file
   - `pdfCompatible` boolean
-  - `preview` boolean, default `false`, embed a PNG of the first artboard, at most 256 px
   - `svg` object, SVG options may also be given flat; an SVG save keeps hidden layers, display:none, unless hiddenLayers is false
   - `version` integer, default `3`, 2 or 1: for older Kition Vector versions, never compressed
 - `file.formatOptions` (reads): Answers a writable format's options with their types, defaults and the values the document last saved with, plus the formats Save As offers.

@@ -1,0 +1,27 @@
+format: 1
+id: vector.document.outside-change/replica-merge
+feature: vector.document.outside-change
+intent: >-
+  Under the dev host with the replica kept (?replica=1&checkpoints=1&replica-merges-file=1): a
+  drawing edited and saved, then changed by another program (devHost.reopenChanged), opens with
+  its stored replica (Kit UI protocol UI-R1, replicaMergesFile): the outside change shows, the
+  drawing opens clean, every object keeps its id, the replica id is the same, the version from
+  before is still in its history (the outside change is one import after it), and the checkpoint
+  from before stays available. Undo steps are the session's and are not checked.
+layer: gate
+source:
+  kind: synthetic
+  from: web/tests/replica.mjs
+  license: Apache-2.0
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/replica.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 90
+since: "2026-11-23"

@@ -7,7 +7,7 @@ use std::io::Write as _;
 use std::sync::Arc;
 
 use kition_vector_doc::{ColorProfiles, Composer, Document, ImageBlob, ImageObject, Node, NodeKind, OpacityMask, Symbol};
-use kition_vector_format::{SaveOptions, VERSION, is_compressed, load, preview, save, save_with, sniff};
+use kition_vector_format::{SaveOptions, VERSION, is_compressed, load, save, save_with, sniff};
 use kition_vector_geom::Affine;
 use kition_vector_testkit::fixtures;
 use kition_vector_testkit::invariants::{check_native_roundtrip, doc_json};
@@ -219,16 +219,35 @@ fn saves_version_1_with_profiles_as_a_document_field() {
 }
 
 #[test]
-fn preview_is_embedded_and_read_back() {
-    let d = Document::new(10.0, 10.0);
-    assert_eq!(preview(&save(&d, false)), None);
-    let png = vec![0x89, b'P', b'N', b'G', 1, 2, 3];
+fn a_file_holds_the_drawing_only() {
+    // No thumbnail and nothing of one person's editing (view, open Layers rows): the members a
+    // file has are these, and the document has no such keys.
+    let d = rich_doc();
     for compress in [false, true] {
-        let bytes = save_with(&d, &SaveOptions { compress, preview: Some(png.clone()), ..SaveOptions::default() }).unwrap();
-        assert_eq!(preview(&bytes), Some(png.clone()));
-        assert!(load(&bytes).is_ok());
+        let bytes = save_with(&d, &SaveOptions { compress, ..SaveOptions::default() }).unwrap();
+        let text = if compress {
+            let mut out = String::new();
+            std::io::Read::read_to_string(&mut flate2::read::GzDecoder::new(&bytes[..]), &mut out).unwrap();
+            out
+        } else {
+            String::from_utf8(bytes.clone()).unwrap()
+        };
+        let j: Value = serde_json::from_str(&text).unwrap();
+        let members: Vec<&str> = j.as_object().unwrap().keys().map(String::as_str).collect();
+        assert_eq!(members, ["format", "version", "generator", "document", "images"], "compress {compress}");
+        for key in ["last_view", "layers_open", "preview", "selection"] {
+            assert!(j["document"].get(key).is_none(), "{key}");
+        }
     }
-    assert_eq!(preview(b"not a file"), None);
+    // Unknown members follow the format's rule: a top-level one is ignored (not read, not written
+    // back); a document key is kept as a newer version's (`Document::extra`) and written back.
+    let mut j: Value = serde_json::from_slice(&save(&d, false)).unwrap();
+    j["preview"] = json!({"mime": "image/png", "data": "iVBORw0KGgo="});
+    j["document"]["last_view"] = json!({"name": "", "center": {"x": 1.0, "y": 2.0}, "zoom": 3.0});
+    let read = load(&serde_json::to_vec(&j).unwrap()).unwrap();
+    let again: Value = serde_json::from_slice(&save(&read, false)).unwrap();
+    assert!(again.get("preview").is_none());
+    assert_eq!(again["document"]["last_view"], j["document"]["last_view"]);
 }
 
 #[test]

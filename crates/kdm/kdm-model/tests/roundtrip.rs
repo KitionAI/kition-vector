@@ -102,16 +102,6 @@ fn drawing_with_every_reference_round_trips() {
 }
 
 #[test]
-fn view_state_and_editing_layers_are_not_replicated() {
-    let mut d = drawing();
-    d.layers_open = Some(vec![d.layers[0].id]);
-    d.last_view = Some(kition_vector_doc::SavedView { name: String::new(), center: Default::default(), zoom: 2.0, rotation: 0.0 });
-    let read = round_trip(&d);
-    assert!(read.layers_open.is_none() && read.last_view.is_none(), "the editor's view state stays with the editor");
-    assert_same_content("view state", &d, &read);
-}
-
-#[test]
 fn import_and_export_through_a_session() {
     let d = drawing();
     let bytes = kition_vector_format::save_file(&d);

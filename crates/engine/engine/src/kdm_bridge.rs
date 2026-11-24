@@ -541,10 +541,6 @@ impl Session {
             return Ok(false);
         }
         let mut after = fresh.clone();
-        // What a file keeps for its editor (the saved view, the open Layers rows) is no part of
-        // the drawing a replica holds: the session keeps its own.
-        after.last_view.clone_from(&st.doc.last_view);
-        after.layers_open.clone_from(&st.doc.layers_open);
         after.raise_next_id(st.doc.peek_next_id());
         let after = shared(&Arc::new(after));
         let current = shared(&st.doc);
@@ -578,8 +574,6 @@ impl Session {
             // As a file opens (`Session::add_document`): with each named entry's identity, so a
             // file without them is compared with the replica as it opens (C8-vector-5).
             doc.settle_uids(None);
-            let view = doc.last_view.take();
-            doc.layers_open = None;
             let kdm = st.link.kdm.as_mut().ok_or_else(no_replica)?;
             if !kdm.holds(&doc).map_err(kdm_error)? {
                 doc.raise_next_id(st.doc.peek_next_id());
@@ -590,7 +584,6 @@ impl Session {
                 st.saved_doc = doc.clone();
                 st.link.synced = doc;
                 st.selection = Selection::default();
-                st.view = view;
                 st.revision += 1;
             }
         }

@@ -185,9 +185,6 @@ pub struct DocState {
     /// That format's options as last saved (SVG options for SVG, the Save PDF settings for PDF;
     /// empty for native files): Save reuses them and `file.formatOptions` reads them back.
     pub save_options: serde_json::Map<String, Value>,
-    /// The view saved into native files (`Document::last_view`); the UI keeps it current before a
-    /// save and restores it when the document opens.
-    pub view: Option<kition_vector_doc::SavedView>,
     /// Restored by Data Recovery: the title says "[Recovered]" and Save asks where to save it
     /// (suggesting `path`, the file it was copied from) instead of overwriting that file.
     pub recovered: bool,
@@ -195,7 +192,7 @@ pub struct DocState {
     pub recovery: Option<cmd::recovery::RecoveryCopy>,
     /// View → Show Print Tiling, per document (view state: not saved, not undoable).
     pub print_tiling: bool,
-    /// The rows open in the Layers panel (view state: not undoable; native files keep it).
+    /// The rows open in the Layers panel (view state: not undoable, not saved).
     pub layers_open: OpenRows,
     /// The file this document was read from, and what reading it left out (hidden text, art or
     /// layers it could not read): writing the document over that file would lose those for good,
@@ -212,8 +209,8 @@ pub struct DocState {
 static NEXT_DOC_UID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 /// The rows open in the Layers panel: the layers, sublayers and groups that show what they hold.
-/// A document opens with the ones it was saved with ([`Document::layers_open`]), else with only
-/// its top-level layers open.
+/// A document opens with only its top-level layers open; a file never keeps them (one person's
+/// view state).
 #[derive(Clone, Debug, Default)]
 pub struct OpenRows {
     ids: std::collections::HashSet<NodeId>,
@@ -222,13 +219,9 @@ pub struct OpenRows {
 }
 
 impl OpenRows {
-    /// The rows `saved` in a file, else `doc`'s top-level layers.
-    fn new(doc: &Document, saved: Option<Vec<NodeId>>) -> Self {
-        let ids = match saved {
-            Some(ids) => ids.into_iter().collect(),
-            None => doc.layers.iter().map(|l| l.id).collect(),
-        };
-        Self { ids, generation: 0 }
+    /// `doc`'s top-level layers.
+    fn new(doc: &Document) -> Self {
+        Self { ids: doc.layers.iter().map(|l| l.id).collect(), generation: 0 }
     }
     pub fn contains(&self, id: NodeId) -> bool {
         self.ids.contains(&id)
@@ -242,30 +235,12 @@ impl OpenRows {
     pub fn generation(&self) -> u64 {
         self.generation
     }
-    /// What a native file keeps of the open rows: those of `doc` that hold others, in id order;
-    /// `None` when they are the default (only the top-level layers).
-    pub fn saved(&self, doc: &Document) -> Option<Vec<NodeId>> {
-        let mut ids = vec![];
-        doc.walk(|n| {
-            if n.children().is_some() && self.ids.contains(&n.id) {
-                ids.push(n.id);
-            }
-        });
-        ids.sort_unstable();
-        let mut layers: Vec<NodeId> = doc.layers.iter().map(|l| l.id).collect();
-        layers.sort_unstable();
-        (ids != layers).then_some(ids)
-    }
 }
 
 impl DocState {
-    pub fn new(mut doc: Document, path: Option<String>) -> Self {
+    pub fn new(doc: Document, path: Option<String>) -> Self {
         let active_layer = doc.default_layer();
-        // The saved view and open Layers rows live here while the document is open (saves write
-        // them back).
-        let view = doc.last_view.take();
-        let saved_open = doc.layers_open.take();
-        let layers_open = OpenRows::new(&doc, saved_open);
+        let layers_open = OpenRows::new(&doc);
         let doc = Arc::new(doc);
         Self {
             link: kdm_bridge::Link::new(&doc),
@@ -291,7 +266,6 @@ impl DocState {
             transparency_grid: false,
             format: "kvector",
             save_options: Default::default(),
-            view,
             recovered: false,
             recovery: None,
             print_tiling: false,
@@ -1137,7 +1111,6 @@ impl Session {
         st.save_options = old.save_options.clone();
         st.imported_from = old.imported_from.clone();
         st.import_losses = old.import_losses.clone();
-        st.view = old.view.clone();
         st.layers_open = old.layers_open.clone();
         // The same document: its replica goes on (the new content is written to it as an edit).
         st.history.pushed = old.history.pushed;

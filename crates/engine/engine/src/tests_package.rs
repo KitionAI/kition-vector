@@ -395,22 +395,20 @@ fn identical_stale_paths_in_different_nested_documents_keep_separate_assets() {
 }
 
 #[test]
-fn packaging_nested_files_preserves_embedded_preview_pdf_and_compression() {
+fn packaging_nested_files_preserves_embedded_pdf_and_compression() {
     let dir = Folder::new("package-native-extras");
     let mut parent = poster_with_placed_document(&dir);
     let source = dir.file("art/part.kvector");
     let original = std::fs::read(&source).unwrap();
     let doc = kition_vector_format::load(&original).unwrap();
-    let preview = png(8, 8, BLUE);
     let pdf = b"%PDF-1.7\n%Embedded client preview\n".to_vec();
-    let opts = kition_vector_format::SaveOptions { preview: Some(preview.clone()), pdf: Some(pdf.clone()), compress: true, ..Default::default() };
+    let opts = kition_vector_format::SaveOptions { pdf: Some(pdf.clone()), compress: true, ..Default::default() };
     write(&source, &kition_vector_format::save_with(&doc, &opts).unwrap());
 
     let result = run(&mut parent, "file.package", json!({ "folder": dir.file("delivery") }));
     assert_eq!(result["missingLinks"], json!([]), "{result}");
     let packaged = std::fs::read(dir.0.join("delivery/poster Folder/Links/part.kvector")).unwrap();
     assert!(packaged.starts_with(&[0x1f, 0x8b]), "compression must be preserved");
-    assert_eq!(kition_vector_format::preview(&packaged), Some(preview));
     assert_eq!(kition_vector_format::pdf_content(&packaged), Some(pdf));
     let nested = kition_vector_format::load(&packaged).unwrap();
     let mut images = Vec::new();

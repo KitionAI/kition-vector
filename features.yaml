@@ -1,6 +1,6 @@
 format: 1
 kit: vector
-updated: "2026-11-22"
+updated: "2026-11-23"
 gate_budget_s: 600
 protected: []
 features:
@@ -99,6 +99,22 @@ features:
     paths: [bindings/headless/src/main.rs, bindings/headless/tests/identity.rs, kit.json]
     cases: [vector.document.identity/no-replica]
     since: "2026-11-20"
+  - id: vector.document.outside-change
+    title: "A drawing changed outside Kition keeps its replica: the engine merges the newer file into it as one import change (Kit UI protocol UI-R1, replicaMergesFile)"
+    dimension: [collab, data-safety]
+    priority: P0
+    status: has
+    paths: [web/src/App.tsx, web/tests/replica.mjs, crates/engine/engine/src/kdm_bridge.rs]
+    cases: [vector.document.outside-change/replica-merge]
+    since: "2026-11-23"
+  - id: vector.file.drawing-only
+    title: "A .kvector holds the drawing only: no view, open Layers rows or preview; opening and saving without editing writes the same bytes"
+    dimension: [data-safety, collab]
+    priority: P0
+    status: has
+    paths: [crates/formats/format/src/lib.rs, crates/engine/engine/src/cmd/fileio/save.rs, crates/engine/engine/src/cmd/fileio/native.rs, bindings/wasm/tests/deterministic_save.rs]
+    cases: [vector.file.drawing-only/same-bytes]
+    since: "2026-11-23"
   - id: vector.document.inspect
     title: "Document setup, units, colour mode and inspection"
     dimension: [function]

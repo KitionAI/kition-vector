@@ -637,15 +637,6 @@ pub struct Document {
     /// ([`Document::raster_effects_ppi`]).
     #[serde(default, skip_serializing_if = "skip::is_default")]
     pub raster_effects: RasterEffectsSettings,
-    /// The view (zoom, centre, rotation) the document was saved with; it reopens there. Written at
-    /// save time only, so changing the view never marks the document modified.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_view: Option<SavedView>,
-    /// The layers, sublayers and groups open in the Layers panel when the document was saved; they
-    /// reopen that way. `None`: the default, only the top-level layers open. Written at save time
-    /// only, like [`Document::last_view`].
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub layers_open: Option<Vec<NodeId>>,
     /// Edit → Assign Profile: the profiles the document is tagged with (files before format v3
     /// kept them in `unknown`, see [`Document::migrate_color_profiles`]).
     #[serde(default, skip_serializing_if = "ColorProfiles::is_empty")]
@@ -738,8 +729,6 @@ impl Document {
             paste_remembers_layers: false,
             metadata: DocMetadata::default(),
             raster_effects: RasterEffectsSettings::default(),
-            last_view: None,
-            layers_open: None,
             color_profiles: ColorProfiles::default(),
             export_settings: Default::default(),
             extra: Default::default(),

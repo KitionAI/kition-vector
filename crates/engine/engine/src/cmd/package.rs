@@ -205,7 +205,6 @@ impl<'a> Collector<'a> {
                     } else {
                         match kition_vector_format::load_file(&bytes) {
                             Ok(saved) => {
-                                let preview = kition_vector_format::preview(&bytes);
                                 let pdf = kition_vector_format::pdf_content(&bytes);
                                 let compressed = bytes.starts_with(&[0x1f, 0x8b]);
                                 let include_linked =
@@ -215,7 +214,6 @@ impl<'a> Collector<'a> {
                                 if self.opts.relink {
                                     // Preserve auxiliary native-file content when rewriting.
                                     let options = kition_vector_format::SaveOptions {
-                                        preview,
                                         pdf,
                                         profiles: saved.profiles,
                                         compress: compressed,

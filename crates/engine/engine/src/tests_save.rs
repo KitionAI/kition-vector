@@ -1,10 +1,8 @@
 //! The save pipeline: Save writes a document's own format, Save As / a Copy / as Template, Revert,
-//! templates, converted legacy files, the saved view and the single Document Color Mode command.
+//! templates, converted legacy files, no view state in files and the single Document Color Mode command.
 
 use std::path::PathBuf;
 
-use kition_vector_doc::SavedView;
-use kition_vector_geom::Point;
 use serde_json::{Value, json};
 
 use super::*;
@@ -227,56 +225,65 @@ fn native_files_open_under_their_name_and_other_versions_are_refused() {
     let _ = std::fs::remove_dir_all(d);
 }
 
-#[test]
-fn the_saved_view_round_trips_without_dirtying() {
-    let d = dir("view");
-    let mut s = session();
-    let view = SavedView { name: String::new(), center: Point::new(40.0, 25.0), zoom: 3.0, rotation: 15.0 };
-    s.doc_mut().unwrap().view = Some(view.clone());
-    assert!(!s.doc().unwrap().is_dirty(), "the view isn't an edit");
-    let native = path(&d, "v.kvector");
-    s.execute("document.save", &json!({"path": native})).unwrap();
-    assert_eq!(s.doc().unwrap().doc.last_view, None, "only the written file carries it");
-    s.execute("document.open", &json!({"path": native})).unwrap();
-    assert_eq!(s.doc().unwrap().view.as_ref(), Some(&view));
-    // Files without a view (older ones) open with none; SVG doesn't carry it.
-    let doc = kition_vector_format::load(&kition_vector_format::save(&kition_vector_doc::Document::new(5.0, 5.0), false)).unwrap();
-    assert_eq!(doc.last_view, None);
-    let svg = path(&d, "v.svg");
-    s.execute("document.save", &json!({"path": svg})).unwrap();
-    s.execute("document.open", &json!({"path": svg})).unwrap();
-    assert_eq!(s.doc().unwrap().view, None);
-    let _ = std::fs::remove_dir_all(d);
-}
-
-#[test]
-fn open_layers_rows_round_trip_without_dirtying() {
-    let d = dir("open-rows");
+/// A drawing with a group in its layer, saved to `file` (dates fixed): what the save tests open.
+fn grouped_drawing(file: &str) -> (NodeId, NodeId) {
     let mut s = session();
     let layer = s.doc().unwrap().doc.layers[0].id;
     let a = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [a]})).unwrap();
     let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
-    // A document starts with its top-level layers open, and a file keeps nothing for that.
+    s.execute("document.save", &json!({"path": file, "modified": 1_794_182_400})).unwrap();
+    (layer, g)
+}
+
+#[test]
+fn a_file_keeps_no_view_state() {
+    let d = dir("view-state");
+    let first = path(&d, "first.kvector");
+    let (layer, g) = grouped_drawing(&first);
+    let mut s = Session::new();
+    s.execute("document.open", &json!({"path": first})).unwrap();
+    // A document opens with its top-level layers open.
     assert!(s.doc().unwrap().layers_open.contains(layer) && !s.doc().unwrap().layers_open.contains(g));
-    let native = path(&d, "rows.kvector");
-    s.execute("document.save", &json!({"path": native})).unwrap();
-    let bytes = std::fs::read(&native).unwrap();
-    assert_eq!(kition_vector_format::load(&bytes).unwrap().layers_open, None);
-    // Opening the group and closing the layer is view state: not an edit, kept by the file.
+    let before = path(&d, "before.kvector");
+    s.execute("document.save", &json!({"path": before, "modified": null})).unwrap();
+    // Opening the group, closing the layer and selecting are one person's view state: not edits,
+    // and a save writes nothing of them.
     let st = s.doc_mut().unwrap();
     st.layers_open.set(g, true);
     st.layers_open.set(layer, false);
+    s.execute("select.all", &json!({})).unwrap();
     assert!(!s.doc().unwrap().is_dirty());
-    s.execute("document.save", &json!({"path": native})).unwrap();
-    assert_eq!(s.doc().unwrap().doc.layers_open, None, "only the written file carries it");
-    let mut again = session();
-    again.execute("document.open", &json!({"path": native})).unwrap();
+    let second = path(&d, "second.kvector");
+    s.execute("document.save", &json!({"path": second, "modified": null})).unwrap();
+    assert!(std::fs::read(&before).unwrap() == std::fs::read(&second).unwrap(), "the view state changed the file");
+    let mut again = Session::new();
+    again.execute("document.open", &json!({"path": second})).unwrap();
     let open = &again.doc().unwrap().layers_open;
-    assert!(open.contains(g) && !open.contains(layer));
-    // Older files (none saved) open with the top-level layers open.
-    let doc = kition_vector_format::load(&kition_vector_format::save(&kition_vector_doc::Document::new(5.0, 5.0), false)).unwrap();
-    assert_eq!(doc.layers_open, None);
+    assert!(open.contains(layer) && !open.contains(g), "it opens with the top-level layers open");
+    let _ = std::fs::remove_dir_all(d);
+}
+
+#[test]
+fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical_files() {
+    let d = dir("same-bytes");
+    let source = path(&d, "source.kvector");
+    let (_, g) = grouped_drawing(&source);
+    let mut files = vec![];
+    for (who, look) in [("a", false), ("b", true)] {
+        let mut s = Session::new();
+        s.execute("document.open", &json!({"path": source})).unwrap();
+        if look {
+            // One person looks around: opens a row, selects; the other does nothing.
+            s.doc_mut().unwrap().layers_open.set(g, true);
+            s.execute("select.all", &json!({})).unwrap();
+        }
+        let out = path(&d, &format!("{who}.kvector"));
+        // `modified: null`: the dates stay as the file has them (a save stamps them by default).
+        s.execute("document.save", &json!({"path": out, "modified": null})).unwrap();
+        files.push(std::fs::read(&out).unwrap());
+    }
+    assert!(files[0] == files[1], "two sessions saved other bytes");
     let _ = std::fs::remove_dir_all(d);
 }
 

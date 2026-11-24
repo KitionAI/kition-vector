@@ -55,8 +55,6 @@ pub(crate) const MODELLED: &[&str] = &[
     "guides",
     "text_threads",
     "next_id",
-    "last_view",
-    "layers_open",
 ];
 
 /// The register fields of one object, as written (references already object ids).
@@ -274,8 +272,6 @@ pub(crate) fn settings(doc: &Document, ids: &Ids) -> KdmResult<Map<String, Value
     shell.images = Default::default();
     shell.slices = Vec::new();
     shell.assets = Vec::new();
-    shell.last_view = None;
-    shell.layers_open = None;
     let mut map = object_of(value(&shell)?);
     for key in MODELLED {
         map.remove(*key);

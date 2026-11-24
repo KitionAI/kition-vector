@@ -146,14 +146,13 @@ pub fn shared_part(doc: &Document) -> Cow<'_, Document> {
 }
 
 /// A file's drawing, as [`KitModel::import`] reads it: `.kvector` (by content), else SVG
-/// (by content or `name`'s extension), without the view state a file keeps for its editor (the
-/// saved view and the open Layers rows) and the person's own state ([`shared_part`]), and with
+/// (by content or `name`'s extension), without the person's own state ([`shared_part`]), and with
 /// duplicate ids renumbered (a replica needs every object, slice, asset and artboard id unique,
 /// and a symbol's art ids unique in it).
 pub fn decode(name: &str, bytes: &[u8]) -> Result<Document> {
     let lower = name.to_ascii_lowercase();
     let svg = lower.ends_with(".svg") || lower.ends_with(".svgz") || kition_vector_svg::is_svgz(bytes) || looks_like_svg(bytes);
-    let mut doc = if kition_vector_format::sniff(bytes) {
+    let doc = if kition_vector_format::sniff(bytes) {
         kition_vector_format::load(bytes).map_err(kit_err)?
     } else if svg {
         let text = kition_vector_svg::text_of(bytes).map_err(kit_err)?;
@@ -161,8 +160,6 @@ pub fn decode(name: &str, bytes: &[u8]) -> Result<Document> {
     } else {
         kition_vector_format::load(bytes).map_err(kit_err)?
     };
-    doc.last_view = None;
-    doc.layers_open = None;
     let mut doc = shared_part(&doc).into_owned();
     doc.settle_uids(None);
     ids::dedupe(&mut doc);

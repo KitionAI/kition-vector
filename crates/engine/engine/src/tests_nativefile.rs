@@ -96,20 +96,21 @@ fn saves_write_version_1_pretty_printed() {
     }
     let formats = s.execute("document.formats", &json!({})).unwrap();
     let native = formats["formats"].as_array().unwrap().iter().find(|f| f["id"] == "kvector").unwrap();
-    for o in ["compress", "preview"] {
-        assert!(native["options"].get(o).is_some(), "{o} documented");
-    }
+    assert!(native["options"].get("compress").is_some(), "compress documented");
     assert!(native["options"].get("version").is_none(), "no version to choose");
+    assert!(native["options"].get("preview").is_none(), "a file embeds no preview (a PNG is an export)");
 }
 
 #[test]
-fn preview_is_at_most_256_pixels() {
+fn a_native_save_embeds_no_preview() {
     let mut s = session();
-    let bytes = saved(&mut s, json!({"preview": true, "compress": true}));
-    let png = kition_vector_format::preview(&bytes).expect("a preview");
-    let img = image::load_from_memory(&png).unwrap();
-    assert_eq!((img.width(), img.height()), (256, 128), "the 400×200 artboard fitted into 256 px");
-    assert!(kition_vector_format::preview(&saved(&mut s, json!({}))).is_none(), "off by default");
+    // An old option is not one any more: the file is the drawing only.
+    let j = json_of(&saved(&mut s, json!({"preview": true})));
+    assert!(j.get("preview").is_none());
+    // A PNG of the drawing is an export.
+    let png = s.execute("document.exportBytes", &json!({"format": "png"})).unwrap();
+    let png = kition_vector_format::base64_decode(png["data"].as_str().expect("data")).unwrap();
+    assert!(png.starts_with(b"\x89PNG"));
 }
 
 #[test]

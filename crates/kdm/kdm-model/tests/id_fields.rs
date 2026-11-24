@@ -42,12 +42,11 @@ const HANDLED: &[&str] = &[
     "variables.rs: bindings: BTreeMap<NodeId, BTreeSet<String>>",
     "node.rs: graphic_style: Option<u32>",
     // Per person or derived, never in the replica: opacity-mask and pattern editing (`MaskEdit`,
-    // never serialized; `PatternEdit`, left out by `shared_part`), the open Layers rows (view
-    // state), warp pins, the selection, hit tests and laid-out slices.
+    // never serialized; `PatternEdit`, left out by `shared_part`), warp pins, the selection, hit
+    // tests and laid-out slices.
     "pattern.rs: layer: NodeId",
     "lib.rs: object: NodeId",
     "lib.rs: layer: NodeId",
-    "lib.rs: layers_open: Option<Vec<NodeId>>",
     "pin_warp.rs: ids: Vec<NodeId>",
     "selection.rs: objects: Vec<NodeId>",
     "selection.rs: anchors: BTreeMap<NodeId, BTreeSet<AnchorRef>>",

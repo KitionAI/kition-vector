@@ -1232,7 +1232,7 @@ proptest! {
             bytes = gzip(&bytes);
         }
         let _ = kition_vector_format::sniff(&bytes);
-        let _ = kition_vector_format::preview(&bytes);
+        let _ = kition_vector_format::pdf_content(&bytes);
         survive("mutated native file", || kition_vector_engine::cmd::fileio::load("x.kvector", &bytes).ok().map(|l| l.doc))?;
     }
 }

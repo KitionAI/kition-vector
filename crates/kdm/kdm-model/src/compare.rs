@@ -111,9 +111,7 @@ pub fn normalize(d: &Document) -> Value {
             }
         }
     }
-    for key in ["next_id", "last_view", "layers_open"] {
-        v.remove(key);
-    }
+    v.remove("next_id");
     let mut images = Map::new();
     for (key, img) in &d.images {
         let mut entry = Map::new();

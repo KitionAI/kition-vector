@@ -1,4 +1,4 @@
-//! The native format's options: compression, an embedded preview, and the save options native and
+//! The native format's options: compression, and the save options native and
 //! `.ai` files share: each artboard to a separate file, Include Linked Files, Embed ICC Profiles
 //! and Create PDF-Compatible File.
 
@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 use kition_vector_color::cms;
 use kition_vector_doc::Document;
-use kition_vector_format::{PREVIEW_MAX, SaveOptions};
+use kition_vector_format::SaveOptions;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -20,12 +20,6 @@ pub const OPTIONS: &[FormatOption] = &[
         ty: "boolean",
         default: "false",
         description: "gzip the file: smaller, not readable as text (saves default to Preferences → File Handling → Use Compression)",
-    },
-    FormatOption {
-        name: "preview",
-        ty: "boolean",
-        default: "false",
-        description: "embed a PNG preview of the first artboard (at most 256 pixels on its longer side) for file browsers",
     },
     SEPARATE_ARTBOARDS,
     SEPARATE_RANGE,
@@ -89,7 +83,6 @@ pub const AI_OPTIONS: &[FormatOption] = &[
 #[serde(default, rename_all = "camelCase")]
 struct NativeOptions {
     compress: Option<bool>,
-    preview: bool,
     include_linked: bool,
     embed_profiles: Option<bool>,
     pdf_compatible: bool,
@@ -97,19 +90,18 @@ struct NativeOptions {
 
 /// What [`save_options`] leaves to [`encode`] (rendering and encoding take time).
 pub(super) struct Extras {
-    preview: bool,
     pdf: bool,
 }
 
-/// The options in `p` for saving `doc`, checked, with the profiles to embed (the preview and PDF
-/// are left to [`encode`]).
+/// The options in `p` for saving `doc`, checked, with the profiles to embed (the PDF is left to
+/// [`encode`]).
 pub(super) fn save_options(f: &Format, doc: &Document, p: &Value) -> Result<(SaveOptions, Extras)> {
     let o: NativeOptions = super::encode::options(f, p)?;
     let mut so = SaveOptions { compress: o.compress.unwrap_or(false), include_linked: o.include_linked, ..SaveOptions::default() };
     if o.embed_profiles.unwrap_or(true) {
         so.profiles = embedded_profiles(doc);
     }
-    Ok((so, Extras { preview: o.preview, pdf: o.pdf_compatible }))
+    Ok((so, Extras { pdf: o.pdf_compatible }))
 }
 
 /// The `.kvector` file of `doc` with the options in `p`.
@@ -118,9 +110,6 @@ pub(super) fn encode(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result
     // Include Linked Files keeps placed documents' files.
     let full = if so.include_linked { crate::cmd::place::document::full_documents(doc).0 } else { std::borrow::Cow::Borrowed(doc) };
     let doc = &*full;
-    if extras.preview {
-        so.preview = preview_png(doc)?;
-    }
     if extras.pdf {
         // Every artboard as PDF pages (no editing data: the file is the native document).
         so.pdf = Some(super::pdf::encode(cmd, doc, &json!({ "range": "all", "preserveEditing": false }))?.0);
@@ -161,22 +150,11 @@ pub(super) fn install_profiles(profiles: BTreeMap<String, Vec<u8>>) -> Vec<Strin
 pub(super) fn ai_native(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Result<Vec<u8>> {
     let mut q = p.clone();
     if let Some(o) = q.as_object_mut() {
-        o.retain(|k, _| !matches!(k.as_str(), "compress" | "preview" | "pdfCompatible"));
+        o.retain(|k, _| !matches!(k.as_str(), "compress" | "pdfCompatible"));
     }
     let (mut so, _) = save_options(f, doc, &q)?;
     so.pretty = false;
     kition_vector_format::save_with(doc, &so).map_err(|e| bad(cmd, e.to_string()))
-}
-
-/// The first artboard (else the art) as a PNG fitted into [`PREVIEW_MAX`] pixels (`None`: nothing
-/// to show).
-pub(crate) fn preview_png(doc: &Document) -> Result<Option<Vec<u8>>> {
-    let Some(r) = doc.artboards.first().map(|a| a.rect).or_else(|| kition_vector_render::encode::art_bounds(doc)) else { return Ok(None) };
-    let scale = f64::from(PREVIEW_MAX) / r.width().max(r.height());
-    if kition_vector_render::raster_size(r, scale).is_err() {
-        return Ok(None);
-    }
-    kition_vector_render::Renderer::new().render_region(doc, r, scale, false).to_png().map(Some).map_err(EngineError::Other)
 }
 
 /// `p` with `compress` from the Use Compression preference when it doesn't say (saves only;

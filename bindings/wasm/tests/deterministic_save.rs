@@ -56,3 +56,27 @@ fn the_same_commands_save_the_same_bytes() {
     std::fs::remove_dir_all(&dir).ok();
     assert!(String::from_utf8_lossy(&first).contains("\"created\": 1794182400"), "created at the epoch");
 }
+
+/// The kit's save writes the drawing only: two sessions that open the same file and save without
+/// editing write the same bytes, whatever each person looked at or selected (nothing of one
+/// person's editing, no thumbnail, is in a `.kvector`).
+#[test]
+fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical_files() {
+    let mut doc = VectorDocument::create("Logo.kvector", 800, 600).unwrap();
+    doc.execute("shape.rectangle", json!({ "x": 40, "y": 40, "width": 120, "height": 80 })).unwrap();
+    doc.execute("select.all", json!({})).unwrap();
+    doc.execute("object.group", json!({})).unwrap();
+    let file = doc.save(None).unwrap();
+
+    let a = VectorDocument::open("Logo.kvector", &file).unwrap();
+    let mut b = VectorDocument::open("Logo.kvector", &file).unwrap();
+    // One person selects and looks; the other does nothing.
+    b.execute("select.all", json!({})).unwrap();
+    let first = a.save(None).unwrap();
+    let second = b.save(None).unwrap();
+    assert!(first == second, "two sessions saved other bytes");
+    let text = String::from_utf8_lossy(&first);
+    for key in ["\"last_view\"", "\"layers_open\"", "\"preview\""] {
+        assert!(!text.contains(key), "{key} in the file");
+    }
+}
