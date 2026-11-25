@@ -518,8 +518,9 @@ fn a_draft_moving_the_object_the_person_moved_meanwhile_is_refused() {
     let changes = b.export_changes(&base).unwrap();
 
     let (in_a, c) = (named(doc(&a), "A"), named(doc(&a), "C"));
-    a.execute("layer.setCurrent", &json!({"id": c})).unwrap();
+    // Selecting makes A's layer the current one: Notes becomes current after it.
     a.execute("select.set", &json!({"ids": [in_a]})).unwrap();
+    a.execute("layer.setCurrent", &json!({"id": c})).unwrap();
     a.execute("arrange.sendToCurrentLayer", &json!({})).unwrap();
     assert_eq!(siblings(doc(&a), "A"), vec!["C", "A"], "the person moved A to the layer Notes");
     let (version, hash, view) = (a.version().unwrap(), a.state_hash().unwrap(), canonical(doc(&a)));
