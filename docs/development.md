@@ -73,7 +73,6 @@ Environment variables the tests read:
 |---|---|
 | `PROPTEST_CASES` | Number of cases the property tests run |
 | `AFFINITY_CORPUS_REQUIRED` | `1`: the Affinity corpus tests fail instead of skipping when the corpus is absent ([affinity-validation.md](features/affinity-validation.md)) |
-| `KITION_WASM_ENGINE` | Enables the native-against-WebAssembly parity test in `bindings/wasm/tests/convergence.rs`, which is skipped when it is unset |
 
 ## The editor (`web/`)
 

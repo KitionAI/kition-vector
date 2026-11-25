@@ -84,11 +84,11 @@ features:
     cases: [vector.document.text/reading-order]
     since: "2026-11-17"
   - id: vector.collab.containers
-    title: "Two people editing one text, one threaded story, one symbol's art or the guides at once keep both edits (KDM text, list and tree containers)"
+    title: "A type object's characters, a threaded story, a symbol's art and the guides are KDM text, list and tree containers, and edits of them reach another replica of the drawing"
     dimension: [collab, data-safety]
     priority: P0
     status: has
-    paths: [crates/kdm/kdm-model/src, crates/kdm/kdm-model/model/schema.json, crates/kdm/kdm-model/tests/containers.rs, bindings/wasm/tests/convergence.rs]
+    paths: [crates/kdm/kdm-model/src, crates/kdm/kdm-model/model/schema.json, crates/kdm/kdm-model/tests/containers.rs]
     cases: [vector.collab.containers/concurrent-edits]
     since: "2026-11-22"
   - id: vector.document.identity
@@ -100,7 +100,7 @@ features:
     cases: [vector.document.identity/no-replica]
     since: "2026-11-20"
   - id: vector.document.outside-change
-    title: "A drawing changed outside Kition keeps its replica: the engine merges the newer file into it as one import change (Kit UI protocol UI-R1, replicaMergesFile)"
+    title: "A drawing changed outside Kition keeps its replica: the engine writes the newer file's state onto it as one import change (Kit UI protocol UI-R1)"
     dimension: [collab, data-safety]
     priority: P0
     status: has
@@ -113,7 +113,7 @@ features:
     priority: P0
     status: has
     paths: [crates/formats/format/src/lib.rs, crates/engine/engine/src/cmd/fileio/save.rs, crates/engine/engine/src/cmd/fileio/native.rs, bindings/wasm/tests/deterministic_save.rs]
-    cases: [vector.file.drawing-only/same-bytes]
+    cases: [vector.file.drawing-only/same-bytes, vector.file.drawing-only/reopen-same-ids]
     since: "2026-11-23"
   - id: vector.document.inspect
     title: "Document setup, units, colour mode and inspection"

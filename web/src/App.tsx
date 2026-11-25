@@ -30,19 +30,13 @@ import { SidePanel } from './SidePanel'
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: ZOOM_TOOL }
 const HIDDEN = new Set(HIDDEN_TOOLS)
 const round = (value: number) => Math.round(value * 100) / 100
-/**
- * A stored replica opens whatever the file's stamp (UI-R1): the engine merges what a file changed
- * outside Kition holds that the replica does not as one `import` change (`open_with_replica`), so
- * the drawing keeps its object ids and history.
- */
-const SESSION_OPTIONS = { replicaMergesFile: true }
 /** Menus kept in a read-only document. */
 const VIEW_MENUS = ['View', 'Window', 'Help']
 
 export function App({ host, phrase }: { host: HostConnection; phrase: Phrases }) {
   const t = useMemo(() => createKitStrings(CATALOGS, host.init.locale), [host])
   const manifest = useMemo(engineManifest, [])
-  const session = useKitSession(host, manifest, describe, SESSION_OPTIONS)
+  const session = useKitSession(host, manifest, describe)
   const editor = useKitEditorState(session, host, t, 'vector', phrase)
   const { doc, change, state } = session
   const tools = useEngineTools(session.tool, doc != null, change, { initial: 'selection', hostTools: HOST_TOOLS, hidden: HIDDEN })

@@ -1,5 +1,6 @@
-//! Shared test helpers: a drawing to edit, a blob store shared between replicas, and a
-//! multi-replica harness over `KitSession<VectorModel>`. Each `tests/*.rs` binary uses only some.
+//! Shared test helpers: a drawing to edit, a blob store shared between replicas, and replicas
+//! over `KitSession<VectorModel>` that take each other's changes in order. Each `tests/*.rs`
+//! binary uses only some.
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::collections::{BTreeSet, HashMap};
@@ -207,24 +208,6 @@ pub fn edit(session: &mut Session, blobs: &SharedBlobs, f: impl FnOnce(&mut Docu
 pub fn send(from: &Session, to: &mut Session) {
     let bytes = from.export_changes(&to.version()).unwrap_or_else(|error| panic!("export: {error}"));
     to.import_changes(&bytes).unwrap_or_else(|error| panic!("import: {error}"));
-}
-
-/// Exchanges until every session holds the same version (repairs are changes too).
-pub fn sync_all(sessions: &mut [Session]) {
-    for _ in 0..8 {
-        for i in 0..sessions.len() {
-            for j in 0..sessions.len() {
-                if i != j {
-                    let bytes = sessions[i].export_changes(&sessions[j].version()).unwrap_or_else(|error| panic!("export: {error}"));
-                    sessions[j].import_changes(&bytes).unwrap_or_else(|error| panic!("import: {error}"));
-                }
-            }
-        }
-        if sessions.windows(2).all(|w| w[0].version() == w[1].version()) {
-            return;
-        }
-    }
-    panic!("the replicas did not converge");
 }
 
 pub fn sync(a: &mut Session, b: &mut Session) {

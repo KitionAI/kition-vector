@@ -30,6 +30,6 @@ serde_json = { workspace = true }
 # (KITION_REPRODUCIBLE_IDS); never in [dependencies]: a shipped engine draws its ids at random.
 kition-kit = { workspace = true, features = ["session", "reproducible-ids"] }
 kition-vector-svg = { workspace = true }
-# The Kition platform convergence suite (L6), on the same kition-sdk revision.
+# The Kition platform kit suite's performance mode (tests/perf.rs), on the same kition-sdk revision.
 kition-convergence = { workspace = true }
 image = { workspace = true }

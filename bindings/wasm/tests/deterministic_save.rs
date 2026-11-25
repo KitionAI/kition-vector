@@ -80,3 +80,64 @@ fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical
         assert!(!text.contains(key), "{key} in the file");
     }
 }
+
+/// Every object's id in the drawing (`document.inspect`'s layer tree, depth first).
+fn node_ids(doc: &VectorDocument) -> Vec<u64> {
+    fn walk(node: &serde_json::Value, out: &mut Vec<u64>) {
+        out.extend(node["id"].as_u64());
+        for child in node["children"].as_array().into_iter().flatten() {
+            walk(child, out);
+        }
+    }
+    let inspected = doc.inspect().unwrap();
+    let mut out = Vec::new();
+    for layer in inspected["layers"].as_array().into_iter().flatten() {
+        walk(layer, &mut out);
+    }
+    out
+}
+
+/// The replica's objects, by type and id, sorted.
+fn replica_objects(doc: &mut VectorDocument) -> Vec<(String, String)> {
+    use kition_kit::kdm::{ActorId, Replica};
+    use kition_kit::session::KitModel;
+    let replica = Replica::load(kdm_model::VectorModel::schema(), &doc.snapshot().unwrap(), ActorId::random()).unwrap();
+    let mut out = Vec::new();
+    for ty in ["Drawing", "Node", "Artboard", "Swatch", "Guide", "Thread", "Image"] {
+        out.extend(replica.objects_of_type(ty).into_iter().map(|id| (ty.to_owned(), id.to_string())));
+    }
+    out.sort();
+    out
+}
+
+/// An unchanged drawing saves to the bytes it was opened from, opened alone or on the replica the
+/// host stored for it, and reopening keeps every object's id: the drawing's own ids and the
+/// replica's object ids (the stored replica is taken as it is, no import change).
+#[test]
+fn an_unchanged_drawing_saves_the_same_bytes_and_reopens_with_the_same_object_ids() {
+    let mut made = VectorDocument::create("Logo.kvector", 800, 600).unwrap();
+    made.execute("shape.rectangle", json!({ "x": 40, "y": 40, "width": 120, "height": 80 })).unwrap();
+    made.execute("shape.ellipse", json!({ "x": 200, "y": 150, "width": 60, "height": 60 })).unwrap();
+    made.execute("text.create", json!({ "x": 80, "y": 300, "text": "Trail" })).unwrap();
+    made.execute("select.all", json!({})).unwrap();
+    made.execute("object.group", json!({})).unwrap();
+    let mut opened = VectorDocument::open("Logo.kvector", &made.save(None).unwrap()).unwrap();
+    let file = opened.save(None).unwrap();
+    let ids = node_ids(&opened);
+    assert!(ids.len() >= 5, "a layer, a group and its three objects: {ids:?}");
+    let (snapshot, blobs, version) = (opened.snapshot().unwrap(), opened.blobs().unwrap(), opened.version().unwrap());
+    let objects = replica_objects(&mut opened);
+    assert!(objects.iter().filter(|(ty, _)| ty == "Node").count() >= 5, "{objects:?}");
+
+    let alone = VectorDocument::open("Logo.kvector", &file).unwrap();
+    assert!(alone.save(None).unwrap() == file, "opened alone, an unchanged drawing saves the same bytes");
+    assert_eq!(node_ids(&alone), ids, "opened alone, every object keeps its id");
+
+    let mut stored = VectorDocument::open_with_replica("Logo.kvector", &file, &snapshot, &blobs).unwrap();
+    assert!(stored.has_replica(), "the stored replica opened");
+    assert!(!stored.dirty());
+    assert!(stored.save(None).unwrap() == file, "on its stored replica, an unchanged drawing saves the same bytes");
+    assert_eq!(node_ids(&stored), ids, "on its stored replica, every object keeps its id");
+    assert_eq!(stored.version().unwrap(), version, "the same file wrote no import change");
+    assert_eq!(replica_objects(&mut stored), objects, "the replica's objects keep their ids");
+}

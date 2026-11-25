@@ -1,7 +1,7 @@
 format: 1
 id: vector.collab.containers/concurrent-edits
 feature: vector.collab.containers
-intent: Two people editing one drawing at once keep both edits where the drawing holds a collection, not one value. Typing in two places of one text, formatting two ranges of it, or typing while the other aligns a paragraph; typing at both ends of a threaded story (one text, however it flows through its frames); editing two objects of one symbol; adding and moving different guides. After the merge both edits are there and both replicas hold the same drawing.
+intent: Where the drawing holds a collection, not one value, the replica holds a KDM container. A type object's characters are its text, not its data; a threaded story is one text, however it flows through its frames, and unthreading gives each frame its own text again; a symbol's art is the symbol's tree and goes with it. Edits made on two replicas one after the other (typing at both ends of a story, editing two objects of one symbol) reach both, and both replicas hold the same drawing.
 layer: gate
 dimension: collab
 source: {kind: synthetic, from: schema-freeze, license: Apache-2.0}

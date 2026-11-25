@@ -3,6 +3,13 @@
 Changes to Kition Vector, newest first. A version is the kit package version in `kit.json`;
 each package is published with a `package-v<version>` tag.
 
+## Unreleased
+
+- The engine runs on kition-sdk's plain document model (no CRDT): Kition Desktop is for one
+  person, so drawings are no longer merged from concurrent edits; a replica takes another's changes
+  in order. A drawing changed outside Kition still opens on its stored replica, with the file's
+  state written by object id as one import step when the two differ. Loro is no longer linked.
+
 ## 0.1.2
 
 - A host asks what document a drawing file is (`document.identity`) and copies one as a new

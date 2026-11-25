@@ -1,6 +1,6 @@
-//! The Kition platform convergence suite's adapter for Kition Vector: drives `VectorDocument`
-//! the way a host does (contract 1 `execute`, the contract 2 replica members), shared by the
-//! `convergence` and `perf` test binaries.
+//! The Kition platform kit suite's adapter for Kition Vector (its performance mode): drives
+//! `VectorDocument` the way a host does (contract 1 `execute`, the contract 2 replica members),
+//! for the `perf` test binary.
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::collections::BTreeMap;
@@ -38,7 +38,13 @@ pub fn decode_blobs(bytes: &[u8]) -> Result<Blobs> {
 }
 
 pub fn encode_blobs(blobs: &Blobs) -> Vec<u8> {
-    kition_convergence::wasm::encode_blobs(blobs)
+    let mut out = Vec::new();
+    for (hash, data) in blobs {
+        out.extend_from_slice(hash.as_bytes());
+        out.extend_from_slice(&(data.len() as u64).to_le_bytes());
+        out.extend_from_slice(data);
+    }
+    out
 }
 
 fn exec(doc: &mut VectorDocument, command: &str, params: Value) -> Result<Value> {
@@ -300,8 +306,7 @@ impl KitAdapter for VectorKit {
                 exec(doc, "file.place", json!({ "name": format!("picture-{seed}.png"), "dataBase64": data }))?;
             }
             // Typing in the first text object, as the Type tool edits it (`text.editRange`, in
-            // bytes of its plain text): its characters are its `Node.text`, which merges by
-            // character.
+            // bytes of its plain text): its characters are its `Node.text`.
             Script::InsertText { at, text } => {
                 let Some((id, now)) = text_object(doc) else { return Ok(false) };
                 let at = byte_at(&now, *at);
@@ -339,10 +344,7 @@ impl KitAdapter for VectorKit {
         let fresh = self.join(&snapshot, &blobs)?;
         let tree = |doc: &VectorDocument| strip_ids(&doc.inspect().unwrap_or(Value::Null)["layers"]);
         if tree(doc) != tree(&fresh) {
-            return Err(format!(
-                "the view's layer tree differs from a fresh replica's: {}",
-                kition_convergence::state::first_difference(&tree(doc), &tree(&fresh)).unwrap_or_default()
-            ));
+            return Err("the view's layer tree differs from a fresh replica's".into());
         }
         let (w, h) = (doc.width(), doc.height());
         if doc.render(0.0, 0.0, 1.0, w, h)? != fresh.render(0.0, 0.0, 1.0, w, h)? {

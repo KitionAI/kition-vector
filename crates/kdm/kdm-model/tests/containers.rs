@@ -1,7 +1,7 @@
 //! The schema's containers (task schema-freeze): a type object's characters (`Node.text`), a
 //! threaded story (`Thread.text` with its `frames`), a symbol's art (`Symbol.nodes`) and the
-//! guides (`Drawing.guides`). For each, two replicas edit it concurrently, the edits merge, both
-//! survive, and the replicas end identical.
+//! guides (`Drawing.guides`): how the replica holds each, and that edits of them made on two
+//! replicas, one after the other, both reach both and leave the replicas identical.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 mod common;
@@ -12,7 +12,7 @@ use common::{SharedBlobs, assert_no_dangling, assert_replica_clean, canonical, e
 use kition_kit::kdm::ObjectId;
 use kition_vector_doc::color::{Color, Paint};
 use kition_vector_doc::geom::{Affine, Point, Rect, shapes};
-use kition_vector_doc::{Appearance, CharStyle, Document, Guide, Justify, Node, NodeId, NodeKind, ParaStyle, Symbol, TextKind, TextObject, TextRun};
+use kition_vector_doc::{Appearance, CharStyle, Document, Node, NodeId, NodeKind, Symbol, TextKind, TextObject, TextRun};
 
 fn assert_converged(a: &common::Session, b: &common::Session) {
     assert_eq!(a.state_hash().ok(), b.state_hash().ok(), "same replica state");
@@ -36,14 +36,6 @@ fn text_of<'a>(d: &'a Document, name: &str) -> &'a TextObject {
     }
 }
 
-fn text_mut<'a>(d: &'a mut Document, name: &str) -> &'a mut TextObject {
-    let id = named_id(d, name);
-    match &mut d.node_mut(id).unwrap().kind {
-        NodeKind::Text(t) => t,
-        other => panic!("{name} is not type: {other:?}"),
-    }
-}
-
 fn point_type(d: &mut Document, name: &str, text: &str) -> Node {
     let id = d.alloc_id();
     let mut n = Node::new(id, NodeKind::Text(Box::new(TextObject::point(Point::new(20.0, 40.0), text, CharStyle::default()))));
@@ -61,14 +53,6 @@ fn area_type(d: &mut Document, name: &str, x: f64, text: &str) -> Node {
     n
 }
 
-fn red() -> CharStyle {
-    CharStyle { fill: Paint::solid(Color::rgb(0.9, 0.1, 0.1)), ..CharStyle::default() }
-}
-
-fn bold() -> CharStyle {
-    CharStyle { font_style: "Bold".into(), ..CharStyle::default() }
-}
-
 /// A drawing with point type "Title" ("Hello world") and a second paragraph.
 fn with_type() -> Document {
     let mut d = Document::new(400.0, 300.0);
@@ -83,53 +67,6 @@ fn pair(d: &Document) -> (SharedBlobs, common::Session, common::Session) {
     let a = first(d, &blobs);
     let b = peer(&a, 2, &blobs);
     (blobs, a, b)
-}
-
-#[test]
-fn typing_in_two_places_of_one_text_keeps_both() {
-    let (blobs, mut a, mut b) = pair(&with_type());
-    edit(&mut a, &blobs, |d| text_mut(d, "Title").runs = vec![TextRun::new("Hello big world\nSecond", CharStyle::default())]);
-    edit(&mut b, &blobs, |d| text_mut(d, "Title").runs = vec![TextRun::new("Hello world\nSecond line", CharStyle::default())]);
-    sync(&mut a, &mut b);
-    assert_converged(&a, &b);
-    assert_eq!(text_of(a.model().document(), "Title").plain_text(), "Hello big world\nSecond line");
-}
-
-#[test]
-fn formatting_two_ranges_of_one_text_keeps_both() {
-    let (blobs, mut a, mut b) = pair(&with_type());
-    edit(&mut a, &blobs, |d| {
-        text_mut(d, "Title").runs = vec![TextRun::new("Hello", bold()), TextRun::new(" world\nSecond", CharStyle::default())];
-    });
-    edit(&mut b, &blobs, |d| {
-        text_mut(d, "Title").runs =
-            vec![TextRun::new("Hello ", CharStyle::default()), TextRun::new("world", red()), TextRun::new("\nSecond", CharStyle::default())];
-    });
-    sync(&mut a, &mut b);
-    assert_converged(&a, &b);
-    let t = text_of(a.model().document(), "Title");
-    assert_eq!(
-        t.runs,
-        vec![
-            TextRun::new("Hello", bold()),
-            TextRun::new(" ", CharStyle::default()),
-            TextRun::new("world", red()),
-            TextRun::new("\nSecond", CharStyle::default())
-        ]
-    );
-}
-
-#[test]
-fn typing_while_the_other_aligns_a_paragraph_keeps_both() {
-    let (blobs, mut a, mut b) = pair(&with_type());
-    edit(&mut a, &blobs, |d| text_mut(d, "Title").runs = vec![TextRun::new("Hello world!\nSecond", CharStyle::default())]);
-    let centred = ParaStyle { justify: Justify::Center, ..ParaStyle::default() };
-    edit(&mut b, &blobs, |d| text_mut(d, "Title").set_paragraph_styles(vec![ParaStyle::default(), centred.clone()]));
-    sync(&mut a, &mut b);
-    assert_converged(&a, &b);
-    let t = text_of(a.model().document(), "Title");
-    assert_eq!(t.plain_text(), "Hello world!\nSecond");
-    assert_eq!(t.paragraph_styles(), vec![ParaStyle::default(), centred]);
 }
 
 #[test]
@@ -169,7 +106,7 @@ fn story(d: &Document) -> String {
 }
 
 #[test]
-fn a_threaded_story_is_one_text_and_edits_in_two_frames_merge() {
+fn a_threaded_story_is_one_text_and_edits_in_two_frames_reach_both_replicas() {
     let (blobs, mut a, mut b) = pair(&with_thread());
     assert_eq!(story(a.model().document()), "One two three");
     let root = ObjectId::from_string("drawing");
@@ -178,7 +115,7 @@ fn a_threaded_story_is_one_text_and_edits_in_two_frames_merge() {
     for frame in a.replica().list(&thread, "frames").unwrap() {
         assert_eq!(a.replica().text(&frame, "text").unwrap(), "", "a frame's own text is empty");
     }
-    // A types at the story's start (in the first frame), B at its end (in the last one).
+    // A types at the story's start (in the first frame), then B at its end (in the last one).
     edit(&mut a, &blobs, |d| {
         let first = d.text_threads[0][0];
         if let Some(NodeKind::Text(t)) = d.node_mut(first).map(|n| &mut n.kind) {
@@ -186,6 +123,7 @@ fn a_threaded_story_is_one_text_and_edits_in_two_frames_merge() {
             t.runs = vec![TextRun::new(format!("Zero {text}"), CharStyle::default())];
         }
     });
+    sync(&mut a, &mut b);
     edit(&mut b, &blobs, |d| {
         let last = *d.text_threads[0].last().unwrap();
         if let Some(NodeKind::Text(t)) = d.node_mut(last).map(|n| &mut n.kind) {
@@ -197,36 +135,6 @@ fn a_threaded_story_is_one_text_and_edits_in_two_frames_merge() {
     assert_converged(&a, &b);
     assert_eq!(story(a.model().document()), "Zero One two three four");
     assert_eq!(a.model().document().text_threads.len(), 1);
-}
-
-#[test]
-fn adding_a_frame_while_the_other_types_in_the_story_keeps_both() {
-    let (blobs, mut a, mut b) = pair(&with_thread());
-    // A threads a third frame "F3" onto the story; B types at the story's end.
-    edit(&mut a, &blobs, |d| {
-        let layer = d.layers[0].id;
-        let f3 = area_type(d, "F3", 400.0, "");
-        let id = f3.id;
-        d.insert(Some(layer), usize::MAX, f3).unwrap();
-        d.text_threads[0].push(id);
-    });
-    edit(&mut b, &blobs, |d| {
-        let last = *d.text_threads[0].last().unwrap();
-        if let Some(NodeKind::Text(t)) = d.node_mut(last).map(|n| &mut n.kind) {
-            let text = t.plain_text();
-            t.runs = vec![TextRun::new(format!("{text} four"), CharStyle::default())];
-        }
-    });
-    sync(&mut a, &mut b);
-    assert_converged(&a, &b);
-    let d = a.model().document();
-    assert_eq!(d.text_threads.len(), 1);
-    let frames: Vec<String> = d.text_threads[0].iter().map(|id| d.node(*id).and_then(|n| n.name.clone()).unwrap_or_default()).collect();
-    assert_eq!(frames, vec!["F1", "F2", "F3"], "A's frame is threaded, in order");
-    assert_eq!(story(d), "One two three four", "B's typing is in the story");
-    let root = ObjectId::from_string("drawing");
-    let thread = a.replica().list(&root, "threads").unwrap()[0].clone();
-    assert_eq!(a.replica().list(&thread, "frames").unwrap().len(), 3);
 }
 
 #[test]
@@ -289,6 +197,7 @@ fn editing_two_objects_of_one_symbol_keeps_both() {
             path.transform(Affine::translate((5.0, 0.0)));
         }
     });
+    sync(&mut a, &mut b);
     edit(&mut b, &blobs, |d| art_node_mut(d, "Star").appearance.set_fill(Paint::solid(Color::rgb(0.0, 0.5, 1.0))));
     sync(&mut a, &mut b);
     assert_converged(&a, &b);
@@ -310,27 +219,6 @@ fn deleting_a_symbol_deletes_its_art() {
     for object in art {
         assert!(!a.replica().exists(&object), "{object} went with its symbol");
     }
-}
-
-#[test]
-fn adding_and_moving_different_guides_keeps_both() {
-    let mut d = Document::new(400.0, 300.0);
-    d.guides.push(Guide::new(true, 10.0));
-    d.guides.push(Guide::new(false, 20.0));
-    let (blobs, mut a, mut b) = pair(&d);
-    edit(&mut a, &blobs, |d| {
-        d.guides[0].pos = 15.0;
-        d.guides.push(Guide::new(true, 100.0));
-    });
-    edit(&mut b, &blobs, |d| {
-        d.guides[1].pos = 25.0;
-        d.guides.push(Guide::new(false, 200.0));
-    });
-    sync(&mut a, &mut b);
-    assert_converged(&a, &b);
-    let mut guides: Vec<(bool, f64)> = a.model().document().guides.iter().map(|g| (g.vertical, g.pos)).collect();
-    guides.sort_by(|x, y| x.1.total_cmp(&y.1));
-    assert_eq!(guides, vec![(true, 15.0), (false, 25.0), (true, 100.0), (false, 200.0)]);
 }
 
 #[test]

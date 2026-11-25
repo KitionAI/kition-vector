@@ -1,0 +1,20 @@
+format: 1
+id: vector.file.drawing-only/reopen-same-ids
+feature: vector.file.drawing-only
+intent: >-
+  An unchanged drawing saves to the bytes it was opened from, whether it opens alone or on the
+  replica the host stored for it, and reopening keeps every object's id: the drawing's own ids and
+  the replica's object ids, with no import change written for a file the replica already holds
+  (plain document model, plan 2026-11-24).
+layer: gate
+source:
+  kind: synthetic
+  from: bindings/wasm/tests/deterministic_save.rs (an_unchanged_drawing_saves_the_same_bytes_and_reopens_with_the_same_object_ids)
+  license: Apache-2.0
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: deterministic_save, filter: an_unchanged_drawing_saves_the_same_bytes_and_reopens_with_the_same_object_ids }
+expected:
+  - actual: out:exit
+    compare: exit
+since: "2026-11-24"

@@ -154,9 +154,10 @@ fn blobs_handed_over_ahead_wait_for_changes_imported_several_imports_later() {
     let before = a.version();
     a.record(&person("a"), &after).unwrap();
     steps.push(a.export_changes(&before).unwrap());
-    // Every blob first, then the changes last to first: the later ones wait for the earlier.
+    // Every blob first, then the changes one import at a time, in order: the blobs wait for the
+    // changes that reference them, even when those come several imports later.
     b.add_blobs(&MemoryBlobs(a.blobs_since(&start).into_iter().collect()));
-    for bytes in steps.iter().rev() {
+    for bytes in &steps {
         b.import_changes(bytes).unwrap();
     }
     assert_eq!(*b.document().images["image0"].bytes, vec![1, 2]);

@@ -3,8 +3,9 @@
 //! keeps the remote edit, a drag is one undo step (and a remote edit in the middle of it is
 //! kept), an undo group is one step, a direct write before a command is no part of its step,
 //! selection-only changes write nothing, the history limit never loses an edit, a remote deletion
-//! of the selection moves it on, and two sessions running random commands converge with the
-//! engine's drawing equal to its own replica after every step.
+//! of the selection moves it on, and two sessions taking turns at random commands, each taking
+//! the other's changes in order, end equal, with the engine's drawing equal to its own replica
+//! after every step.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use kition_vector_engine::doc::{Document, NodeId, NodeKind};
@@ -235,6 +236,7 @@ fn undo_after_a_remote_edit_keeps_it() {
     let mut b = peer(&mut a);
     let aid = named(doc(&a), "A");
     move_object(&mut a, aid, 50.0, 0.0);
+    send(&mut a, &mut b);
     let bid = named(doc(&b), "B");
     b.execute("paint.setFill", &json!({"color": "#0000ff", "ids": [bid]})).unwrap();
     sync(&mut a, &mut b);
@@ -494,14 +496,17 @@ fn random_command(s: &mut Session, rng: &mut Rng) -> String {
     id.to_owned()
 }
 
+/// Two sessions take turns at random commands on one line of changes: before a session edits,
+/// it takes the changes the other made that it lacks.
 #[test]
-fn random_commands_keep_drawing_and_replica_equal_and_converge() {
+fn random_commands_keep_drawing_and_replica_equal_and_reach_the_peer() {
     for seed in [5u64, 6, 7] {
         let mut rng = Rng(seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1);
         let mut a = new_session();
         let mut b = peer(&mut a);
         for step in 0..120 {
             let (s, other) = if rng.below(2) == 0 { (&mut a, &mut b) } else { (&mut b, &mut a) };
+            send(other, s);
             let what = random_command(s, &mut rng);
             assert_holds(s, &format!("seed {seed} step {step} ({what})"));
             if rng.below(4) == 0 {
