@@ -11,8 +11,8 @@ importers:
   .:
     dependencies:
       '@kition/sdk':
-        specifier: npm:@kitionstage/sdk@0.5.2-stage.25
-        version: '@kitionstage/sdk@0.5.2-stage.25(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
+        specifier: npm:@kitionstage/sdk@0.5.2-stage.28
+        version: '@kitionstage/sdk@0.5.2-stage.28(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       '@kition/tessera':
         specifier: npm:@kitionstage/tessera@0.1.1-stage.2
         version: '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
@@ -314,8 +314,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kitionstage/sdk@0.5.2-stage.25':
-    resolution: {integrity: sha512-U2vVn/6JIyzkQ8425gH8pbmIChQbEaz9p109yCrTfoHuIGjPkkmttCHMp3ewo+JrHuA4QVcqtyzQdrc4zEDjZg==}
+  '@kitionstage/sdk@0.5.2-stage.28':
+    resolution: {integrity: sha512-zUufY+KX4pOhRidOAIrL8aji9LaF/DH4+yy6Eja2W1FYF6VDRfjfjEhRnaywiC7Yz3rvo+lSxnfQZEt66ZIspQ==}
     hasBin: true
     peerDependencies:
       '@kition/tessera': 0.1.1-stage.2
@@ -1884,7 +1884,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@kitionstage/sdk@0.5.2-stage.25(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@kitionstage/sdk@0.5.2-stage.28(@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     optionalDependencies:
       '@kition/tessera': '@kitionstage/tessera@0.1.1-stage.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       react: 19.3.0

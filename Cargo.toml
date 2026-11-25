@@ -12,14 +12,14 @@ repository = "https://github.com/KitionAI/kition-vector"
 
 [workspace.dependencies]
 # kition-sdk, pinned by commit (one revision for every crate of it)
-kition-convergence = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
-kition-headless = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
-kition-kit-server = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
-kition-kit = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
+kition-convergence = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
+kition-headless = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
+kition-kit-server = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
+kition-kit = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
 # A host of kit processes (`HeadlessKit`), for the `document.identity` tests.
-kition-kit-host = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
+kition-kit-host = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
 # The kits' MCP server's tools (kition-kits-mcp's library), for the headless kit's end-to-end tests.
-kition-kits = { git = "https://github.com/KitionAI/kition-sdk", rev = "74e9a1c398b236ea8f464c20a6c452b161565416" }
+kition-kits = { git = "https://github.com/KitionAI/kition-sdk", rev = "03f628540fa2164dbdd1bf21a7011f4c969a8c97" }
 
 # internal
 kition-vector-geom = { path = "crates/support/geom" }
