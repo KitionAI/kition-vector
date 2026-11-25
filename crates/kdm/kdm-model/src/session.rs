@@ -129,31 +129,39 @@ impl VectorSession {
     /// other scope's steps, Kition platform KitModel 1.1 M12a), repairs the result and patches the
     /// view. Answers whether there was one, and the damage.
     pub fn undo_in(&mut self, scope: UndoScope) -> Result<(bool, Damage)> {
-        if !self.can_undo_in(scope) {
-            return Ok((false, Damage::None));
-        }
-        let done = self.replica.undo_in(scope).map_err(kit_err)?;
-        let (damage, moved) = self.settle();
-        if done {
-            self.log_added(moved.added.iter().cloned());
-            self.index.undone(scope, moved);
-        }
-        self.index.collect_garbage(&mut self.blobs);
-        Ok((done, damage?))
+        self.step_in(scope, true).map(|(steps, damage)| (steps > 0, damage))
     }
 
     pub fn redo_in(&mut self, scope: UndoScope) -> Result<(bool, Damage)> {
-        if !self.can_redo_in(scope) {
-            return Ok((false, Damage::None));
+        self.step_in(scope, false).map(|(steps, damage)| (steps > 0, damage))
+    }
+
+    /// [`VectorSession::undo_in`] (`undo`) or [`VectorSession::redo_in`], answering how many of
+    /// `scope`'s steps the replica took off its stack: the steps it passed over (they changed
+    /// nothing any more) and the one it took back, or 0 when it took none. A caller that keeps a
+    /// history of its own beside the replica's counts its steps with it.
+    pub fn step_in(&mut self, scope: UndoScope, undo: bool) -> Result<(usize, Damage)> {
+        let can = if undo { self.can_undo_in(scope) } else { self.can_redo_in(scope) };
+        if !can {
+            return Ok((0, Damage::None));
         }
-        let done = self.replica.redo_in(scope).map_err(kit_err)?;
+        let outcome = if undo { self.replica.undo_in(scope) } else { self.replica.redo_in(scope) }.map_err(kit_err)?;
         let (damage, moved) = self.settle();
-        if done {
+        let steps = if outcome.is_done() { outcome.steps() } else { 0 };
+        if steps > 0 {
             self.log_added(moved.added.iter().cloned());
-            self.index.redone(scope, moved);
+            // The steps passed over joined the one taken back: one step moves to the other stack.
+            for _ in 1..steps {
+                self.index.drop_top(scope, undo);
+            }
+            if undo {
+                self.index.undone(scope, moved);
+            } else {
+                self.index.redone(scope, moved);
+            }
         }
         self.index.collect_garbage(&mut self.blobs);
-        Ok((done, damage?))
+        Ok((steps, damage?))
     }
 
     /// Whether `scope` has an undo step to take: one of this replica's, not trimmed by
@@ -192,6 +200,58 @@ impl VectorSession {
         self.index.imported();
         self.index.collect_garbage(&mut self.blobs);
         damage
+    }
+
+    /// Takes a draft's changes (made on a fork of this replica) in as one transaction of `origin`
+    /// (`Replica::merge_changes`): one undo step of its scope unless `origin` is a `system` or
+    /// `import` one. Repairs the result and patches the view as an import does; add the draft's
+    /// blobs first ([`VectorSession::add_blobs`]). Answers the undo steps it made (1 or 0) and the
+    /// damage. A refused merge changes nothing.
+    pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<(u32, Damage)> {
+        let before = self.replica.version();
+        self.replica.merge_changes(bytes, origin).map_err(kit_err)?;
+        self.took_in(&before, origin)
+    }
+
+    /// Writes the state `snapshot` holds (a snapshot or content of this drawing, as a host's
+    /// checkpoint keeps it) over the replica as one transaction of `origin`, keyed by object id
+    /// (`kition_kit::session::write_state`), so every object the two share keeps its id: one undo
+    /// step of its scope unless `origin` is a `system` or `import` one. Nothing changes when the
+    /// states are equal. Refuses another document's snapshot. Add the blobs it references first.
+    pub fn restore_state(&mut self, snapshot: &[u8], origin: &Origin) -> Result<(u32, Damage)> {
+        let schema = VectorModel::schema();
+        let loaded = Replica::load(Arc::clone(&schema), snapshot, ActorId::random()).map_err(kit_err)?;
+        if loaded.doc_id() != self.replica.doc_id() {
+            return Err(kit_err(KdmError::WrongDocument { expected: self.replica.doc_id().to_string(), found: loaded.doc_id().to_string() }));
+        }
+        let (now, then) = (kition_kit::session::state(&self.replica)?, kition_kit::session::state(&loaded)?);
+        if now == then {
+            return Ok((0, Damage::None));
+        }
+        let before = self.replica.version();
+        let result = self.replica.transact(origin, |tx| kition_kit::session::write_state(tx, &schema, &now, &then).map_err(crate::kdm_err));
+        if let Err(error) = result {
+            self.replica.take_changed();
+            return Err(kit_err(error));
+        }
+        self.took_in(&before, origin)
+    }
+
+    /// After a merge or a restore wrote one transaction of `origin` since `before`: repairs and
+    /// patches the view as an import does, and counts the transaction as an undo step of its
+    /// scope. A failed repair or view load is the error, as an import's is: the transaction stays
+    /// ([`VectorSession::view_loaded`] tells whether the view followed).
+    fn took_in(&mut self, before: &Version, origin: &Origin) -> Result<(u32, Damage)> {
+        let wrote = self.replica.version() != *before;
+        let (damage, moved) = self.settle();
+        self.log_added(moved.added.iter().cloned());
+        let scope = UndoScope::of(origin.kind).filter(|_| wrote);
+        if let Some(scope) = scope {
+            self.index.push_step(scope, moved);
+        }
+        self.index.imported();
+        self.index.collect_garbage(&mut self.blobs);
+        damage.map(|damage| (u32::from(scope.is_some()), damage))
     }
 
     /// Whether the view matches the replica as it is now (its own read succeeds).

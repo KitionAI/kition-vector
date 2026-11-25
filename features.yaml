@@ -91,6 +91,15 @@ features:
     paths: [crates/kdm/kdm-model/src, crates/kdm/kdm-model/model/schema.json, crates/kdm/kdm-model/tests/containers.rs]
     cases: [vector.collab.containers/concurrent-edits]
     since: "2026-11-22"
+  - id: vector.collab.drafts
+    title: "Drafts merge in and earlier versions restore as one undo step; the engine answers the object model, receipts and reply ids itself (engine members mergeChanges, compareChanges, restoreState, changesSince, modelReply, modelDescribe, modelBatch)"
+    dimension: [collab, data-safety]
+    priority: P1
+    status: partial
+    paths: [bindings/wasm/src/collab.rs, bindings/wasm/src/lib.rs, crates/engine/engine/src/kdm_bridge.rs, crates/kdm/kdm-model/src/session.rs, web/package.json]
+    target: "Kit UI protocol section 7 (replica/restore); engine contract rule K3a"
+    gap: Engine tests merge a draft, compare it first, restore a version, answer receipts, the object model and reply ids, and test:contract checks the built engine exports them; no case drives a draft or a restore in the editor yet.
+    since: "2026-11-25"
   - id: vector.document.identity
     title: "A host reads the document id a .kvector carries (none: it embeds no replica) and forks it as the same bytes (document.identity, document.fork; Kit Process Protocol 5.6)"
     dimension: [platform, data-safety]

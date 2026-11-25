@@ -420,6 +420,35 @@ fn a_file_newer_than_its_stored_replica_wins_on_open() {
     assert_eq!(c.version().unwrap(), version);
 }
 
+/// A threaded story edited through the engine: after every step the engine's drawing (the
+/// session's own view, each frame showing its part of the story) is what a fresh read of the
+/// replica gives, which lays the story out through the frames again.
+#[test]
+fn a_threaded_story_shows_as_a_fresh_read_lays_it_out() {
+    let mut s = new_session();
+    let frames: Vec<u64> = (0..3).map(|k| rect(&mut s, &format!("F{k}"), 100.0 + 120.0 * f64::from(k), 300.0)).collect();
+    s.execute("select.set", &json!({"ids": frames})).unwrap();
+    s.execute("text.thread.create", &json!({})).unwrap();
+    assert_eq!(doc(&s).text_threads.len(), 1, "one thread of three frames");
+    assert_holds(&s, "threaded");
+    let first = doc(&s).text_threads[0][0].0;
+    let long = "The quick brown fox jumps over the lazy dog. ".repeat(12);
+    s.execute("text.editRange", &json!({"id": first, "start": 0, "end": 0, "insert": long})).unwrap();
+    assert_holds(&s, "typed into the first frame");
+    let last = *doc(&s).text_threads[0].last().unwrap();
+    let end = match &doc(&s).node(last).unwrap().kind {
+        NodeKind::Text(t) => t.plain_text().len(),
+        _ => panic!("the last frame is type"),
+    };
+    s.execute("text.editRange", &json!({"id": last.0, "start": end, "end": end, "insert": " The end."})).unwrap();
+    assert_holds(&s, "typed at the story's end, in the last frame");
+    move_object(&mut s, first, 0.0, 10.0);
+    assert_holds(&s, "a frame moved");
+    s.execute("edit.undo", &json!({})).unwrap();
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_holds(&s, "undone");
+}
+
 #[test]
 fn passthroughs_answer_before_any_edit() {
     let mut s = Session::new();

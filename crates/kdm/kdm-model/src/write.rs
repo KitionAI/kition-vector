@@ -296,6 +296,9 @@ pub(crate) fn settings(doc: &Document, ids: &Ids) -> KdmResult<Map<String, Value
             }
         }
     }
+    // A setting that is null is no key: writing null into a KDM map deletes the key, so a null
+    // kept here would read as a change on every comparison.
+    map.retain(|_, v| !v.is_null());
     Ok(map)
 }
 

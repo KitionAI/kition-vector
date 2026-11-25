@@ -143,6 +143,81 @@ impl VectorDocument {
         Ok(encode_blobs(&blobs))
     }
 
+    /// The replicated state, the replica made first if there is none yet.
+    pub(crate) fn replicated_state(&mut self) -> Result<Value, String> {
+        self.session.version().map_err(engine_error)?;
+        let kdm = self.session.kdm().ok_or("the drawing has no replica")?;
+        kdm.replica().state_json().map_err(engine_error)
+    }
+
+    /// Takes a draft's changes (from a replica forked from this one) in as one undo step of
+    /// `origin`'s scope (`mergeChanges`, as `kition-sdk`'s `export_kit_session!` answers it): the
+    /// engine's drawing follows, and Undo takes the whole draft back. Add the draft's blobs first.
+    /// Answers `{"damage", "summary"}`, `summary` the `StateDiff` of the replicated state before
+    /// and after. A refused merge changes nothing and fails with the KDM's message.
+    pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<Value, String> {
+        self.pass.reset();
+        let before = self.replicated_state()?;
+        let damage = self.session.merge_changes(bytes, origin).map_err(engine_error)?;
+        let after = self.replicated_state()?;
+        Ok(json!({ "damage": damage, "summary": kition_kit::kdm::diff::diff_states(&before, &after).to_json() }))
+    }
+
+    /// What merging a draft's changes would change in the drawing now, as `StateDiff` JSON;
+    /// nothing changes. Refuses what [`VectorDocument::merge_changes`] refuses.
+    pub fn compare_changes(&self, bytes: &[u8]) -> Result<Value, String> {
+        let kdm = self.session.kdm().ok_or("the drawing has no replica, so no draft of it")?;
+        let before = kdm.replica().state_json().map_err(engine_error)?;
+        let after = kdm.replica().merged_state(bytes).map_err(engine_error)?;
+        Ok(kition_kit::kdm::diff::diff_states(&before, &after).to_json())
+    }
+
+    /// Writes the state a snapshot holds (a checkpoint of this drawing, the Kit UI protocol's
+    /// `replica/restore`) over the drawing by object id, as one undo step of `origin`'s scope: the
+    /// engine's drawing follows. Add the blobs it references first. Nothing changes when the
+    /// states are equal; another document's snapshot is refused.
+    pub fn restore_state(&mut self, snapshot: &[u8], origin: &Origin) -> Result<Damage, String> {
+        self.pass.reset();
+        self.session.restore_state(snapshot, origin).map_err(engine_error)
+    }
+
+    /// An agent's reply (JSON text) with every object id it holds as a value or a key named as
+    /// the tool interface names it (its tool id, KitObjectModel OM9); unchanged without a replica
+    /// or when the schema declares no tool ids. The drawing keeps its own ids.
+    pub fn model_reply(&self, value: &str) -> Result<String, String> {
+        let value: Value = serde_json::from_str(value).map_err(|error| format!("the reply is not JSON: {error}"))?;
+        let Some(kdm) = self.session.kdm() else { return Ok(value.to_string()) };
+        let ids = kition_kit::kdm::tool_ids::ToolIds::of_replica(kdm.replica());
+        Ok(if ids.is_active() { ids.show_json(&value) } else { value }.to_string())
+    }
+
+    /// What changed since the version `since` (empty bytes: since the replica began), a receipt as
+    /// `kition-sdk`'s `changesSince` answers it: `{"changes": StateDiff}`, or `{"changes": null,
+    /// "unavailable": "<why>"}` when the replica's log does not hold `since` (or there is no
+    /// replica yet), never an empty change set in its place.
+    pub fn changes_since(&self, since: &[u8]) -> Value {
+        let Some(kdm) = self.session.kdm() else { return json!({ "changes": null, "unavailable": "the drawing has no replica yet" }) };
+        let replica = kdm.replica();
+        let since = if since.is_empty() { Ok(Version::empty()) } else { Version::decode(since) };
+        match since.and_then(|since| replica.changes_since(&since)) {
+            Ok(changes) => json!({ "changes": changes.to_recorded_json(replica.schema()) }),
+            Err(error) => json!({ "changes": null, "unavailable": error.to_string() }),
+        }
+    }
+
+    /// `model/describe` (KitObjectModel 1.0) as the in-page engine answers it: the same exchange
+    /// `kition-vector` serves headless (`kition_kit::session::model::Exchange`).
+    pub fn model_describe(&mut self) -> Result<Value, Value> {
+        kition_kit::session::model::Exchange::new().describe(self).map_err(|failure| failure.to_json())
+    }
+
+    /// `model/batch`: one undo step; a failure is the error's JSON (`{"code", "index", "message"}`).
+    pub fn model_batch(&mut self, request: &str) -> Result<Value, Value> {
+        let request: Value = serde_json::from_str(request)
+            .map_err(|failure| json!({ "code": "invalid-op", "index": null, "message": format!("the batch is not JSON: {failure}") }))?;
+        kition_kit::session::model::Exchange::new().batch(self, &request, false).map_err(|failure| failure.to_json())
+    }
+
     /// How many times the drawing left its replica because it refused a write or an undo (a
     /// drawing it cannot hold, or a bug). The drawing keeps working, undoing from its
     /// own history; the next shared edit makes a fresh replica, which collaborators must resync
@@ -327,6 +402,149 @@ mod tests {
         assert_eq!(b.0.len(), 2);
         assert_eq!(b.0.get(&"a".repeat(64)).map(|v| v.as_ref()), Some(b"hello".as_ref()));
         assert_eq!(b.0.get(&"b".repeat(64)).map(|v| v.as_ref()), Some(b"".as_ref()));
+    }
+
+    /// How many objects the drawing shows, layers and groups included.
+    fn object_count(doc: &VectorDocument) -> usize {
+        fn walk(node: &Value) -> usize {
+            1 + node["children"].as_array().into_iter().flatten().map(walk).sum::<usize>()
+        }
+        doc.inspect().unwrap()["layers"].as_array().into_iter().flatten().map(walk).sum()
+    }
+
+    /// A draft of `doc` (a replica opened from its snapshot) with one more ellipse, and its
+    /// changes since the fork.
+    fn draft_changes(doc: &mut VectorDocument) -> Vec<u8> {
+        let base = doc.version().unwrap();
+        let mut draft = VectorDocument::open_with_replica("Logo.kvector", &[], &doc.snapshot().unwrap(), &doc.blobs().unwrap()).unwrap();
+        assert!(draft.has_replica());
+        draft.execute("shape.ellipse", json!({ "x": 300, "y": 200, "width": 30, "height": 30 })).unwrap();
+        draft.export_changes(&base).unwrap()
+    }
+
+    /// A draft merges in as one step of the person's Undo: the engine's drawing follows, an edit
+    /// made here meanwhile stays, and a refused merge changes nothing.
+    #[test]
+    fn a_draft_merges_in_as_one_undo_step_and_the_drawing_follows() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let changes = draft_changes(&mut doc);
+        doc.execute("shape.rectangle", json!({ "x": 10, "y": 10, "width": 10, "height": 10 })).unwrap();
+        let before = object_count(&doc);
+        let origin = Origin::person("person:local");
+        let answer = doc.merge_changes(&changes, &origin).unwrap();
+        assert_ne!(answer["damage"], json!("none"), "{answer}");
+        assert!(answer["summary"].is_object(), "{answer}");
+        assert_eq!(object_count(&doc), before + 1, "the engine's drawing follows the merge");
+        assert!(doc.dirty());
+        assert!(doc.undo().unwrap().0);
+        assert_eq!(object_count(&doc), before, "one undo takes the whole draft back, the edit made here stays");
+        assert!(doc.redo().unwrap().0);
+        assert_eq!(object_count(&doc), before + 1, "redo brings the draft back");
+        let at = doc.version().unwrap();
+        assert!(doc.merge_changes(b"not changes", &origin).is_err());
+        assert_eq!(doc.version().unwrap(), at, "a refused merge changes nothing");
+    }
+
+    /// Comparing a draft names what merging it would do and changes nothing.
+    #[test]
+    fn comparing_a_draft_names_what_the_merge_does_and_changes_nothing() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let changes = draft_changes(&mut doc);
+        let (version, before) = (doc.version().unwrap(), object_count(&doc));
+        let preview = doc.compare_changes(&changes).unwrap();
+        assert_eq!(doc.version().unwrap(), version, "comparing changes nothing");
+        assert_eq!(object_count(&doc), before);
+        let answer = doc.merge_changes(&changes, &Origin::person("person:local")).unwrap();
+        assert_eq!(answer["summary"], preview, "the comparison named what the merge did: {answer}");
+        assert!(doc.compare_changes(b"not changes").is_err());
+    }
+
+    /// An earlier state (a checkpoint's snapshot) is written over the drawing by object id as one
+    /// undo step: the replica holds that state again, with the same ids, and Undo takes it back.
+    #[test]
+    fn a_restored_state_keeps_the_ids_and_undoes_as_one_step() {
+        use kition_kit::kdm::{ActorId, Replica};
+        use kition_kit::session::KitModel;
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        doc.version().unwrap();
+        let checkpoint = doc.snapshot().unwrap();
+        let before = object_count(&doc);
+        extra_edit(&mut doc);
+        assert_eq!(object_count(&doc), before + 1);
+        let origin = Origin::person("person:local");
+        assert_ne!(doc.restore_state(&checkpoint, &origin).unwrap(), Damage::None);
+        assert_eq!(object_count(&doc), before, "the engine's drawing follows the restore");
+        let then = Replica::load(<kdm_model::VectorModel as KitModel>::schema(), &checkpoint, ActorId::random()).unwrap().state_json().unwrap();
+        assert_eq!(doc.replicated_state().unwrap()["objects"], then["objects"], "the checkpoint's objects, under their ids");
+        let at = doc.version().unwrap();
+        assert_eq!(doc.restore_state(&checkpoint, &origin).unwrap(), Damage::None, "the same state again changes nothing");
+        assert_eq!(doc.version().unwrap(), at);
+        assert!(doc.undo().unwrap().0);
+        assert_eq!(object_count(&doc), before + 1, "one undo takes the restore back");
+        let mut other = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        assert!(doc.restore_state(&other.snapshot().unwrap(), &origin).is_err(), "another document's state is refused");
+    }
+
+    /// An agent's reply names objects by their tool ids; text that merely holds an id stays.
+    #[test]
+    fn a_reply_names_objects_by_their_tool_ids() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let state = doc.replicated_state().unwrap();
+        let artboard = state["objects"]
+            .as_object()
+            .unwrap()
+            .iter()
+            .find(|(_, object)| object["$type"] == "Artboard")
+            .map(|(id, _)| id.clone())
+            .unwrap_or_else(|| panic!("an artboard object: {state}"));
+        let shown: Value =
+            serde_json::from_str(&doc.model_reply(&json!({ "target": artboard, "note": format!("about {artboard}") }).to_string()).unwrap()).unwrap();
+        assert!(shown["target"].as_str().is_some_and(|id| id.starts_with("artboard:")), "{shown}");
+        assert_eq!(shown["note"], json!(format!("about {artboard}")), "text that holds an id stays");
+        assert!(doc.model_reply("not json").is_err());
+    }
+
+    /// A receipt names what changed since a version; one the drawing has no replica for, or a
+    /// version that is no version, is unavailable, never an empty change set.
+    #[test]
+    fn changes_since_a_version_answer_what_changed() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let none = doc.changes_since(&[]);
+        assert!(none["changes"].is_null() && none["unavailable"].is_string(), "{none}");
+        let since = doc.version().unwrap();
+        extra_edit(&mut doc);
+        let answer = doc.changes_since(&since);
+        assert!(answer["changes"].is_object(), "{answer}");
+        let now = doc.version().unwrap();
+        let nothing = doc.changes_since(&now);
+        assert!(nothing["changes"].is_object(), "{nothing}");
+        assert_ne!(answer["changes"], nothing["changes"], "the edit is in the receipt since before it");
+        let refused = doc.changes_since(b"not a version");
+        assert!(refused["changes"].is_null() && refused["unavailable"].is_string(), "{refused}");
+    }
+
+    /// `modelDescribe` answers the object model with the engine's commands.
+    #[test]
+    fn model_describe_answers_the_object_model() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let described = doc.model_describe().unwrap();
+        assert_eq!(described["capability"], "KitObjectModel 1.0");
+        assert!(described["commands"].as_array().unwrap().iter().any(|command| command["id"] == "shape.ellipse"));
+    }
+
+    /// `modelBatch` runs a batch's command on the engine's drawing, which Undo takes back, and
+    /// refuses a request that is not JSON.
+    #[test]
+    fn model_batch_runs_its_command_on_the_drawing() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let before = object_count(&doc);
+        let request = json!({ "ops": [{ "op": "command", "id": "shape.ellipse", "params": { "x": 10, "y": 10, "width": 20, "height": 20 } }] });
+        doc.model_batch(&request.to_string()).unwrap();
+        assert_eq!(object_count(&doc), before + 1);
+        assert!(doc.undo().unwrap().0);
+        assert_eq!(object_count(&doc), before, "undo takes the batch's command back");
+        let refused = doc.model_batch("not json").unwrap_err();
+        assert_eq!(refused["code"], "invalid-op", "{refused}");
     }
 
     #[test]

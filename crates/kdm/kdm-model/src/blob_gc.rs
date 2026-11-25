@@ -186,6 +186,16 @@ impl BlobIndex {
         steps.undo.push_back(moved.all());
     }
 
+    /// Drops the top step of `scope`'s undo (`undo`) or redo stack: one the replica passed over.
+    pub fn drop_top(&mut self, scope: UndoScope, undo: bool) {
+        let steps = self.scope(scope);
+        if undo {
+            steps.undo.pop_back();
+        } else {
+            steps.redo.pop();
+        }
+    }
+
     pub fn undo_steps(&self, scope: UndoScope) -> usize {
         self.steps.get(slot(scope)).map_or(0, |s| s.undo.len())
     }
