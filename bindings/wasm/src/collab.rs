@@ -150,9 +150,10 @@ impl VectorDocument {
         kdm.replica().state_json().map_err(engine_error)
     }
 
-    /// Takes a draft's changes (from a replica forked from this one) in as one undo step of
-    /// `origin`'s scope (`mergeChanges`, as `kition-sdk`'s `export_kit_session!` answers it): the
-    /// engine's drawing follows, and Undo takes the whole draft back. Add the draft's blobs first.
+    /// Takes a draft's changes (from a replica forked from this one) in as one undo step of the
+    /// person, even when `origin` is an agent's (the person accepted the draft, KitModel M12a;
+    /// `mergeChanges`, as `kition-sdk`'s `export_kit_session!` answers it): the engine's drawing
+    /// follows, and the person's Undo takes the whole draft back. Add the draft's blobs first.
     /// Answers `{"damage", "summary"}`, `summary` the `StateDiff` of the replicated state before
     /// and after. A refused merge changes nothing and fails with the KDM's message.
     pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<Value, String> {
@@ -182,12 +183,23 @@ impl VectorDocument {
     }
 
     /// An agent's reply (JSON text) with every object id it holds as a value or a key named as
-    /// the tool interface names it (its tool id, KitObjectModel OM9); unchanged without a replica
-    /// or when the schema declares no tool ids. The drawing keeps its own ids.
+    /// the tool interface names it (its tool id, KitObjectModel OM9); unchanged without a replica,
+    /// when it names no object, or when the schema declares no tool ids. The drawing keeps its own
+    /// ids.
+    ///
+    /// The editor asks this for every agent reply (`ai/inspect`, `document/check`, `ai/run`): the
+    /// tool ids are read for the objects the reply names alone (`Replica::tool_ids_of`), not for
+    /// the whole drawing's.
     pub fn model_reply(&self, value: &str) -> Result<String, String> {
         let value: Value = serde_json::from_str(value).map_err(|error| format!("the reply is not JSON: {error}"))?;
         let Some(kdm) = self.session.kdm() else { return Ok(value.to_string()) };
-        let ids = kition_kit::kdm::tool_ids::ToolIds::of_replica(kdm.replica());
+        let replica = kdm.replica();
+        let mut named = std::collections::BTreeSet::new();
+        objects_named(&value, &|text| Some(kition_kit::kdm::ObjectId::from_string(text)).filter(|id| replica.exists(id)), &mut named);
+        if named.is_empty() {
+            return Ok(value.to_string());
+        }
+        let ids = replica.tool_ids_of(&named);
         Ok(if ids.is_active() { ids.show_json(&value) } else { value }.to_string())
     }
 
@@ -224,6 +236,32 @@ impl VectorDocument {
     /// (its full [`VectorDocument::snapshot`]). Hosts watch this.
     pub fn kdm_resets(&self) -> u32 {
         u32::try_from(self.session.kdm_resets()).unwrap_or(u32::MAX)
+    }
+}
+
+/// The objects `value` names: every string and key in it, and each `:`-separated part of one, that
+/// `object` takes for an object of the drawing.
+fn objects_named(
+    value: &Value,
+    object: &dyn Fn(&str) -> Option<kition_kit::kdm::ObjectId>,
+    out: &mut std::collections::BTreeSet<kition_kit::kdm::ObjectId>,
+) {
+    fn add(text: &str, object: &dyn Fn(&str) -> Option<kition_kit::kdm::ObjectId>, out: &mut std::collections::BTreeSet<kition_kit::kdm::ObjectId>) {
+        out.extend(object(text));
+        if text.contains(':') {
+            out.extend(text.split(':').filter(|part| !part.is_empty()).filter_map(object));
+        }
+    }
+    match value {
+        Value::String(text) => add(text, object, out),
+        Value::Array(items) => items.iter().for_each(|item| objects_named(item, object, out)),
+        Value::Object(map) => {
+            for (key, item) in map {
+                add(key, object, out);
+                objects_named(item, object, out);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -422,32 +460,77 @@ mod tests {
         draft.export_changes(&base).unwrap()
     }
 
-    /// A draft merges in as one step of the person's Undo: the engine's drawing follows, an edit
-    /// made here meanwhile stays, and a refused merge changes nothing.
+    /// The engine's own drawing, id-blind, as the replica holds it.
+    fn view(doc: &VectorDocument) -> Value {
+        kdm_model::normalize(&kdm_model::shared_part(&doc.session.active().unwrap().doc))
+    }
+
+    /// The kinds of the objects of the drawing's first layer, bottom first.
+    fn kinds(doc: &VectorDocument) -> Vec<String> {
+        let d = &doc.session.active().unwrap().doc;
+        d.layers[0].children().unwrap().iter().map(|n| n.kind_label().to_owned()).collect()
+    }
+
+    /// A draft merges in as one step of the person's Undo: the engine's drawing follows, the edits
+    /// made here meanwhile stay (a recolour, and an ellipse added to the layer the draft adds a
+    /// rectangle to: both land, this side's first, data model 6.6 D6/D7), Undo gives back the
+    /// exact state before and Redo the exact merged state, and a refused merge changes nothing.
     #[test]
     fn a_draft_merges_in_as_one_undo_step_and_the_drawing_follows() {
         let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
-        let changes = draft_changes(&mut doc);
-        // Meanwhile, here: the fixture's rectangle is recoloured (another field than the draft's).
+        let base = doc.version().unwrap();
+        let mut draft = VectorDocument::open_with_replica("Logo.kvector", &[], &doc.snapshot().unwrap(), &doc.blobs().unwrap()).unwrap();
+        draft.execute("shape.rectangle", json!({ "x": 300, "y": 200, "width": 30, "height": 30 })).unwrap();
+        let changes = draft.export_changes(&base).unwrap();
+        // Meanwhile, here: the fixture's rectangle is recoloured, and an ellipse is added.
         doc.execute("select.all", json!({})).unwrap();
         doc.execute("paint.setFill", json!({ "color": "#00ff00" })).unwrap();
         doc.execute("select.none", json!({})).unwrap();
-        let recoloured = doc.replicated_state().unwrap();
+        doc.execute("shape.ellipse", json!({ "x": 200, "y": 150, "width": 60, "height": 60 })).unwrap();
+        doc.execute("select.none", json!({})).unwrap();
+        assert_eq!(kinds(&doc), ["Rectangle", "Ellipse"]);
+        let (state, drawing) = (doc.replicated_state().unwrap(), view(&doc));
         let before = object_count(&doc);
         let origin = Origin::person("person:local");
         let answer = doc.merge_changes(&changes, &origin).unwrap();
         assert_ne!(answer["damage"], json!("none"), "{answer}");
         assert!(answer["summary"].is_object(), "{answer}");
         assert_eq!(object_count(&doc), before + 1, "the engine's drawing follows the merge");
+        assert_eq!(kinds(&doc), ["Rectangle", "Ellipse", "Rectangle"], "both are there, this side's first");
+        let (merged, merged_drawing) = (doc.replicated_state().unwrap(), view(&doc));
         assert!(doc.dirty());
         assert!(doc.undo().unwrap().0);
         assert_eq!(object_count(&doc), before, "one undo takes the whole draft back");
-        assert_eq!(doc.replicated_state().unwrap()["objects"], recoloured["objects"], "the edit made here stays");
+        assert_eq!(doc.replicated_state().unwrap()["objects"], state["objects"], "the edit made here stays");
+        assert_eq!(doc.replicated_state().unwrap(), state, "undo gives back the exact state before");
+        assert_eq!(view(&doc), drawing, "and the engine's drawing before");
         assert!(doc.redo().unwrap().0);
         assert_eq!(object_count(&doc), before + 1, "redo brings the draft back");
+        assert_eq!(doc.replicated_state().unwrap(), merged, "redo gives back the exact merged state");
+        assert_eq!(view(&doc), merged_drawing);
         let at = doc.version().unwrap();
         assert!(doc.merge_changes(b"not changes", &origin).is_err());
         assert_eq!(doc.version().unwrap(), at, "a refused merge changes nothing");
+    }
+
+    /// An agent's draft merges as one step of the person's Undo (KitModel M12a), the origin the
+    /// editor passes (`draft/merge` records the agent): the person's Undo takes it back, the
+    /// agent's has nothing to take.
+    #[test]
+    fn an_agents_draft_is_one_step_of_the_persons_undo() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        let changes = draft_changes(&mut doc);
+        let state = doc.replicated_state().unwrap();
+        let agent = Origin::agent("agent:helper");
+        doc.merge_changes(&changes, &agent).unwrap();
+        let merged = doc.replicated_state().unwrap();
+        assert!(doc.execute_as("edit.undo", json!({}), &agent).is_err(), "the agent's Undo has nothing to take");
+        assert_eq!(doc.replicated_state().unwrap(), merged);
+        assert!(doc.undo().unwrap().0, "the person's Undo takes the draft");
+        assert_eq!(doc.replicated_state().unwrap(), state);
+        let kdm = doc.session.kdm().unwrap();
+        assert_eq!(kdm.steps(kition_vector_engine::UndoScope::Agent), (0, 0), "the replica holds no step of the agent");
+        assert_eq!(kdm.steps(kition_vector_engine::UndoScope::Person).1, 1, "the person's Redo holds the draft");
     }
 
     /// Comparing a draft names what merging it would do and changes nothing.
@@ -476,16 +559,23 @@ mod tests {
         let before = object_count(&doc);
         extra_edit(&mut doc);
         assert_eq!(object_count(&doc), before + 1);
+        let (edited, edited_drawing) = (doc.replicated_state().unwrap(), view(&doc));
         let origin = Origin::person("person:local");
         assert_ne!(doc.restore_state(&checkpoint, &origin).unwrap(), Damage::None);
         assert_eq!(object_count(&doc), before, "the engine's drawing follows the restore");
         let then = Replica::load(<kdm_model::VectorModel as KitModel>::schema(), &checkpoint, ActorId::random()).unwrap().state_json().unwrap();
         assert_eq!(doc.replicated_state().unwrap()["objects"], then["objects"], "the checkpoint's objects, under their ids");
         let at = doc.version().unwrap();
+        let (restored, restored_drawing) = (doc.replicated_state().unwrap(), view(&doc));
         assert_eq!(doc.restore_state(&checkpoint, &origin).unwrap(), Damage::None, "the same state again changes nothing");
         assert_eq!(doc.version().unwrap(), at);
         assert!(doc.undo().unwrap().0);
         assert_eq!(object_count(&doc), before + 1, "one undo takes the restore back");
+        assert_eq!(doc.replicated_state().unwrap(), edited, "undo gives back the exact state before the restore");
+        assert_eq!(view(&doc), edited_drawing, "and the engine's drawing before");
+        assert!(doc.redo().unwrap().0);
+        assert_eq!(doc.replicated_state().unwrap(), restored, "redo gives back the exact restored state");
+        assert_eq!(view(&doc), restored_drawing);
         let mut other = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
         assert!(doc.restore_state(&other.snapshot().unwrap(), &origin).is_err(), "another document's state is refused");
     }
@@ -507,6 +597,36 @@ mod tests {
         assert!(shown["target"].as_str().is_some_and(|id| id.starts_with("artboard:")), "{shown}");
         assert_eq!(shown["note"], json!(format!("about {artboard}")), "text that holds an id stays");
         assert!(doc.model_reply("not json").is_err());
+    }
+
+    /// `modelReply` reads the tool ids of the objects a reply names alone: in a drawing of many
+    /// objects, a reply naming one, or every one, gives the ids the whole drawing's give; a reply
+    /// naming none comes back unchanged.
+    #[test]
+    fn a_reply_names_the_objects_it_holds_as_the_whole_drawings_ids_do() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        for k in 0..200 {
+            doc.execute("shape.rectangle", json!({ "x": k % 20 * 15, "y": k / 20 * 15, "width": 10, "height": 10 })).unwrap();
+        }
+        let state = doc.replicated_state().unwrap();
+        let objects: Vec<String> = state["objects"].as_object().unwrap().keys().cloned().collect();
+        assert!(objects.len() > 200, "{}", objects.len());
+        let whole = |doc: &VectorDocument, reply: &Value| {
+            kition_kit::kdm::tool_ids::ToolIds::of_replica(doc.session.kdm().unwrap().replica()).show_json(reply)
+        };
+        let node =
+            objects.iter().find(|id| state["objects"][id.as_str()]["$type"] == "Node").unwrap_or_else(|| panic!("a node object: {state}")).clone();
+        for reply in [
+            json!({ "target": node, "note": format!("about {node}") }),
+            json!({ "objects": objects }),
+            json!({ "changed": Value::Object([(node.clone(), json!({ "by": node }))].into_iter().collect()) }),
+        ] {
+            let shown: Value = serde_json::from_str(&doc.model_reply(&reply.to_string()).unwrap()).unwrap();
+            assert_eq!(shown, whole(&doc, &reply), "the same tool ids as the whole drawing's");
+            assert_ne!(shown, reply, "the reply names objects: {shown}");
+        }
+        let plain = json!({ "summary": "Logo", "names": ["Rectangle", "Ellipse"], "count": 201 });
+        assert_eq!(serde_json::from_str::<Value>(&doc.model_reply(&plain.to_string()).unwrap()).unwrap(), plain, "a reply naming none stays");
     }
 
     /// A receipt names what changed since a version; one the drawing has no replica for, or a

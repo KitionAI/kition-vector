@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-identity
 feature: vector.agent.premises
-intent: A swatch, graphic style, character or paragraph style, symbol or pattern has a persistent identity saved with it (its tool id, `swatch:<uid>`); a rename keeps it, so the receipt and a read of the saved file tell the same change, an entry a model batch creates gets one in the batch.
+intent: A swatch, graphic style, character or paragraph style, symbol or pattern has a persistent identity saved with it (its tool id, `swatch:<uid>`); a rename keeps it, so the receipt and a read of the saved file tell the same change, an entry a model batch creates gets one in the batch, and a draft merged after the person created or renamed an entry of the same name meanwhile leaves no identity held twice.
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-5, license: Apache-2.0}

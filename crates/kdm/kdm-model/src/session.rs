@@ -210,7 +210,9 @@ impl VectorSession {
     pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<(u32, Damage)> {
         let before = self.replica.version();
         self.replica.merge_changes(bytes, origin).map_err(kit_err)?;
-        self.took_in(&before, origin)
+        // The person's step even when an agent made the draft: the person accepted it (M12a), as
+        // the replica records it.
+        self.took_in(&before, UndoScope::of(origin.kind).map(|_| UndoScope::Person))
     }
 
     /// Writes the state `snapshot` holds (a snapshot or content of this drawing, as a host's
@@ -234,18 +236,18 @@ impl VectorSession {
             self.replica.take_changed();
             return Err(kit_err(error));
         }
-        self.took_in(&before, origin)
+        self.took_in(&before, UndoScope::of(origin.kind))
     }
 
-    /// After a merge or a restore wrote one transaction of `origin` since `before`: repairs and
-    /// patches the view as an import does, and counts the transaction as an undo step of its
-    /// scope. A failed repair or view load is the error, as an import's is: the transaction stays
+    /// After a merge or a restore wrote one transaction since `before`: repairs and patches the
+    /// view as an import does, and counts the transaction as an undo step of `scope` (`None`: a
+    /// `system` or `import` one, no undo step). A failed repair or view load is the error, as an import's is: the transaction stays
     /// ([`VectorSession::view_loaded`] tells whether the view followed).
-    fn took_in(&mut self, before: &Version, origin: &Origin) -> Result<(u32, Damage)> {
+    fn took_in(&mut self, before: &Version, scope: Option<UndoScope>) -> Result<(u32, Damage)> {
         let wrote = self.replica.version() != *before;
         let (damage, moved) = self.settle();
         self.log_added(moved.added.iter().cloned());
-        let scope = UndoScope::of(origin.kind).filter(|_| wrote);
+        let scope = scope.filter(|_| wrote);
         if let Some(scope) = scope {
             self.index.push_step(scope, moved);
         }

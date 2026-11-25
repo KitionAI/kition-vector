@@ -5,7 +5,8 @@
 //! selection-only changes write nothing, the history limit never loses an edit, a remote deletion
 //! of the selection moves it on, and two sessions taking turns at random commands, each taking
 //! the other's changes in order, end equal, with the engine's drawing equal to its own replica
-//! after every step.
+//! after every step. A draft merges as one undo step of the person (an agent's draft too), beside
+//! the person's edits made meanwhile, and a draft that collides with them is refused.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use kition_vector_engine::doc::{Document, NodeId, NodeKind};
@@ -394,6 +395,142 @@ fn an_agent_undo_under_the_persons_later_step_keeps_the_persons_edit() {
     assert_eq!(x_of(doc(&a), "B"), xb + 5.0);
     assert!(a.execute("edit.undo", &json!({"scope": "other"})).is_err(), "an unknown scope is refused");
     assert_holds(&a, "after scoped undo and redo");
+}
+
+/// A draft of `a`'s drawing (a replica opened from its snapshot) and the version it was made at.
+fn draft_of(a: &mut Session) -> (Session, Version) {
+    let base = a.version().unwrap();
+    (peer(a), base)
+}
+
+/// The names of the objects beside `name`, in their stacking order (bottom first).
+fn siblings(d: &Document, name: &str) -> Vec<String> {
+    let parent = d.parent_of(NodeId(named(d, name))).unwrap();
+    d.node(parent).unwrap().children().unwrap().iter().map(|n| n.name.clone().unwrap_or_default()).collect()
+}
+
+/// The undo and redo steps of the session's history for `origin`'s scope (the person's for the
+/// local person, the agents' for an agent).
+fn history_of(s: &mut Session, origin: Option<Origin>) -> (usize, usize) {
+    let previous = s.set_origin(origin);
+    let st = s.active().unwrap();
+    let steps = (st.history.undo.len(), st.history.redo.len());
+    s.set_origin(previous);
+    steps
+}
+
+/// The replica's undo and redo steps of the person and of the agents.
+fn replica_scopes(s: &Session) -> [(usize, usize); 2] {
+    let kdm = s.kdm().unwrap();
+    [kdm.steps(UndoScope::Person), kdm.steps(UndoScope::Agent)]
+}
+
+/// KitModel M12a, data model 6.6 D9: a draft an agent made merges as one undo step of the person
+/// who accepts it, whatever origin the merge records (the editor records the agent's). The
+/// person's Undo takes it back to the exact state before and Redo brings the exact merged state
+/// back; the agent's Undo has nothing to take; the replica's histories and the engine's agree.
+#[test]
+fn an_agents_draft_merges_as_one_step_of_the_persons_undo() {
+    let mut a = new_session();
+    let agent = Origin::agent("agent:helper");
+    let (mut b, base) = draft_of(&mut a);
+    b.set_origin(Some(agent.clone()));
+    let layer_a = named(doc(&b), "A");
+    b.execute("layer.setCurrent", &json!({"id": layer_a})).unwrap();
+    rect(&mut b, "D", 500.0, 100.0);
+    let changes = b.export_changes(&base).unwrap();
+
+    let (hash, view) = (a.state_hash().unwrap(), canonical(doc(&a)));
+    let [person, agents] = replica_scopes(&a);
+    let (mine, theirs) = (history_of(&mut a, None), history_of(&mut a, Some(agent.clone())));
+    assert_eq!(theirs, (0, 0), "the agent has no step yet");
+    a.merge_changes(&changes, &agent).unwrap();
+    assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "D"], "the draft's rectangle is in the drawing");
+    assert_holds(&a, "merged");
+    let (merged_hash, merged_view) = (a.state_hash().unwrap(), canonical(doc(&a)));
+    assert_eq!(replica_scopes(&a), [(person.0 + 1, 0), agents], "the replica records the merge as the person's step");
+    assert_eq!(history_of(&mut a, None), (mine.0 + 1, 0), "the engine records it as the person's step");
+    assert_eq!(history_of(&mut a, Some(agent.clone())), (0, 0), "and not as the agent's");
+
+    assert!(a.execute_as("edit.undo", &json!({}), &agent).is_err(), "the agent's Undo has nothing to take");
+    assert_eq!(a.state_hash().unwrap(), merged_hash, "the agent's Undo does not take the merge back");
+
+    a.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(a.state_hash().unwrap(), hash, "the person's Undo gives back the exact state before");
+    assert!(canonical(doc(&a)) == view, "and the engine's drawing before");
+    assert_holds(&a, "merge undone");
+    assert_eq!(replica_scopes(&a), [(person.0, 1), agents]);
+    assert_eq!(history_of(&mut a, None), (mine.0, 1));
+
+    a.execute("edit.redo", &json!({})).unwrap();
+    assert_eq!(a.state_hash().unwrap(), merged_hash, "Redo gives back the exact merged state");
+    assert!(canonical(doc(&a)) == merged_view, "and the engine's merged drawing");
+    assert_holds(&a, "merge redone");
+    assert_eq!(replica_scopes(&a), [(person.0 + 1, 0), agents]);
+}
+
+/// Data model 6.6 D6/D7: a draft adds a rectangle to the first layer while the person adds an
+/// ellipse to it meanwhile; both land, the person's first, and one Undo of the person takes back
+/// the draft's alone, to the exact state before the merge.
+#[test]
+fn a_draft_and_the_persons_meanwhile_edit_adding_to_one_layer_both_land() {
+    let mut a = new_session();
+    let (mut b, base) = draft_of(&mut a);
+    let in_b = named(doc(&b), "A");
+    b.execute("layer.setCurrent", &json!({"id": in_b})).unwrap();
+    rect(&mut b, "D", 500.0, 100.0);
+    let changes = b.export_changes(&base).unwrap();
+
+    let in_a = named(doc(&a), "A");
+    a.execute("layer.setCurrent", &json!({"id": in_a})).unwrap();
+    let e = a.execute("shape.ellipse", &json!({"x": 500, "y": 300, "width": 60, "height": 60})).unwrap()["id"].as_u64().unwrap();
+    a.execute("layer.setProps", &json!({"id": e, "name": "E"})).unwrap();
+    a.execute("select.none", &json!({})).unwrap();
+    assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "E"]);
+    let (hash, view) = (a.state_hash().unwrap(), canonical(doc(&a)));
+
+    a.merge_changes(&changes, &Origin::person("person:local")).unwrap();
+    assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "E", "D"], "both are there, the person's first");
+    assert_holds(&a, "merged");
+    let merged = (a.state_hash().unwrap(), canonical(doc(&a)));
+
+    a.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "E"], "one Undo takes back the draft's alone");
+    assert_eq!(a.state_hash().unwrap(), hash, "the exact state before the merge");
+    assert!(canonical(doc(&a)) == view, "the engine's drawing before the merge");
+    assert_holds(&a, "merge undone");
+    a.execute("edit.redo", &json!({})).unwrap();
+    assert_eq!(a.state_hash().unwrap(), merged.0, "Redo gives back the exact merged state");
+    assert!(canonical(doc(&a)) == merged.1);
+    assert_holds(&a, "merge redone");
+}
+
+/// Data model 6.6 D7/D9: a draft that moves an object the person moved meanwhile is refused, and
+/// the refused merge changes nothing.
+#[test]
+fn a_draft_moving_the_object_the_person_moved_meanwhile_is_refused() {
+    let mut a = new_session();
+    let (mut b, base) = draft_of(&mut a);
+    let in_b = named(doc(&b), "A");
+    b.execute("select.set", &json!({"ids": [in_b]})).unwrap();
+    b.execute("object.arrange.bringToFront", &json!({})).unwrap();
+    assert_eq!(siblings(doc(&b), "A"), vec!["B", "A"]);
+    let changes = b.export_changes(&base).unwrap();
+
+    let (in_a, c) = (named(doc(&a), "A"), named(doc(&a), "C"));
+    a.execute("layer.setCurrent", &json!({"id": c})).unwrap();
+    a.execute("select.set", &json!({"ids": [in_a]})).unwrap();
+    a.execute("object.arrange.sendToCurrentLayer", &json!({})).unwrap();
+    assert_eq!(siblings(doc(&a), "A"), vec!["C", "A"], "the person moved A to the layer Notes");
+    let (version, hash, view) = (a.version().unwrap(), a.state_hash().unwrap(), canonical(doc(&a)));
+    let history = history_of(&mut a, None);
+
+    let refused = a.merge_changes(&changes, &Origin::person("person:local")).unwrap_err().to_string();
+    assert!(refused.contains("collides"), "{refused}");
+    assert_eq!(a.version().unwrap(), version, "a refused merge changes nothing");
+    assert_eq!(a.state_hash().unwrap(), hash);
+    assert!(canonical(doc(&a)) == view);
+    assert_eq!(history_of(&mut a, None), history, "and makes no undo step");
 }
 
 #[test]

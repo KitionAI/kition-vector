@@ -1,13 +1,13 @@
-//! Shared test helpers: a drawing to edit, a blob store shared between replicas, and replicas
-//! over `KitSession<VectorModel>` that take each other's changes in order. Each `tests/*.rs`
-//! binary uses only some.
+//! Shared test helpers: a drawing to edit, a blob store shared between replicas, replicas over
+//! `KitSession<VectorModel>` that take each other's changes in order, and drafts merged back.
+//! Each `tests/*.rs` binary uses only some.
 #![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::collections::{BTreeSet, HashMap};
 use std::sync::{Arc, Mutex};
 
 use kdm_model::{Ids, VectorModel, write_changes, write_document};
-use kition_kit::kdm::{ActorId, DocId, ObjectId, Origin, Replica};
+use kition_kit::kdm::{ActorId, DocId, ObjectId, Origin, Replica, Version};
 use kition_kit::session::{BlobRef, BlobSink, BlobSource, KitError, KitModel, KitSession, sha256_hex};
 use kition_vector_doc::color::{Color, Paint, Swatch};
 use kition_vector_doc::geom::{Affine, Rect, shapes};
@@ -192,6 +192,11 @@ pub fn peer(of: &Session, value: u64, blobs: &SharedBlobs) -> Session {
 
 /// Edits `session`'s view with `f` and records what changed, the way the engine bridge does.
 pub fn edit(session: &mut Session, blobs: &SharedBlobs, f: impl FnOnce(&mut Document)) {
+    edit_as(session, blobs, &person("test"), f);
+}
+
+/// [`edit`] recorded as `origin` (an `import` one: a file changed outside, read again).
+pub fn edit_as(session: &mut Session, blobs: &SharedBlobs, origin: &Origin, f: impl FnOnce(&mut Document)) {
     let before = session.model().document().clone();
     let mut after = (*before).clone();
     f(&mut after);
@@ -199,9 +204,22 @@ pub fn edit(session: &mut Session, blobs: &SharedBlobs, f: impl FnOnce(&mut Docu
     let mut ids = session.model().ids().clone();
     let mut sink = blobs.clone();
     session
-        .record(&person("test"), |tx| write_changes(tx, &before, &after, &mut ids, &mut sink).map(|_| ()).map_err(KitError::from))
+        .record(origin, |tx| write_changes(tx, &before, &after, &mut ids, &mut sink).map(|_| ()).map_err(KitError::from))
         .unwrap_or_else(|error| panic!("record: {error}"));
     session.model_mut().adopt(after, ids);
+}
+
+/// A draft of `of` (a fork of its replica, actor `value`) and the version it was made at.
+pub fn draft(of: &Session, value: u64, blobs: &SharedBlobs) -> (Session, Version) {
+    let draft = of.fork(actor(value), Box::new(blobs.clone())).unwrap_or_else(|error| panic!("fork: {error}"));
+    (draft, of.version())
+}
+
+/// Merges `draft`'s changes since `base` into `into` as the person accepting them
+/// (`merge_changes`, data model 6.6); a refusal is the error.
+pub fn merge(draft: &Session, base: &Version, into: &mut Session) -> Result<(), String> {
+    let changes = draft.export_changes(base).unwrap_or_else(|error| panic!("export: {error}"));
+    into.merge_changes(&changes, &person("test")).map(|_| ()).map_err(|error| error.to_string())
 }
 
 /// Sends `from`'s changes that `to` lacks.
