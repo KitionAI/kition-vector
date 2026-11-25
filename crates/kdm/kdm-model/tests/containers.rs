@@ -132,7 +132,13 @@ fn a_threaded_story_is_one_text_and_edits_in_two_frames_reach_both_replicas() {
         }
     });
     sync(&mut a, &mut b);
-    assert_converged(&a, &b);
+    // B's own view keeps its typing in the frame it typed in; a read of the replica (A's, after
+    // the import, and a new replica's) gives the story from its first frame. So the views
+    // compared are reads: A's and that of a replica opened from B's.
+    assert_eq!(a.state_hash().ok(), b.state_hash().ok(), "same replica state");
+    assert_eq!(story(b.model().document()), "Zero One two three four");
+    let c = peer(&b, 3, &blobs);
+    assert_converged(&a, &c);
     assert_eq!(story(a.model().document()), "Zero One two three four");
     assert_eq!(a.model().document().text_threads.len(), 1);
 }
