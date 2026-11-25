@@ -1,4 +1,4 @@
-//! File → Document Setup (`document.setup`): validation, one undo step, round-trips, and the
+//! File → Document Setup (`file.setup`): validation, one undo step, round-trips, and the
 //! options other commands read (typographer's quotes, superscript/subscript, SVG text export).
 
 use kition_vector_doc::{CharPosition, DocSetup, ExportText, GridSize, NodeId, NodeKind, ScriptMetrics, TextObject, TextStyleDef, Unit};
@@ -25,7 +25,7 @@ fn text(s: &Session, id: NodeId) -> TextObject {
 }
 
 fn create_text(s: &mut Session, t: &str) -> NodeId {
-    NodeId(s.execute("text.create", &json!({"x": 10, "y": 50, "text": t, "size": 20})).unwrap()["id"].as_u64().unwrap())
+    NodeId(s.execute("text.add", &json!({"x": 10, "y": 50, "text": t, "size": 20})).unwrap()["id"].as_u64().unwrap())
 }
 
 /// Click with the Type tool at (x, y) and type `keys` one at a time; returns the new text object.
@@ -46,7 +46,7 @@ fn type_at(s: &mut Session, x: f64, y: f64, keys: &[&str]) -> NodeId {
 #[test]
 fn query_reports_the_defaults_and_accepts_them_back() {
     let mut s = session();
-    let q = s.execute("document.setup", &json!({})).unwrap();
+    let q = s.execute("file.setup", &json!({})).unwrap();
     assert_eq!(q["units"], "Points");
     assert_eq!(q["bleed"], json!([0.0, 0.0, 0.0, 0.0]));
     assert_eq!(q["gridColors"], json!(["#ffffff", "#cccccc"]));
@@ -57,7 +57,7 @@ fn query_reports_the_defaults_and_accepts_them_back() {
     assert_eq!(q["typographersQuotes"], true);
     assert_eq!(q["superscript"], json!({"size": 58.3, "position": 33.3}));
     // Feeding the report back changes nothing (and records no undo step).
-    assert_eq!(s.execute("document.setup", &q).unwrap(), q);
+    assert_eq!(s.execute("file.setup", &q).unwrap(), q);
     assert!(s.doc().unwrap().history.undo.is_empty());
     assert_eq!(*setup(&s), DocSetup::default());
 }
@@ -68,7 +68,7 @@ fn many_settings_are_one_undo_step() {
     let before = s.doc().unwrap().doc.clone();
     let r = s
         .execute(
-            "document.setup",
+            "file.setup",
             &json!({
                 "units": "Millimeters", "bleed": {"top": 9, "right": 4.5}, "gridSize": "large", "gridColors": "Blue",
                 "simulatePaper": true, "flattenerPreset": "high", "discardWhiteOverprint": false,
@@ -115,7 +115,7 @@ fn bad_values_are_rejected_and_change_nothing() {
         json!({"bleed": 9, "nonsense": true}),
         json!([1, 2]),
     ] {
-        assert!(s.execute("document.setup", &p).is_err(), "{p}");
+        assert!(s.execute("file.setup", &p).is_err(), "{p}");
     }
     assert_eq!(*setup(&s), DocSetup::default());
     assert!(s.doc().unwrap().history.undo.is_empty());
@@ -124,19 +124,19 @@ fn bad_values_are_rejected_and_change_nothing() {
 #[test]
 fn set_units_is_an_alias() {
     let mut s = session();
-    s.execute("document.setUnits", &json!({"units": "inches"})).unwrap();
+    s.execute("file.setUnits", &json!({"units": "inches"})).unwrap();
     assert_eq!(s.doc().unwrap().doc.units, Unit::Inches);
-    assert_eq!(s.execute("document.setup", &json!({})).unwrap()["units"], "Inches");
-    assert!(s.execute("document.setUnits", &json!({"units": "parsecs"})).is_err());
+    assert_eq!(s.execute("file.setup", &json!({})).unwrap()["units"], "Inches");
+    assert!(s.execute("file.setUnits", &json!({"units": "parsecs"})).is_err());
 }
 
 #[test]
 fn language_picks_its_quotes_unless_quotes_are_given() {
     let mut s = session();
-    s.execute("document.setup", &json!({"language": "german"})).unwrap();
+    s.execute("file.setup", &json!({"language": "german"})).unwrap();
     assert_eq!(setup(&s).language, "German");
     assert_eq!(setup(&s).quotes.double, ['„', '“']);
-    s.execute("document.setup", &json!({"language": "French", "quotes": {"double": ["“", "”"]}})).unwrap();
+    s.execute("file.setup", &json!({"language": "French", "quotes": {"double": ["“", "”"]}})).unwrap();
     assert_eq!((setup(&s).quotes.double, setup(&s).quotes.single), (['“', '”'], ['‹', '›']));
 }
 
@@ -146,11 +146,11 @@ fn typographers_quotes_setting_changes_typed_quotes() {
     let id = type_at(&mut s, 50.0, 50.0, &["\"", "H", "i", "\"", " ", "i", "t", "'", "s"]);
     assert_eq!(text(&s, id).plain_text(), "“Hi” it’s");
     // The document's quote style.
-    s.execute("document.setup", &json!({"language": "German"})).unwrap();
+    s.execute("file.setup", &json!({"language": "German"})).unwrap();
     let id = type_at(&mut s, 50.0, 150.0, &["\"", "a", "\""]);
     assert_eq!(text(&s, id).plain_text(), "„a“");
     // Straight quotes with the option off.
-    s.execute("document.setup", &json!({"typographersQuotes": false})).unwrap();
+    s.execute("file.setup", &json!({"typographersQuotes": false})).unwrap();
     let id = type_at(&mut s, 50.0, 250.0, &["\"", "b", "'"]);
     assert_eq!(text(&s, id).plain_text(), "\"b'");
 }
@@ -158,9 +158,9 @@ fn typographers_quotes_setting_changes_typed_quotes() {
 #[test]
 fn smart_punctuation_uses_the_document_quotes() {
     let mut s = session();
-    s.execute("document.setup", &json!({"language": "French"})).unwrap();
+    s.execute("file.setup", &json!({"language": "French"})).unwrap();
     let id = create_text(&mut s, "\"oui\" 'non'");
-    s.execute("type.smartPunctuation", &json!({"scope": "document"})).unwrap();
+    s.execute("text.smartPunctuation", &json!({"scope": "document"})).unwrap();
     assert_eq!(text(&s, id).plain_text(), "«oui» ‹non›");
 }
 
@@ -168,7 +168,7 @@ fn smart_punctuation_uses_the_document_quotes() {
 fn superscript_and_small_caps_use_and_follow_the_setup_sizes() {
     let mut s = session();
     let id = create_text(&mut s, "E=mc2");
-    s.execute("document.setup", &json!({"superscript": {"size": 50, "position": 40}})).unwrap();
+    s.execute("file.setup", &json!({"superscript": {"size": 50, "position": 40}})).unwrap();
     s.execute("text.setRangeStyle", &json!({"id": id.0, "start": 4, "end": 5, "position": "superscript"})).unwrap();
     s.execute("text.setFormat", &json!({"ids": [id.0], "smallCaps": true})).unwrap();
     let t = text(&s, id);
@@ -177,7 +177,7 @@ fn superscript_and_small_caps_use_and_follow_the_setup_sizes() {
     let narrow = t.cached_bounds.unwrap();
     // A Document Setup change restyles the text in the same undo step.
     let undo = s.doc().unwrap().history.undo.len();
-    s.execute("document.setup", &json!({"superscript": {"size": 100}, "smallCapsSize": 100})).unwrap();
+    s.execute("file.setup", &json!({"superscript": {"size": 100}, "smallCapsSize": 100})).unwrap();
     assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1);
     let t = text(&s, id);
     assert_eq!(t.runs.last().unwrap().style.position, CharPosition::Superscript(ScriptMetrics { size: 100.0, position: 40.0 }));
@@ -197,7 +197,7 @@ fn character_styles_follow_the_setup_sizes() {
         name: "Note".into(),
         attrs: attrs.as_object().unwrap().clone(),
     });
-    s.execute("document.setup", &json!({"subscript": {"size": 40}, "smallCapsSize": 80})).unwrap();
+    s.execute("file.setup", &json!({"subscript": {"size": 40}, "smallCapsSize": 80})).unwrap();
     let def = &s.doc().unwrap().doc.char_styles[0];
     assert_eq!(def.attrs["position"], json!({"kind": "subscript", "size": 40.0, "position": 33.3}));
     assert_eq!(def.attrs["small_caps"], json!(80.0));
@@ -207,7 +207,7 @@ fn character_styles_follow_the_setup_sizes() {
 fn setup_survives_save_and_load() {
     let mut s = session();
     s.execute(
-        "document.setup",
+        "file.setup",
         &json!({"bleed": [9, 9, 18, 18], "gridColors": ["#ff0000", "#00ff00"], "language": "Japanese", "exportText": "appearance"}),
     )
     .unwrap();
@@ -224,11 +224,11 @@ fn svg_text_export_follows_the_export_text_setting() {
     let svg = |s: &mut Session, p: Value| {
         let mut p = p;
         p["format"] = json!("svg");
-        let r = s.execute("document.export", &p).unwrap();
+        let r = s.execute("file.export", &p).unwrap();
         String::from_utf8(kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()).unwrap()
     };
     assert!(svg(&mut s, json!({})).contains("<text"));
-    s.execute("document.setup", &json!({"exportText": "appearance"})).unwrap();
+    s.execute("file.setup", &json!({"exportText": "appearance"})).unwrap();
     assert!(!svg(&mut s, json!({})).contains("<text"));
     // An explicit option still wins.
     assert!(svg(&mut s, json!({"outlineText": false})).contains("<text"));
@@ -252,7 +252,7 @@ fn discard_white_overprint_keeps_white_overprints_in_overprint_preview() {
     };
     // On by default: the white knocks out as it will print.
     assert_eq!(centre(&s), [255, 255, 255, 255]);
-    s.execute("document.setup", &json!({"discardWhiteOverprint": false})).unwrap();
+    s.execute("file.setup", &json!({"discardWhiteOverprint": false})).unwrap();
     let [r, g, b, _] = centre(&s);
     assert!(r > 200 && g < 60 && b < 60, "a white overprint vanishes: {:?}", [r, g, b]);
 }
@@ -261,10 +261,10 @@ fn discard_white_overprint_keeps_white_overprints_in_overprint_preview() {
 fn saved_flattener_presets_and_background_contents() {
     let mut s = session();
     s.execute("flattener.presets.save", &json!({"name": "Proofs", "preset": "high"})).unwrap();
-    assert_eq!(s.execute("document.setup", &json!({"flattenerPreset": "proofs"})).unwrap()["flattenerPreset"], "Proofs");
-    assert_eq!(s.execute("document.setup", &json!({"flattenerPreset": "Medium Resolution"})).unwrap()["flattenerPreset"], "Medium Resolution");
+    assert_eq!(s.execute("file.setup", &json!({"flattenerPreset": "proofs"})).unwrap()["flattenerPreset"], "Proofs");
+    assert_eq!(s.execute("file.setup", &json!({"flattenerPreset": "Medium Resolution"})).unwrap()["flattenerPreset"], "Medium Resolution");
     assert_eq!(setup(&s).flattener_preset, None, "the default is not stored");
-    let r = s.execute("document.setup", &json!({"backgroundContents": "white"})).unwrap();
+    let r = s.execute("file.setup", &json!({"backgroundContents": "white"})).unwrap();
     assert_eq!(r["backgroundContents"], "white");
     assert_eq!(setup(&s).background, kition_vector_doc::Background::White);
 }

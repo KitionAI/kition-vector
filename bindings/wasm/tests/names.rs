@@ -69,7 +69,7 @@ fn a_file_with_a_name_twice_in_a_table_opens_with_each_name_once() {
     // The first keeps the name: art filled by `Brand` takes the first one's colour.
     let r = doc.execute("shape.rectangle", json!({"x":1,"y":1,"width":5,"height":5})).unwrap()["id"].clone();
     doc.execute("paint.setFill", json!({"ids":[r],"swatch":"Brand"})).unwrap();
-    let fill = doc.execute("document.node", json!({"id":r})).unwrap()["appearance"]["items"][0]["paint"]["color"].clone();
+    let fill = doc.execute("file.node", json!({"id":r})).unwrap()["appearance"]["items"][0]["paint"]["color"].clone();
     assert!(fill["r"].as_f64().unwrap() < 0.5, "the first Brand (#123456): {fill}");
 }
 

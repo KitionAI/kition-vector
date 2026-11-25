@@ -226,7 +226,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 600, "height": 600})).unwrap();
         let text = "word ".repeat(200);
-        let t = s.execute("text.create", &json!({"x": 0, "y": 0, "text": text, "size": 12, "area": {"width": 400, "height": 400}})).unwrap()["id"]
+        let t = s.execute("text.add", &json!({"x": 0, "y": 0, "text": text, "size": 12, "area": {"width": 400, "height": 400}})).unwrap()["id"]
             .as_u64()
             .unwrap();
         let plain = lines(&s, t);
@@ -254,7 +254,7 @@ mod tests {
         let below = s.execute("shape.rectangle", &json!({"x": 0, "y": 50, "width": 200, "height": 100})).unwrap()["id"].as_u64().unwrap();
         s.execute("select.set", &json!({"ids": [below]})).unwrap();
         s.execute("object.textWrap.make", &json!({})).unwrap();
-        s.execute("object.arrange.sendToBack", &json!({})).unwrap();
+        s.execute("arrange.sendToBack", &json!({})).unwrap();
         assert_eq!(lines(&s, t), plain);
     }
 
@@ -263,7 +263,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 600, "height": 600})).unwrap();
         let t = s
-            .execute("text.create", &json!({"x": 0, "y": 0, "text": "word ".repeat(300), "size": 12, "area": {"width": 400, "height": 400}}))
+            .execute("text.add", &json!({"x": 0, "y": 0, "text": "word ".repeat(300), "size": 12, "area": {"width": 400, "height": 400}}))
             .unwrap()["id"]
             .as_u64()
             .unwrap();

@@ -44,7 +44,7 @@ fn an_svg_path_writes_svg_and_save_writes_it_back() {
     let mut s = session();
     rect(&mut s);
     let svg = path(&d, "art.svg");
-    let r = s.execute("document.save", &json!({"path": svg})).unwrap();
+    let r = s.execute("file.save", &json!({"path": svg})).unwrap();
     assert_eq!(r["format"], "svg");
     assert!(r["warnings"][0].as_str().unwrap().contains("SVG keeps the artwork"), "{r}");
     assert!(std::fs::read_to_string(&svg).unwrap().starts_with("<?xml"));
@@ -52,15 +52,15 @@ fn an_svg_path_writes_svg_and_save_writes_it_back() {
     assert_eq!((st.path.as_deref(), st.format, st.is_dirty()), (Some(svg.as_str()), "svg", false));
     // Save writes the same file in the same format.
     rect(&mut s);
-    s.execute("document.save", &json!({})).unwrap();
+    s.execute("file.save", &json!({})).unwrap();
     assert!(std::fs::read_to_string(&svg).unwrap().starts_with("<?xml"));
     assert!(!s.doc().unwrap().is_dirty());
     // A reopened SVG keeps its path and saves as SVG again.
     let mut s = Session::new();
-    s.execute("document.open", &json!({"path": svg})).unwrap();
+    s.execute("file.open", &json!({"path": svg})).unwrap();
     assert_eq!((s.doc().unwrap().path.as_deref(), s.doc().unwrap().format), (Some(svg.as_str()), "svg"));
     rect(&mut s);
-    assert_eq!(s.execute("document.save", &json!({})).unwrap()["format"], "svg");
+    assert_eq!(s.execute("file.save", &json!({})).unwrap()["format"], "svg");
     assert!(std::fs::read_to_string(&svg).unwrap().starts_with("<?xml"));
     let _ = std::fs::remove_dir_all(d);
 }
@@ -87,12 +87,12 @@ fn save_as_takes_on_path_format_and_options() {
     let svgz = path(&d, "doc.svgz");
     s.execute("file.saveAs", &json!({"path": svgz})).unwrap();
     assert_eq!(&std::fs::read(&svgz).unwrap()[..2], [0x1f, 0x8b]);
-    s.execute("document.open", &json!({"path": svgz})).unwrap();
+    s.execute("file.open", &json!({"path": svgz})).unwrap();
     assert_eq!(s.doc().unwrap().format, "svgz");
     // Export formats aren't save formats.
     let e = s.execute("file.saveAs", &json!({"path": path(&d, "x.png")})).unwrap_err().to_string();
-    assert!(e.contains("document.export"), "{e}");
-    assert!(s.execute("document.save", &json!({"format": "webp"})).is_err());
+    assert!(e.contains("file.export"), "{e}");
+    assert!(s.execute("file.save", &json!({"format": "webp"})).is_err());
     assert!(s.execute("file.saveAs", &json!({"path": svgz, "options": 3})).is_err());
     let _ = std::fs::remove_dir_all(d);
 }
@@ -102,8 +102,8 @@ fn another_format_without_a_path_hands_the_bytes_back() {
     let d = dir("otherfmt");
     let mut s = session();
     let native = path(&d, "a.kvector");
-    s.execute("document.save", &json!({"path": native})).unwrap();
-    let r = s.execute("document.save", &json!({"format": "svg"})).unwrap();
+    s.execute("file.save", &json!({"path": native})).unwrap();
+    let r = s.execute("file.save", &json!({"format": "svg"})).unwrap();
     assert!(String::from_utf8(b64(&r)).unwrap().starts_with("<?xml"));
     assert_eq!(r["name"], "a.svg");
     assert!(kition_vector_format::sniff(&std::fs::read(&native).unwrap()), "the native file isn't overwritten with SVG");
@@ -115,7 +115,7 @@ fn save_a_copy_keeps_the_path_title_and_modified_state() {
     let d = dir("copy");
     let mut s = session();
     let native = path(&d, "poster.kvector");
-    s.execute("document.save", &json!({"path": native})).unwrap();
+    s.execute("file.save", &json!({"path": native})).unwrap();
     rect(&mut s);
     let r = s.execute("file.saveCopy", &json!({})).unwrap();
     assert_eq!((r["name"].as_str(), r["folder"].as_str()), (Some("poster copy.kvector"), Some(d.to_string_lossy().as_ref())));
@@ -134,7 +134,7 @@ fn revert_reloads_the_saved_file_in_the_same_tab() {
     let mut s = session();
     rect(&mut s);
     let native = path(&d, "a.kvector");
-    s.execute("document.save", &json!({"path": native})).unwrap();
+    s.execute("file.save", &json!({"path": native})).unwrap();
     assert!(s.execute("file.revert", &json!({})).is_err(), "nothing to revert");
     s.execute("file.new", &json!({})).unwrap();
     s.set_active(0);
@@ -166,7 +166,7 @@ fn templates_suggest_a_name_in_the_templates_folder_and_open_untitled() {
     let d = dir("tpl");
     let mut s = session();
     let source = path(&d, "flyer.kvector");
-    s.execute("document.save", &json!({"path": source})).unwrap();
+    s.execute("file.save", &json!({"path": source})).unwrap();
     s.prefs.templates_folder = path(&d, "Templates");
     let r = s.execute("file.saveAsTemplate", &json!({})).unwrap();
     assert_eq!(r["name"], "flyer template.vctemplate");
@@ -178,7 +178,7 @@ fn templates_suggest_a_name_in_the_templates_folder_and_open_untitled() {
     s.execute("file.saveAsTemplate", &json!({"path": tpl})).unwrap();
     assert_eq!(s.doc().unwrap().path.as_deref(), Some(source.as_str()));
     assert!(s.doc().unwrap().is_dirty());
-    let r = s.execute("document.open", &json!({"path": tpl})).unwrap();
+    let r = s.execute("file.open", &json!({"path": tpl})).unwrap();
     assert_eq!(r["format"], "template");
     assert!(r["title"].as_str().unwrap().starts_with("Untitled-"), "{r}");
     assert_eq!(s.doc().unwrap().path, None);
@@ -210,9 +210,9 @@ fn native_files_open_under_their_name_and_other_versions_are_refused() {
     std::fs::write(&file, file_of_version(1)).unwrap();
     let mut s = Session::new();
     // A version 1 file opens as itself, and Save writes it back.
-    let r = s.execute("document.open", &json!({"path": file})).unwrap();
+    let r = s.execute("file.open", &json!({"path": file})).unwrap();
     assert_eq!(r["title"], "badge.kvector");
-    assert_eq!(s.execute("document.save", &json!({})).unwrap()["path"].as_str(), Some(file.as_str()));
+    assert_eq!(s.execute("file.save", &json!({})).unwrap()["path"].as_str(), Some(file.as_str()));
     let saved = path(&d, "badge2.kvector");
     s.execute("file.saveAs", &json!({"path": saved})).unwrap();
     assert_eq!(s.doc().unwrap().title(), "badge2.kvector");
@@ -220,7 +220,7 @@ fn native_files_open_under_their_name_and_other_versions_are_refused() {
     for version in [0, 2, 3, 4] {
         let other = path(&d, &format!("v{version}.kvector"));
         std::fs::write(&other, file_of_version(version)).unwrap();
-        assert!(s.execute("document.open", &json!({"path": other})).is_err(), "version {version}");
+        assert!(s.execute("file.open", &json!({"path": other})).is_err(), "version {version}");
     }
     let _ = std::fs::remove_dir_all(d);
 }
@@ -231,8 +231,8 @@ fn grouped_drawing(file: &str) -> (NodeId, NodeId) {
     let layer = s.doc().unwrap().doc.layers[0].id;
     let a = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [a]})).unwrap();
-    let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
-    s.execute("document.save", &json!({"path": file, "modified": 1_794_182_400})).unwrap();
+    let g = NodeId(s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+    s.execute("file.save", &json!({"path": file, "modified": 1_794_182_400})).unwrap();
     (layer, g)
 }
 
@@ -242,23 +242,23 @@ fn a_file_keeps_no_view_state() {
     let first = path(&d, "first.kvector");
     let (layer, g) = grouped_drawing(&first);
     let mut s = Session::new();
-    s.execute("document.open", &json!({"path": first})).unwrap();
+    s.execute("file.open", &json!({"path": first})).unwrap();
     // A document opens with its top-level layers open.
     assert!(s.doc().unwrap().layers_open.contains(layer) && !s.doc().unwrap().layers_open.contains(g));
     let before = path(&d, "before.kvector");
-    s.execute("document.save", &json!({"path": before, "modified": null})).unwrap();
+    s.execute("file.save", &json!({"path": before, "modified": null})).unwrap();
     // Opening the group, closing the layer and selecting are one person's view state: not edits,
     // and a save writes nothing of them.
     let st = s.doc_mut().unwrap();
     st.layers_open.set(g, true);
     st.layers_open.set(layer, false);
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     assert!(!s.doc().unwrap().is_dirty());
     let second = path(&d, "second.kvector");
-    s.execute("document.save", &json!({"path": second, "modified": null})).unwrap();
+    s.execute("file.save", &json!({"path": second, "modified": null})).unwrap();
     assert!(std::fs::read(&before).unwrap() == std::fs::read(&second).unwrap(), "the view state changed the file");
     let mut again = Session::new();
-    again.execute("document.open", &json!({"path": second})).unwrap();
+    again.execute("file.open", &json!({"path": second})).unwrap();
     let open = &again.doc().unwrap().layers_open;
     assert!(open.contains(layer) && !open.contains(g), "it opens with the top-level layers open");
     let _ = std::fs::remove_dir_all(d);
@@ -272,15 +272,15 @@ fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical
     let mut files = vec![];
     for (who, look) in [("a", false), ("b", true)] {
         let mut s = Session::new();
-        s.execute("document.open", &json!({"path": source})).unwrap();
+        s.execute("file.open", &json!({"path": source})).unwrap();
         if look {
             // One person looks around: opens a row, selects; the other does nothing.
             s.doc_mut().unwrap().layers_open.set(g, true);
-            s.execute("select.all", &json!({})).unwrap();
+            s.execute("edit.selectAll", &json!({})).unwrap();
         }
         let out = path(&d, &format!("{who}.kvector"));
         // `modified: null`: the dates stay as the file has them (a save stamps them by default).
-        s.execute("document.save", &json!({"path": out, "modified": null})).unwrap();
+        s.execute("file.save", &json!({"path": out, "modified": null})).unwrap();
         files.push(std::fs::read(&out).unwrap());
     }
     assert!(files[0] == files[1], "two sessions saved other bytes");
@@ -290,7 +290,7 @@ fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical
 #[test]
 fn save_plans_suggest_names_and_folders() {
     let mut s = session();
-    s.execute("file.info", &json!({"title": "Map"})).unwrap();
+    s.execute("file.setInfo", &json!({"title": "Map"})).unwrap();
     let plan = |s: &Session, mode, p: Value| save_plan(s, mode, &p).unwrap();
     let p = plan(&s, SaveMode::Save, json!({}));
     assert_eq!((p.path, p.name.as_str(), p.format.id, p.folder), (None, "Map.kvector", "kvector", None));
@@ -337,16 +337,16 @@ fn a_pdf_opened_in_part_is_not_saved_back_over_the_whole_file() {
     s.execute("file.new", &json!({"width": 100, "height": 100, "artboards": 2})).unwrap();
     rect(&mut s);
     let pdf = path(&d, "two.pdf");
-    s.execute("document.export", &json!({"path": pdf, "format": "pdf"})).unwrap();
+    s.execute("file.export", &json!({"path": pdf, "format": "pdf"})).unwrap();
     // The whole file: Save writes it back as PDF.
-    s.execute("document.open", &json!({"path": pdf})).unwrap();
+    s.execute("file.open", &json!({"path": pdf})).unwrap();
     let st = s.doc().unwrap();
     assert_eq!((st.path.as_deref(), st.format), (Some(pdf.as_str()), "pdf"));
     // One page of it: Save asks for a name instead of dropping the other page.
-    s.execute("document.open", &json!({"path": pdf, "pages": "1"})).unwrap();
+    s.execute("file.open", &json!({"path": pdf, "pages": "1"})).unwrap();
     let st = s.doc().unwrap();
     assert_eq!((st.path.as_deref(), st.format), (None, "kvector"));
-    assert!(s.execute("document.save", &json!({})).unwrap().get("dataBase64").is_some());
+    assert!(s.execute("file.save", &json!({})).unwrap().get("dataBase64").is_some());
     let _ = std::fs::remove_dir_all(d);
 }
 
@@ -354,7 +354,7 @@ fn a_pdf_opened_in_part_is_not_saved_back_over_the_whole_file() {
 fn a_template_places_like_a_native_file() {
     let mut s = session();
     rect(&mut s);
-    let tpl = s.execute("document.serialize", &json!({"format": "template"})).unwrap();
+    let tpl = s.execute("file.serialize", &json!({"format": "template"})).unwrap();
     s.execute("file.new", &json!({"width": 200, "height": 100})).unwrap();
     let empty = s.doc().unwrap().doc.node_count();
     s.execute("file.place", &json!({"name": "card.vctemplate", "dataBase64": tpl["dataBase64"]})).unwrap();

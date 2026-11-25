@@ -119,7 +119,7 @@ fn pins_appear_when_the_tool_is_chosen_or_art_selected() {
     assert_eq!((p["auto"].clone(), p["ids"].clone(), p["rest"].clone()), (json!(true), json!([a.0]), json!(true)));
     assert_eq!(p["pins"], p["moved"], "automatic pins sit where they started");
     // The tool first, then art selected.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(pin_overlays(&mut s), 0);
     assert!(s.execute("object.pinWarp.pins", &json!({})).is_err(), "nothing selected");
     s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
@@ -227,7 +227,7 @@ fn pin_warp_works_on_groups_compound_paths_and_open_strokes() {
                 let a = rect(&mut s, 100.0, 170.0, 140.0, 60.0);
                 let b = rect(&mut s, 260.0, 170.0, 140.0, 60.0);
                 s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-                let cmd = if kind == "group" { "object.group" } else { "object.compoundPath.make" };
+                let cmd = if kind == "group" { "arrange.group" } else { "object.compoundPath.make" };
                 let r = s.execute(cmd, &json!({})).unwrap();
                 r["id"].as_u64().map(NodeId).unwrap_or_else(|| s.doc().unwrap().selection.objects[0])
             }
@@ -254,9 +254,9 @@ fn pins_are_never_saved() {
     s.select_tool("pinWarp", ViewInfo::default()).unwrap();
     click(&mut s, 250.0, 150.0);
     assert!(s.doc().unwrap().doc.pin_warp.is_some());
-    let r = s.execute("document.serialize", &json!({"format": "kvector"})).unwrap();
+    let r = s.execute("file.serialize", &json!({"format": "kvector"})).unwrap();
     let data = r["dataBase64"].as_str().unwrap().to_string();
-    s.execute("document.open", &json!({"name": "pins.kvector", "dataBase64": data})).unwrap();
+    s.execute("file.open", &json!({"name": "pins.kvector", "dataBase64": data})).unwrap();
     let st = s.doc().unwrap();
     assert!(st.doc.pin_warp.is_none());
     assert_eq!(st.doc.node_count(), 2, "layer + rectangle");

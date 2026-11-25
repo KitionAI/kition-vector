@@ -93,12 +93,12 @@ pub fn specs() -> Vec<CommandSpec> {
             "Rasterize…",
             ["Object"],
             None,
-            "{ppi?, background?: transparent|white|black|\"#rrggbb\", antiAlias?: none|art|type (text snapped to pixels)|bool, padding?|addAround?: pt (0–1000), colorModel?: \"rgb\"|\"cmyk\"|\"grayscale\"|\"bitmap\", clippingMask?: bool (a clip group with the art's outline)} replace the selection with an embedded PNG image; each defaults to document.rasterEffectsSettings → {id (the image, or its clip group), width, height}",
+            "{ppi?, background?: transparent|white|black|\"#rrggbb\", antiAlias?: none|art|type (text snapped to pixels)|bool, padding?|addAround?: pt (0–1000), colorModel?: \"rgb\"|\"cmyk\"|\"grayscale\"|\"bitmap\", clippingMask?: bool (a clip group with the art's outline)} replace the selection with an embedded PNG image; each defaults to file.rasterEffectsSettings → {id (the image, or its clip group), width, height}",
             has_selection,
             rasterize
         ),
         cmd!(
-            "object.createObjectMosaic",
+            "object.addObjectMosaic",
             "Create Object Mosaic…",
             ["Object"],
             None,
@@ -125,7 +125,7 @@ pub fn specs() -> Vec<CommandSpec> {
             mask_image
         ),
         cmd!(
-            "object.createTrimMarks",
+            "object.addTrimMarks",
             "Create Trim Marks",
             ["Object"],
             None,
@@ -455,7 +455,7 @@ fn has_image(s: &Session) -> std::result::Result<(), String> {
 }
 
 fn object_mosaic(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.createObjectMosaic";
+    const C: &str = "object.addObjectMosaic";
     let st = s.doc()?;
     let id = st
         .selection
@@ -680,7 +680,7 @@ impl Session {
 }
 
 fn trim_marks(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.createTrimMarks";
+    const C: &str = "object.addTrimMarks";
     let style = match str_param(p, "style") {
         Some(v) => MarkStyle::parse(v).ok_or_else(|| bad(C, "`style` must be roman or japanese"))?,
         None => s.crop_mark_style(),

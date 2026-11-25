@@ -46,10 +46,10 @@ fn new_documents_start_in_the_preference_and_document_setup_only_changes_the_doc
     assert_eq!(units(&s), Unit::Inches);
     s.execute("file.new", &json!({"width": 100, "height": 100, "units": "Pixels"})).unwrap();
     assert_eq!((units(&s), s.general_unit()), (Unit::Pixels, Unit::Pixels), "given units win");
-    s.execute("document.setUnits", &json!({"units": "cm"})).unwrap();
+    s.execute("file.setUnits", &json!({"units": "cm"})).unwrap();
     assert_eq!((units(&s), s.default_units()), (Unit::Centimeters, Unit::Inches));
     // Each document keeps its own units.
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     assert_eq!(s.general_unit(), Unit::Inches);
     assert!(s.execute("file.new", &json!({"units": "furlongs"})).is_err());
 }
@@ -57,7 +57,7 @@ fn new_documents_start_in_the_preference_and_document_setup_only_changes_the_doc
 #[test]
 fn document_setup_without_a_document_fails() {
     let mut s = Session::new();
-    assert!(s.execute("document.setUnits", &json!({"units": "mm"})).is_err());
+    assert!(s.execute("file.setUnits", &json!({"units": "mm"})).is_err());
     // The preference alone still changes.
     s.execute("prefs.set", &json!({"key": "unitsGeneral", "value": "Millimeters"})).unwrap();
     assert_eq!(s.prefs.units_general, "millimeters");
@@ -116,7 +116,7 @@ fn canvas_measurement_labels_follow_the_units() {
 #[test]
 fn units_survive_a_native_round_trip() {
     let mut s = session();
-    s.execute("document.setUnits", &json!({"units": "Feet & Inches"})).unwrap();
+    s.execute("file.setUnits", &json!({"units": "Feet & Inches"})).unwrap();
     let back = kition_vector_format::load(&kition_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(back.units, Unit::FeetInches);
 }
@@ -124,7 +124,7 @@ fn units_survive_a_native_round_trip() {
 #[test]
 fn distance_params_take_a_unit() {
     let mut s = session();
-    let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "Hi"})).unwrap()["id"].clone();
+    let id = s.execute("text.add", &json!({"x": 10, "y": 10, "text": "Hi"})).unwrap()["id"].clone();
     s.execute("select.set", &json!({ "ids": [id] })).unwrap();
     s.execute("text.setStyle", &json!({"size": "0.5 in", "leading": "1in", "tracking": "20"})).unwrap();
     let n = s.doc().unwrap().doc.node(NodeId(id.as_u64().unwrap())).unwrap().clone();

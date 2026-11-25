@@ -1,4 +1,4 @@
-//! Effect → Document Raster Effects Settings (`document.rasterEffectsSettings`): the settings, the
+//! Effect → Document Raster Effects Settings (`file.rasterEffectsSettings`): the settings, the
 //! raster effect images they make (PDF export, Expand Appearance) and the Rasterize defaults.
 
 use kition_vector_doc::{Background, Document, NodeId, NodeKind, RasterColorModel, RasterEffectsSettings};
@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 use super::*;
 
-const C: &str = "document.rasterEffectsSettings";
+const C: &str = "file.rasterEffectsSettings";
 
 fn session() -> Session {
     let mut s = Session::new();

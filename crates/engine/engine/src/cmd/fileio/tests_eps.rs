@@ -45,7 +45,7 @@ fn warnings(r: &Value) -> Vec<String> {
 fn eps_covers_the_art_y_up_from_the_first_artboard_with_a_preview_and_the_document() {
     let mut s = session(200.0, 200.0, 1);
     s.execute("shape.rectangle", &json!({"x": 50, "y": 60, "width": 100, "height": 40})).unwrap();
-    let r = s.execute("document.export", &json!({"format": "eps"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "eps"})).unwrap();
     assert_eq!(r["format"], "eps");
     let bytes = b64(&r);
     // The default TIFF preview sits behind the binary header.
@@ -63,7 +63,7 @@ fn eps_covers_the_art_y_up_from_the_first_artboard_with_a_preview_and_the_docume
     assert_eq!(native.layers[0].children().unwrap().len(), 1);
     assert!(kition_vector_eps::thumbnail(&bytes).unwrap().starts_with(b"\x89PNG"));
     // Without the preview, thumbnail and CMYK: plain PostScript in RGB.
-    let r = s.execute("document.exportEps", &json!({"previewFormat": "none", "thumbnails": false, "cmykPostScript": false, "level": 2})).unwrap();
+    let r = s.execute("file.exportEps", &json!({"previewFormat": "none", "thumbnails": false, "cmykPostScript": false, "level": 2})).unwrap();
     let bytes = b64(&r);
     assert!(bytes.starts_with(b"%!PS-Adobe-3.0 EPSF-3.0"));
     let ps = postscript(&bytes);
@@ -77,7 +77,7 @@ fn use_artboards_writes_a_file_per_artboard_named_with_an_underscore() {
     let second = s.doc().unwrap().doc.artboards[1].rect.x0;
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 30, "height": 30})).unwrap();
     s.execute("shape.rectangle", &json!({"x": second + 10.0, "y": 10, "width": 30, "height": 30})).unwrap();
-    let r = s.execute("document.export", &json!({"format": "eps", "useArtboards": true, "previewFormat": "none"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "eps", "useArtboards": true, "previewFormat": "none"})).unwrap();
     let files = r["files"].as_array().unwrap();
     let names: Vec<&str> = files.iter().map(|f| f["name"].as_str().unwrap()).collect();
     assert_eq!(names, ["Untitled-1_Artboard-1.eps", "Untitled-1_Artboard-2.eps"]);
@@ -90,13 +90,13 @@ fn use_artboards_writes_a_file_per_artboard_named_with_an_underscore() {
         assert_eq!(native.artboards.len(), 1);
     }
     // A range names the artboards (useArtboards implied); one file keeps the path's name.
-    let r = s.execute("document.exportEps", &json!({"range": "2", "previewFormat": "none"})).unwrap();
+    let r = s.execute("file.exportEps", &json!({"range": "2", "previewFormat": "none"})).unwrap();
     assert!(r.get("files").is_none());
     assert!(postscript(&b64(&r)).contains(&format!("[1 0 0 -1 {} 100] cm", -second)));
-    assert!(s.execute("document.exportEps", &json!({"artboard": 5})).is_err());
+    assert!(s.execute("file.exportEps", &json!({"artboard": 5})).is_err());
     // Without art there is nothing to bound.
     let mut empty = session(100.0, 100.0, 1);
-    assert!(empty.execute("document.exportEps", &json!({})).unwrap_err().to_string().contains("nothing to export"));
+    assert!(empty.execute("file.exportEps", &json!({})).unwrap_err().to_string().contains("nothing to export"));
 }
 
 #[test]
@@ -104,12 +104,12 @@ fn transparency_is_flattened_with_the_flattener_preset() {
     let mut s = session(200.0, 200.0, 1);
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 20, "y": 20, "width": 100, "height": 100})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.execute("paint.setFill", &json!({"color": "#0000ff"})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 60, "y": 60, "width": 100, "height": 100})).unwrap();
     s.execute("transparency.set", &json!({"opacity": 50})).unwrap();
     let opts = json!({"previewFormat": "none", "thumbnails": false, "cmykPostScript": false});
-    let r = s.execute("document.exportEps", &opts).unwrap();
+    let r = s.execute("file.exportEps", &opts).unwrap();
     let w = warnings(&r);
     assert!(w.iter().any(|w| w.contains("flattened")), "{w:?}");
     assert!(!w.iter().any(|w| w.contains("written opaque")), "nothing transparent reaches the writer: {w:?}");
@@ -124,9 +124,9 @@ fn transparency_is_flattened_with_the_flattener_preset() {
     assert!(native.layers[0].children().unwrap().iter().any(|c| c.opacity < 1.0));
     // A saved preset by name; an unknown one is refused.
     s.execute("flattener.presets.save", &json!({"name": "All Raster", "balance": 0})).unwrap();
-    let r = s.execute("document.exportEps", &json!({"flattenerPreset": "All Raster", "previewFormat": "none"})).unwrap();
+    let r = s.execute("file.exportEps", &json!({"flattenerPreset": "All Raster", "previewFormat": "none"})).unwrap();
     assert!(postscript(&b64(&r)).contains("image"), "rasterized");
-    let e = s.execute("document.exportEps", &json!({"flattenerPreset": "Nope"})).unwrap_err().to_string();
+    let e = s.execute("file.exportEps", &json!({"flattenerPreset": "Nope"})).unwrap_err().to_string();
     assert!(e.contains("preset"), "{e}");
 }
 
@@ -134,17 +134,17 @@ fn transparency_is_flattened_with_the_flattener_preset() {
 fn overprints_are_kept_or_discarded() {
     let mut s = session(100.0, 100.0, 1);
     let id = s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 30, "height": 30})).unwrap()["id"].as_u64().unwrap();
-    s.execute("attributes.set", &json!({"ids": [id], "overprintFill": true})).unwrap();
-    let kept = postscript(&b64(&s.execute("document.exportEps", &json!({"previewFormat": "none"})).unwrap()));
+    s.execute("attribute.set", &json!({"ids": [id], "overprintFill": true})).unwrap();
+    let kept = postscript(&b64(&s.execute("file.exportEps", &json!({"previewFormat": "none"})).unwrap()));
     assert!(kept.contains("true op\n"), "{kept}");
-    let dropped = postscript(&b64(&s.execute("document.exportEps", &json!({"previewFormat": "none", "overprints": "discard"})).unwrap()));
+    let dropped = postscript(&b64(&s.execute("file.exportEps", &json!({"previewFormat": "none", "overprints": "discard"})).unwrap()));
     assert!(!dropped.contains("true op"));
 }
 
 #[test]
 fn placed_images_are_written_and_previews_are_black_and_white_on_request() {
     let mut s = super::tests_svg::image_session();
-    let r = s.execute("document.exportEps", &json!({"previewFormat": "tiffBw", "level": 2})).unwrap();
+    let r = s.execute("file.exportEps", &json!({"previewFormat": "tiffBw", "level": 2})).unwrap();
     let bytes = b64(&r);
     let ps = postscript(&bytes);
     assert!(ps.contains("/RunLengthDecode filter >> image"), "{ps}");
@@ -152,7 +152,7 @@ fn placed_images_are_written_and_previews_are_black_and_white_on_request() {
     // A bilevel TIFF: one sample of one bit, white is zero.
     assert!(tiff.starts_with(b"II*\0"));
     assert_eq!((tiff_tag(tiff, 258), tiff_tag(tiff, 277), tiff_tag(tiff, 262)), (Some(1), Some(1), Some(0)));
-    let l3 = postscript(&b64(&s.execute("document.exportEps", &json!({"previewFormat": "none"})).unwrap()));
+    let l3 = postscript(&b64(&s.execute("file.exportEps", &json!({"previewFormat": "none"})).unwrap()));
     assert!(l3.contains("/FlateDecode filter >> image"));
 }
 
@@ -168,11 +168,11 @@ fn bad_eps_options_are_refused_and_formats_list_eps() {
         json!({"flattener": {"balance": 400}}),
         json!({"thumbnails": "yes"}),
     ] {
-        let e = s.execute("document.exportEps", &p).unwrap_err().to_string();
+        let e = s.execute("file.exportEps", &p).unwrap_err().to_string();
         assert!(e.contains("EPS"), "{p}: {e}");
     }
-    assert!(s.execute("document.exportForScreens", &json!({"formats": [{"format": "eps"}]})).is_err());
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    assert!(s.execute("file.exportForScreens", &json!({"formats": [{"format": "eps"}]})).is_err());
+    let r = s.execute("file.formats", &json!({})).unwrap();
     let eps = r["formats"].as_array().unwrap().iter().find(|f| f["id"] == "eps").unwrap().clone();
     // Readable too since EPS import (tests_epsimport.rs).
     assert_eq!((eps["read"].as_bool(), eps["write"].as_bool(), eps["mime"].as_str()), (Some(true), Some(true), Some("application/postscript")));
@@ -201,6 +201,6 @@ fn selected_only_writes_the_selection() {
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 30, "height": 30})).unwrap();
     let b = s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 50, "height": 20})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [b]})).unwrap();
-    let ps = postscript(&b64(&s.execute("document.exportEps", &json!({"selectedOnly": true, "previewFormat": "none"})).unwrap()));
+    let ps = postscript(&b64(&s.execute("file.exportEps", &json!({"selectedOnly": true, "previewFormat": "none"})).unwrap()));
     assert_eq!(dsc(&ps, "BoundingBox").as_deref(), Some("100 80 150 100"));
 }

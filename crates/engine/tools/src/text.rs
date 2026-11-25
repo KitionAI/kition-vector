@@ -2,7 +2,7 @@
 //!
 //! Type: click places point type, drag draws an area-type frame, clicking into existing text
 //! places the caret. Area Type / Type on a Path: click a path to turn it into a text frame or a
-//! baseline (`text.createInPath`). Point type placed by a click and left empty is discarded when
+//! baseline (`text.addInPath`). Point type placed by a click and left empty is discarded when
 //! editing ends (`text.discardEmpty`); frames keep their shape. Where new type goes (the click, the
 //! frame's corners) snaps to Smart Guides ([`DrawSnap`]), hovering too.
 //!
@@ -13,7 +13,7 @@
 //! `text.editRange` (the changed span, with its styled runs) against the session snapshot.
 //! Styling a selected range goes through `text.setRangeStyle` (the Character panel reads the
 //! selection from [`Tool::options`]); Alt+arrows step it by the Preferences › Type increments
-//! (`type.step`). New type starts with placeholder text, selected, when Fill New Type Objects With
+//! (`text.step`). New type starts with placeholder text, selected, when Fill New Type Objects With
 //! Placeholder Text is on.
 //!
 //! IME: the marked text of a composition is part of the typing session (so it lays out in place),
@@ -283,7 +283,7 @@ impl TypeTool {
             if let Some(pid) = Self::path_at(cx, start, !on_path) {
                 let mode = if on_path { "onPath" } else { "area" };
                 out.push(Action::Exec(
-                    "text.createInPath".into(),
+                    "text.addInPath".into(),
                     json!({"path": pid.0, "mode": mode, "text": "", "at": [start.x, start.y], "vertical": self.vertical, "placeholder": cx.placeholder_text}),
                 ));
                 out.push(Action::Notify("text.editNew".into()));
@@ -297,7 +297,7 @@ impl TypeTool {
         };
         params["vertical"] = json!(self.vertical);
         params["placeholder"] = json!(cx.placeholder_text);
-        out.push(Action::Exec("text.create".into(), params));
+        out.push(Action::Exec("text.add".into(), params));
         out.push(Action::Notify("text.editNew".into()));
         out
     }
@@ -325,7 +325,7 @@ impl TypeTool {
 
 /// Byte range in `s` of the characters `r` (IME ranges count characters; carets count bytes).
 /// `None` when `r` runs past the end of `s` or backwards.
-/// The `type.step` an Alt+arrow asks for, by one step: ←/→ kerning at a `caret`, else tracking;
+/// The `text.step` an Alt+arrow asks for, by one step: ←/→ kerning at a `caret`, else tracking;
 /// ↑/↓ leading (down opens it up); Shift+↑/↓ baseline shift.
 fn step_key(key: ToolKey, shift: bool, caret: bool) -> Option<(&'static str, f64)> {
     let sign = |up: bool| if up { 1.0 } else { -1.0 };
@@ -501,7 +501,7 @@ impl Tool for TypeTool {
         {
             let mut out = self.commit();
             let by = if mods.cmd { by * 5.0 } else { by };
-            out.push(Action::Exec("type.step".into(), json!({"id": id.0, "start": a, "end": b, "attribute": attribute, "by": by})));
+            out.push(Action::Exec("text.step".into(), json!({"id": id.0, "start": a, "end": b, "attribute": attribute, "by": by})));
             return out;
         }
         let word = mods.cmd || mods.alt;
@@ -667,7 +667,7 @@ impl Tool for TypeTool {
         }
         self.finish(cx)
     }
-    /// After `text.create` / `text.createInPath` the engine selects the new object; edit it.
+    /// After `text.add` / `text.addInPath` the engine selects the new object; edit it.
     fn notify(&mut self, cx: &ToolContext, what: &str) {
         if what == "text.editNew"
             && let Some(id) = cx.selection.objects.first().copied()

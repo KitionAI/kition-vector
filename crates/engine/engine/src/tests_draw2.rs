@@ -136,7 +136,7 @@ fn paintbrush_uses_stroke_blob_brush_fills() {
     drag(&mut s, "paintbrush", &wave(50.0, 200.0, 100.0), Mods::default());
     let n = s.doc().unwrap().doc.node(paths(&s)[0].0).unwrap().clone();
     assert!(n.appearance.fill_paint().is_none());
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     drag(&mut s, "blobBrush", &[(100.0, 400.0), (200.0, 400.0)], Mods::default());
     let ps = paths(&s);
     assert_eq!(ps.len(), 2);
@@ -210,7 +210,7 @@ fn curvature_edits_any_selected_path() {
         {"x": 450, "y": 350, "in": [420, 360], "out": [480, 300]},
         {"x": 550, "y": 260, "in": [520, 290]}
     ]);
-    let id = NodeId(s.execute("path.create", &json!({ "anchors": anchors })).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("path.add", &json!({ "anchors": anchors })).unwrap()["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.select_tool("curvature", v).unwrap();
     let before = path(&s, id).subpaths[0].clone();
@@ -340,7 +340,7 @@ fn scissors_splits_open_path_in_two() {
 fn knife_cuts_rect_into_two_pieces() {
     let mut s = session();
     rect(&mut s, 100.0, 100.0, 200.0, 100.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let undo = s.doc().unwrap().history.undo.len();
     drag(&mut s, "knife", &[(200.0, 50.0), (210.0, 150.0), (200.0, 250.0)], Mods::default());
     let ps = paths(&s);
@@ -357,7 +357,7 @@ fn knife_cuts_rect_into_two_pieces() {
 fn knife_partial_cut_does_nothing() {
     let mut s = session();
     let id = rect(&mut s, 100.0, 100.0, 200.0, 100.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let r = s.execute("path.knife", &json!({"points": [[200, 50], [200, 150]]})).unwrap();
     assert_eq!(r["ids"], json!([]));
     assert_eq!(path(&s, id).anchor_count(), 4);
@@ -368,7 +368,7 @@ fn eraser_splits_shapes_and_lines() {
     let mut s = session();
     rect(&mut s, 100.0, 100.0, 200.0, 100.0);
     line(&mut s, 100.0, 300.0, 300.0, 300.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     drag(&mut s, "eraser", &[(200.0, 50.0), (200.0, 350.0)], Mods::default());
     let ps = paths(&s);
     assert_eq!(ps.len(), 4, "two rect halves + two line pieces");
@@ -385,7 +385,7 @@ fn eraser_splits_shapes_and_lines() {
 fn eraser_removes_small_shape_entirely() {
     let mut s = session();
     rect(&mut s, 100.0, 100.0, 4.0, 4.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.execute("path.eraseRegion", &json!({"points": [[102, 102]], "size": 20})).unwrap();
     assert!(paths(&s).is_empty());
 }
@@ -404,7 +404,7 @@ fn path_eraser_splits_selected_path() {
 fn smooth_tool_reduces_jagged_path() {
     let mut s = session();
     let anchors: Vec<_> = (0..=40).map(|i| json!({"x": 100.0 + i as f64 * 5.0, "y": 200.0 + if i % 2 == 0 { 0.0 } else { 1.5 }})).collect();
-    let r = s.execute("path.create", &json!({"anchors": anchors})).unwrap();
+    let r = s.execute("path.add", &json!({"anchors": anchors})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     drag(&mut s, "smooth", &[(90.0, 200.0), (200.0, 200.0), (310.0, 200.0)], Mods::default());
     let p = path(&s, id);
@@ -417,7 +417,7 @@ fn join_tool_joins_two_lines() {
     let mut s = session();
     let a = line(&mut s, 100.0, 100.0, 200.0, 100.0);
     line(&mut s, 205.0, 100.0, 300.0, 150.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     drag(&mut s, "join", &[(202.0, 90.0), (202.0, 110.0)], Mods::default());
     let ps = paths(&s);
     assert_eq!(ps.len(), 1);
@@ -470,7 +470,7 @@ fn draw2_commands_reject_bad_params() {
 /// A curve from (100, 100) to (300, 100) whose first anchor has an out handle at (150, 100).
 fn curve(s: &mut Session) -> NodeId {
     let anchors = json!([{"x": 100, "y": 100, "out": [150, 100]}, {"x": 300, "y": 100, "in": [250, 100]}]);
-    NodeId(s.execute("path.create", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap())
+    NodeId(s.execute("path.add", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap())
 }
 
 /// Drag the out handle of path `id`'s first anchor with `tool` to `to`, holding `mods`. Direct
@@ -480,7 +480,7 @@ fn drag_handle(s: &mut Session, tool: &str, id: NodeId, to: (f64, f64), mods: Mo
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.select_tool(tool, v).unwrap();
     if tool == "directSelection" {
-        s.execute("select.none", &json!({})).unwrap();
+        s.execute("edit.deselectAll", &json!({})).unwrap();
         s.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 100.0), v).unwrap();
         s.pointer(&PointerEvent::new(PointerKind::Up, 100.0, 100.0), v).unwrap();
     }
@@ -535,7 +535,7 @@ fn shift_drag_keeps_a_smooth_anchor_smooth_and_alt_breaks_it() {
     for (mods, opposite_follows) in [(shift, true), (shift_alt, false)] {
         let mut s = session();
         let anchors = json!([{"x": 100, "y": 200}, {"x": 200, "y": 100, "in": [150, 100], "out": [250, 100]}, {"x": 300, "y": 200}]);
-        let id = NodeId(s.execute("path.create", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
+        let id = NodeId(s.execute("path.add", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
         s.select_tool("directSelection", view()).unwrap();
         for (kind, x, y, m) in [
             (PointerKind::Down, 200.0, 100.0, Mods::default()),
@@ -562,7 +562,7 @@ fn removing_an_anchor_refits_a_split_curve_and_undo_restores_it() {
     let mut s = session();
     let made = s
         .execute(
-            "path.create",
+            "path.add",
             &json!({"anchors": [
                 {"x": 0, "y": 0, "out": [30, 80]},
                 {"x": 100, "y": 0, "in": [70, 80]}
@@ -589,7 +589,7 @@ fn remove_anchor_points_keeps_the_paths_closed() {
     // stays closed, a straight-sided triangle; a curve keeps its shape round a removed point.
     let mut s = session();
     let r = rect(&mut s, 0.0, 0.0, 100.0, 80.0);
-    let made = s.execute("path.create", &json!({"anchors": [{"x": 300, "y": 0, "out": [330, 80]}, {"x": 400, "y": 0, "in": [370, 80]}]})).unwrap();
+    let made = s.execute("path.add", &json!({"anchors": [{"x": 300, "y": 0, "out": [330, 80]}, {"x": 400, "y": 0, "in": [370, 80]}]})).unwrap();
     let c = NodeId(made["id"].as_u64().unwrap());
     let before = path(&s, c).subpaths[0].segment(0);
     s.execute("path.insertAnchor", &json!({"id": c.0, "segment": 0, "t": 0.5})).unwrap();
@@ -618,7 +618,7 @@ fn undo_steps(s: &Session) -> usize {
 fn convert_anchors_turns_the_selected_anchors_corner_or_smooth() {
     // The Control bar's convert buttons: one undo step each, other anchors left alone.
     let mut s = session();
-    let made = s.execute("path.create", &json!({"anchors": [{"x": 100, "y": 200}, {"x": 200, "y": 100}, {"x": 300, "y": 200}]})).unwrap();
+    let made = s.execute("path.add", &json!({"anchors": [{"x": 100, "y": 200}, {"x": 200, "y": 100}, {"x": 300, "y": 200}]})).unwrap();
     let id = NodeId(made["id"].as_u64().unwrap());
     s.execute("select.anchors", &json!({"id": id.0, "anchors": [[0, 1]]})).unwrap();
     let undo = undo_steps(&s);
@@ -651,7 +651,7 @@ fn cut_at_anchors_splits_paths_and_leaves_one_end_selected() {
     // of each cut stays selected, so dragging it pulls the path apart there.
     let mut s = session();
     let anchors = json!([{"x": 100, "y": 100}, {"x": 200, "y": 100, "in": [170, 80], "out": [230, 120]}, {"x": 300, "y": 100}, {"x": 400, "y": 100}]);
-    let id = NodeId(s.execute("path.create", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("path.add", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
     s.execute("select.anchors", &json!({"id": id.0, "anchors": [[0, 1], [0, 2]]})).unwrap();
     let undo = undo_steps(&s);
     let made = s.execute("path.cutAtAnchors", &json!({})).unwrap();
@@ -695,7 +695,7 @@ fn pen_with_alt_moves_one_handle_and_converts_anchors() {
     let v = view();
     let mut s = session();
     let anchors = json!([{"x": 100, "y": 200}, {"x": 200, "y": 100, "in": [150, 100], "out": [250, 100]}, {"x": 300, "y": 200}]);
-    let id = NodeId(s.execute("path.create", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("path.add", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
     s.select_tool("pen", v).unwrap();
     // Alt-drag the out handle: it moves alone, the in handle stays.
     assert_eq!(gesture(&mut s, &[(250.0, 100.0), (260.0, 130.0), (275.0, 165.0)], alt), 1);
@@ -713,7 +713,7 @@ fn pen_with_alt_moves_one_handle_and_converts_anchors() {
     assert_eq!(path(&s, id).subpaths[0].anchors.len(), 3);
     // Drawing: place a smooth point, then Alt-drag its outgoing handle; the next click goes on
     // drawing the same path.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     gesture(&mut s, &[(100.0, 400.0)], Mods::default());
     gesture(&mut s, &[(200.0, 400.0), (250.0, 400.0)], Mods::default());
     let new = *s.doc().unwrap().selection.objects.first().unwrap();
@@ -787,7 +787,7 @@ fn reshaping_a_segment_keeps_smooth_anchors_smooth() {
     // handle turns with the moved one (at its length), a corner's stays.
     let mut s = session();
     let anchors = json!([{"x": 100, "y": 300}, {"x": 200, "y": 300, "in": [160, 300], "out": [240, 300]}, {"x": 300, "y": 300}]);
-    let id = NodeId(s.execute("path.create", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("path.add", &json!({"anchors": anchors})).unwrap()["id"].as_u64().unwrap());
     s.execute("path.reshapeSegment", &json!({"id": id.0, "segment": 0, "t": 0.5, "dx": 0, "dy": -30})).unwrap();
     let sp = &path(&s, id).subpaths[0];
     let a = sp.anchors[1];
@@ -862,7 +862,7 @@ fn the_pen_continues_any_open_path_and_joins_another() {
     let mut s = session();
     let a = line(&mut s, 100.0, 100.0, 200.0, 100.0);
     let b = line(&mut s, 300.0, 200.0, 400.0, 200.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.select_tool("pen", v).unwrap();
     assert_eq!(s.cursor(Point::new(200.0, 100.0), none, v), Cursor::PenContinue, "an end of a path that isn't selected");
     gesture(&mut s, &[(200.0, 100.0)], none);
@@ -881,7 +881,7 @@ fn the_pen_continues_any_open_path_and_joins_another() {
     gesture(&mut s, &[(500.0, 500.0)], none);
     assert_eq!(paths(&s).len(), 2);
     // From a path's first end, drawing goes on from there: the path is reversed.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.select_tool("selection", v).unwrap();
     s.select_tool("pen", v).unwrap();
     gesture(&mut s, &[(100.0, 100.0)], none);

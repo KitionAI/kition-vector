@@ -1,5 +1,5 @@
 //! PDF and .ai files that reopen as they were: Preserve Editing embeds the native document, which
-//! `document.open` restores unless the pages changed elsewhere; `.ai` saves always carry it and
+//! `file.open` restores unless the pages changed elsewhere; `.ai` saves always carry it and
 //! `.ait` templates open from it untitled.
 
 use serde_json::{Value, json};
@@ -12,7 +12,7 @@ fn b64(v: &Value) -> Vec<u8> {
 }
 
 fn open(s: &mut Session, name: &str, bytes: &[u8]) -> Value {
-    s.execute("document.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap()
+    s.execute("file.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap()
 }
 
 fn tmp(name: &str) -> String {
@@ -35,7 +35,7 @@ fn a_pdf_saved_with_preserve_editing_reopens_as_the_same_document() {
     let mut s = rich();
     let before = comparable(&s.doc().unwrap().doc);
     // On in the default preset.
-    let v = s.execute("document.exportPdf", &json!({})).unwrap();
+    let v = s.execute("file.exportPdf", &json!({})).unwrap();
     assert_eq!(v["warnings"].as_array().map(|w| w.iter().any(|w| w.as_str().unwrap().contains("Preserve"))), Some(false), "{v}");
     let pdf = b64(&v);
     let r = open(&mut s, "rich.pdf", &pdf);
@@ -43,21 +43,21 @@ fn a_pdf_saved_with_preserve_editing_reopens_as_the_same_document() {
     assert_eq!(comparable(&s.doc().unwrap().doc), before, "the document came back exactly");
     assert_eq!(s.doc().unwrap().path, None, "a PDF is not saved over");
     // Picking pages imports them as artwork.
-    let r = s.execute("document.open", &json!({"name": "rich.pdf", "dataBase64": kition_vector_format::base64_encode(&pdf), "pages": "1"})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "rich.pdf", "dataBase64": kition_vector_format::base64_encode(&pdf), "pages": "1"})).unwrap();
     assert_eq!(r["restored"], false, "{r}");
     // Off: the pages import as artwork.
-    let plain = b64(&s.execute("document.exportPdf", &json!({"preserveEditing": false})).unwrap());
+    let plain = b64(&s.execute("file.exportPdf", &json!({"preserveEditing": false})).unwrap());
     assert!(kition_vector_pdf::editing(&plain).is_none());
     assert_eq!(open(&mut s, "plain.pdf", &plain)["restored"], false);
-    // document.export and serialize take the same option.
-    let v = s.execute("document.serialize", &json!({"format": "pdf"})).unwrap();
+    // file.export and serialize take the same option.
+    let v = s.execute("file.serialize", &json!({"format": "pdf"})).unwrap();
     assert!(kition_vector_pdf::editing(&b64(&v)).is_some_and(|e| e.intact));
 }
 
 #[test]
 fn pages_changed_elsewhere_open_as_artwork_with_a_warning() {
     let mut s = rich();
-    let pdf = b64(&s.execute("document.exportPdf", &json!({"compression": {"compressText": false}})).unwrap());
+    let pdf = b64(&s.execute("file.exportPdf", &json!({"compression": {"compressText": false}})).unwrap());
     // Another app changes the artboard's height (300 × 200 pt).
     let edited = patched(&pdf, b"/MediaBox[0 0 300 200]", b"/MediaBox[0 0 300 201]");
     let r = open(&mut s, "edited.pdf", &edited);
@@ -73,7 +73,7 @@ fn pages_changed_elsewhere_open_as_artwork_with_a_warning() {
 fn ai_files_are_pdfs_that_save_and_reopen_editable() {
     let mut s = rich();
     let path = tmp("art.ai");
-    let r = s.execute("document.save", &json!({"path": path, "preserveEditing": false, "range": "1"})).unwrap();
+    let r = s.execute("file.save", &json!({"path": path, "preserveEditing": false, "range": "1"})).unwrap();
     assert_eq!(r["path"], path.as_str());
     // As saved (Save stamps the File Info dates).
     let before = comparable(&s.doc().unwrap().doc);
@@ -82,43 +82,43 @@ fn ai_files_are_pdfs_that_save_and_reopen_editable() {
     assert!(kition_vector_pdf::editing(&bytes).is_some_and(|e| e.intact), "always carries the document");
     assert_eq!(s.doc().unwrap().path.as_deref(), Some(path.as_str()), "the document takes the path");
     // Reopening restores it and keeps the path: Save writes .ai again.
-    let r = s.execute("document.open", &json!({"path": path})).unwrap();
+    let r = s.execute("file.open", &json!({"path": path})).unwrap();
     assert_eq!((&r["format"], &r["restored"]), (&json!("ai"), &json!(true)), "{r}");
     assert_eq!(comparable(&s.doc().unwrap().doc), before);
     assert_eq!(s.doc().unwrap().path.as_deref(), Some(path.as_str()));
     s.execute("shape.rectangle", &json!({"x": 1, "y": 1, "width": 5, "height": 5})).unwrap();
-    s.execute("document.save", &json!({})).unwrap();
+    s.execute("file.save", &json!({})).unwrap();
     let again = kition_vector_pdf::editing(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(kition_vector_format::load(&again.data).unwrap().layers, s.doc().unwrap().doc.layers);
     // Save As also writes a plain PDF (the document then saves back as PDF); PNG stays an export.
-    assert_eq!(s.execute("document.save", &json!({"path": tmp("x.pdf")})).unwrap()["format"], "pdf");
-    assert!(s.execute("document.save", &json!({"path": tmp("x.png")})).is_err(), "PNG is written with document.export");
+    assert_eq!(s.execute("file.save", &json!({"path": tmp("x.pdf")})).unwrap()["format"], "pdf");
+    assert!(s.execute("file.save", &json!({"path": tmp("x.png")})).is_err(), "PNG is written with file.export");
     // A plain PDF named .ai opens as artwork, without a path to save over.
-    let plain = b64(&s.execute("document.exportPdf", &json!({"preserveEditing": false})).unwrap());
+    let plain = b64(&s.execute("file.exportPdf", &json!({"preserveEditing": false})).unwrap());
     let plain_path = tmp("plain.ai");
     std::fs::write(&plain_path, plain).unwrap();
-    let r = s.execute("document.open", &json!({"path": plain_path})).unwrap();
+    let r = s.execute("file.open", &json!({"path": plain_path})).unwrap();
     assert_eq!(r["restored"], false);
     assert_eq!(s.doc().unwrap().path, None);
 }
 
-/// The exports (`document.export`, the CLI's `--export` and `convert`) write `.ai` as Save
+/// The exports (`file.export`, the CLI's `--export` and `convert`) write `.ai` as Save
 /// As does, leaving the document's own path alone.
 #[test]
 fn exports_write_ai_as_save_as_does() {
     let mut s = rich();
     let before = comparable(&s.doc().unwrap().doc);
     let path = tmp("exported.ai");
-    let r = s.execute("document.export", &json!({"path": path})).unwrap();
+    let r = s.execute("file.export", &json!({"path": path})).unwrap();
     assert_eq!(r["format"], "ai", "{r}");
     let bytes = std::fs::read(&path).unwrap();
     assert!(bytes.starts_with(b"%PDF") && kition_vector_pdf::editing(&bytes).is_some_and(|e| e.intact), "PDF-compatible, carrying the document");
     assert_eq!(s.doc().unwrap().path, None, "an export doesn't give the document a path");
-    let r = s.execute("document.open", &json!({"path": path})).unwrap();
+    let r = s.execute("file.open", &json!({"path": path})).unwrap();
     assert_eq!((&r["format"], &r["restored"]), (&json!("ai"), &json!(true)), "{r}");
     assert_eq!(comparable(&s.doc().unwrap().doc), before);
     // Its options as Save As takes them; no path gives the bytes.
-    let r = s.execute("document.export", &json!({"format": "ai", "pdfCompatible": false})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "ai", "pdfCompatible": false})).unwrap();
     assert!(r["warnings"].as_array().unwrap().iter().any(|w| w.as_str().is_some_and(|w| w.contains("without PDF content"))), "{r}");
     assert!(b64(&r).starts_with(b"%PDF"));
 }
@@ -128,7 +128,7 @@ fn ait_templates_open_their_document_untitled() {
     let mut s = rich();
     let before = comparable(&s.doc().unwrap().doc);
     // A never-saved document's .ai comes back as bytes.
-    let ai = b64(&s.execute("document.save", &json!({"format": "ai"})).unwrap());
+    let ai = b64(&s.execute("file.save", &json!({"format": "ai"})).unwrap());
     assert!(ai.starts_with(b"%PDF"));
     let r = open(&mut s, "brochure.ait", &ai);
     assert_eq!((&r["format"], &r["restored"]), (&json!("ait"), &json!(true)), "{r}");
@@ -141,12 +141,12 @@ fn ait_templates_open_their_document_untitled() {
 fn standards_and_screens_leave_the_editing_data_out() {
     let mut s = rich();
     // Choosing PDF/A turns Preserve Editing off unless it is asked for, which PDF/A refuses.
-    let pdf_a = b64(&s.execute("document.exportPdf", &json!({"standard": "pdfA2b"})).unwrap());
+    let pdf_a = b64(&s.execute("file.exportPdf", &json!({"standard": "pdfA2b"})).unwrap());
     assert!(kition_vector_pdf::editing(&pdf_a).is_none());
-    let e = s.execute("document.exportPdf", &json!({"standard": "pdfA2b", "preserveEditing": true})).unwrap_err();
+    let e = s.execute("file.exportPdf", &json!({"standard": "pdfA2b", "preserveEditing": true})).unwrap_err();
     assert!(matches!(e, crate::EngineError::BadParams { .. }), "{e}");
     // Export for Screens writes a PDF per artboard for viewing.
-    let r = s.execute("document.exportForScreens", &json!({"formats": [{"format": "pdf"}]})).unwrap();
+    let r = s.execute("file.exportForScreens", &json!({"formats": [{"format": "pdf"}]})).unwrap();
     let file = kition_vector_format::base64_decode(r["files"][0]["dataBase64"].as_str().unwrap()).unwrap();
     assert!(kition_vector_pdf::editing(&file).is_none());
 }
@@ -168,7 +168,7 @@ fn a_pdf_of_some_artboards_carries_no_editing_data() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 100, "height": 80, "artboards": 3})).unwrap();
     for (range, kept) in [("2", false), ("1,3", false), ("3,2,1", false), ("1-3", true), ("all", true)] {
-        let v = s.execute("document.exportPdf", &json!({ "range": range })).unwrap();
+        let v = s.execute("file.exportPdf", &json!({ "range": range })).unwrap();
         assert_eq!(kition_vector_pdf::editing(&b64(&v)).is_some(), kept, "{range}");
         let warned = v["warnings"].as_array().unwrap().iter().any(|w| w == super::pdf::EDITING_NEEDS_EVERY_ARTBOARD);
         assert_eq!(warned, !kept, "{range}: {v}");

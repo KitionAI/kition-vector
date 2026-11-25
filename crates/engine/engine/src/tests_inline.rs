@@ -19,11 +19,11 @@ fn circle_symbol(s: &mut Session, name: &str, d: f64) {
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     s.execute("paint.setStroke", &json!({"none": true})).unwrap();
     s.execute("symbol.new", &json!({"name": name})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
 }
 
 fn text(s: &mut Session, t: &str) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": 100, "y": 100, "text": t, "size": 20})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 100, "y": 100, "text": t, "size": 20})).unwrap();
     NodeId(r["id"].as_u64().unwrap())
 }
 
@@ -162,9 +162,9 @@ fn inline_graphics_follow_their_symbol() {
     s.execute("symbol.delete", &json!({"name": "Dot"})).unwrap();
     let t = obj(&s, id);
     assert!(t.runs[1].inline.as_ref().unwrap().bounds.is_none());
-    let _ = s.execute("document.serialize", &json!({"format": "png"})).unwrap();
-    let _ = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
-    let _ = s.execute("document.serialize", &json!({"format": "pdf"})).unwrap();
+    let _ = s.execute("file.serialize", &json!({"format": "png"})).unwrap();
+    let _ = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
+    let _ = s.execute("file.serialize", &json!({"format": "pdf"})).unwrap();
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn create_outlines_turns_inline_graphics_into_symbol_instances() {
     let id = text(&mut s, "a b");
     s.execute("text.insertInline", &json!({"id": id.0, "at": 2, "symbol": "Dot"})).unwrap();
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
-    let r = s.execute("type.createOutlines", &json!({})).unwrap();
+    let r = s.execute("text.convertToOutlines", &json!({})).unwrap();
     let g = NodeId(r["ids"][0].as_u64().unwrap());
     let d = &s.doc().unwrap().doc;
     let kids = d.node(g).unwrap().children().unwrap();

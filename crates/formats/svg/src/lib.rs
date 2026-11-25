@@ -186,7 +186,7 @@ pub enum Profile {
 /// SVG export options (SVG Options). Deserializes from camelCase JSON with every field optional;
 /// unknown fields are rejected.
 ///
-/// These defaults are the library's and the engine's (`document.export` without options):
+/// These defaults are the library's and the engine's (`file.export` without options):
 /// presentation attributes and a fixed size, the most portable output. The SVG Options dialog
 /// starts from Internal CSS and Responsive instead, like the reference app's Export As.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

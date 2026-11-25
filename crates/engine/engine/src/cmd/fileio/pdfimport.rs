@@ -1,5 +1,5 @@
-//! Opening and placing PDF (and PDF-compatible `.ai`/`.ait`) files: the options `document.open`
-//! and `file.place` read ([`LoadOptions`]), the pages they import and `document.pdfInfo` (pages,
+//! Opening and placing PDF (and PDF-compatible `.ai`/`.ait`) files: the options `file.open`
+//! and `file.place` read ([`LoadOptions`]), the pages they import and `file.pdfInfo` (pages,
 //! boxes, a thumbnail) for the Import PDF dialog.
 
 use kition_vector_doc::{ColorMode, Document};
@@ -10,7 +10,7 @@ use super::super::colormgmt::Grays;
 use super::super::*;
 use super::{err, source};
 
-/// The `document.open` options besides the file. The PDF ones (pages, box, password, text,
+/// The `file.open` options besides the file. The PDF ones (pages, box, password, text,
 /// layers) and the DXF ones are ignored by other formats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LoadOptions {
@@ -147,9 +147,9 @@ pub fn page_document(bytes: &[u8], page: usize, o: &LoadOptions) -> Result<(Docu
     kition_vector_pdf::import_with_report(bytes, &opts).map(|r| (r.document, r.warnings)).map_err(err)
 }
 
-const INFO: &str = "document.pdfInfo";
+const INFO: &str = "file.pdfInfo";
 
-/// `document.pdfInfo`.
+/// `file.pdfInfo`.
 pub(super) fn pdf_info(_: &mut Session, p: &Value) -> Result<Value> {
     let bytes = source(p, INFO)?.bytes;
     let o = LoadOptions::from_params(INFO, p)?;

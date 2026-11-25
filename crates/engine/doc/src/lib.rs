@@ -641,7 +641,7 @@ pub struct Document {
     /// kept them in `unknown`, see [`Document::migrate_color_profiles`]).
     #[serde(default, skip_serializing_if = "ColorProfiles::is_empty")]
     pub color_profiles: ColorProfiles,
-    /// File → Export for Screens: the settings it last exported with (`document.exportForScreens`
+    /// File → Export for Screens: the settings it last exported with (`file.exportForScreens`
     /// params), so the dialog reopens on them.
     #[serde(default, skip_serializing_if = "serde_json::Map::is_empty")]
     pub export_settings: serde_json::Map<String, serde_json::Value>,

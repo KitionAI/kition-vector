@@ -506,11 +506,11 @@ impl Tool for DirectSelectionTool {
                     self.state = State::SpinePoint { id, anchor, from, start, began: true };
                 }
                 let q = from + move_delta(start, p, ev.mods.shift);
-                out.push(Action::Preview("object.blend.spine.moveAnchor".into(), json!({"id": id.0, "anchor": anchor, "x": q.x, "y": q.y})));
+                out.push(Action::Preview("object.blend.moveSpineAnchor".into(), json!({"id": id.0, "anchor": anchor, "x": q.x, "y": q.y})));
                 out
             }
             (PointerKind::Drag, State::SpineHandle { id, anchor, out }) => vec![Action::Preview(
-                "object.blend.spine.moveAnchor".into(),
+                "object.blend.moveSpineAnchor".into(),
                 json!({"id": id.0, "anchor": anchor, "handle": if out {"out"} else {"in"}, "x": p.x, "y": p.y, "independent": ev.mods.alt}),
             )],
             (PointerKind::Drag, State::Mesh) => self.mesh.drag_to(p).unwrap_or_default(),
@@ -562,7 +562,7 @@ impl Tool for DirectSelectionTool {
                 self.state = State::Idle;
                 let r = Rect::from_points(start, p);
                 if r.width() < cx.tol(3.0) && r.height() < cx.tol(3.0) {
-                    return if toggle { vec![] } else { vec![Action::Exec("select.none".into(), json!({}))] };
+                    return if toggle { vec![] } else { vec![Action::Exec("edit.deselectAll".into(), json!({}))] };
                 }
                 // Collect anchors inside the rect for every editable path.
                 let mut sel: Vec<(NodeId, Vec<AnchorRef>)> = vec![];
@@ -772,7 +772,7 @@ mod tests {
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 211.0, 310.0)), vec![]);
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 221.0, 350.0));
         assert_eq!(a[0], Action::Begin("Reshape Spine".into()));
-        assert_eq!(a[1], Action::Preview("object.blend.spine.moveAnchor".into(), json!({"id": g.0, "anchor": 1, "x": 220.0, "y": 350.0})));
+        assert_eq!(a[1], Action::Preview("object.blend.moveSpineAnchor".into(), json!({"id": g.0, "anchor": 1, "x": 220.0, "y": 350.0})));
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 221.0, 350.0)), vec![Action::Commit]);
         assert!(t.overlays(&cx).iter().any(|o| matches!(o, Overlay::Anchor { filled: true, .. })), "the clicked point shows");
     }

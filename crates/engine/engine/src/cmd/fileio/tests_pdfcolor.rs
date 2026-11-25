@@ -1,4 +1,4 @@
-//! `document.open` keeps a PDF's CMYK, Gray and spot colours, and `colorMode` picks the mode.
+//! `file.open` keeps a PDF's CMYK, Gray and spot colours, and `colorMode` picks the mode.
 
 use kition_vector_color::{Color, Paint};
 use kition_vector_doc::ColorMode;
@@ -19,7 +19,7 @@ fn cmyk_pdf() -> String {
         s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap();
         s.execute("paint.setFill", &fill).unwrap();
     }
-    let v = s.execute("document.serialize", &json!({"format": "pdf"})).unwrap();
+    let v = s.execute("file.serialize", &json!({"format": "pdf"})).unwrap();
     v["dataBase64"].as_str().unwrap().to_string()
 }
 
@@ -31,8 +31,8 @@ fn fills(s: &Session) -> Vec<Paint> {
 #[test]
 fn a_cmyk_pdf_opens_as_a_cmyk_document_with_its_spot_swatch() {
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf()})).unwrap();
-    assert_eq!(s.execute("file.info", &json!({})).unwrap()["colorMode"], "cmyk");
+    s.execute("file.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf()})).unwrap();
+    assert_eq!(s.execute("file.setInfo", &json!({})).unwrap()["colorMode"], "cmyk");
     let f = fills(&s);
     assert!(matches!(f[0].color(), Some(Color::Cmyk { c, .. }) if (c - 0.6).abs() < 0.004), "{:?}", f[0]);
     assert!(matches!(f[1].color(), Some(Color::Gray { k }) if (k - 0.3).abs() < 0.004), "{:?}", f[1]);
@@ -46,7 +46,7 @@ fn a_cmyk_pdf_opens_as_a_cmyk_document_with_its_spot_swatch() {
 #[test]
 fn color_mode_opens_the_file_in_the_mode_asked_for() {
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf(), "colorMode": "RGB"})).unwrap();
+    s.execute("file.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf(), "colorMode": "RGB"})).unwrap();
     assert_eq!(s.active().unwrap().doc.color_mode, ColorMode::Rgb);
     let f = fills(&s);
     // Converted as Document Color Mode does: no CMYK left, greys stay grey.
@@ -56,11 +56,11 @@ fn color_mode_opens_the_file_in_the_mode_asked_for() {
     let mut svg = Session::new();
     svg.execute("file.new", &json!({"width": 20, "height": 20})).unwrap();
     svg.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
-    let text = svg.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
-    s.execute("document.open", &json!({"name": "a.svg", "dataBase64": kition_vector_format::base64_encode(text.as_bytes()), "colorMode": "cmyk"}))
+    let text = svg.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    s.execute("file.open", &json!({"name": "a.svg", "dataBase64": kition_vector_format::base64_encode(text.as_bytes()), "colorMode": "cmyk"}))
         .unwrap();
     assert_eq!(s.active().unwrap().doc.color_mode, ColorMode::Cmyk);
     assert!(fills(&s).iter().all(|p| !matches!(p.color(), Some(Color::Rgb { .. }))));
-    let e = s.execute("document.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf(), "colorMode": "lab"})).unwrap_err().to_string();
+    let e = s.execute("file.open", &json!({"name": "press.pdf", "dataBase64": cmyk_pdf(), "colorMode": "lab"})).unwrap_err().to_string();
     assert!(e.contains("rgb or cmyk"), "{e}");
 }

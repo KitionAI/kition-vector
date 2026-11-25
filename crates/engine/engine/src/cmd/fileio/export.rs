@@ -1,4 +1,4 @@
-//! `document.export`, `document.exportBytes`, `document.serialize`, `document.exportSelection`, `document.exportForOffice`.
+//! `file.export`, `file.exportBytes`, `file.serialize`, `file.exportSelection`, `file.exportForOffice`.
 
 use std::borrow::Cow;
 use std::collections::HashSet;
@@ -14,10 +14,10 @@ use super::encode::single_artboard;
 use super::{ARTBOARD_PARAMS, Format, default_name, encode, encode_all, encode_with_warnings, merge, writable, write_encoded, write_or_return};
 
 pub(super) fn serialize(s: &mut Session, p: &Value) -> Result<Value> {
-    let f = writable("document.serialize", Some(str_param(p, "format").unwrap_or("kvector")), None)?;
-    let expanded = expand_presets(s, "document.serialize", p)?;
+    let f = writable("file.serialize", Some(str_param(p, "format").unwrap_or("kvector")), None)?;
+    let expanded = expand_presets(s, "file.serialize", p)?;
     let p = &*expanded;
-    let doc = &*source(s, f, p, "document.serialize")?;
+    let doc = &*source(s, f, p, "file.serialize")?;
     let enc = encode_all(doc, f.id, p)?;
     let files = enc.named(doc, &default_name(doc, f.extensions[0]));
     let (main, linked) = files.split_at(enc.files.len());
@@ -47,9 +47,9 @@ pub(super) fn serialize(s: &mut Session, p: &Value) -> Result<Value> {
 pub(super) fn export(s: &mut Session, p: &Value) -> Result<Value> {
     let path = str_param(p, "path");
     if let Some(path) = path {
-        super::check_not_lossy_overwrite(s.doc()?, path, p, "document.export")?;
+        super::check_not_lossy_overwrite(s.doc()?, path, p, "file.export")?;
     }
-    export_to(s, p, path, "document.export")
+    export_to(s, p, path, "file.export")
 }
 
 /// The export `p` asks for, written to `path`, or answered as base64 without one.
@@ -62,11 +62,11 @@ fn export_to(s: &mut Session, p: &Value, path: Option<&str>, cmd: &str) -> Resul
     write_encoded(path, &default_name(doc, f.extensions[0]), doc, &enc, json!({ "format": f.id, "warnings": enc.warnings }))
 }
 
-/// `document.exportBytes`: `document.export` without a file, for a host to write (an editor in a
+/// `file.exportBytes`: `file.export` without a file, for a host to write (an editor in a
 /// browser, an agent's export). The file is base64 in `data` (the first one when the format writes
 /// several, which `files` then lists, each `{name, data}`; linked images are `linked`, alike).
 pub(super) fn export_bytes(s: &mut Session, p: &Value) -> Result<Value> {
-    let mut out = export_to(s, p, None, "document.exportBytes")?;
+    let mut out = export_to(s, p, None, "file.exportBytes")?;
     let rename = |v: &mut Value| {
         if let Some(o) = v.as_object_mut()
             && let Some(data) = o.remove("dataBase64")
@@ -91,7 +91,7 @@ pub fn export_source<'a>(st: &'a DocState, p: &Value) -> Result<Cow<'a, Document
     }
     let keep: HashSet<NodeId> = edit::roots_of(&st.doc, st.selection.in_paint_order(&st.doc)).into_iter().collect();
     if keep.is_empty() {
-        return Err(bad("document.export", "select something to export (or turn off selectedOnly)"));
+        return Err(bad("file.export", "select something to export (or turn off selectedOnly)"));
     }
     let mut d = Document::clone(&st.doc);
     d.layers = st.doc.layers.iter().filter_map(|l| selected_part(l, &keep)).map(Arc::new).collect();
@@ -195,7 +195,7 @@ pub(crate) fn isolated(doc: &Document, ids: &[NodeId], name: &str) -> Option<(Do
 /// File → Export Selection: the selected objects alone, cropped to their visual bounds. Objects on
 /// template layers are guides, not artwork, and are left out.
 pub(super) fn export_selection(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "document.exportSelection";
+    const C: &str = "file.exportSelection";
     if let Some(path) = str_param(p, "path") {
         super::check_not_lossy_overwrite(s.doc()?, path, p, C)?;
     }
@@ -205,7 +205,7 @@ pub(super) fn export_selection(s: &mut Session, p: &Value) -> Result<Value> {
     let p = &*expanded;
     let (d, bounds) = selection(s, C)?;
     // The encoder's warnings (options accepted but not applied, features approximated or left
-    // out), as document.export reports them.
+    // out), as file.export reports them.
     let (bytes, warnings) = encode_with_warnings(&d, f.id, &without_artboards(p))?;
     write_or_return(path, &bytes, json!({ "format": f.id, "warnings": warnings, "bounds": [bounds.x0, bounds.y0, bounds.width(), bounds.height()] }))
 }
@@ -213,7 +213,7 @@ pub(super) fn export_selection(s: &mut Session, p: &Value) -> Result<Value> {
 /// File → Save for Office Documents: one artboard as a PNG at `ppi`, on white unless
 /// `transparent`.
 pub(super) fn export_for_office(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "document.exportForOffice";
+    const C: &str = "file.exportForOffice";
     if let Some(path) = str_param(p, "path") {
         super::check_not_lossy_overwrite(s.doc()?, path, p, C)?;
     }

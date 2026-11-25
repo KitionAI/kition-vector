@@ -28,7 +28,7 @@ impl Tool for MagicWandTool {
             return vec![];
         }
         let Some(h) = hit_test(cx.doc, ev.pos, cx.hit_options()) else {
-            return if ev.mods.shift || ev.mods.alt { vec![] } else { vec![Action::Exec("select.none".into(), json!({}))] };
+            return if ev.mods.shift || ev.mods.alt { vec![] } else { vec![Action::Exec("edit.deselectAll".into(), json!({}))] };
         };
         let mode = if ev.mods.alt {
             "subtract"
@@ -101,7 +101,7 @@ impl Tool for LassoTool {
                 let poly = std::mem::take(&mut self.points);
                 let (add, sub) = (ev.mods.shift, ev.mods.alt);
                 if poly.len() < 3 {
-                    return if add || sub { vec![] } else { vec![Action::Exec("select.none".into(), json!({}))] };
+                    return if add || sub { vec![] } else { vec![Action::Exec("edit.deselectAll".into(), json!({}))] };
                 }
                 // Anchors inside the loop for every editable path.
                 let mut hits: Vec<(NodeId, BTreeSet<AnchorRef>)> = vec![];
@@ -168,7 +168,7 @@ mod tests {
         let r = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 150.0, 150.0).with_mods(shift));
         assert_eq!(r, vec![Action::Exec("select.magicWand".into(), json!({"id": a.0, "mode": "add"}))]);
         let miss = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 900.0, 900.0));
-        assert_eq!(miss, vec![Action::Exec("select.none".into(), json!({}))]);
+        assert_eq!(miss, vec![Action::Exec("edit.deselectAll".into(), json!({}))]);
     }
 
     #[test]

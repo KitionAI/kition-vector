@@ -160,12 +160,12 @@ pub fn check_svg_roundtrip(doc: &Document) -> Result<Document, String> {
     kition_vector_svg::import(&svg).map_err(|e| format!("svg re-import: {e}\n{svg}"))
 }
 
-/// `document.inspect` must succeed and serialize.
+/// `file.inspect` must succeed and serialize.
 pub fn check_inspect(s: &mut Session) -> Result<(), String> {
     if s.active().is_none() {
         return Ok(());
     }
-    let v = s.execute("document.inspect", &json!({})).map_err(|e| format!("inspect: {e}"))?;
+    let v = s.execute("file.inspect", &json!({})).map_err(|e| format!("inspect: {e}"))?;
     serde_json::to_string(&v).map_err(|e| e.to_string())?;
     Ok(())
 }

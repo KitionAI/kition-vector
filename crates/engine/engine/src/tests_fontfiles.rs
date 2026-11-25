@@ -44,7 +44,7 @@ fn finished(s: &mut Session) -> Value {
 
 /// New point type in `font` and `style` → its id.
 fn text(s: &mut Session, y: f64, font: &str, style: &str) -> u64 {
-    s.execute("text.create", &json!({"x": 10, "y": y, "text": "Ab", "font": font, "style": style})).unwrap()["id"].as_u64().unwrap()
+    s.execute("text.add", &json!({"x": 10, "y": y, "text": "Ab", "font": font, "style": style})).unwrap()["id"].as_u64().unwrap()
 }
 
 fn bundled(file: &str) -> Vec<u8> {
@@ -71,7 +71,7 @@ fn missing_fonts_are_listed_symbols_included() {
     let id = text(&mut s, 140.0, "Symbol Only Family", "Bold");
     s.execute("select.set", &json!({"ids": [id]})).unwrap();
     s.execute("symbol.new", &json!({})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     // CSS generic families, which no font file provides, are left out.
     text(&mut s, 180.0, "sans-serif", "Regular");
     text(&mut s, 220.0, "SERIF", "Bold");

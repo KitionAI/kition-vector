@@ -1,7 +1,7 @@
 /**
  * File › Export: the drawing as SVG, PDF or PNG (at 1, 2 or 3 times its size, transparent or on
  * white): every artboard, one artboard, or the selection cropped to its art. The engine writes the
- * file into memory (`document.exportBytes`) and the host writes it as a new file next to the
+ * file into memory (`file.exportBytes`) and the host writes it as a new file next to the
  * drawing; success is shown only once the host answers.
  */
 import { useState } from 'react'
@@ -41,7 +41,7 @@ export function ExportDialog({ info, onClose }: { info: VectorInfo; onClose: () 
         params.scale = Number(scale)
         params.background = transparent ? 'transparent' : 'white'
       }
-      const answer = await query<ExportAnswer>('document.exportBytes', params)
+      const answer = await query<ExportAnswer>('file.exportBytes', params)
       if (!answer?.data) throw new Error(t('exportNoFile'))
       const names = scope === 'all' ? info.artboards.map((artboard) => artboard.name) : []
       const written = await writeExports(exportFiles(answer, host.init.document, format, names), host.exportFile)

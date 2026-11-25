@@ -130,7 +130,7 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         cmd!("select.object.slices", "Slices", ["Select", "Object"], None, "{} select every user and object slice → {count}", has_doc, select_all),
         cmd!(
-            "object.slice.create",
+            "object.slice.add",
             "Create Slice",
             [],
             None,
@@ -633,7 +633,7 @@ fn rect_param(p: &Value, cmd: &str) -> Result<Rect> {
 }
 
 fn create(s: &mut Session, p: &Value) -> Result<Value> {
-    let r = rect_param(p, "object.slice.create")?;
+    let r = rect_param(p, "object.slice.add")?;
     let id = s.edit("Slice", |d, sel| {
         let id = add_slice(d, r, SliceOptions::default());
         sel.set_slices([id]);

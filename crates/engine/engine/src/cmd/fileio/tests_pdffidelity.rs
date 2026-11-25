@@ -1,4 +1,4 @@
-//! `document.open` PDF options `textAs` and `layers`.
+//! `file.open` PDF options `textAs` and `layers`.
 
 use kition_vector_doc::NodeKind;
 use kition_vector_pdf::TextAs;
@@ -12,7 +12,7 @@ fn open(s: &mut Session, bytes: &[u8], extra: Value) -> crate::Result<Value> {
     if let (Some(o), Value::Object(e)) = (p.as_object_mut(), extra) {
         o.extend(e);
     }
-    s.execute("document.open", &p)
+    s.execute("file.open", &p)
 }
 
 fn kinds(s: &Session) -> Vec<&'static str> {
@@ -81,7 +81,7 @@ fn exports_that_draw_type_in_a_missing_font_say_it_is_the_fallback_font() {
     assert_eq!(fonts[0]["status"], "missing", "{fonts}");
     assert!(r["warnings"].to_string().contains(&family), "opening lists it: {r}");
     let warned = |s: &mut Session, p: Value| {
-        let w = s.execute("document.serialize", &p).unwrap()["warnings"].to_string();
+        let w = s.execute("file.serialize", &p).unwrap()["warnings"].to_string();
         w.contains(&family) && w.contains(kition_vector_text::FALLBACK_FAMILY)
     };
     for p in [
@@ -99,7 +99,7 @@ fn exports_that_draw_type_in_a_missing_font_say_it_is_the_fallback_font() {
     for p in [json!({"format": "svg", "outlineText": false}), json!({"format": "kvector"}), json!({"format": "txt"})] {
         assert!(!warned(&mut s, p.clone()), "{p}");
     }
-    let pdf_export = s.execute("document.exportPdf", &json!({})).unwrap();
+    let pdf_export = s.execute("file.exportPdf", &json!({})).unwrap();
     assert!(pdf_export["warnings"].to_string().contains(&family), "{pdf_export}");
     s.execute("text.replaceFont", &json!({"from": {"family": family}, "to": {"family": "Source Serif 4"}})).unwrap();
     assert!(!warned(&mut s, json!({"format": "pdf"})), "replaced: nothing is substituted");

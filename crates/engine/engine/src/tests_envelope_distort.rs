@@ -148,7 +148,7 @@ fn images_bend_as_a_raster_mesh_warp() {
     assert!(mid[0] > 200 && mid[1] < 60, "the middle rose: {mid:?}");
     assert!(img.pixel(101, 95)[1] > 200, "the corner stayed: {:?}", img.pixel(101, 95));
     // The pieces export as clipped images, bent in the SVG too.
-    let svg = s.execute("document.export", &json!({"format": "svg"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+    let svg = s.execute("file.export", &json!({"format": "svg"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
     let svg = String::from_utf8(kition_vector_format::base64_decode(&svg).unwrap()).unwrap();
     assert!(svg.matches("<use").count() >= 32 && svg.contains("clip"), "{}", &svg[..svg.len().min(400)]);
     assert_eq!(svg.matches("<image").count(), 1, "the pieces share the image's pixels");

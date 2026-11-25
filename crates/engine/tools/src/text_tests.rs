@@ -240,13 +240,13 @@ fn area_and_path_tools_convert_clicked_paths() {
     tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 100.0, 150.0));
     let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 100.0, 150.0));
     assert!(
-        acts.iter().any(|a| matches!(a, Action::Exec(cmd, p) if cmd == "text.createInPath" && p["path"] == json!(rect.0) && p["mode"] == "area")),
+        acts.iter().any(|a| matches!(a, Action::Exec(cmd, p) if cmd == "text.addInPath" && p["path"] == json!(rect.0) && p["mode"] == "area")),
         "{acts:?}"
     );
     let mut tool = TypeTool::new("typeOnPath");
     tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 150.0, 100.0));
     let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 150.0, 100.0));
-    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, p) if cmd == "text.createInPath" && p["mode"] == "onPath")), "{acts:?}");
+    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, p) if cmd == "text.addInPath" && p["mode"] == "onPath")), "{acts:?}");
 }
 
 #[test]
@@ -351,13 +351,13 @@ fn new_type_snaps_to_smart_guides() {
     assert!(tool.overlays(&c).iter().any(|o| matches!(o, Overlay::Label { text, p, .. } if text == "align" && *p == Point::new(150.0, 330.0))));
     tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 151.0, 330.0));
     let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 151.0, 330.0));
-    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.create" && v["x"] == 150.0 && v["y"] == 330.0)), "{acts:?}");
+    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.add" && v["x"] == 150.0 && v["y"] == 330.0)), "{acts:?}");
     let mut tool = TypeTool::new("type");
     tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 102.0, 98.0));
     tool.pointer(&c, &PointerEvent::new(PointerKind::Drag, 199.0, 202.0));
     let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 199.0, 202.0));
     let area = json!({"width": 100.0, "height": 100.0});
-    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.create" && v["x"] == 100.0 && v["area"] == area)), "{acts:?}");
+    assert!(acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.add" && v["x"] == 100.0 && v["area"] == area)), "{acts:?}");
 }
 
 #[test]

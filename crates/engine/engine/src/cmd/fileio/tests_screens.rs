@@ -19,7 +19,7 @@ fn session(artboards: usize) -> Session {
 }
 
 fn export(s: &mut Session, p: Value) -> Value {
-    s.execute("document.exportForScreens", &p).unwrap()
+    s.execute("file.exportForScreens", &p).unwrap()
 }
 
 /// `(name, bytes)` of each returned file.
@@ -68,7 +68,7 @@ fn a_width_or_height_row_gives_that_many_pixels() {
     let r = export(&mut s, json!({"formats": [{"format": "png", "scale": 3, "width": 20}]}));
     assert_eq!(size(&files(&r)[0].1), (20, 15));
     for bad in [json!({"scale": "big"}), json!({"width": -5}), json!({"height": "tall"})] {
-        assert!(s.execute("document.exportForScreens", &json!({"formats": [bad]})).is_err(), "{bad}");
+        assert!(s.execute("file.exportForScreens", &json!({"formats": [bad]})).is_err(), "{bad}");
     }
     // Vector rows ignore sizes and their suffixes.
     let r = export(&mut s, json!({"formats": [{"format": "svg", "scale": "100w", "suffix": "@100w"}]}));
@@ -94,8 +94,8 @@ fn density_buckets_go_into_sub_folders() {
     assert_eq!(widths, [30, 40, 60, 80, 120, 160]);
     let r = export(&mut s, json!({"preset": "mobile", "artboards": [1]}));
     assert_eq!(names(&r), ["1x/Artboard-2.png", "2x/Artboard-2@2x.png", "3x/Artboard-2@3x.png"]);
-    assert!(s.execute("document.exportForScreens", &json!({"preset": "mobile", "formats": [{}]})).is_err(), "a preset or formats");
-    assert!(s.execute("document.exportForScreens", &json!({"preset": "tablet"})).is_err());
+    assert!(s.execute("file.exportForScreens", &json!({"preset": "mobile", "formats": [{}]})).is_err(), "a preset or formats");
+    assert!(s.execute("file.exportForScreens", &json!({"preset": "tablet"})).is_err());
     // Sub-folders by size for raster rows, by format for vector rows, or the row's own (made safe).
     let r = export(
         &mut s,
@@ -148,14 +148,14 @@ fn full_document_gives_one_file_per_format() {
     // Nothing visible: nothing to export but the PDF.
     let mut empty = session(1);
     empty.execute("edit.undo", &json!({})).unwrap();
-    assert!(empty.execute("document.exportForScreens", &json!({"fullDocument": true, "formats": [{"format": "png"}]})).is_err());
+    assert!(empty.execute("file.exportForScreens", &json!({"fullDocument": true, "formats": [{"format": "png"}]})).is_err());
     assert_eq!(files(&export(&mut empty, json!({"fullDocument": true, "formats": [{"format": "pdf"}]}))).len(), 1);
 }
 
 #[test]
 fn include_bleed_grows_each_artboard() {
     let mut s = session(1);
-    s.execute("document.setup", &json!({"bleed": [2, 4, 6, 8]})).unwrap();
+    s.execute("file.setup", &json!({"bleed": [2, 4, 6, 8]})).unwrap();
     let r = export(&mut s, json!({"includeBleed": true, "formats": [{"format": "png"}, {"format": "png", "scale": "108w", "suffix": "-w"}]}));
     let f = files(&r);
     assert_eq!(size(&f[0].1), (54, 36), "40 + 6 + 8 by 30 + 2 + 4");
@@ -238,11 +238,11 @@ fn zip_archives_store_their_files() {
 #[test]
 fn the_document_remembers_its_export_settings() {
     let mut s = session(2);
-    assert_eq!(s.execute("document.exportSettings", &json!({})).unwrap()["settings"], json!({}));
+    assert_eq!(s.execute("file.exportSettings", &json!({})).unwrap()["settings"], json!({}));
     s.doc_mut().unwrap().mark_saved();
     let p = json!({"range": "2", "subfolders": true, "prefix": "p-", "zip": true, "openLocation": true, "formats": [{"format": "jpg", "quality": 80, "scale": "2x"}]});
     export(&mut s, p);
-    let settings = s.execute("document.exportSettings", &json!({})).unwrap()["settings"].clone();
+    let settings = s.execute("file.exportSettings", &json!({})).unwrap()["settings"].clone();
     assert_eq!(
         settings,
         json!({"range": "2", "subfolders": true, "prefix": "p-", "openLocation": true, "formats": [{"format": "jpg", "quality": 80, "scale": "2x"}]})
@@ -258,8 +258,8 @@ fn the_document_remembers_its_export_settings() {
     export(&mut s, json!({"range": "1"}));
     assert_eq!(s.doc().unwrap().history.undo.len(), undo_depth, "not an undo step");
     // A failed export keeps the last settings.
-    assert!(s.execute("document.exportForScreens", &json!({"range": "9"})).is_err());
-    assert_eq!(s.execute("document.exportSettings", &json!({})).unwrap()["settings"], json!({"range": "1"}));
+    assert!(s.execute("file.exportForScreens", &json!({"range": "9"})).is_err());
+    assert_eq!(s.execute("file.exportSettings", &json!({})).unwrap()["settings"], json!({"range": "1"}));
     // Saved with the document (native round trip); older files have none.
     let doc = kition_vector_format::load(&kition_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
     assert_eq!(doc.export_settings, s.doc().unwrap().doc.export_settings);

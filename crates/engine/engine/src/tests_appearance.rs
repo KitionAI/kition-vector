@@ -171,7 +171,7 @@ fn group_rows_are_the_groups_own_stack() {
     let a = rect(&mut s, 100.0);
     let b = rect(&mut s, 250.0);
     run(&mut s, "select.set", json!({"ids": [a.0, b.0]}));
-    let g = NodeId(run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap());
+    let g = NodeId(run(&mut s, "arrange.group", json!({}))["id"].as_u64().unwrap());
     run(&mut s, "appearance.addFill", json!({}));
     assert_eq!(node(&s, g).appearance.items.len(), 1);
     assert_eq!(node(&s, a).appearance.items.len(), 2);
@@ -188,7 +188,7 @@ fn group_rows_are_the_groups_own_stack() {
 #[test]
 fn text_items_take_item_paint() {
     let mut s = session();
-    let t = NodeId(run(&mut s, "text.create", json!({"x": 10, "y": 50, "text": "Hi"}))["id"].as_u64().unwrap());
+    let t = NodeId(run(&mut s, "text.add", json!({"x": 10, "y": 50, "text": "Hi"}))["id"].as_u64().unwrap());
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     run(&mut s, "appearance.addFill", json!({}));
     run(&mut s, "paint.setFill", json!({"item": 0, "color": "#ff0000"}));
@@ -252,7 +252,7 @@ fn per_fill_offset_path_renders() {
 #[test]
 fn text_fill_items_composite_with_their_opacity() {
     let mut s = session();
-    let t = NodeId(run(&mut s, "text.create", json!({"x": 20, "y": 200, "text": "HIM", "size": 150}))["id"].as_u64().unwrap());
+    let t = NodeId(run(&mut s, "text.add", json!({"x": 20, "y": 200, "text": "HIM", "size": 150}))["id"].as_u64().unwrap());
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     run(&mut s, "appearance.addFill", json!({}));
     run(&mut s, "appearance.setItem", json!({"index": 0, "color": "#ff0000"}));
@@ -351,7 +351,7 @@ fn an_active_row_of_the_other_kind_leaves_edits_on_the_painted_leaves() {
     let a = rect(&mut s, 100.0);
     let b = rect(&mut s, 250.0);
     run(&mut s, "select.set", json!({"ids": [a.0, b.0]}));
-    let g = NodeId(run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap());
+    let g = NodeId(run(&mut s, "arrange.group", json!({}))["id"].as_u64().unwrap());
     run(&mut s, "appearance.addFill", json!({}));
     // The group's own fill row is active: stroke edits still go to the members' strokes.
     run(&mut s, "appearance.setActiveItem", json!({"index": 0}));
@@ -396,7 +396,7 @@ fn clear_and_reduce_keep_a_groups_stack_empty() {
     let b = rect(&mut s, 250.0);
     let members = node(&s, a).appearance;
     run(&mut s, "select.set", json!({"ids": [a.0, b.0]}));
-    let g = NodeId(run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap());
+    let g = NodeId(run(&mut s, "arrange.group", json!({}))["id"].as_u64().unwrap());
     run(&mut s, "appearance.reduceToBasic", json!({}));
     assert!(node(&s, g).appearance.items.is_empty());
     run(&mut s, "appearance.addStroke", json!({}));

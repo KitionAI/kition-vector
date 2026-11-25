@@ -19,7 +19,7 @@ fn build() -> Vec<u8> {
     let mut doc = VectorDocument::create("badge.kvector", 400, 300).unwrap();
     doc.execute("shape.ellipse", json!({ "x": 50, "y": 50, "width": 200, "height": 200 })).unwrap();
     doc.execute("paint.setFill", json!({ "color": "#2a9d8f" })).unwrap();
-    doc.execute("text.create", json!({ "x": 80, "y": 160, "text": "Trail", "size": 40 })).unwrap();
+    doc.execute("text.add", json!({ "x": 80, "y": 160, "text": "Trail", "size": 40 })).unwrap();
     doc.save(Some("badge.kvector")).unwrap()
 }
 
@@ -64,14 +64,14 @@ fn the_same_commands_save_the_same_bytes() {
 fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical_files() {
     let mut doc = VectorDocument::create("Logo.kvector", 800, 600).unwrap();
     doc.execute("shape.rectangle", json!({ "x": 40, "y": 40, "width": 120, "height": 80 })).unwrap();
-    doc.execute("select.all", json!({})).unwrap();
-    doc.execute("object.group", json!({})).unwrap();
+    doc.execute("edit.selectAll", json!({})).unwrap();
+    doc.execute("arrange.group", json!({})).unwrap();
     let file = doc.save(None).unwrap();
 
     let a = VectorDocument::open("Logo.kvector", &file).unwrap();
     let mut b = VectorDocument::open("Logo.kvector", &file).unwrap();
     // One person selects and looks; the other does nothing.
-    b.execute("select.all", json!({})).unwrap();
+    b.execute("edit.selectAll", json!({})).unwrap();
     let first = a.save(None).unwrap();
     let second = b.save(None).unwrap();
     assert!(first == second, "two sessions saved other bytes");
@@ -81,7 +81,7 @@ fn two_sessions_that_open_the_same_file_and_save_without_editing_write_identical
     }
 }
 
-/// Every object's id in the drawing (`document.inspect`'s layer tree, depth first).
+/// Every object's id in the drawing (`file.inspect`'s layer tree, depth first).
 fn node_ids(doc: &VectorDocument) -> Vec<u64> {
     fn walk(node: &serde_json::Value, out: &mut Vec<u64>) {
         out.extend(node["id"].as_u64());
@@ -118,9 +118,9 @@ fn an_unchanged_drawing_saves_the_same_bytes_and_reopens_with_the_same_object_id
     let mut made = VectorDocument::create("Logo.kvector", 800, 600).unwrap();
     made.execute("shape.rectangle", json!({ "x": 40, "y": 40, "width": 120, "height": 80 })).unwrap();
     made.execute("shape.ellipse", json!({ "x": 200, "y": 150, "width": 60, "height": 60 })).unwrap();
-    made.execute("text.create", json!({ "x": 80, "y": 300, "text": "Trail" })).unwrap();
-    made.execute("select.all", json!({})).unwrap();
-    made.execute("object.group", json!({})).unwrap();
+    made.execute("text.add", json!({ "x": 80, "y": 300, "text": "Trail" })).unwrap();
+    made.execute("edit.selectAll", json!({})).unwrap();
+    made.execute("arrange.group", json!({})).unwrap();
     let mut opened = VectorDocument::open("Logo.kvector", &made.save(None).unwrap()).unwrap();
     let file = opened.save(None).unwrap();
     let ids = node_ids(&opened);

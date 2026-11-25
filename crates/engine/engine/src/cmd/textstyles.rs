@@ -546,7 +546,7 @@ mod tests {
     fn session_with_text(text: &str) -> (Session, u64) {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": text})).unwrap()["id"].as_u64().unwrap();
+        let id = s.execute("text.add", &json!({"x": 10, "y": 50, "text": text})).unwrap()["id"].as_u64().unwrap();
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
         (s, id)
     }
@@ -627,7 +627,7 @@ mod tests {
         // Captured from text with explicit leading, applied to fresh Auto-leading text.
         s.execute("text.setStyle", &json!({"leading": 30})).unwrap();
         s.execute("charStyle.new", &json!({"name": "Spaced"})).unwrap();
-        let fresh = s.execute("text.create", &json!({"x": 10, "y": 90, "text": "B"})).unwrap()["id"].as_u64().unwrap();
+        let fresh = s.execute("text.add", &json!({"x": 10, "y": 90, "text": "B"})).unwrap()["id"].as_u64().unwrap();
         assert_eq!(runs(&s, fresh)[0].style.leading, None);
         for clear in [false, true] {
             s.execute("charStyle.apply", &json!({"name": "Spaced", "id": fresh, "clearOverrides": clear})).unwrap();
@@ -647,7 +647,7 @@ mod tests {
         // A library keeps the captured attributes and makes the style again where it's used.
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
         let lib = s.execute("library.add", &json!({"kind": "charStyle", "name": "Lib Spaced"})).unwrap();
-        let other = s.execute("text.create", &json!({"x": 10, "y": 150, "text": "C"})).unwrap()["id"].as_u64().unwrap();
+        let other = s.execute("text.add", &json!({"x": 10, "y": 150, "text": "C"})).unwrap()["id"].as_u64().unwrap();
         s.execute("library.use", &json!({"library": lib["library"], "kind": "charStyle", "item": lib["name"]})).unwrap();
         assert_eq!(runs(&s, other)[0].style.leading, Some(30.0));
     }

@@ -286,7 +286,7 @@ fn a_polygon_keeps_its_corners_through_sides_and_scales() {
 fn a_pen_path_rounds_its_corners_but_not_its_ends() {
     let (mut s, _) = session();
     let pen = json!({"anchors": [{"x": 10, "y": 200}, {"x": 110, "y": 100}, {"x": 210, "y": 200}, {"x": 310, "y": 100}]});
-    let id = NodeId(s.execute("path.create", &pen).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("path.add", &pen).unwrap()["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     run(&mut s, json!({"radius": 8}));
     let path = node_path(&s, id).0;

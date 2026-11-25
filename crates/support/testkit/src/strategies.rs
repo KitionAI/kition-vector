@@ -166,13 +166,8 @@ pub const PATHFINDER: [&str; 10] = [
     "object.pathfinder.outline",
     "object.pathfinder.minusBack",
 ];
-const ARRANGE: [&str; 5] = [
-    "object.arrange.bringToFront",
-    "object.arrange.bringForward",
-    "object.arrange.sendBackward",
-    "object.arrange.sendToBack",
-    "object.arrange.sendToCurrentLayer",
-];
+const ARRANGE: [&str; 5] =
+    ["arrange.bringToFront", "arrange.bringForward", "arrange.sendBackward", "arrange.sendToBack", "arrange.sendToCurrentLayer"];
 const COLORS: [&str; 6] = ["#ff0000", "#00ff00", "#0000ff", "#222222", "#ffffff", "#ffcc00"];
 const BLENDS: [&str; 4] = ["Normal", "Multiply", "Screen", "Difference"];
 const PASTE: [&str; 4] = ["edit.paste", "edit.pasteInFront", "edit.pasteInBack", "edit.pasteInPlace"];
@@ -295,12 +290,12 @@ impl Op {
             Op::Star(x, y, r1, r2) => c("shape.star", json!({"cx": x, "cy": y, "radius1": r1, "radius2": r2})),
             Op::Line(a, b, cc, d) => c("shape.line", json!({"x1": a, "y1": b, "x2": cc, "y2": d})),
             Op::Path(pts, closed) => {
-                c("path.create", json!({"anchors": pts.iter().map(|(x, y)| json!({"x": x, "y": y})).collect::<Vec<_>>(), "closed": closed}))
+                c("path.add", json!({"anchors": pts.iter().map(|(x, y)| json!({"x": x, "y": y})).collect::<Vec<_>>(), "closed": closed}))
             }
-            Op::Text(x, y) => c("text.create", json!({"x": x, "y": y, "text": "Ab", "size": 18})),
+            Op::Text(x, y) => c("text.add", json!({"x": x, "y": y, "text": "Ab", "size": 18})),
             Op::SelectSet(ix) => c("select.set", json!({"ids": ix.iter().filter_map(|i| pick(&art, *i)).collect::<Vec<_>>()})),
-            Op::SelectAll => c("select.all", json!({})),
-            Op::SelectNone => c("select.none", json!({})),
+            Op::SelectAll => c("edit.selectAll", json!({})),
+            Op::SelectNone => c("edit.deselectAll", json!({})),
             Op::SelectInverse => c("select.inverse", json!({})),
             Op::Move(dx, dy, copy) => c("object.move", json!({"dx": dx, "dy": dy, "copy": copy})),
             Op::Rotate(a, copy) => c("object.rotate", json!({"angle": a, "copy": copy})),
@@ -309,8 +304,8 @@ impl Op {
             Op::Shear(a) => c("object.shear", json!({"angle": a})),
             Op::TransformAgain => c("object.transformAgain", json!({})),
             Op::Nudge(x, y) => c("object.nudge", json!({"dx": x, "dy": y})),
-            Op::Group => c("object.group", json!({})),
-            Op::Ungroup => c("object.ungroup", json!({})),
+            Op::Group => c("arrange.group", json!({})),
+            Op::Ungroup => c("arrange.ungroup", json!({})),
             Op::Arrange(i) => {
                 let i = *i as usize % ARRANGE.len();
                 // Known bug (crates/engine/engine/tests/known_bugs.rs): Bring to Front/Forward panics when
@@ -320,7 +315,7 @@ impl Op {
                     parents.dedup();
                     parents.len() > 1
                 });
-                if i < 2 && multi_parent { c("document.inspect", json!({})) } else { c(ARRANGE[i], json!({})) }
+                if i < 2 && multi_parent { c("file.inspect", json!({})) } else { c(ARRANGE[i], json!({})) }
             }
             Op::Pathfinder(i) => c(PATHFINDER[*i as usize % PATHFINDER.len()], json!({})),
             Op::Fill(i) => c("paint.setFill", json!({"color": COLORS[*i as usize % COLORS.len()]})),
@@ -362,7 +357,7 @@ impl Op {
             Op::Cut => c("edit.cut", json!({})),
             Op::Paste(i) => c(PASTE[*i as usize % PASTE.len()], json!({})),
             Op::Duplicate => c("edit.duplicate", json!({"dx": 5, "dy": 5})),
-            Op::Clear => c("edit.clear", json!({})),
+            Op::Clear => c("edit.delete", json!({})),
             Op::Undo => c("edit.undo", json!({})),
             Op::Redo => c("edit.redo", json!({})),
             Op::Clip => c("object.clippingMask.make", json!({})),

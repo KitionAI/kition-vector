@@ -45,9 +45,9 @@ fn built_in_presets_are_listed_and_read_only() {
     assert!(is_bad_params(s.execute("pdf.preset.delete", &json!({"name": "Smallest File Size"}))));
     assert_eq!(names(&mut s).len(), 7);
     // Built-in presets apply as named.
-    let v = s.execute("document.pdfSettings", &json!({"preset": "Smallest File Size"})).unwrap();
+    let v = s.execute("file.pdfSettings", &json!({"preset": "Smallest File Size"})).unwrap();
     assert_eq!((&v["settings"]["fastWebView"], &v["changed"]), (&json!(true), &json!([])), "{v}");
-    let pdf = s.execute("document.exportPdf", &json!({"preset": "PDF/X-4:2010"})).unwrap();
+    let pdf = s.execute("file.exportPdf", &json!({"preset": "PDF/X-4:2010"})).unwrap();
     assert!(pdf["dataBase64"].is_string(), "PDF/X is written");
 }
 
@@ -59,15 +59,15 @@ fn saved_presets_apply_wherever_a_preset_is_named() {
         .unwrap();
     assert_eq!((&r["name"], &r["created"]), (&json!("Web"), &json!(true)));
     assert_eq!(names(&mut s).last().map(String::as_str), Some("Web"));
-    // document.exportPdf, document.export, serialize and pdfSettings take it.
-    let v = s.execute("document.exportPdf", &json!({"preset": "web"})).unwrap();
+    // file.exportPdf, file.export, serialize and pdfSettings take it.
+    let v = s.execute("file.exportPdf", &json!({"preset": "web"})).unwrap();
     assert!(pdf(&v).starts_with(b"%PDF-1.5"), "the preset's compatibility");
     assert!(String::from_utf8_lossy(&pdf(&v)).contains("/Linearized 1"), "the preset's fast web view: {v}");
-    let v = s.execute("document.export", &json!({"format": "pdf", "preset": "Web"})).unwrap();
+    let v = s.execute("file.export", &json!({"format": "pdf", "preset": "Web"})).unwrap();
     assert!(pdf(&v).starts_with(b"%PDF-1.5"));
-    let v = s.execute("document.serialize", &json!({"format": "pdf", "preset": "Web", "compatibility": "1.6"})).unwrap();
+    let v = s.execute("file.serialize", &json!({"format": "pdf", "preset": "Web", "compatibility": "1.6"})).unwrap();
     assert!(pdf(&v).starts_with(b"%PDF-1.6"), "options apply over it");
-    let v = s.execute("document.pdfSettings", &json!({"preset": "Web", "thumbnails": true})).unwrap();
+    let v = s.execute("file.pdfSettings", &json!({"preset": "Web", "thumbnails": true})).unwrap();
     assert_eq!(v["changed"], json!([{"option": "thumbnails", "value": true}]), "{v}");
     assert!(v["presets"].as_array().unwrap().contains(&json!("Web")));
     // Saving it again changes it from its own settings; it can be renamed but not to a taken name.
@@ -81,7 +81,7 @@ fn saved_presets_apply_wherever_a_preset_is_named() {
     assert!(s.prefs.pdf_presets[1].settings.security.open_password.is_empty());
     assert_eq!(s.execute("pdf.preset.save", &json!({})).unwrap()["name"], "PDF Preset 1");
     assert_eq!(s.execute("pdf.preset.delete", &json!({"name": "locked"})).unwrap()["deleted"], "Locked");
-    assert!(is_bad_params(s.execute("document.exportPdf", &json!({"preset": "Locked"}))), "deleted");
+    assert!(is_bad_params(s.execute("file.exportPdf", &json!({"preset": "Locked"}))), "deleted");
 }
 
 #[test]

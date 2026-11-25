@@ -1,4 +1,4 @@
-//! Saving: `document.save`, `file.saveAs`, `file.saveCopy`, `file.saveAsTemplate`,
+//! Saving: `file.save`, `file.saveAs`, `file.saveCopy`, `file.saveAsTemplate`,
 //! `file.newFromTemplate`, `file.revert` and `file.formatOptions`.
 //!
 //! Every frontend saves the same way: [`save_plan`] resolves where and how (path, format, options,
@@ -50,7 +50,7 @@ impl SaveMode {
     /// The engine command of this mode.
     pub fn command(self) -> &'static str {
         match self {
-            Self::Save => "document.save",
+            Self::Save => "file.save",
             Self::SaveAs => "file.saveAs",
             Self::Copy => "file.saveCopy",
             Self::Template => "file.saveAsTemplate",
@@ -179,7 +179,7 @@ fn parent_folder(path: &str) -> Option<String> {
 fn save_format_of(f: &str) -> std::result::Result<&'static Format, String> {
     match format(f) {
         Some(f) if SAVE_FORMATS.contains(&f.id) => Ok(f),
-        Some(f) => Err(format!("Save writes {}, not {}: use document.export for other formats", SAVE_FORMATS.join(", "), f.label)),
+        Some(f) => Err(format!("Save writes {}, not {}: use file.export for other formats", SAVE_FORMATS.join(", "), f.label)),
         None => Err(format!("unknown format `{f}` (Save writes {})", SAVE_FORMATS.join(", "))),
     }
 }
@@ -218,7 +218,7 @@ pub fn save_plan(s: &Session, mode: SaveMode, p: &Value) -> Result<SavePlan> {
         svg.extend(super::svg_options(p).map_err(|e| bad(cmd, e))?);
         given = svg;
     } else {
-        // So do PDF options (as the Save PDF dialog and document.exportPdf name them) and the
+        // So do PDF options (as the Save PDF dialog and file.exportPdf name them) and the
         // native ones (compress).
         if let Some(o) = p.as_object() {
             given.extend(
@@ -365,7 +365,7 @@ pub(super) fn ai_params(params: &mut Value) {
 
 /// Encode `doc` as a PDF-compatible `.ai` file (`params` as [`ai_params`] makes them) for command
 /// `cmd`: its pages (blank with `pdfCompatible: false`, which it then notes), carrying the native
-/// document. File › Save As writes it, and so do the exports (`document.export`, the CLI).
+/// document. File › Save As writes it, and so do the exports (`file.export`, the CLI).
 pub(super) fn encode_ai(cmd: &str, f: &Format, doc: &Document, params: &Value) -> Result<Encoded> {
     let compatible = bool_or(params, "pdfCompatible", true);
     let pages = doc.without_edit_modes();
@@ -448,7 +448,7 @@ impl SaveJob {
         let (cmd, f) = (self.plan.mode.command(), self.plan.format);
         let enc = if f.id == "ai" { encode_ai(cmd, f, doc, &self.params)? } else { encode_all(doc, f.id, &self.params)? };
         if enc.files.len() != 1 {
-            return Err(bad(cmd, "Save writes one artboard: name one, or export several with document.export"));
+            return Err(bad(cmd, "Save writes one artboard: name one, or export several with file.export"));
         }
         Ok(enc)
     }
@@ -565,7 +565,7 @@ fn format_options(s: &mut Session, p: &Value) -> Result<Value> {
     let id = str_param(p, "format").or(st.map(|d| d.format)).unwrap_or("kvector");
     let f = format(id)
         .filter(|f| f.write || SAVE_FORMATS.contains(&f.id))
-        .ok_or_else(|| bad(C, format!("`{id}` is no writable format (see document.formats)")))?;
+        .ok_or_else(|| bad(C, format!("`{id}` is no writable format (see file.formats)")))?;
     let saved = st.filter(|d| d.format == f.id).map(|d| &d.save_options);
     // A native save compresses as Use Compression says, unless told otherwise.
     let prefs = with_compression_pref(&s.prefs, &json!({}));
@@ -584,11 +584,11 @@ fn format_options(s: &mut Session, p: &Value) -> Result<Value> {
 pub(super) fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "document.save",
+            "file.save",
             "Save Document",
             [],
             None,
-            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (SVG options may also be given flat; an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), compress?: bool (native: gzip, default: the useCompression preference; .ai: compression.compressText, default true), separateArtboards?: false (native and .ai: also save each artboard of range to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: string (the artboards separateArtboards saves, like \"1-3, 5\" or \"all\"; default all), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which document.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
+            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own format), options?: {…the format's options, see file.formatOptions; default: as last saved}, svg?: {…SVG options} (SVG options may also be given flat; an SVG save keeps hidden layers, display:none, unless hiddenLayers is false), compress?: bool (native: gzip, default: the useCompression preference; .ai: compression.compressText, default true), separateArtboards?: false (native and .ai: also save each artboard of range to <name>-<artboard>.<ext> beside the file, holding that artboard and the art touching it; the result's files lists every file written), range?: string (the artboards separateArtboards saves, like \"1-3, 5\" or \"all\"; default all), includeLinked?: false (keep linked files' own pixels, not just their previews; they stay linked), embedProfiles?: true (carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing), pdfCompatible?: false for native (also carry a PDF of every artboard) | true for .ai (false: blank pages, only the native document), modified?: Unix seconds|null (the File Info modified date, and created date when there is none, a save to a file stamps; default now, recorded in the journal so a replay matches; null: leave the dates)} → {path, format, bytes, warnings, files?: [path…] (the file and its artboards' files), linked?: [path…] (images an SVG links to)}. Save writes one artboard, except a .ai file: a PDF-compatible file of every artboard carrying the native document (preserveEditing always on; PDF options flat or in options), which file.open restores exactly; separateArtboards writes more files, one per artboard. Without a path it writes the document's own file in its own format: a document opened from or saved as SVG/PDF saves as that again (warnings name what the format loses). No path known (never saved, restored by Data Recovery, or another format) → {dataBase64, format, name, folder?, warnings} and the document stays modified",
             has_doc,
             |s, p| save(s, SaveMode::Save, p)
         ),
@@ -597,7 +597,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save As…",
             ["File"],
             Some("Cmd+Shift+S"),
-            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own), options?, svg?, modified? (as document.save)} the document takes on the new path, name and format (except a template, which is always a copy) → {path, format, bytes, warnings}; no path → {dataBase64, format, name, folder?, warnings}",
+            "{path?, format?: kvector|template|pdf|svg|svgz|ai (default: the path's extension, else the document's own), options?, svg?, modified? (as file.save)} the document takes on the new path, name and format (except a template, which is always a copy) → {path, format, bytes, warnings}; no path → {dataBase64, format, name, folder?, warnings}",
             has_doc,
             |s, p| save(s, SaveMode::SaveAs, p)
         ),
@@ -615,7 +615,7 @@ pub(super) fn specs() -> Vec<CommandSpec> {
             "Save as Template…",
             ["File"],
             None,
-            "{path?, compress? (as document.save)} a native template (.vctemplate) that opens as a new untitled document; the document is unchanged → {path, format, bytes, warnings}; no path → {dataBase64, format, name: \"<name> template.vctemplate\", folder: the Templates folder (preference templatesFolder), warnings}",
+            "{path?, compress? (as file.save)} a native template (.vctemplate) that opens as a new untitled document; the document is unchanged → {path, format, bytes, warnings}; no path → {dataBase64, format, name: \"<name> template.vctemplate\", folder: the Templates folder (preference templatesFolder), warnings}",
             has_doc,
             |s, p| save(s, SaveMode::Template, p)
         ),

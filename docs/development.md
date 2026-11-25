@@ -278,7 +278,7 @@ caret, selection, hit testing and arrow keys follow the visual order. A paragrap
 right to left in it skips the algorithm, so plain text pays nothing for it.
 
 Alignment is physical (`Justify::Left` is left in either direction). New type
-(`text.create`, the Type tools) is aligned `Justify::Auto`, the start of each paragraph's direction:
+(`text.add`, the Type tools) is aligned `Justify::Auto`, the start of each paragraph's direction:
 Hebrew grows to the left of a point type's anchor. Imported text keeps its own alignment, and SVG
 import pins the direction SVG implies (left to right unless `direction: rtl`).
 

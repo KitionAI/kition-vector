@@ -193,7 +193,7 @@ fn libraries_saved_in_the_user_folder_are_user_defined() {
 fn another_documents_swatches_load_as_a_library() {
     let mut s = session();
     run(&mut s, "swatch.new", json!({"name": "Signal", "color": "#ff3300"}));
-    let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
+    let b64 = run(&mut s, "file.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
     let r = run(&mut s, "swatch.library.load", json!({"dataBase64": b64, "name": "Poster.kvector"}));
     assert_eq!(r["name"], "Poster");
     let (_, lib) = cmd::swatchlib::library(&s, r["library"].as_str().unwrap()).unwrap();
@@ -328,7 +328,7 @@ fn loaded_libraries_copy_into_the_user_folder_without_replacing_files() {
     assert_eq!(std::fs::read_dir(&user).unwrap().count(), 2);
     // A document's swatches and a library loaded from data are written as .vcswatches.
     run(&mut s, "swatch.new", json!({"name": "Signal", "color": "#ff3300"}));
-    let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
+    let b64 = run(&mut s, "file.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
     let poster = elsewhere.join("Poster.kvector");
     std::fs::write(&poster, kition_vector_format::base64_decode(&b64).unwrap()).unwrap();
     let loaded = run(&mut s, "swatch.library.load", json!({ "path": poster.to_string_lossy() }))["library"].clone();

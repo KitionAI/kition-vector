@@ -88,7 +88,7 @@ fn apply_adds_a_stroke_when_missing_and_reaches_into_groups() {
     let b = rect(&mut s, 80.0, 10.0, 50.0, 50.0);
     s.execute("paint.setStroke", &json!({"color": null, "ids": [a.0]})).ok();
     select(&mut s, &[a, b]);
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
     s.execute("brush.apply", &json!({"name": "Dots"})).unwrap();
     assert_eq!(brush_of(&s, a).as_deref(), Some("Dots"));
     assert_eq!(brush_of(&s, b).as_deref(), Some("Dots"));

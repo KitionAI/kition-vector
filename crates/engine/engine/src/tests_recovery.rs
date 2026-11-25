@@ -76,7 +76,7 @@ fn recovery_save_writes_modified_documents_once() {
     assert!(again["saved"].as_array().unwrap().is_empty());
     assert_eq!(again["skipped"][0]["reason"], "unchanged since its last recovery copy");
     // Changed: the same copy is rewritten.
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 100, "y": 10, "width": 20, "height": 20})).unwrap();
     let r = s.execute("file.recovery.save", &json!({})).unwrap();
     assert_eq!(r["saved"][0]["file"], format!("{area}/Untitled-1-1"));
@@ -114,7 +114,7 @@ fn a_crash_leaves_copies_that_restore_modified_and_titled() {
     assert_eq!(st.recovery.as_ref().unwrap().file, format!("{mine}/Poster-1"));
     assert_eq!(store.areas().unwrap(), std::slice::from_ref(&mine));
     // Save asks for a path (suggesting the original file) rather than overwriting it.
-    let saved = s.execute("document.save", &json!({})).unwrap();
+    let saved = s.execute("file.save", &json!({})).unwrap();
     assert!(saved.get("dataBase64").is_some(), "no path: {saved}");
     assert_eq!(saved["name"], "Poster.svg");
     // Restored once: nothing is left to restore.
@@ -356,7 +356,7 @@ fn saving_reverting_or_closing_removes_the_copy() {
     let (mut s, store) = session();
     s.execute("file.recovery.save", &json!({})).unwrap();
     assert_eq!(copies(store.as_ref()).len(), 1);
-    s.execute("document.save", &json!({"path": path})).unwrap();
+    s.execute("file.save", &json!({"path": path})).unwrap();
     assert!(copies(store.as_ref()).is_empty(), "saved: the copy goes");
     assert!(s.doc().unwrap().recovery.is_none());
     // Revert.
@@ -376,7 +376,7 @@ fn saving_reverting_or_closing_removes_the_copy() {
     drop(s);
     let mut s2 = relaunch(&store);
     assert_eq!(restored(s2.execute("file.recovery.restore", &json!({})).unwrap()), 1);
-    s2.execute("document.save", &json!({"path": path})).unwrap();
+    s2.execute("file.save", &json!({"path": path})).unwrap();
     assert!(copies(store.as_ref()).is_empty());
     let st = s2.doc().unwrap();
     assert!(!st.recovered && !st.is_dirty());

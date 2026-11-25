@@ -230,8 +230,8 @@ fn node_json(s: &Session, id: u64) -> Value {
 fn type_symbols_graphs_and_live_contents_are_left_alone_and_reported() {
     let mut s = session();
     let id = |v: Value| v["id"].as_u64().unwrap();
-    let text = id(s.execute("text.create", &json!({"x": 100, "y": 100, "text": "Liquid"})).unwrap());
-    let graph = id(s.execute("graph.create", &json!({"type": "column", "x": 300, "y": 60, "width": 120, "height": 80, "rows": [[1, 2]]})).unwrap());
+    let text = id(s.execute("text.add", &json!({"x": 100, "y": 100, "text": "Liquid"})).unwrap());
+    let graph = id(s.execute("graph.add", &json!({"type": "column", "x": 300, "y": 60, "width": 120, "height": 80, "rows": [[1, 2]]})).unwrap());
     let sq = rect(&mut s, 450.0, 60.0, 60.0, 60.0);
     s.execute("select.set", &json!({"ids": [sq.0]})).unwrap();
     let inst = id(s.execute("symbol.new", &json!({"name": "Dot"})).unwrap());
@@ -283,7 +283,7 @@ fn guides_are_left_alone_in_selection_mode_and_the_tool_reports_skips() {
     s.execute("view.guides.make", &json!({})).unwrap();
     let guide = path(&s, g);
     let a = rect(&mut s, 120.0, 120.0, 160.0, 160.0);
-    let t = s.execute("text.create", &json!({"x": 300, "y": 200, "text": "Hi"})).unwrap()["id"].as_u64().unwrap();
+    let t = s.execute("text.add", &json!({"x": 300, "y": 200, "text": "Hi"})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [g.0, a.0, t]})).unwrap();
     let v = ViewInfo::default();
     s.select_tool("bloat", v).unwrap();

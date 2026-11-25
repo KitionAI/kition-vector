@@ -17,7 +17,7 @@ fn session() -> Session {
 }
 
 fn text(s: &mut Session, t: &str) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": 100, "y": 100, "text": t, "size": 20})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 100, "y": 100, "text": t, "size": 20})).unwrap();
     NodeId(r["id"].as_u64().unwrap())
 }
 
@@ -320,7 +320,7 @@ fn select_all_and_cut_like_ui() {
     click(&mut s, p.x, p.y);
     // Select All while editing takes the text, not the art (the rectangle stays unselected).
     assert!(s.tool_wants_text());
-    let o = s.execute("select.all", &json!({})).unwrap();
+    let o = s.execute("edit.selectAll", &json!({})).unwrap();
     assert_eq!(o, json!({"editing": id.0, "start": 0, "end": 7}));
     assert_eq!(s.doc().unwrap().selection.objects, [id]);
     let r = s.execute("text.getRange", &json!({"id": o["editing"], "start": o["start"], "end": o["end"]})).unwrap();
@@ -334,7 +334,7 @@ fn select_all_and_cut_like_ui() {
     // Not editing: Select All selects the art again.
     key(&mut s, ToolKey::Escape, Mods::default());
     assert!(!s.tool_wants_text());
-    assert_eq!(s.execute("select.all", &json!({})).unwrap(), json!({"count": 2}));
+    assert_eq!(s.execute("edit.selectAll", &json!({})).unwrap(), json!({"count": 2}));
 }
 
 #[test]
@@ -359,7 +359,7 @@ fn area_type_from_a_circle_keeps_glyphs_inside() {
     let mut s = session();
     let e = s.execute("shape.ellipse", &json!({"x": 100, "y": 100, "width": 240, "height": 240})).unwrap();
     let pid = e["id"].as_u64().unwrap();
-    let r = s.execute("text.createInPath", &json!({"path": pid, "mode": "area", "text": kition_vector_engine_placeholder()})).unwrap();
+    let r = s.execute("text.addInPath", &json!({"path": pid, "mode": "area", "text": kition_vector_engine_placeholder()})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     assert!(s.doc().unwrap().doc.node(NodeId(pid)).is_none(), "the path became the frame");
     let t = obj(&s, id);
@@ -374,7 +374,7 @@ fn area_type_from_a_circle_keeps_glyphs_inside() {
         }
     }
     assert_eq!(s.doc().unwrap().selection.objects, vec![id]);
-    assert!(s.execute("text.createInPath", &json!({"path": 9999})).is_err());
+    assert!(s.execute("text.addInPath", &json!({"path": 9999})).is_err());
 }
 
 fn kition_vector_engine_placeholder() -> String {
@@ -386,9 +386,9 @@ fn type_on_path_starts_where_clicked() {
     let mut s = session();
     let r = s
         .execute("shape.line", &json!({"x1": 100, "y1": 300, "x2": 500, "y2": 300}))
-        .or_else(|_| s.execute("path.create", &json!({"points": [[100, 300], [500, 300]], "closed": false})));
+        .or_else(|_| s.execute("path.add", &json!({"points": [[100, 300], [500, 300]], "closed": false})));
     let pid = r.unwrap()["id"].as_u64().unwrap();
-    let r = s.execute("text.createInPath", &json!({"path": pid, "mode": "onPath", "text": "On the line", "at": [200, 310]})).unwrap();
+    let r = s.execute("text.addInPath", &json!({"path": pid, "mode": "onPath", "text": "On the line", "at": [200, 310]})).unwrap();
     let t = obj(&s, NodeId(r["id"].as_u64().unwrap()));
     let TextKind::OnPath { start, .. } = t.kind else { panic!() };
     assert!((start - 0.25).abs() < 0.01, "{start}");
@@ -419,12 +419,12 @@ fn fit_headline_fills_the_frame_width() {
     let mut s = session();
     let r = s
         .execute(
-            "text.create",
+            "text.add",
             &json!({"x": 50, "y": 50, "text": "Headline\nBody copy follows here", "size": 24, "area": {"width": 400, "height": 200}}),
         )
         .unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
-    let r = s.execute("type.fitHeadline", &json!({"ids": [id.0]})).unwrap();
+    let r = s.execute("text.fitHeadlineSelection", &json!({"ids": [id.0]})).unwrap();
     assert!(r["tracking"][0].as_f64().unwrap() > 100.0, "{r}");
     let t = obj(&s, id);
     let lay = kition_vector_text::layout(kition_vector_text::FontDb::global(), &t);
@@ -433,8 +433,8 @@ fn fit_headline_fills_the_frame_width() {
     assert!((l0.x1 - l0.x0 - 400.0).abs() < 1.0, "{}", l0.x1 - l0.x0);
     // The body keeps its tracking.
     assert_eq!(t.runs.last().unwrap().style.tracking, 0.0);
-    let p = s.execute("text.create", &json!({"x": 1, "y": 1, "text": "point"})).unwrap();
-    assert!(s.execute("type.fitHeadline", &json!({"ids": [p["id"]]})).is_err(), "area type only");
+    let p = s.execute("text.add", &json!({"x": 1, "y": 1, "text": "point"})).unwrap();
+    assert!(s.execute("text.fitHeadlineSelection", &json!({"ids": [p["id"]]})).is_err(), "area type only");
 }
 
 fn first_glyph_doc_pos(t: &TextObject) -> Point {
@@ -448,19 +448,19 @@ fn convert_area_point_keeps_text_in_place_for_every_alignment() {
         let mut s = session();
         let r = s
             .execute(
-                "text.create",
+                "text.add",
                 &json!({"x": 100, "y": 100, "text": "Centered words wrap in a frame", "size": 18, "area": {"width": 150, "height": 200}}),
             )
             .unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         s.execute("text.setStyle", &json!({"ids": [id.0], "justify": j})).unwrap();
         let before = first_glyph_doc_pos(&obj(&s, id));
-        s.execute("type.convertToPointType", &json!({"ids": [id.0]})).unwrap();
+        s.execute("text.convertToPointType", &json!({"ids": [id.0]})).unwrap();
         let t = obj(&s, id);
         assert!(matches!(t.kind, TextKind::Point));
         let after = first_glyph_doc_pos(&t);
         assert!((after - before).hypot() < 0.01, "{j}: {before:?} → {after:?}");
-        s.execute("type.convertToAreaType", &json!({"ids": [id.0]})).unwrap();
+        s.execute("text.convertToAreaType", &json!({"ids": [id.0]})).unwrap();
         let t = obj(&s, id);
         let back = first_glyph_doc_pos(&t);
         assert!((back - before).hypot() < 0.01, "{j} (area again): {before:?} → {back:?}");
@@ -473,7 +473,7 @@ fn convert_area_point_keeps_text_in_place_for_every_alignment() {
 fn commands_are_listed_with_params() {
     let s = session();
     let cmds: Vec<Value> = s.commands().iter().map(|c| serde_json::to_value(c).unwrap()).collect();
-    for id in ["text.editRange", "text.setRangeStyle", "text.getRange", "text.createInPath", "type.fitHeadline"] {
+    for id in ["text.editRange", "text.setRangeStyle", "text.getRange", "text.addInPath", "text.fitHeadlineSelection"] {
         assert!(cmds.iter().any(|c| c["id"] == id), "{id}");
     }
 }
@@ -500,13 +500,13 @@ fn type_tool_state_does_not_leak_across_documents() {
 #[test]
 fn vertical_text_creation_orientation_and_persistence() {
     let mut s = session();
-    let r = s.execute("text.create", &json!({"x":100,"y":100,"text":"日本語", "vertical":true})).unwrap();
+    let r = s.execute("text.add", &json!({"x":100,"y":100,"text":"日本語", "vertical":true})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     let t = obj(&s, id);
     assert!(t.vertical);
     let round: TextObject = serde_json::from_value(serde_json::to_value(&t).unwrap()).unwrap();
     assert!(round.vertical);
-    s.execute("type.orientation.horizontal", &json!({"id":id.0})).unwrap();
+    s.execute("text.orientation.horizontal", &json!({"id":id.0})).unwrap();
     assert!(!obj(&s, id).vertical);
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(obj(&s, id).vertical);

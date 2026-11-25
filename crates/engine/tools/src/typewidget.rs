@@ -63,7 +63,7 @@ impl TypeWidget {
 
     /// The command converting the type to the other kind.
     pub fn command(&self) -> &'static str {
-        if self.area { "type.convertToPointType" } else { "type.convertToAreaType" }
+        if self.area { "text.convertToPointType" } else { "text.convertToAreaType" }
     }
 }
 
@@ -99,7 +99,7 @@ mod tests {
         let t = TextObject::point(Point::new(100.0, 300.0), "Point", Default::default());
         d.insert(Some(l), 0, Node::new(point, NodeKind::Text(Box::new(t)))).unwrap();
         let p = paint();
-        for (id, cmd) in [(area, "type.convertToPointType"), (point, "type.convertToAreaType")] {
+        for (id, cmd) in [(area, "text.convertToPointType"), (point, "text.convertToAreaType")] {
             let mut s = Selection::default();
             s.add(id);
             let c = cx(&d, &s, &p);

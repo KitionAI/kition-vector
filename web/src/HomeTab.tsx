@@ -45,14 +45,14 @@ export function HomeTab() {
 
       <RibbonGroup label={t('home.arrange')} icon={Group}>
         <RibbonStack>
-          <CommandButton command="object.arrange.bringForward" icon={BringToFront} primary />
-          <CommandButton command="object.arrange.sendBackward" icon={SendToBack} primary />
-          <CommandButton command="object.arrange.bringToFront" icon={BringToFront} />
+          <CommandButton command="arrange.bringForward" icon={BringToFront} primary />
+          <CommandButton command="arrange.sendBackward" icon={SendToBack} primary />
+          <CommandButton command="arrange.bringToFront" icon={BringToFront} />
         </RibbonStack>
         <RibbonStack>
-          <CommandButton command="object.group" icon={Group} primary />
-          <CommandButton command="object.ungroup" icon={Ungroup} primary />
-          <CommandButton command="object.arrange.sendToBack" icon={SendToBack} />
+          <CommandButton command="arrange.group" icon={Group} primary />
+          <CommandButton command="arrange.ungroup" icon={Ungroup} primary />
+          <CommandButton command="arrange.sendToBack" icon={SendToBack} />
         </RibbonStack>
         <RibbonMenu icon={ALIGN[1].icon} label={p('Align')} size="large" disabled={!enabled('object.align')} testId="vector-home-align" primary>
           {ALIGN.map((item) => (
@@ -82,10 +82,10 @@ export function HomeTab() {
       </RibbonGroup>
 
       <RibbonGroup label={p('Select')} icon={MousePointer2}>
-        <CommandButton command="select.all" icon={SquareDashedMousePointer} size="large" primary />
+        <CommandButton command="edit.selectAll" icon={SquareDashedMousePointer} size="large" primary />
         <RibbonStack>
           <CommandButton command="select.inverse" icon={Contrast} />
-          <CommandButton command="select.none" icon={SquareX} />
+          <CommandButton command="edit.deselectAll" icon={SquareX} />
         </RibbonStack>
       </RibbonGroup>
 

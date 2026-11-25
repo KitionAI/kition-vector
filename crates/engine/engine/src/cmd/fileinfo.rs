@@ -1,4 +1,4 @@
-//! File → File Info (`file.info`): the document title and its descriptive metadata (author,
+//! File → File Info (`file.setInfo`): the document title and its descriptive metadata (author,
 //! description, keywords, rating, copyright), with the read-only created and modified dates. The
 //! SVG (with `metadata`), PDF and PNG writers carry it.
 
@@ -8,16 +8,16 @@ use serde_json::{Map, Value, json};
 
 use super::*;
 
-const C: &str = "file.info";
+const C: &str = "file.setInfo";
 /// Longest text field, in characters.
 const MAX_TEXT: usize = 65_536;
 /// Longest keyword, in characters.
 const MAX_KEYWORD: usize = 256;
 const MAX_KEYWORDS: usize = 1000;
-/// Values `file.info` reports but doesn't take (fed back, they are ignored).
+/// Values `file.setInfo` reports but doesn't take (fed back, they are ignored).
 const READ_ONLY: [&str; 6] = ["created", "modified", "colorMode", "units", "artboards", "objects"];
 
-/// What `file.info` reports (and takes back).
+/// What `file.setInfo` reports (and takes back).
 pub(crate) fn info_json(d: &Document) -> Value {
     let m = &d.metadata;
     json!({

@@ -31,7 +31,7 @@ fn fill(s: &Session, id: NodeId) -> Color {
 }
 
 fn select_all(s: &mut Session) {
-    run(s, "select.all", json!({}));
+    run(s, "edit.selectAll", json!({}));
 }
 
 fn keys(v: &Value) -> Vec<String> {
@@ -200,7 +200,7 @@ fn methods_and_bad_params() {
     assert!(s.execute("recolor.apply", &json!({"map": {"#ff0000": "#00ff00"}, "method": "nope"})).is_err());
     assert!(s.execute("recolor.apply", &json!({"map": {"#ff0000": "nonsense"}})).is_err());
     assert!(s.execute("recolor.apply", &json!({})).is_err());
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert!(s.execute("recolor.apply", &json!({"map": {}})).is_err(), "needs art or a group");
 }
 
@@ -276,7 +276,7 @@ fn edit_group_relinks_art_and_apply_rewrites_the_group_with_the_art() {
     assert_eq!(fill(&s, plain).to_hex(), "#ffff00");
     assert_eq!(s.doc().unwrap().doc.swatch(&name).unwrap().paint.color().unwrap().to_hex(), "#ffff00");
     // Without a selection, only the group.
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     run(&mut s, "recolor.apply", json!({"map": [{"from": ["#ffff00"], "to": "#ff00ff"}], "group": "Theme"}));
     assert_eq!(s.doc().unwrap().doc.swatch(&name).unwrap().paint.color().unwrap().to_hex(), "#ff00ff");
     assert_eq!(s.doc().unwrap().history.undo.last().unwrap().label, "Edit Color Group");

@@ -8,14 +8,14 @@
 //! document opens ([`resolve`]), the files found unchanged are read again, modified ones follow
 //! Preferences → File Handling → Update Links, and missing ones show their preview.
 //!
-//! `links.check` reports, `links.update` reads modified files again, `links.relink` points images
+//! `linkedFile.check` reports, `linkedFile.update` reads modified files again, `linkedFile.relink` points images
 //! at other files. A file read again takes the image's place as its Placement Options say
 //! ([`PlacementOptions`]: keep the bounds or the transforms, fit or fill the bounds…).
 //!
-//! The Links panel lists every image (`links.list`) with its Link Info (`links.info`); Go To
-//! selects one (`links.goTo`), Embed keeps a linked file's pixels in the document
-//! (`links.embed`) and Unembed writes an embedded image to a file it then links to
-//! (`links.unembed`).
+//! The Links panel lists every image (`linkedFile.list`) with its Link Info (`linkedFile.info`); Go To
+//! selects one (`linkedFile.goTo`), Embed keeps a linked file's pixels in the document
+//! (`linkedFile.embed`) and Unembed writes an embedded image to a file it then links to
+//! (`linkedFile.unembed`).
 //!
 //! Placed documents ([`PlacedDocument`], Kition Vector documents placed with Link) link to their
 //! files the same way: checking, updating, relinking and finding them on open work alike, and they
@@ -35,7 +35,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            query "links.check",
+            query "linkedFile.check",
             "Check Links",
             [],
             None,
@@ -44,7 +44,7 @@ pub fn specs() -> Vec<CommandSpec> {
             check
         ),
         cmd!(
-            "links.update",
+            "linkedFile.update",
             "Update Links",
             [],
             None,
@@ -53,7 +53,7 @@ pub fn specs() -> Vec<CommandSpec> {
             update
         ),
         cmd!(
-            "links.updateChanged",
+            "linkedFile.updateChanged",
             "Update Changed Links",
             [],
             None,
@@ -62,7 +62,7 @@ pub fn specs() -> Vec<CommandSpec> {
             crate::link_watch::update_changed
         ),
         cmd!(
-            "links.relink",
+            "linkedFile.relink",
             "Relink",
             [],
             None,
@@ -71,7 +71,7 @@ pub fn specs() -> Vec<CommandSpec> {
             relink
         ),
         cmd!(
-            query "links.list",
+            query "linkedFile.list",
             "Links",
             [],
             None,
@@ -80,7 +80,7 @@ pub fn specs() -> Vec<CommandSpec> {
             list
         ),
         cmd!(
-            "links.goTo",
+            "linkedFile.goTo",
             "Go To Link",
             [],
             None,
@@ -89,7 +89,7 @@ pub fn specs() -> Vec<CommandSpec> {
             go_to
         ),
         cmd!(
-            "links.embed",
+            "linkedFile.embed",
             "Embed Image",
             [],
             None,
@@ -98,7 +98,7 @@ pub fn specs() -> Vec<CommandSpec> {
             embed
         ),
         cmd!(
-            "links.unembed",
+            "linkedFile.unembed",
             "Unembed",
             [],
             None,
@@ -107,7 +107,7 @@ pub fn specs() -> Vec<CommandSpec> {
             unembed
         ),
         cmd!(
-            query "links.info",
+            query "linkedFile.info",
             "Link Info",
             [],
             None,
@@ -116,11 +116,11 @@ pub fn specs() -> Vec<CommandSpec> {
             info
         ),
         cmd!(
-            "links.placementOptions",
+            "linkedFile.placementOptions",
             "Placement Options",
             [],
             None,
-            "{ids?: [image or placed document ids] (default: the selected ones), preserve?: transforms|bounds (default)|fileDimensions|fit|fill, align?: topLeft|top|topRight|left|center (default)|right|bottomLeft|bottom|bottomRight (where the new art sits; not for bounds), clip?: false (clip it to the old bounds where it is larger)} how a file read again (links.relink, links.update) takes each image's place: transforms keeps its scale (relative to each file's 100% size), rotation and position; bounds stretches it into the old bounds; fileDimensions puts it at 100%, unrotated; fit and fill scale it proportionally to fit inside or cover the old bounds. Without options → {placement} of the first image; else one undo step → {ids, placement}",
+            "{ids?: [image or placed document ids] (default: the selected ones), preserve?: transforms|bounds (default)|fileDimensions|fit|fill, align?: topLeft|top|topRight|left|center (default)|right|bottomLeft|bottom|bottomRight (where the new art sits; not for bounds), clip?: false (clip it to the old bounds where it is larger)} how a file read again (linkedFile.relink, linkedFile.update) takes each image's place: transforms keeps its scale (relative to each file's 100% size), rotation and position; bounds stretches it into the old bounds; fileDimensions puts it at 100%, unrotated; fit and fill scale it proportionally to fit inside or cover the old bounds. Without options → {placement} of the first image; else one undo step → {ids, placement}",
             has_doc,
             placement_options
         ),
@@ -551,7 +551,7 @@ pub struct Resolved {
 }
 
 impl Resolved {
-    /// The `document.open` result fields.
+    /// The `file.open` result fields.
     pub fn to_json(&self) -> Value {
         json!({ "missingLinks": self.missing, "modifiedLinks": self.modified, "updatedLinks": self.updated })
     }
@@ -567,7 +567,7 @@ pub fn resolve(d: &mut Document, doc_path: Option<&str>, update: bool) -> Resolv
         match probe(&g, folder(doc_path)) {
             (Status::Missing, _) => out.missing.extend(row),
             (Status::Modified, Some(mut f)) if update => {
-                match read_for(&mut f, &g, "document.open").and_then(|read| install_read(d, &g.ids, read, false)) {
+                match read_for(&mut f, &g, "file.open").and_then(|read| install_read(d, &g.ids, read, false)) {
                     Ok(()) => out.updated.extend(row),
                     Err(_) => out.missing.extend(row),
                 }
@@ -575,7 +575,7 @@ pub fn resolve(d: &mut Document, doc_path: Option<&str>, update: bool) -> Resolv
             (Status::Modified, _) => out.modified.extend(row),
             // A placed document keeps its file's bytes: only lost ones are read again.
             (Status::Ok, Some(mut f)) if g.document.is_some() => {
-                let read = if stale(d, &g) { Some(read_for(&mut f, &g, "document.open")) } else { None };
+                let read = if stale(d, &g) { Some(read_for(&mut f, &g, "file.open")) } else { None };
                 match read {
                     Some(Ok(read)) => {
                         if install_read(d, &g.ids, read, true).is_err() {
@@ -670,7 +670,7 @@ pub(crate) fn refresh_placed(s: &mut Session, saved: u64, path: &str) {
     let back = s.active;
     for (i, ids) in targets {
         s.active = Some(i);
-        // A file that can't be read leaves what its objects show: links.check reports it.
+        // A file that can't be read leaves what its objects show: linkedFile.check reports it.
         let _ = update(s, &json!({ "ids": ids }));
     }
     s.active = back;
@@ -755,7 +755,7 @@ fn update(s: &mut Session, p: &Value) -> Result<Value> {
             // Unchanged and showing the file: nothing to read unless asked for by id.
             (Status::Ok, Some(_)) if ids.is_none() && !stale(&st.doc, &g) => {}
             // Unreadable as an image (or a document) counts as missing.
-            (_, Some(mut f)) => match read_for(&mut f, &g, "links.update") {
+            (_, Some(mut f)) => match read_for(&mut f, &g, "linkedFile.update") {
                 Ok(read) => reads.push((g.ids, read)),
                 Err(_) => missing.extend(ids_json(&g.ids)),
             },
@@ -769,7 +769,7 @@ fn update(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn relink(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.relink";
+    const C: &str = "linkedFile.relink";
     let st = s.doc()?;
     let folder_param = str_param(p, "folder");
     // An image or a placed document, with its link.
@@ -931,19 +931,19 @@ fn format_label(d: &Document, im: &ImageObject) -> &'static str {
         .map_or("Image", |f| f.label)
 }
 
-/// A placed document's `links.list` fields: `format`, `document: true` and its artboard's size
+/// A placed document's `linkedFile.list` fields: `format`, `document: true` and its artboard's size
 /// (`pageWidth`, `pageHeight`, pt) instead of pixels.
 fn document_row(p: &PlacedDocument) -> Value {
     json!({ "format": "Kition Vector", "document": true, "pageWidth": p.width, "pageHeight": p.height })
 }
 
-/// Sort rank of a `links.list` status: missing, modified, ok, embedded.
+/// Sort rank of a `linkedFile.list` status: missing, modified, ok, embedded.
 fn status_rank(status: &str) -> usize {
     ["missing", "modified", "ok", "embedded"].iter().position(|s| *s == status).unwrap_or(4)
 }
 
 fn list(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.list";
+    const C: &str = "linkedFile.list";
     let st = s.doc()?;
     let show = str_param(p, "show").unwrap_or("all");
     if !matches!(show, "all" | "missing" | "modified" | "embedded") {
@@ -1011,14 +1011,14 @@ fn list(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn go_to(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.doc()?;
-    let id = linked_param(st, p, "links.goTo")?;
+    let id = linked_param(st, p, "linkedFile.goTo")?;
     let b = st.doc.node(id).and_then(Node::geometric_bounds).unwrap_or_default();
     s.select(|_, sel| sel.set([id]))?;
     Ok(json!({ "id": id.0, "bounds": [b.x0, b.y0, b.x1, b.y1] }))
 }
 
 fn embed(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.embed";
+    const C: &str = "linkedFile.embed";
     let st = s.doc()?;
     let kind = |id: &NodeId| st.doc.node(*id).map(|n| &n.kind);
     let linked = |id: &NodeId| match kind(id) {
@@ -1090,7 +1090,7 @@ fn convert_image(bytes: &[u8], ext: &str) -> std::result::Result<Vec<u8>, String
 }
 
 fn unembed(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.unembed";
+    const C: &str = "linkedFile.unembed";
     let st = s.doc()?;
     let id = image_param(st, p, C)?;
     let n = st.doc.node(id).ok_or(crate::EngineError::NoNode(id))?;
@@ -1157,7 +1157,7 @@ fn scale_rotation(xf: Affine, (px, py): (f64, f64)) -> (Value, Value) {
 /// Link Info of placed document `id`.
 fn placed_info(st: &crate::DocState, id: NodeId) -> Result<Value> {
     let n = st.doc.node(id).ok_or(crate::EngineError::NoNode(id))?;
-    let NodeKind::PlacedDocument(pl) = &n.kind else { return Err(bad("links.info", format!("object {} is not a placed document", id.0))) };
+    let NodeKind::PlacedDocument(pl) = &n.kind else { return Err(bad("linkedFile.info", format!("object {} is not a placed document", id.0))) };
     let size = n.geometric_bounds().unwrap_or_default();
     let (scale, rotation) = scale_rotation(pl.xf, (1.0, 1.0));
     let mut out = document_row(pl);
@@ -1180,7 +1180,7 @@ fn placed_info(st: &crate::DocState, id: NodeId) -> Result<Value> {
 }
 
 fn info(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.info";
+    const C: &str = "linkedFile.info";
     let id = linked_param(s.doc()?, p, C)?;
     if image_of(&s.doc()?.doc, id).is_none() {
         return placed_info(s.doc()?, id);
@@ -1202,7 +1202,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn placement_options(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "links.placementOptions";
+    const C: &str = "linkedFile.placementOptions";
     let st = s.doc()?;
     let ids =
         ids_param(p, "ids")?.unwrap_or_else(|| st.selection.objects.iter().copied().filter(|id| placement_of(&st.doc, *id).is_some()).collect());

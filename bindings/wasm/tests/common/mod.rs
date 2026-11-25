@@ -51,7 +51,7 @@ fn exec(doc: &mut VectorDocument, command: &str, params: Value) -> Result<Value>
     doc.execute(command, params).map_err(|error| format!("{command}: {error}"))
 }
 
-/// The layer tree as `document.inspect` reports it, depth first, top of the stack first.
+/// The layer tree as `file.inspect` reports it, depth first, top of the stack first.
 fn nodes(doc: &VectorDocument) -> Vec<Value> {
     fn walk(node: &Value, out: &mut Vec<Value>) {
         out.push(node.clone());
@@ -155,13 +155,13 @@ impl KitAdapter for VectorKit {
         let b = [self.rect(&mut doc, 60, 60)?, self.rect(&mut doc, 100, 60)?];
         for pair in [a, b] {
             select(&mut doc, &pair)?;
-            exec(&mut doc, "object.group", json!({}))?;
+            exec(&mut doc, "arrange.group", json!({}))?;
         }
         exec(&mut doc, "paint.setFill", json!({ "ids": [loose], "color": "#3366cc" }))?;
-        exec(&mut doc, "text.create", json!({ "x": 20, "y": 200, "text": "Hello vector" }))?;
+        exec(&mut doc, "text.add", json!({ "x": 20, "y": 200, "text": "Hello vector" }))?;
         exec(&mut doc, "layer.new", json!({ "name": "Top" }))?;
         exec(&mut doc, "shape.ellipse", json!({ "x": 200, "y": 100, "width": 40, "height": 40 }))?;
-        exec(&mut doc, "select.none", json!({}))?;
+        exec(&mut doc, "edit.deselectAll", json!({}))?;
         Ok(doc)
     }
 
@@ -212,7 +212,7 @@ impl KitAdapter for VectorKit {
             (0 | 1, _) => ("rectangle", self.rect(doc, value, value / 7).is_ok()),
             (2, _) => ("ellipse", attempt(doc, "shape.ellipse", json!({ "x": value % 360, "y": value % 260, "width": 20, "height": 20 }))?),
             (3, Some(id)) => ("fill", attempt(doc, "paint.setFill", json!({ "ids": [id], "color": color(value) }))?),
-            (4, Some(id)) if leaves.len() > 2 => ("delete", attempt(doc, "edit.clear", json!({ "ids": [id] }))?),
+            (4, Some(id)) if leaves.len() > 2 => ("delete", attempt(doc, "edit.delete", json!({ "ids": [id] }))?),
             (5 | 6, Some(id)) => {
                 select(doc, &[id])?;
                 ("move", attempt(doc, "object.move", json!({ "dx": (value % 21) as i64 - 10, "dy": (value % 13) as i64 - 6 }))?)
@@ -223,8 +223,7 @@ impl KitAdapter for VectorKit {
             }
             (8, Some(id)) => {
                 select(doc, &[id])?;
-                let order =
-                    ["object.arrange.bringToFront", "object.arrange.sendToBack", "object.arrange.bringForward", "object.arrange.sendBackward"];
+                let order = ["arrange.bringToFront", "arrange.sendToBack", "arrange.bringForward", "arrange.sendBackward"];
                 ("arrange", attempt(doc, order[rng.below(order.len())], json!({}))?)
             }
             (9, Some(id)) if leaves.len() > 1 => {
@@ -233,13 +232,13 @@ impl KitAdapter for VectorKit {
                     return Ok(None);
                 }
                 select(doc, &[id, other])?;
-                ("group", attempt(doc, "object.group", json!({}))?)
+                ("group", attempt(doc, "arrange.group", json!({}))?)
             }
             (10, _) => {
                 let groups = groups(doc);
                 let Some(&group) = rng.pick(&groups) else { return Ok(None) };
                 select(doc, &[group])?;
-                ("ungroup", attempt(doc, "object.ungroup", json!({}))?)
+                ("ungroup", attempt(doc, "arrange.ungroup", json!({}))?)
             }
             (11, Some(id)) => {
                 let layers = layers(doc);
@@ -248,7 +247,7 @@ impl KitAdapter for VectorKit {
             }
             (12, _) => {
                 let text: String = [CJK_MIDDLE, CJK_TEXT, EMOJI_GRIN].iter().collect();
-                ("text", attempt(doc, "text.create", json!({ "x": value % 300, "y": 40 + value % 200, "text": format!("t{value}{text}") }))?)
+                ("text", attempt(doc, "text.add", json!({ "x": value % 300, "y": 40 + value % 200, "text": format!("t{value}{text}") }))?)
             }
             (13, _) => {
                 let Some((id, text)) = text_object(doc) else { return Ok(None) };
@@ -279,7 +278,7 @@ impl KitAdapter for VectorKit {
             }
             Script::Delete => {
                 let id = probe(doc)?;
-                exec(doc, "edit.clear", json!({ "ids": [id] }))?;
+                exec(doc, "edit.delete", json!({ "ids": [id] }))?;
             }
             Script::Duplicate => {
                 let id = probe(doc)?;
@@ -292,7 +291,7 @@ impl KitAdapter for VectorKit {
                 let leaves = leaves(doc);
                 let id = *leaves.iter().rev().nth(usize::from(*which)).ok_or("no object")?;
                 select(doc, &[id])?;
-                exec(doc, "object.arrange.bringToFront", json!({}))?;
+                exec(doc, "arrange.bringToFront", json!({}))?;
             }
             Script::Reparent { which } => {
                 // Each group into the other: the tree must refuse the cycle one of them makes.
@@ -327,7 +326,7 @@ impl KitAdapter for VectorKit {
             }
             _ => return Ok(false),
         }
-        exec(doc, "select.none", json!({}))?;
+        exec(doc, "edit.deselectAll", json!({}))?;
         Ok(true)
     }
 

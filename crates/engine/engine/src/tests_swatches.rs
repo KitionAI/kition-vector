@@ -62,7 +62,7 @@ fn grouped_spot_swatches_print_on_their_own_plate() {
             .unwrap();
     let pdf = String::from_utf8_lossy(&bytes);
     assert!(pdf.contains("/Separation") && pdf.contains("Signal#20Orange"), "a grouped spot swatch is a Separation");
-    let info = run(&mut s, "document.info", json!({}));
+    let info = run(&mut s, "file.getInfo", json!({}));
     assert_eq!(info["spotColors"], json!(["Signal Orange"]));
 }
 
@@ -72,7 +72,7 @@ fn document_info_counts_grouped_swatches() {
     let d = doc(&s);
     let all = d.swatches.len() + d.swatch_groups.iter().map(|g| g.swatches.len()).sum::<usize>();
     assert!(all > d.swatches.len());
-    assert_eq!(run(&mut s, "document.info", json!({}))["swatches"], json!(all));
+    assert_eq!(run(&mut s, "file.getInfo", json!({}))["swatches"], json!(all));
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn editing_a_global_swatch_recolours_linked_art_in_one_step() {
     let (a, b) = (rect(&mut s), rect(&mut s));
     run(&mut s, "paint.setFill", json!({"ids": [a.0], "swatch": "Brand"}));
     run(&mut s, "paint.setFill", json!({"ids": [b.0], "color": "#2a6fb0"}));
-    let t = NodeId(run(&mut s, "text.create", json!({"x": 10, "y": 50, "text": "Hi"}))["id"].as_u64().unwrap());
+    let t = NodeId(run(&mut s, "text.add", json!({"x": 10, "y": 50, "text": "Hi"}))["id"].as_u64().unwrap());
     run(&mut s, "paint.setFill", json!({"ids": [t.0], "swatch": "Brand"}));
     run(&mut s, "select.set", json!({"ids": []}));
     run(&mut s, "paint.setStroke", json!({"swatch": "Brand"}));
@@ -349,7 +349,7 @@ fn a_group_from_a_mesh_holds_its_point_colours() {
     let a = rect(&mut s);
     run(&mut s, "paint.setFill", json!({"ids": [a.0], "color": "#ff0000"}));
     run(&mut s, "select.set", json!({"ids": [a.0]}));
-    run(&mut s, "object.mesh.create", json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100}));
+    run(&mut s, "object.mesh.add", json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100}));
     let r = run(&mut s, "swatch.newGroup", json!({"fromArtwork": true}));
     let names = r["swatches"].as_array().unwrap();
     assert!(names.contains(&json!("R=255 G=0 B=0")) && names.contains(&json!("R=255 G=255 B=255")), "{r}");

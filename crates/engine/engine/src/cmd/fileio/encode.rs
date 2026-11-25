@@ -18,7 +18,7 @@ use super::super::*;
 use super::Format;
 use super::imagemap::{self, MapKind};
 
-const C: &str = "document.export";
+const C: &str = "file.export";
 
 /// The params that pick artboards (the fields of [`ArtboardPick`]).
 pub const ARTBOARD_PARAMS: [&str; 3] = ["artboard", "artboards", "range"];
@@ -58,7 +58,7 @@ impl ArtboardPick {
             None if count > 0 => Ok(0),
             None => Err("the document has no artboard".into()),
             Some([i]) => Ok(*i),
-            Some(_) => Err("this format holds one artboard: export several as PDF or with document.exportForScreens".into()),
+            Some(_) => Err("this format holds one artboard: export several as PDF or with file.exportForScreens".into()),
         }
     }
 }
@@ -130,11 +130,11 @@ impl Encoded {
     /// The one file and the warnings, when the export wrote nothing else.
     fn single(self, f: &Format) -> Result<(Vec<u8>, Vec<String>)> {
         if !self.linked.is_empty() || !self.maps.is_empty() {
-            return Err(bad(C, format!("{} with linked images or an image map writes several files: use document.export", f.label)));
+            return Err(bad(C, format!("{} with linked images or an image map writes several files: use file.export", f.label)));
         }
         match <[_; 1]>::try_from(self.files) {
             Ok([(_, bytes)]) => Ok((bytes, self.warnings)),
-            Err(_) => Err(bad(C, format!("{} writes one file per artboard here: use document.export, or name one artboard", f.label))),
+            Err(_) => Err(bad(C, format!("{} writes one file per artboard here: use file.export, or name one artboard", f.label))),
         }
     }
 }
@@ -347,7 +347,7 @@ fn check_format_size(f: &Format, w: f64, h: f64) -> Result<()> {
 }
 
 /// Encode `doc` as `format` (an id or extension from [`super::FORMATS`]) with that format's
-/// options from `p` (see `document.formats`) into one file. Raster formats leave template layers
+/// options from `p` (see `file.formats`) into one file. Raster formats leave template layers
 /// out, and no format writes the opacity-mask editing layer. Exports that write several files (an
 /// SVG per artboard, linked images) go through [`encode_all`].
 pub fn encode(doc: &Document, format: &str, p: &Value) -> Result<Vec<u8>> {

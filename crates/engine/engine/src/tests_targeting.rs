@@ -62,7 +62,7 @@ fn a_targeted_layer_takes_transparency_appearance_and_effects() {
 fn targeting_an_object_selects_it_and_locked_layers_cannot_be_targeted() {
     let mut s = session();
     let a = rect(&mut s, 20.0);
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     run(&mut s, "layer.target", json!({"id": a.0}));
     assert_eq!(s.doc().unwrap().selection.objects, vec![a]);
     let layer = s.doc().unwrap().doc.layers[0].id;

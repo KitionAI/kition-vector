@@ -122,9 +122,9 @@ fn a_command_that_deselects_the_text_ends_the_edit() {
     // Commands on the edited text (the Character panel) keep editing it.
     let id = texts(&s)[0].0;
     s.execute("text.setRangeStyle", &json!({"id": id.0, "size": 30})).unwrap();
-    s.execute("document.inspect", &json!({})).unwrap();
+    s.execute("file.inspect", &json!({})).unwrap();
     assert!(s.tool_wants_text());
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(!s.tool_wants_text());
     assert!(texts(&s).is_empty());
     assert!(undo_labels(&s).is_empty(), "{:?}", undo_labels(&s));
@@ -150,13 +150,13 @@ fn switching_documents_discards_it_in_the_document_left() {
 #[test]
 fn discard_empty_command() {
     let mut s = session();
-    let r = s.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
     assert_eq!(s.execute("text.discardEmpty", &json!({"id": r["id"]})).unwrap(), json!({"removed": false}));
     let rect = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
     assert!(s.execute("text.discardEmpty", &json!({"id": rect["id"]})).is_err(), "not text");
     assert!(s.execute("text.discardEmpty", &json!({})).is_err(), "id required");
     // Created by the newest step: that step goes.
-    let e = s.execute("text.create", &json!({"x": 10, "y": 80, "text": ""})).unwrap();
+    let e = s.execute("text.add", &json!({"x": 10, "y": 80, "text": ""})).unwrap();
     assert_eq!(s.execute("text.discardEmpty", &json!({"id": e["id"]})).unwrap(), json!({"removed": true}));
     assert_eq!(undo_labels(&s), ["Type", "Rectangle"]);
     assert_eq!(texts(&s).len(), 1);

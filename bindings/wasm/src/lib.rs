@@ -142,10 +142,10 @@ impl VectorDocument {
 /// (selection, isolation, the current layer, tool and panel options, the clipboard) or produce
 /// bytes: they never commit to the drawing or its replica.
 const VIEWING: &[&str] = &[
-    "document.activate",
-    "document.export",
-    "document.exportSelection",
-    "document.exportForOffice",
+    "file.activate",
+    "file.export",
+    "file.exportSelection",
+    "file.exportForOffice",
     "file.saveCopy",
     "edit.copy",
     "edit.findNext",
@@ -341,7 +341,7 @@ impl KitDocument for VectorDocument {
     /// Opens a `.kvector` drawing, or SVG, PDF, AI, or EPS: `name`'s extension picks the format.
     fn open(name: &str, bytes: &[u8]) -> Result<Self, String> {
         let mut session = kit_session();
-        session.execute("document.open", &json!({ "name": name, "dataBase64": kition_vector_format::base64_encode(bytes) })).map_err(engine_error)?;
+        session.execute("file.open", &json!({ "name": name, "dataBase64": kition_vector_format::base64_encode(bytes) })).map_err(engine_error)?;
         Ok(Self::from_session(session, name))
     }
 
@@ -404,7 +404,7 @@ impl KitDocument for VectorDocument {
 
     /// The drawing as JSON: artboards, layer tree with bounds, selection, history.
     fn inspect(&self) -> Result<Value, String> {
-        let mut inspected = self.peek("document.inspect")?;
+        let mut inspected = self.peek("file.inspect")?;
         let can_undo = inspected.get("history").and_then(Value::as_array).is_some_and(|history| !history.is_empty());
         let can_redo = inspected.get("redo").and_then(Value::as_array).is_some_and(|redo| !redo.is_empty());
         let origin = self.origin();
@@ -933,7 +933,7 @@ mod tests {
     fn the_selection_shows_as_overlays_in_document_pixels() {
         let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
         doc.select_tool("selection", 1.0).unwrap();
-        doc.execute("select.all", json!({})).unwrap();
+        doc.execute("edit.selectAll", json!({})).unwrap();
         let shown = doc.state(0.0, 0.0, ToolMods::default(), 1.0);
         let paths = shown.overlays.iter().filter(|overlay| matches!(overlay, ToolOverlay::Path { .. })).count();
         let anchors = shown.overlays.iter().filter(|overlay| matches!(overlay, ToolOverlay::Anchor { .. })).count();
@@ -945,7 +945,7 @@ mod tests {
                 .iter()
                 .any(|overlay| matches!(overlay, ToolOverlay::Anchor { x, y, .. } if (*x - 20.0).abs() < 1e-6 && (*y - 10.0).abs() < 1e-6))
         );
-        doc.execute("select.none", json!({})).unwrap();
+        doc.execute("edit.deselectAll", json!({})).unwrap();
         assert!(doc.state(0.0, 0.0, ToolMods::default(), 1.0).overlays.is_empty());
         let hovering =
             doc.pointer(&ToolPointer { action: PointerAction::Move, x: 20.0, y: 25.0, mods: ToolMods::default(), pressure: 1.0, zoom: 1.0 }).unwrap();
@@ -957,21 +957,20 @@ mod tests {
         let doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
         let commands = doc.commands();
         let flag = |id: &str| commands.iter().find(|command| command.id == id).map(|command| command.mutates);
-        for id in
-            ["shape.rectangle", "object.group", "edit.undo", "edit.redo", "edit.cut", "file.new", "document.save", "command.batch", "select.save"]
+        for id in ["shape.rectangle", "arrange.group", "edit.undo", "edit.redo", "edit.cut", "file.new", "file.save", "command.batch", "select.save"]
         {
             assert_eq!(flag(id), Some(true), "{id} changes the drawing");
         }
         for id in [
-            "select.all",
-            "select.none",
+            "edit.selectAll",
+            "edit.deselectAll",
             "view.drawMode",
             "edit.copy",
-            "document.export",
-            "document.exportBytes",
+            "file.export",
+            "file.exportBytes",
             "file.saveCopy",
             "layer.setCurrent",
-            "document.inspect",
+            "file.inspect",
         ] {
             assert_eq!(flag(id), Some(false), "{id} does not change the drawing");
         }
@@ -986,30 +985,30 @@ mod tests {
         doc.execute("shape.ellipse", json!({ "x": 100, "y": 20, "width": 60, "height": 60 })).unwrap();
         let before = doc.version().unwrap();
         for (id, params) in [
-            ("select.all", json!({})),
+            ("edit.selectAll", json!({})),
             ("select.inverse", json!({})),
-            ("select.none", json!({})),
-            ("select.all", json!({})),
+            ("edit.deselectAll", json!({})),
+            ("edit.selectAll", json!({})),
             ("edit.copy", json!({})),
             ("view.drawMode", json!({ "mode": "behind" })),
             ("paint.toggleActive", json!({})),
-            ("document.export", json!({ "format": "svg" })),
-            ("document.exportBytes", json!({ "format": "png", "scale": 2, "background": "white", "artboard": 0 })),
+            ("file.export", json!({ "format": "svg" })),
+            ("file.exportBytes", json!({ "format": "png", "scale": 2, "background": "white", "artboard": 0 })),
         ] {
             assert!(!doc.commands().iter().any(|command| command.id == id && command.mutates), "{id}");
             let _ = doc.execute(id, params);
             assert_eq!(doc.version().unwrap(), before, "{id} committed to the replica");
         }
-        doc.execute("object.group", json!({})).unwrap();
+        doc.execute("arrange.group", json!({})).unwrap();
         assert_ne!(doc.version().unwrap(), before, "an edit commits");
     }
 
     #[test]
     fn export_bytes_takes_the_export_options_but_a_path() {
         let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
-        let answer = doc.execute("document.exportBytes", json!({ "format": "png", "scale": 2, "background": "white", "artboard": 0 })).unwrap();
+        let answer = doc.execute("file.exportBytes", json!({ "format": "png", "scale": 2, "background": "white", "artboard": 0 })).unwrap();
         assert!(answer["data"].as_str().is_some_and(|data| data.starts_with("iVBORw0KGgo")), "{answer}");
-        let refused = doc.execute("document.exportBytes", json!({ "format": "svg", "path": "/tmp/x.svg" })).err().unwrap_or_default();
+        let refused = doc.execute("file.exportBytes", json!({ "format": "svg", "path": "/tmp/x.svg" })).err().unwrap_or_default();
         assert!(refused.contains("path"), "{refused}");
     }
 

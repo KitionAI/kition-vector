@@ -7,7 +7,7 @@ appearance.setItem	index	an appearance item (fill, stroke) inside the target; th
 appearance.setItem	opacity	a value, no object: an opacity percentage
 appearance.setItem	tint	a value, no object: a tint percentage
 artboard.rearrange	columns	a value, no object: a count of columns
-attributes.info	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+attribute.info	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 charStyle.apply	end	a value, no object: a byte offset in the text to end at
 charStyle.apply	start	a value, no object: a byte offset in the text to start from
 clipboard.conflicts	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
@@ -19,43 +19,43 @@ clipboard.importPdf	page	a position inside the file being read (PDF pages (1-bas
 clipboard.importText	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
 color.harmony	amount	a value, no object: an amount
 color.harmony	steps	a value, no object: a count of steps
-document.activate	index	an open document tab, not drawing content
-document.export	artboard	an artboard a command that changes no drawing content reads
-document.export	colors	a value, no object: a colour count
-document.export	depth	a value, no object: a bit depth or nesting depth
-document.export	ditherAmount	a value, no object: a dither percentage
-document.export	quality	a value, no object: a JPEG or WebP quality
-document.export	scans	a value, no object: a count of scans
-document.exportBytes	artboard	an artboard a command that changes no drawing content reads
-document.exportBytes	colors	a value, no object: a colour count
-document.exportBytes	depth	a value, no object: a bit depth or nesting depth
-document.exportBytes	ditherAmount	a value, no object: a dither percentage
-document.exportBytes	quality	a value, no object: a JPEG or WebP quality
-document.exportBytes	scans	a value, no object: a count of scans
-document.exportDxf	colors	a value, no object: a colour count
-document.exportDxf	scale	a value, no object: a scale factor
-document.exportEps	level	a value, no object: a PostScript or compression level
-document.exportForOffice	artboard	an artboard a command that changes no drawing content reads
-document.exportForOffice	ppi	a value, no object: a resolution
-document.exportForWeb	colors	a value, no object: a colour count
-document.exportForWeb	ditherAmount	a value, no object: a dither percentage
-document.exportForWeb	lossy	a value, no object: a lossy amount
-document.exportForWeb	percent	a value, no object: a percentage
-document.exportForWeb	quality	a value, no object: a JPEG quality
-document.exportForWeb	webSnap	a value, no object: a percentage
-document.exportForWeb.preview	slice	a slice's number in the export layout, read by a command that writes nothing
-document.exportPdf	advanced.fontSubsetPercent	a value, no object: a percentage
-document.exportPdf	compression.gray.abovePpi	a value, no object: a resolution
-document.exportPdf	compression.gray.ppi	a value, no object: a resolution
-document.exportPdf	compression.mono.abovePpi	a value, no object: a resolution
-document.exportPdf	compression.mono.ppi	a value, no object: a resolution
-document.exportPdf	marks.offset	a value, no object: a distance
-document.exportSelection	scale	a value, no object: a scale factor
-document.find	limit	a value, no object: a count of matches
-document.inspect	childLimit	a value, no object: a count of children shown
-document.inspect	depth	a value, no object: a bit depth or nesting depth
-document.node	childLimit	a value, no object: a count of children shown
-document.node	depth	a value, no object: a bit depth or nesting depth
+file.activate	index	an open document tab, not drawing content
+file.export	artboard	an artboard a command that changes no drawing content reads
+file.export	colors	a value, no object: a colour count
+file.export	depth	a value, no object: a bit depth or nesting depth
+file.export	ditherAmount	a value, no object: a dither percentage
+file.export	quality	a value, no object: a JPEG or WebP quality
+file.export	scans	a value, no object: a count of scans
+file.exportBytes	artboard	an artboard a command that changes no drawing content reads
+file.exportBytes	colors	a value, no object: a colour count
+file.exportBytes	depth	a value, no object: a bit depth or nesting depth
+file.exportBytes	ditherAmount	a value, no object: a dither percentage
+file.exportBytes	quality	a value, no object: a JPEG or WebP quality
+file.exportBytes	scans	a value, no object: a count of scans
+file.exportDxf	colors	a value, no object: a colour count
+file.exportDxf	scale	a value, no object: a scale factor
+file.exportEps	level	a value, no object: a PostScript or compression level
+file.exportForOffice	artboard	an artboard a command that changes no drawing content reads
+file.exportForOffice	ppi	a value, no object: a resolution
+file.exportForWeb	colors	a value, no object: a colour count
+file.exportForWeb	ditherAmount	a value, no object: a dither percentage
+file.exportForWeb	lossy	a value, no object: a lossy amount
+file.exportForWeb	percent	a value, no object: a percentage
+file.exportForWeb	quality	a value, no object: a JPEG quality
+file.exportForWeb	webSnap	a value, no object: a percentage
+file.exportForWeb.preview	slice	a slice's number in the export layout, read by a command that writes nothing
+file.exportPdf	advanced.fontSubsetPercent	a value, no object: a percentage
+file.exportPdf	compression.gray.abovePpi	a value, no object: a resolution
+file.exportPdf	compression.gray.ppi	a value, no object: a resolution
+file.exportPdf	compression.mono.abovePpi	a value, no object: a resolution
+file.exportPdf	compression.mono.ppi	a value, no object: a resolution
+file.exportPdf	marks.offset	a value, no object: a distance
+file.exportSelection	scale	a value, no object: a scale factor
+file.find	limit	a value, no object: a count of matches
+file.inspect	childLimit	a value, no object: a count of children shown
+file.inspect	depth	a value, no object: a bit depth or nesting depth
+file.node	childLimit	a value, no object: a count of children shown
+file.node	depth	a value, no object: a bit depth or nesting depth
 edit.colors.adjustBalance	gray	a value, no object: a grey level
 edit.colors.adjustBalance	k	a value, no object: a black percentage
 edit.colors.adjustBalance	tint	a value, no object: a tint percentage
@@ -74,7 +74,7 @@ effect.setParams	index	a position inside the target object's own geometry or pai
 effect.setParams	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 eyedropper.setOptions	sampleSize	a value, no object: a sample size in pixels
 file.close	index	an open document tab, not drawing content
-file.info	rating	a value, no object: a rating
+file.setInfo	rating	a value, no object: a rating
 file.new	artboardLayout.columns	a value, no object: a count of columns
 file.new	artboards	a value, no object: read as a number
 file.new	rasterEffectsPpi	a value, no object: a resolution
@@ -99,7 +99,7 @@ guide.remove	index	a ruler guide: guides are the drawing's settings, held by the
 guide.setLayer	index	a ruler guide: guides are the drawing's settings, held by the drawing's own premise
 image.info	page	a page of the linked file being read, not drawing content
 layer.setProps	color	a layer colour preset (0..26), no object
-library.createGroup	items[].item	an item of a user library (its graphic number or name), not drawing content
+library.addGroup	items[].item	an item of a user library (its graphic number or name), not drawing content
 livePaint.fill	tint	a value, no object: a tint percentage
 livePaint.strokeEdge	tint	a value, no object: a tint percentage
 magicWand.set	fillTolerance	a value, no object: a colour tolerance
@@ -107,11 +107,11 @@ magicWand.set	strokeTolerance	a value, no object: a colour tolerance
 object.blend.make	steps	a value, no object: a count of steps
 object.blend.options	steps	a value, no object: a count of steps
 object.blend.options	value	a value, no object: a blend option value
-object.blend.spine.moveAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
-object.blend.spine.moveAnchor	subpath	a position inside the target blend's spine, held by the target's premise
-object.blend.spine.removeAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
-object.createObjectMosaic	columns	a value, no object: a count of columns
-object.createObjectMosaic	rows	a value, no object: a count of rows
+object.blend.moveSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.blend.moveSpineAnchor	subpath	a position inside the target blend's spine, held by the target's premise
+object.blend.removeSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.addObjectMosaic	columns	a value, no object: a count of columns
+object.addObjectMosaic	rows	a value, no object: a count of rows
 object.envelope.makeWithMesh	cols	a value, no object: a count of columns
 object.envelope.makeWithMesh	rows	a value, no object: a count of rows
 object.envelope.options	fidelity	a value, no object: an envelope fidelity
@@ -125,8 +125,8 @@ object.flattenTransparency	gradientPpi	a value, no object: a resolution
 object.flattenTransparency	lineArtPpi	a value, no object: a resolution
 object.liquify	complexity	a value, no object: a complexity level
 object.liquify	detail	a value, no object: a detail level
-object.mesh.create	cols	a value, no object: a count of columns
-object.mesh.create	rows	a value, no object: a count of rows
+object.mesh.add	cols	a value, no object: a count of columns
+object.mesh.add	rows	a value, no object: a count of rows
 object.mesh.deletePoint	index	a position inside the target object's own geometry or paint, held by the target's premise (mesh points (0-based))
 object.mesh.movePoint	handle	a position inside the target object's own geometry or paint, held by the target's premise (handles of point (0 right,1 left,2 down,3 up))
 object.mesh.movePoint	index	a position inside the target object's own geometry or paint, held by the target's premise (mesh points (0-based))
@@ -250,12 +250,12 @@ text.tabs.set	end	a value, no object: a number to end at
 text.tabs.set	start	a value, no object: a page or number to start from
 transparency.set	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 transparency.set	opacity	a value, no object: an opacity percentage
-type.size.decrease	by	a value, no object: an amount to step by
-type.size.decrease	end	a value, no object: a character offset in the text
-type.size.decrease	start	a value, no object: a character offset in the text
-type.size.increase	by	a value, no object: an amount to step by
-type.size.increase	end	a value, no object: a character offset in the text
-type.size.increase	start	a value, no object: a character offset in the text
-type.step	by	a value, no object: an amount to step by
-type.step	end	a value, no object: a number to end at
-type.step	start	a value, no object: a page or number to start from
+format.decreaseFontSize	by	a value, no object: an amount to step by
+format.decreaseFontSize	end	a value, no object: a character offset in the text
+format.decreaseFontSize	start	a value, no object: a character offset in the text
+format.increaseFontSize	by	a value, no object: an amount to step by
+format.increaseFontSize	end	a value, no object: a character offset in the text
+format.increaseFontSize	start	a value, no object: a character offset in the text
+text.step	by	a value, no object: an amount to step by
+text.step	end	a value, no object: a number to end at
+text.step	start	a value, no object: a page or number to start from

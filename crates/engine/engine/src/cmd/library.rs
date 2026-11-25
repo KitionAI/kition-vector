@@ -473,7 +473,7 @@ pub fn specs() -> Vec<CommandSpec> {
             set_current
         ),
         cmd!(
-            "library.create",
+            "library.new",
             "Create New Library",
             [],
             None,
@@ -527,7 +527,7 @@ pub fn specs() -> Vec<CommandSpec> {
             remove_item
         ),
         cmd!(
-            "library.createGroup",
+            "library.addGroup",
             "New Library Group",
             [],
             None,
@@ -973,7 +973,7 @@ fn group_at(lib: &Library, name: &str, cmd: &str) -> Result<usize> {
 }
 
 fn create_group(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "library.createGroup";
+    const C: &str = "library.addGroup";
     let id = library_id(s, p, C)?;
     let base = name_param(p, "Group");
     let wanted = match p.get("items") {

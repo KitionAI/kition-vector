@@ -29,7 +29,7 @@ fn only_bundled_and_added_fonts_draw() {
     assert_eq!(run(&mut doc, "text.rescanFonts", json!({}))["faces"], json!(0), "a rescan finds no installed fonts");
 
     // Simplified Chinese no bundled font has: reported, not drawn from the machine.
-    run(&mut doc, "text.create", json!({ "x": 20, "y": 100, "text": "Hello 你们开发", "size": 40, "font": "Inter" }));
+    run(&mut doc, "text.add", json!({ "x": 20, "y": 100, "text": "Hello 你们开发", "size": 40, "font": "Inter" }));
     let fonts = run(&mut doc, "text.fonts", json!({}));
     let inter = fonts.as_array().unwrap().iter().find(|row| row["family"] == "Inter").cloned().unwrap();
     assert_eq!(inter["noGlyph"], json!(4), "four characters no font here has: {inter}");

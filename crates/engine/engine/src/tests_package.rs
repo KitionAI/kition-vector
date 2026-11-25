@@ -22,7 +22,7 @@ fn poster(dir: &Folder) -> Session {
     let mut s = session();
     place(&mut s, &a);
     place(&mut s, &b);
-    run(&mut s, "text.create", json!({"x": 10, "y": 40, "text": "Poster"}));
+    run(&mut s, "text.add", json!({"x": 10, "y": 40, "text": "Poster"}));
     save(&mut s, &dir.file("poster.kvector"));
     s
 }
@@ -162,7 +162,7 @@ fn a_font_named_by_another_of_its_names_is_copied() {
     let dir = Folder::new("package-alias");
     let mut s = poster(&dir);
     // The bundled Semibold by its PostScript name, as an SVG or a PDF can name it.
-    run(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "Alias", "font": "SourceSans3-Semibold"}));
+    run(&mut s, "text.add", json!({"x": 10, "y": 80, "text": "Alias", "font": "SourceSans3-Semibold"}));
     let r = run(&mut s, "file.package", json!({}));
     assert_eq!((r["fonts"].as_u64(), r["skippedFonts"].clone()), (Some(2), json!([])), "{}", r["skippedFonts"]);
     let zip = unzip(&kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
@@ -178,7 +178,7 @@ fn a_substituted_style_names_the_style_shown() {
     let mut s = poster(&dir);
     // No Source Sans 3 has a Black Wide, bundled or installed: its closest style stands in, and
     // that style's file is copied.
-    run(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "Heavy", "font": "Source Sans 3", "style": "Black Wide"}));
+    run(&mut s, "text.add", json!({"x": 10, "y": 80, "text": "Heavy", "font": "Source Sans 3", "style": "Black Wide"}));
     let r = run(&mut s, "file.package", json!({}));
     assert_eq!(r["skippedFonts"], json!([]));
     let zip = unzip(&kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap());
@@ -192,7 +192,7 @@ fn the_document_info_report_has_every_category() {
     let dir = Folder::new("docinfo-report");
     let mut s = poster(&dir);
     s.execute("file.place", &json!({"path": dir.file("art/red.png"), "link": false})).unwrap();
-    let text = run(&mut s, "document.info", json!({"format": "text"}))["text"].as_str().unwrap().to_string();
+    let text = run(&mut s, "file.getInfo", json!({"format": "text"}))["text"].as_str().unwrap().to_string();
     for h in [
         "DOCUMENT",
         "OBJECTS",
@@ -210,15 +210,15 @@ fn the_document_info_report_has_every_category() {
     }
     assert!(text.contains("Images: 3") && text.contains("Source Sans 3 Regular: built in; embedding allowed"), "{text}");
     assert!(text.contains("red.png: 600 × 300 px — ") && text.contains("Color Mode: RGB") && text.contains("\nSwatches: "), "{text}");
-    let fonts = run(&mut s, "document.info", json!({"format": "text", "category": "fonts"}))["text"].as_str().unwrap().to_string();
+    let fonts = run(&mut s, "file.getInfo", json!({"format": "text", "category": "fonts"}))["text"].as_str().unwrap().to_string();
     assert!(fonts.contains("FONTS") && !fonts.contains("OBJECTS"), "{fonts}");
-    let i = run(&mut s, "document.info", json!({"category": "linkedImages"}));
+    let i = run(&mut s, "file.getInfo", json!({"category": "linkedImages"}));
     assert_eq!((i["sections"].as_array().unwrap().len(), i["sections"][0]["id"].as_str()), (1, Some("linkedImages")));
     assert_eq!(i["sections"][0]["rows"].as_array().unwrap().len(), 2);
-    let all = run(&mut s, "document.info", json!({}));
+    let all = run(&mut s, "file.getInfo", json!({}));
     assert_eq!(all["sections"].as_array().unwrap().len(), 11);
-    assert!(s.execute("document.info", &json!({"category": "brushes"})).is_err());
-    assert!(s.execute("document.info", &json!({"format": "xml"})).is_err());
+    assert!(s.execute("file.getInfo", &json!({"category": "brushes"})).is_err());
+    assert!(s.execute("file.getInfo", &json!({"format": "xml"})).is_err());
     // The bundled fonts allow embedding.
     let face = kition_vector_text::FontDb::global().face("Source Sans 3", "Regular").unwrap();
     assert!(face.embeddable() && face.path().is_none());

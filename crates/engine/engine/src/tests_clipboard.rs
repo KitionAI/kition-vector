@@ -93,7 +93,7 @@ fn an_image_symbol_and_pattern_rect_pasted_into_a_new_document_render_the_same()
     s.execute("object.pattern.make", &json!({"name": "Dots", "width": 20, "height": 20})).unwrap();
     s.execute("object.pattern.done", &json!({})).unwrap();
     sel(&mut s, &[dot]);
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     let patterned = rect(&mut s, 20.0, 20.0, 100.0, 80.0);
     s.execute("paint.setFill", &json!({"ids": [patterned.0], "swatch": "Dots"})).unwrap();
     // Symbol "Badge" (a green square) placed once.
@@ -106,7 +106,7 @@ fn an_image_symbol_and_pattern_rect_pasted_into_a_new_document_render_the_same()
     s.execute("paint.setFill", &json!({"ids": [e.0], "color": "#2040ff"})).unwrap();
     sel(&mut s, &[e]);
     s.execute("object.rasterize", &json!({"ppi": 72})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     s.execute("edit.copy", &json!({})).unwrap();
     assert_eq!(s.clipboard.nodes.len(), 3);
     assert_eq!((s.clipboard.symbols.len(), s.clipboard.patterns.len(), s.clipboard.images.len()), (1, 1, 1));
@@ -315,7 +315,7 @@ fn graphic_style_links_follow_the_style_into_the_document() {
     let v = s.execute("edit.paste", &json!({})).unwrap();
     assert_eq!((v["added"].as_u64(), node(&s, ids_of(&v)[0]).graphic_style), (Some(0), Some(linked_to.id)));
     // Back in the source document the link is kept as it was.
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     let v = s.execute("edit.paste", &json!({})).unwrap();
     assert_eq!(node(&s, ids_of(&v)[0]).graphic_style, Some(src_id));
 }
@@ -326,7 +326,7 @@ fn undo_removes_everything_the_paste_added() {
     let r = swatched_rect(&mut s, "Brand", "#ff0000");
     sel(&mut s, &[r]);
     s.execute("symbol.new", &json!({"name": "Mark"})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     s.execute("edit.copy", &json!({})).unwrap();
     new_doc(&mut s);
     let before = doc(&s).clone();
@@ -341,7 +341,7 @@ fn undo_removes_everything_the_paste_added() {
 fn styles_symbols_and_images_of_the_same_name_are_renamed() {
     let mut s = session();
     // A character style, a symbol and an image named like the target's own.
-    let t = id_of(&s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hello"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hello"})).unwrap());
     s.execute("charStyle.new", &json!({"name": "Emphasis", "attrs": {"size": 24.0}})).unwrap();
     s.execute("charStyle.apply", &json!({"name": "Emphasis", "id": t.0})).unwrap();
     let m = rect(&mut s, 200.0, 100.0, 30.0, 30.0);
@@ -397,7 +397,7 @@ fn pasting_again_reuses_what_an_earlier_paste_added() {
     let mut s = session();
     let r = swatched_rect(&mut s, "Brand", "#ff0000");
     // A character style whose fill links to Brand.
-    let t = id_of(&s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap());
     let red = serde_json::to_value(linked(hex("#ff0000"), "Brand", 1.0)).unwrap();
     s.execute("charStyle.new", &json!({"name": "Loud", "attrs": {"fill": red}})).unwrap();
     s.execute("charStyle.apply", &json!({"name": "Loud", "id": t.0})).unwrap();
@@ -451,7 +451,7 @@ fn pasting_back_into_the_source_document_adds_nothing() {
 #[test]
 fn paste_without_formatting_leaves_text_styles_behind() {
     let mut s = session();
-    let t = id_of(&s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hello"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hello"})).unwrap());
     s.execute("charStyle.new", &json!({"name": "Emphasis", "attrs": {"size": 24.0}})).unwrap();
     s.execute("charStyle.apply", &json!({"name": "Emphasis", "id": t.0})).unwrap();
     copy(&mut s, &[t]);
@@ -515,10 +515,10 @@ fn front_and_back_without_a_selection_use_the_current_layers_ends() {
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     copy(&mut s, &[a, b]);
     let layer = |s: &Session| doc(s).layers[0].children().unwrap().iter().map(|n| n.id).collect::<Vec<_>>();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let back = ids_of(&s.execute("edit.pasteInBack", &json!({})).unwrap());
     assert_eq!(&layer(&s)[..2], &back[..], "pasted at the bottom (index 0), in order");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let front = ids_of(&s.execute("edit.pasteInFront", &json!({})).unwrap());
     let l = layer(&s);
     assert_eq!(&l[l.len() - 2..], &front[..], "pasted on top, in order");
@@ -583,7 +583,7 @@ fn paste_remembers_layers_restores_the_source_layers() {
     let other = id_of(&s.execute("layer.new", &json!({"name": "Other"})).unwrap());
     assert_eq!(s.execute("layer.pasteRemembersLayers", &json!({})).unwrap()["on"], true);
     assert!(doc(&s).paste_remembers_layers);
-    assert_eq!(s.execute("document.inspect", &json!({})).unwrap()["pasteRemembersLayers"], true);
+    assert_eq!(s.execute("file.inspect", &json!({})).unwrap()["pasteRemembersLayers"], true);
     let ids = ids_of(&s.execute("edit.paste", &json!({})).unwrap());
     let parents: Vec<_> = ids.iter().map(|id| doc(&s).parent_of(*id)).collect();
     assert_eq!(parents, [Some(first), Some(art)]);
@@ -599,7 +599,7 @@ fn paste_remembers_layers_restores_the_source_layers() {
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(!doc(&s).paste_remembers_layers);
     // Off: everything goes to the current layer.
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     assert_eq!(s.execute("layer.pasteRemembersLayers", &json!({"on": false})).unwrap()["on"], false);
     s.execute("layer.setCurrent", &json!({"id": other.0})).unwrap();
     let ids = ids_of(&s.execute("edit.paste", &json!({})).unwrap());

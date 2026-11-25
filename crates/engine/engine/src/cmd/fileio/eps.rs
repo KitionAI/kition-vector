@@ -1,4 +1,4 @@
-//! EPS export for every EPS path (`document.export {format: eps}`, `document.exportEps`, Export As
+//! EPS export for every EPS path (`file.export {format: eps}`, `file.exportEps`, Export As
 //! → EPS Options): the options parsed from the params, transparency flattened with a flattener
 //! preset, one file of the art's bounds or one per artboard, the preview and thumbnail rendered,
 //! and the native document embedded for reopening.
@@ -15,7 +15,7 @@ use super::super::flatten::{FlattenOptions, flatten_document};
 use super::super::*;
 use super::{ArtboardPick, Encoded, FormatOption};
 
-const C: &str = "document.export";
+const C: &str = "file.export";
 
 /// Most pixels along a side of a preview.
 const MAX_PREVIEW: f64 = 2048.0;
@@ -24,17 +24,17 @@ const THUMBNAIL: f64 = 128.0;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![cmd!(
-        "document.exportEps",
+        "file.exportEps",
         "Export EPS",
         [],
         None,
-        "{path?, level?: 2|3 (default; PostScript language level: 3 writes smooth gradients and masks transparent image pixels out, 2 steps gradients and writes those pixels white), previewFormat?: none|tiffBw|tiffColor (default: a TIFF preview other apps show), transparentPreview?: true (else on white), overprints?: preserve (default)|discard, flattenerPreset?: \"medium\" (default; high, low or a saved preset: flattener.presets.list), flattener?: {the options of object.flattenTransparency over the preset}, embedFonts?: true (type is always written as outlines, so no fonts are needed), includeLinkedFiles?: false (the embedded document keeps linked images whole, not just their previews), thumbnails?: true (a PNG thumbnail in the file), cmykPostScript?: true (RGB documents written in CMYK), compatibleGradients?: false (stepped gradients at level 3 too), selectedOnly?: false, useArtboards?: true (one file per chosen artboard, artboards?/range?, {stem}_{artboard}.eps, the bounding box the artboard) | false (default: one file, the bounding box the visible art, y up from the first artboard's bottom-left corner)} → {path, bytes, warnings, files?}; no path → {dataBase64, …}. Transparency is flattened with the preset (EPS has none); the native document rides along in comments, for reopening the file as it was. Same as document.export {format: eps}",
+        "{path?, level?: 2|3 (default; PostScript language level: 3 writes smooth gradients and masks transparent image pixels out, 2 steps gradients and writes those pixels white), previewFormat?: none|tiffBw|tiffColor (default: a TIFF preview other apps show), transparentPreview?: true (else on white), overprints?: preserve (default)|discard, flattenerPreset?: \"medium\" (default; high, low or a saved preset: flattener.presets.list), flattener?: {the options of object.flattenTransparency over the preset}, embedFonts?: true (type is always written as outlines, so no fonts are needed), includeLinkedFiles?: false (the embedded document keeps linked images whole, not just their previews), thumbnails?: true (a PNG thumbnail in the file), cmykPostScript?: true (RGB documents written in CMYK), compatibleGradients?: false (stepped gradients at level 3 too), selectedOnly?: false, useArtboards?: true (one file per chosen artboard, artboards?/range?, {stem}_{artboard}.eps, the bounding box the artboard) | false (default: one file, the bounding box the visible art, y up from the first artboard's bottom-left corner)} → {path, bytes, warnings, files?}; no path → {dataBase64, …}. Transparency is flattened with the preset (EPS has none); the native document rides along in comments, for reopening the file as it was. Same as file.export {format: eps}",
         has_doc,
         export_eps
     )]
 }
 
-/// The EPS options `document.formats` lists.
+/// The EPS options `file.formats` lists.
 pub(super) const OPTIONS: &[FormatOption] = &[
     super::ARTBOARD,
     super::ARTBOARDS,

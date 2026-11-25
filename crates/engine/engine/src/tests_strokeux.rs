@@ -1,5 +1,5 @@
 //! Stroke panel reach: `stroke.set` on groups, what the panel shows for a selection (mixed values,
-//! Align Stroke), Units > Stroke, and the stroke options `document.inspect` reports.
+//! Align Stroke), Units > Stroke, and the stroke options `file.inspect` reports.
 
 use kition_vector_doc::{NodeId, NodeKind, Unit};
 use serde_json::{Value, json};
@@ -33,7 +33,7 @@ fn stroke_set_on_a_group_skips_images_and_symbol_instances() {
     select(&mut s, &[c]);
     let instance = NodeId(run(&mut s, "symbol.new", json!({"name": "Box"}))["id"].as_u64().unwrap());
     select(&mut s, &[a, image, instance]);
-    run(&mut s, "object.group", json!({}));
+    run(&mut s, "arrange.group", json!({}));
     run(&mut s, "stroke.set", json!({"weight": 5}));
     let d = &s.doc().unwrap().doc;
     assert_eq!(d.node(a).unwrap().appearance.stroke_width(), 5.0);
@@ -56,12 +56,12 @@ fn mixed_values_and_align_stroke_follow_the_selection() {
     let line = NodeId(run(&mut s, "shape.line", json!({"x1": 10, "y1": 100, "x2": 90, "y2": 100}))["id"].as_u64().unwrap());
     select(&mut s, &[a, line]);
     assert!(!s.active().unwrap().stroke_mixed().can_align);
-    let text = NodeId(run(&mut s, "text.create", json!({"x": 10, "y": 200, "text": "Hi"}))["id"].as_u64().unwrap());
+    let text = NodeId(run(&mut s, "text.add", json!({"x": 10, "y": 200, "text": "Hi"}))["id"].as_u64().unwrap());
     select(&mut s, &[text]);
     assert!(!s.active().unwrap().stroke_mixed().can_align);
     // Grouped closed paths can.
     select(&mut s, &[a, b]);
-    run(&mut s, "object.group", json!({}));
+    run(&mut s, "arrange.group", json!({}));
     let m = s.active().unwrap().stroke_mixed();
     assert!(m.can_align && m.weight);
     assert_eq!(s.shown_stroke().map(|st| st.width), Some(1.0), "a group shows its first painted object's stroke");
@@ -85,7 +85,7 @@ fn inspect_reports_stroke_options() {
         "stroke.set",
         json!({"ids": [line], "cap": "round", "join": "bevel", "miterLimit": 4, "dash": [6, 3], "alignDashes": true, "endArrow": "Triangle", "arrowAlign": "tip", "profile": "lens"}),
     );
-    let doc = run(&mut s, "document.inspect", json!({}));
+    let doc = run(&mut s, "file.inspect", json!({}));
     let o = &doc["layers"][0]["children"][0]["strokeOptions"];
     assert_eq!(o["cap"], "round");
     assert_eq!(o["join"], "bevel");
@@ -102,9 +102,9 @@ fn inspect_reports_stroke_options() {
     run(&mut s, "stroke.set", Value::Object(q));
     assert_eq!(s.doc().unwrap().doc.node(NodeId(line)).unwrap().appearance, before);
     // Type reports its characters' stroke.
-    run(&mut s, "text.create", json!({"x": 10, "y": 200, "text": "Hi"}));
+    run(&mut s, "text.add", json!({"x": 10, "y": 200, "text": "Hi"}));
     run(&mut s, "stroke.set", json!({"join": "round"}));
-    let doc = run(&mut s, "document.inspect", json!({}));
+    let doc = run(&mut s, "file.inspect", json!({}));
     let text = doc["layers"][0]["children"].as_array().unwrap().iter().find(|c| c["kind"] == "Text" || c.get("text").is_some()).unwrap().clone();
     assert_eq!(text["strokeOptions"]["join"], "round", "{text}");
 }

@@ -180,7 +180,7 @@ fn object_expand_expands_envelopes_inside_the_selection() {
     let (_, e) = enveloped(&mut s, "object.envelope.makeWithWarp", json!({"style": "arch", "bend": 50}));
     let other = rect(&mut s, 400.0, 400.0, 20.0, 20.0);
     sel(&mut s, &[e, other]);
-    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let g = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     let info = s.execute("object.expand.info", &json!({})).unwrap();
     assert_eq!(info["object"], json!(true));
     s.execute("object.expand", &json!({"fill": false, "stroke": false})).unwrap();
@@ -218,12 +218,12 @@ fn envelope_options_round_trip_natively_and_old_files_load() {
 #[test]
 fn enveloped_type_exports_distorted_in_every_format() {
     let mut s = session();
-    let t = id_of(&s.execute("text.create", &json!({"x": 100, "y": 200, "text": "Envelope", "size": 48})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 100, "y": 200, "text": "Envelope", "size": 48})).unwrap());
     sel(&mut s, &[t]);
     s.execute("object.envelope.makeWithWarp", &json!({"style": "arch", "bend": 0})).unwrap();
     // The export's bytes without its time stamps (EPS and PDF date their files to the second).
     let export = |s: &mut Session, format: &str| -> Vec<u8> {
-        let data = s.execute("document.export", &json!({"format": format})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+        let data = s.execute("file.export", &json!({"format": format})).unwrap()["dataBase64"].as_str().unwrap().to_string();
         let bytes = kition_vector_format::base64_decode(&data).unwrap();
         let dated = |line: &&[u8]| line.windows(12).any(|w| w == b"CreationDate") || line.windows(7).any(|w| w == b"ModDate");
         bytes.split(|b| *b == b'\n').filter(|l| !dated(l)).flat_map(|l| l.iter().copied().chain(*b"\n")).collect()
@@ -243,7 +243,7 @@ fn enveloped_type_exports_distorted_in_every_format() {
 #[test]
 fn enveloped_type_keeps_each_runs_colour_on_the_canvas() {
     let mut s = session();
-    let t = id_of(&s.execute("text.create", &json!({"x": 100, "y": 200, "text": "MMMMMMMM", "size": 60, "fill": "#000000"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 100, "y": 200, "text": "MMMMMMMM", "size": 60, "fill": "#000000"})).unwrap());
     s.edit("red half", |d, _| {
         if let NodeKind::Text(tx) = &mut d.node_mut(t).unwrap().kind {
             kition_vector_text::edit::style_range(&mut tx.runs, 0, 4, |st| {

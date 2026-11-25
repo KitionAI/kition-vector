@@ -1,4 +1,4 @@
-//! File → Export → Save for Web (Legacy): `document.exportForWeb`, its preview, the remembered
+//! File → Export → Save for Web (Legacy): `file.exportForWeb`, its preview, the remembered
 //! settings and the presets.
 
 use serde_json::{Value, json};
@@ -58,7 +58,7 @@ fn files(v: &Value) -> Vec<(String, Vec<u8>)> {
 
 /// The one file of an export.
 fn one(s: &mut Session, p: Value) -> Vec<u8> {
-    let f = files(&run(s, "document.exportForWeb", p));
+    let f = files(&run(s, "file.exportForWeb", p));
     assert_eq!(f.len(), 1);
     f[0].1.clone()
 }
@@ -88,7 +88,7 @@ fn two_colours_give_a_two_colour_palette() {
         assert_eq!(distinct(&img), 2, "{format}");
         assert_eq!(img.get_pixel(5, 5).0, [255, 0, 0, 255]);
         assert_eq!(img.get_pixel(35, 5).0, [0, 0, 255, 255]);
-        let pv = run(&mut s, "document.exportForWeb.preview", p);
+        let pv = run(&mut s, "file.exportForWeb.preview", p);
         let colors: Vec<&str> = pv["colors"].as_array().unwrap().iter().map(|c| c["color"].as_str().unwrap()).collect();
         assert_eq!(colors.len(), 2, "{format}: {colors:?}");
         assert!(colors.contains(&"#ff0000") && colors.contains(&"#0000ff"));
@@ -108,7 +108,7 @@ fn colours_cap_the_palette_at_16() {
                 let p = json!({"format": format, "colors": 16, "dither": dither, "reduction": reduction});
                 let img = pixels(&one(&mut s, p.clone()));
                 assert!(distinct(&img) <= 16, "{p}: {}", distinct(&img));
-                let pv = run(&mut s, "document.exportForWeb.preview", p.clone());
+                let pv = run(&mut s, "file.exportForWeb.preview", p.clone());
                 assert!(pv["colors"].as_array().unwrap().len() <= 16, "{p}");
             }
         }
@@ -137,7 +137,7 @@ fn gif_transparency_index_and_map_to_transparent() {
     let mapped = pixels(&one(&mut s, p.clone()));
     assert_eq!(mapped.get_pixel(15, 15)[3], 0);
     assert_eq!(mapped.get_pixel(25, 15).0, [0, 255, 0, 255]);
-    let pv = run(&mut s, "document.exportForWeb.preview", p);
+    let pv = run(&mut s, "file.exportForWeb.preview", p);
     assert_eq!(pv["mappedToTransparent"], json!(["#ff0000"]));
     assert!(pv["colors"].as_array().unwrap().iter().all(|c| c["source"] != "#ff0000"));
     // An opaque image gets a transparent index for a mapped colour.
@@ -189,7 +189,7 @@ fn preview_size_is_the_written_size() {
         json!({"format": "gif", "percent": 50, "colorTable": {"sort": "luminance"}}),
     ] {
         let file = one(&mut s, p.clone());
-        let pv = run(&mut s, "document.exportForWeb.preview", merge(&p, json!({"image": true})));
+        let pv = run(&mut s, "file.exportForWeb.preview", merge(&p, json!({"image": true})));
         assert_eq!(pv["bytes"].as_u64().unwrap() as usize, file.len(), "{p}");
         assert_eq!(kition_vector_format::base64_decode(pv["dataBase64"].as_str().unwrap()).unwrap(), file, "{p}");
         let img = pixels(&file);
@@ -197,9 +197,9 @@ fn preview_size_is_the_written_size() {
         let seconds = pv["seconds"].as_f64().unwrap();
         assert!((seconds - file.len() as f64 * 8.0 / 56_600.0).abs() < 1e-9, "at 56.6 kbps by default");
     }
-    let pv = run(&mut s, "document.exportForWeb.preview", json!({"kbps": 1000}));
+    let pv = run(&mut s, "file.exportForWeb.preview", json!({"kbps": 1000}));
     assert!((pv["seconds"].as_f64().unwrap() * 125_000.0 - pv["bytes"].as_f64().unwrap()).abs() < 1e-6);
-    assert!(s.execute("document.exportForWeb.preview", &json!({"kbps": 0})).is_err());
+    assert!(s.execute("file.exportForWeb.preview", &json!({"kbps": 0})).is_err());
 }
 
 fn merge(a: &Value, b: Value) -> Value {
@@ -217,12 +217,12 @@ fn slices_give_one_image_each_and_a_page() {
     let a = rect(&mut s, [20.0, 20.0, 100.0, 60.0], "#ff8800");
     run(&mut s, "object.slice.make", json!({"ids": [a]}));
     run(&mut s, "object.slice.options", json!({"name": "logo", "url": "https://example.com/", "alt": "Logo <1>", "target": "_blank"}));
-    let b = run(&mut s, "object.slice.create", json!({"x": 150, "y": 100, "width": 100, "height": 50}))["id"].as_u64().unwrap();
+    let b = run(&mut s, "object.slice.add", json!({"x": 150, "y": 100, "width": 100, "height": 50}))["id"].as_u64().unwrap();
     let layout = run(&mut s, "slice.list", json!({}))["slices"].as_array().unwrap().clone();
     let n = layout.len();
     assert!(n > 2, "auto slices fill the rest: {n}");
 
-    let r = run(&mut s, "document.exportForWeb", json!({"format": "gif", "output": "html"}));
+    let r = run(&mut s, "file.exportForWeb", json!({"format": "gif", "output": "html"}));
     let f = files(&r);
     assert_eq!(f.len(), n + 1, "N images plus the page");
     assert_eq!(f[0].0, "Untitled-1.html");
@@ -241,24 +241,24 @@ fn slices_give_one_image_each_and_a_page() {
     assert_eq!(area, 300 * 200);
 
     // Images only: no page.
-    assert_eq!(files(&run(&mut s, "document.exportForWeb", json!({}))).len(), n);
+    assert_eq!(files(&run(&mut s, "file.exportForWeb", json!({}))).len(), n);
     // A No Image slice is text on the page, not a file.
     run(&mut s, "object.slice.select", json!({"slices": [b]}));
     run(&mut s, "object.slice.options", json!({"kind": "noImage", "text": "<b>Hi</b>", "background": "#ffffff", "hAlign": "center"}));
-    let f = files(&run(&mut s, "document.exportForWeb", json!({"output": "html"})));
+    let f = files(&run(&mut s, "file.exportForWeb", json!({"output": "html"})));
     assert_eq!(f.len(), n);
     let html = String::from_utf8(f[0].1.clone()).unwrap();
     assert!(html.contains("<b>Hi</b>") && html.contains("background: #ffffff;") && html.contains("justify-content: center"));
     // Selected slices only.
     run(&mut s, "object.slice.select", json!({"slices": [a]}));
-    let f = files(&run(&mut s, "document.exportForWeb", json!({"slices": "selected"})));
+    let f = files(&run(&mut s, "file.exportForWeb", json!({"slices": "selected"})));
     assert_eq!(f.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>(), ["images/logo.gif"]);
     run(&mut s, "object.slice.select", json!({}));
-    assert!(s.execute("document.exportForWeb", &json!({"slices": "selected"})).is_err());
+    assert!(s.execute("file.exportForWeb", &json!({"slices": "selected"})).is_err());
     // No slices: one image.
-    assert_eq!(files(&run(&mut s, "document.exportForWeb", json!({"slices": "none"}))).len(), 1);
-    assert_eq!(run(&mut s, "document.exportForWeb.preview", json!({}))["slices"], n - 1);
-    let one_slice = run(&mut s, "document.exportForWeb.preview", json!({"slice": layout[0]["number"]}));
+    assert_eq!(files(&run(&mut s, "file.exportForWeb", json!({"slices": "none"}))).len(), 1);
+    assert_eq!(run(&mut s, "file.exportForWeb.preview", json!({}))["slices"], n - 1);
+    let one_slice = run(&mut s, "file.exportForWeb.preview", json!({"slice": layout[0]["number"]}));
     assert_eq!((one_slice["width"].as_f64(), one_slice["height"].as_f64()), (layout[0]["width"].as_f64(), layout[0]["height"].as_f64()));
 }
 
@@ -267,11 +267,11 @@ fn files_are_written_beside_the_path() {
     let dir = kition_vector_testkit::temp_dir("webexport");
     let mut s = two_colours();
     let path = dir.join("art.gif").to_string_lossy().to_string();
-    let r = run(&mut s, "document.exportForWeb", json!({"path": path}));
+    let r = run(&mut s, "file.exportForWeb", json!({"path": path}));
     assert_eq!(r["files"], json!([path]));
     assert!(std::fs::read(&path).unwrap().starts_with(b"GIF89a"));
     let page = dir.join("page.html").to_string_lossy().to_string();
-    let r = run(&mut s, "document.exportForWeb", json!({"path": page, "output": "html", "format": "png24"}));
+    let r = run(&mut s, "file.exportForWeb", json!({"path": page, "output": "html", "format": "png24"}));
     assert_eq!(r["path"], json!(page));
     assert!(std::fs::read_to_string(&page).unwrap().contains("src=\"images/page.png\""));
     assert!(dir.join("images").join("page.png").exists());
@@ -302,7 +302,7 @@ fn image_size_region_and_metadata() {
         json!({"artboard": 3}),
         json!({"preset": "Nope"}),
     ] {
-        assert!(s.execute("document.exportForWeb", &bad).is_err(), "{bad}");
+        assert!(s.execute("file.exportForWeb", &bad).is_err(), "{bad}");
     }
     // Clip to Artboard off: the art's bounds.
     let mut t = session(100.0, 100.0);
@@ -310,7 +310,7 @@ fn image_size_region_and_metadata() {
     assert_eq!(size(&mut t, json!({"clipToArtboard": false})), (30, 15));
     assert_eq!(size(&mut t, json!({})), (100, 100));
     // File Info: the copyright by default, everything with all, nothing with none.
-    run(&mut s, "file.info", json!({"copyrightNotice": "(c) Someone", "author": "Ann", "description": "Flags"}));
+    run(&mut s, "file.setInfo", json!({"copyrightNotice": "(c) Someone", "author": "Ann", "description": "Flags"}));
     let png = one(&mut s, json!({"format": "png24"}));
     let has = |f: &[u8], t: &str| f.windows(t.len()).any(|w| w == t.as_bytes());
     assert!(has(&png, "(c) Someone") && !has(&png, "Ann"));
@@ -330,7 +330,7 @@ fn colour_table_lock_web_shift_snap_and_sort() {
     rect(&mut s, [0.0, 0.0, 10.0, 10.0], "#123456");
     rect(&mut s, [10.0, 0.0, 10.0, 10.0], "#fe0101");
     rect(&mut s, [20.0, 0.0, 10.0, 10.0], "#808080");
-    let colors = |s: &mut Session, p: Value| -> Vec<Value> { run(s, "document.exportForWeb.preview", p)["colors"].as_array().unwrap().clone() };
+    let colors = |s: &mut Session, p: Value| -> Vec<Value> { run(s, "file.exportForWeb.preview", p)["colors"].as_array().unwrap().clone() };
     let base = colors(&mut s, json!({}));
     assert_eq!(base.len(), 3);
     assert!(base.iter().all(|c| c["color"] == c["source"]));

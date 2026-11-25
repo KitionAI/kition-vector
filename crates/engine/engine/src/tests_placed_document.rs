@@ -144,20 +144,20 @@ fn a_placed_document_is_vectors_in_every_output() {
     source(&src, 100.0, 50.0, RED, 0);
     let mut s = session();
     place(&mut s, &src);
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     let text = svg["text"].as_str().unwrap();
     assert!(!text.contains("<image") && (text.contains("<path") || text.contains("<rect")), "drawn as paths: {text}");
-    let (images, paths) = pdf_contents(&decode(&s.execute("document.serialize", &json!({"format": "pdf"})).unwrap()));
+    let (images, paths) = pdf_contents(&decode(&s.execute("file.serialize", &json!({"format": "pdf"})).unwrap()));
     assert_eq!(images, 0, "no image in the PDF");
     assert!(paths > 0);
-    let png = decode(&s.execute("document.serialize", &json!({"format": "png"})).unwrap());
+    let png = decode(&s.execute("file.serialize", &json!({"format": "png"})).unwrap());
     let [r, g, b, _] = image::load_from_memory(&png).unwrap().to_rgba8().get_pixel(200, 150).0;
     assert!(near([r, g, b], RED), "{:?}", [r, g, b]);
     for format in ["eps", "emf", "dxf"] {
-        let out = s.execute("document.serialize", &json!({"format": format})).unwrap();
+        let out = s.execute("file.serialize", &json!({"format": format})).unwrap();
         assert!(out.to_string().len() > 200, "{format}: {out}");
     }
-    let info = s.execute("document.info", &json!({})).unwrap();
+    let info = s.execute("file.getInfo", &json!({})).unwrap();
     assert!(info.to_string().contains("\"placedDocuments\""), "{info}");
 }
 
@@ -180,16 +180,16 @@ fn the_preview_is_saved_so_the_document_shows_it_without_its_file() {
     let entry = &saved["images"][key];
     assert_eq!((entry["proxy"].as_bool(), entry["mime"].as_str()), (Some(true), Some("image/jpeg")), "the preview, as JPEG (opaque)");
     // Include Linked Files keeps the file itself.
-    let full = file_json(&decode(&s.execute("document.serialize", &json!({"format": "kvector", "includeLinked": true})).unwrap()));
+    let full = file_json(&decode(&s.execute("file.serialize", &json!({"format": "kvector", "includeLinked": true})).unwrap()));
     assert_eq!((full["images"][key]["proxy"].clone(), full["images"][key]["mime"].as_str()), (Value::Null, Some("application/json")));
     std::fs::remove_file(&src).unwrap();
     let r = open(&mut s, &doc_path);
     assert_eq!(r["missingLinks"].as_array().map(Vec::len), Some(1), "{r}");
     assert_eq!(placed(&s, id).link.path, src);
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED), "shown from the saved preview");
-    assert_eq!(s.execute("links.check", &json!({})).unwrap()["missing"], 1);
+    assert_eq!(s.execute("linkedFile.check", &json!({})).unwrap()["missing"], 1);
     // Output with the file gone: the preview, with a warning.
-    let png = s.execute("document.serialize", &json!({"format": "png"})).unwrap();
+    let png = s.execute("file.serialize", &json!({"format": "png"})).unwrap();
     assert!(png["warnings"].to_string().contains("output as their previews"), "{png}");
     let [r, g, b, _] = image::load_from_memory(&decode(&png)).unwrap().to_rgba8().get_pixel(200, 150).0;
     assert!(near([r, g, b], RED), "{:?}", [r, g, b]);
@@ -209,12 +209,12 @@ fn a_document_saved_with_previews_outputs_its_files_art() {
     assert!(s.doc().unwrap().doc.images[&key].is_proxy(), "opened with the preview only");
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     // Output reads the file again: vectors, no warning.
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     assert_eq!(svg["warnings"], json!([]), "{}", svg["warnings"]);
     let text = svg["text"].as_str().unwrap();
     assert!(!text.contains("<image") && (text.contains("<path") || text.contains("<rect")), "vectors");
     // So does saving with Include Linked Files, and the document stays as it was.
-    let full = file_json(&decode(&s.execute("document.serialize", &json!({"format": "kvector", "includeLinked": true})).unwrap()));
+    let full = file_json(&decode(&s.execute("file.serialize", &json!({"format": "kvector", "includeLinked": true})).unwrap()));
     assert_eq!(full["images"][&key]["mime"], "application/json");
     assert!(s.doc().unwrap().doc.images[&key].is_proxy());
 }
@@ -228,24 +228,24 @@ fn a_changed_file_is_modified_and_update_links_reads_it_again() {
     let id = place(&mut s, &src);
     s.execute("object.scale", &json!({"sx": 200})).unwrap();
     let before = bounds(&s, id);
-    let c = s.execute("links.check", &json!({})).unwrap();
+    let c = s.execute("linkedFile.check", &json!({})).unwrap();
     assert_eq!((c["modified"].as_u64(), c["links"][0]["status"].as_str()), (Some(0), Some("ok")), "{c}");
-    let list = s.execute("links.list", &json!({})).unwrap();
+    let list = s.execute("linkedFile.list", &json!({})).unwrap();
     let row = &list["links"][0];
     assert_eq!((row["format"].as_str(), row["document"].as_bool(), row["status"].as_str()), (Some("Kition Vector"), Some(true), Some("ok")), "{row}");
     // A blue document, wider, and a different file size.
     source(&src, 200.0, 50.0, BLUE, 1);
-    assert_eq!(s.execute("links.check", &json!({})).unwrap()["links"][0]["status"], "modified");
+    assert_eq!(s.execute("linkedFile.check", &json!({})).unwrap()["links"][0]["status"], "modified");
     // Until updated, it shows (and outputs) the file as it read it.
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     assert_eq!(svg["warnings"], json!([]));
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
-    let u = s.execute("links.update", &json!({})).unwrap();
+    let u = s.execute("linkedFile.update", &json!({})).unwrap();
     assert_eq!(u["updated"], json!([id.0]), "{u}");
     assert_eq!(placed(&s, id).width, 200.0);
     assert_eq!(bounds(&s, id), before, "keeps its bounds");
     assert!(near(centre_colour(&s.doc().unwrap().doc), BLUE));
-    assert_eq!(s.execute("links.check", &json!({})).unwrap()["modified"], 0);
+    assert_eq!(s.execute("linkedFile.check", &json!({})).unwrap()["modified"], 0);
     // One undo step.
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
@@ -280,7 +280,7 @@ fn relink_points_a_placed_document_at_another_file() {
     source(&b, 100.0, 50.0, BLUE, 0);
     let mut s = session();
     let id = place(&mut s, &a);
-    let r = s.execute("links.relink", &json!({"ids": [id.0], "path": b})).unwrap();
+    let r = s.execute("linkedFile.relink", &json!({"ids": [id.0], "path": b})).unwrap();
     assert_eq!(r["relinked"], json!([id.0]), "{r}");
     assert_eq!(placed(&s, id).link.path, b);
     assert!(near(centre_colour(&s.doc().unwrap().doc), BLUE));
@@ -299,10 +299,10 @@ fn a_placed_document_inside_a_placed_document_outputs_from_its_own_file() {
     place(&mut s, &card);
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     // The logo inside is read from its file: vectors, not its preview.
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     let text = svg["text"].as_str().unwrap();
     assert!(!text.contains("<image"), "the logo's file, not its preview: {text}");
-    assert_eq!(pdf_contents(&decode(&s.execute("document.serialize", &json!({"format": "pdf"})).unwrap())).0, 0);
+    assert_eq!(pdf_contents(&decode(&s.execute("file.serialize", &json!({"format": "pdf"})).unwrap())).0, 0);
 }
 
 #[test]
@@ -314,16 +314,16 @@ fn documents_that_place_each_other_dont_loop() {
     let mut s = session();
     place(&mut s, &a);
     save(&mut s, &b);
-    s.execute("document.open", &json!({"path": a})).unwrap();
+    s.execute("file.open", &json!({"path": a})).unwrap();
     place(&mut s, &b);
     save(&mut s, &a);
-    s.execute("document.open", &json!({"path": b})).unwrap();
-    let u = s.execute("links.update", &json!({})).unwrap();
+    s.execute("file.open", &json!({"path": b})).unwrap();
+    let u = s.execute("linkedFile.update", &json!({})).unwrap();
     assert_eq!(u["updated"].as_array().map(Vec::len), Some(1), "{u}");
     // Drawn and output a few levels deep, then their previews.
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     for format in ["svg", "pdf", "png"] {
-        s.execute("document.serialize", &json!({"format": format})).unwrap();
+        s.execute("file.serialize", &json!({"format": format})).unwrap();
     }
 }
 
@@ -363,10 +363,10 @@ fn a_placed_documents_resources_stay_its_own() {
     assert_eq!(doc.symbols.len(), 1, "nothing joins the document");
     let prefix = kition_vector_doc::placed_document::RESOURCE_PREFIX;
     assert!(doc.images.keys().all(|k| !k.starts_with(prefix)));
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     assert!(!svg["text"].as_str().unwrap().contains("<image"));
     // Nor its saves.
-    let saved = String::from_utf8(decode(&s.execute("document.serialize", &json!({"format": "kvector"})).unwrap())).unwrap();
+    let saved = String::from_utf8(decode(&s.execute("file.serialize", &json!({"format": "kvector"})).unwrap())).unwrap();
     assert!(!saved.contains(prefix), "{saved}");
 }
 
@@ -382,7 +382,7 @@ fn break_link_gives_the_editable_copy_placing_without_link_gives() {
     let copy = s.doc().unwrap().doc.node(NodeId(r["ids"][0].as_u64().unwrap())).unwrap().clone();
     s.execute("edit.undo", &json!({})).unwrap();
     let id = place(&mut s, &src);
-    let r = s.execute("links.embed", &json!({"ids": [id.0]})).unwrap();
+    let r = s.execute("linkedFile.embed", &json!({"ids": [id.0]})).unwrap();
     assert_eq!(r["embedded"], json!([id.0]), "{r}");
     let doc = &s.doc().unwrap().doc;
     let n = doc.node(id).unwrap();
@@ -397,7 +397,7 @@ fn break_link_gives_the_editable_copy_placing_without_link_gives() {
     assert!(near(centre_colour(doc), BLUE), "the art as it showed");
     let names: Vec<&str> = doc.symbols.iter().map(|s| s.name.as_str()).collect();
     assert_eq!(names.len(), 2, "the file's Star joined, renamed: {names:?}");
-    assert_eq!(s.execute("links.list", &json!({})).unwrap()["links"], json!([]));
+    assert_eq!(s.execute("linkedFile.list", &json!({})).unwrap()["links"], json!([]));
     assert_eq!(s.doc().unwrap().history.undo.last().unwrap().label, "Embed");
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(s.doc().unwrap().doc.has_placed());
@@ -406,7 +406,7 @@ fn break_link_gives_the_editable_copy_placing_without_link_gives() {
     let doc_path = dir.file("poster.kvector");
     save(&mut s, &doc_path);
     open(&mut s, &doc_path);
-    let r = s.execute("links.embed", &json!({"ids": [id.0]})).unwrap();
+    let r = s.execute("linkedFile.embed", &json!({"ids": [id.0]})).unwrap();
     assert_eq!((r["embedded"].clone(), r["missing"].clone()), (json!([]), json!([id.0])), "{r}");
 }
 
@@ -442,10 +442,10 @@ fn saving_a_document_refreshes_the_open_documents_that_place_it() {
     let id = place(&mut s, &src);
     let parent = s.active_index().unwrap();
     // Open the file, recolour it and save it.
-    s.execute("document.open", &json!({"path": src})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("file.open", &json!({"path": src})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     s.execute("paint.setFill", &json!({"color": "#1414e6"})).unwrap();
-    s.execute("document.save", &json!({})).unwrap();
+    s.execute("file.save", &json!({})).unwrap();
     let child = s.active_index().unwrap();
     assert_ne!(parent, child);
     let doc = &s.documents()[parent];
@@ -463,7 +463,7 @@ fn link_info_gives_the_artboards_size_not_pixels() {
     let mut s = session();
     let id = place(&mut s, &src);
     s.execute("object.scale", &json!({"sx": 200})).unwrap();
-    let i = s.execute("links.info", &json!({"id": id.0})).unwrap();
+    let i = s.execute("linkedFile.info", &json!({"id": id.0})).unwrap();
     assert_eq!((i["pageWidth"].as_f64(), i["pageHeight"].as_f64(), i["document"].as_bool()), (Some(100.0), Some(50.0), Some(true)), "{i}");
     assert!(i.get("pixelWidth").is_none() && i.get("ppi").is_none(), "no pixels: {i}");
     assert_eq!((i["status"].as_str(), i["fileName"].as_str(), i["scale"].clone()), (Some("ok"), Some("logo.kvector"), json!([200.0, 200.0])), "{i}");

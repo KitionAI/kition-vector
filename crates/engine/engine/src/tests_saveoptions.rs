@@ -37,7 +37,7 @@ fn three_artboards_give_four_files() {
     let dir = Folder::new("separate");
     let mut s = three_boards();
     let path = dir.file("Poster.kvector");
-    let r = s.execute("document.save", &json!({"path": path, "separateArtboards": true})).unwrap();
+    let r = s.execute("file.save", &json!({"path": path, "separateArtboards": true})).unwrap();
     let files: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f.as_str().unwrap()).collect();
     assert_eq!(files, [path.clone(), dir.file("Poster-A.kvector"), dir.file("Poster-B.kvector"), dir.file("Poster-C.kvector")]);
     // The master file has everything; each artboard's file that artboard and its art.
@@ -52,9 +52,9 @@ fn three_artboards_give_four_files() {
     let st = s.doc().unwrap();
     assert_eq!((st.path.as_deref(), st.is_dirty()), (Some(path.as_str()), false));
     // A range: the master and two artboards.
-    let r = s.execute("document.save", &json!({"path": path, "separateArtboards": true, "range": "2-3"})).unwrap();
+    let r = s.execute("file.save", &json!({"path": path, "separateArtboards": true, "range": "2-3"})).unwrap();
     assert_eq!(r["files"].as_array().unwrap().len(), 3);
-    assert!(s.execute("document.save", &json!({"path": path, "separateArtboards": true, "range": "4"})).is_err(), "no fourth artboard");
+    assert!(s.execute("file.save", &json!({"path": path, "separateArtboards": true, "range": "4"})).is_err(), "no fourth artboard");
     // No path: the bytes of every file.
     let r = s.execute("file.saveCopy", &json!({"separateArtboards": true})).unwrap();
     let names: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["name"].as_str().unwrap()).collect();
@@ -69,7 +69,7 @@ fn ai_files_save_each_artboard_too_and_reopen_editable() {
     let path = dir.file("Set.ai");
     let r = s.execute("file.saveAs", &json!({"path": path, "separateArtboards": true, "range": "1, 3"})).unwrap();
     assert_eq!(r["files"], json!([path, dir.file("Set-A.ai"), dir.file("Set-C.ai")]));
-    let r = s.execute("document.open", &json!({"path": dir.file("Set-C.ai")})).unwrap();
+    let r = s.execute("file.open", &json!({"path": dir.file("Set-C.ai")})).unwrap();
     assert_eq!(r["restored"], true);
     let d = &s.doc().unwrap().doc;
     assert_eq!((d.artboards.len(), d.artboards[0].name.as_str(), objects(d)), (1, "C", 1));
@@ -100,7 +100,7 @@ fn a_linked_pngs_bytes_are_embedded() {
     assert_eq!(kition_vector_format::base64_decode(image["data"].as_str().unwrap()).unwrap(), bytes);
     // With the file gone the document still shows the full pixels.
     std::fs::remove_file(&pic).unwrap();
-    let r = s.execute("document.open", &json!({"name": "copy.kvector", "dataBase64": r["dataBase64"]})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "copy.kvector", "dataBase64": r["dataBase64"]})).unwrap();
     assert_eq!(r["missingLinks"].as_array().unwrap().len(), 1);
     let d = &s.doc().unwrap().doc;
     let blob = d.images.values().next().unwrap();
@@ -131,8 +131,7 @@ fn an_embedded_profile_is_restored() {
     let elsewhere = format!("Studio RGB elsewhere {}", std::process::id());
     let moved = String::from_utf8(file).unwrap().replace(&name, &elsewhere);
     assert!(cms::profile(&elsewhere).is_none());
-    let r =
-        s.execute("document.open", &json!({"name": "moved.kvector", "dataBase64": kition_vector_format::base64_encode(moved.as_bytes())})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "moved.kvector", "dataBase64": kition_vector_format::base64_encode(moved.as_bytes())})).unwrap();
     assert!(r["warnings"].as_array().unwrap().is_empty(), "{r}");
     assert_eq!(cms::profile(&elsewhere).map(|p| p.kind), Some(cms::ProfileKind::Rgb));
     assert_eq!(s.doc().unwrap().doc.color_profiles.rgb.as_deref(), Some(elsewhere.as_str()));
@@ -141,7 +140,7 @@ fn an_embedded_profile_is_restored() {
     let mut v: Value = serde_json::from_str(&moved.replace(&elsewhere, &broken)).unwrap();
     v["profiles"][&broken]["data"] = json!("AAAA");
     let r = s
-        .execute("document.open", &json!({"name": "b.kvector", "dataBase64": kition_vector_format::base64_encode(&serde_json::to_vec(&v).unwrap())}))
+        .execute("file.open", &json!({"name": "b.kvector", "dataBase64": kition_vector_format::base64_encode(&serde_json::to_vec(&v).unwrap())}))
         .unwrap();
     assert!(r["warnings"][0].as_str().unwrap().contains(&broken), "{r}");
 }
@@ -152,7 +151,7 @@ fn pdf_compatible_files_carry_a_pdf() {
     let file = bytes_of(&s.execute("file.saveCopy", &json!({"pdfCompatible": true})).unwrap()["dataBase64"]);
     let pdf = kition_vector_format::pdf_content(&file).unwrap();
     assert!(pdf.starts_with(b"%PDF"));
-    let info = s.execute("document.pdfInfo", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf)})).unwrap();
+    let info = s.execute("file.pdfInfo", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf)})).unwrap();
     assert_eq!(info["pages"], 3);
     assert!(kition_vector_format::pdf_content(&bytes_of(&s.execute("file.saveCopy", &json!({})).unwrap()["dataBase64"])).is_none());
 }
@@ -171,12 +170,12 @@ fn ai_without_pdf_content_and_compression() {
     assert!(warnings.as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("without PDF content")), "{warnings}");
     // The pages are empty (an import of a page finds no art), the document comes back whole.
     let page = |s: &mut Session, b: &[u8]| {
-        s.execute("document.open", &json!({"name": "x.ai", "dataBase64": kition_vector_format::base64_encode(b), "pages": "1"})).unwrap();
+        s.execute("file.open", &json!({"name": "x.ai", "dataBase64": kition_vector_format::base64_encode(b), "pages": "1"})).unwrap();
         objects(&s.doc().unwrap().doc)
     };
     assert!(page(&mut s, &full) > 0);
     assert_eq!(page(&mut s, &blank), 0);
-    s.execute("document.open", &json!({"name": "x.ai", "dataBase64": kition_vector_format::base64_encode(&blank)})).unwrap();
+    s.execute("file.open", &json!({"name": "x.ai", "dataBase64": kition_vector_format::base64_encode(&blank)})).unwrap();
     assert_eq!(objects(&s.doc().unwrap().doc), 3);
     // Use Compression off writes the content uncompressed: a larger file.
     let mut s = three_boards();
@@ -197,7 +196,7 @@ fn format_options_list_the_save_options() {
     // Saved with them, a document remembers them for Save.
     let dir = Folder::new("remember");
     let path = dir.file("r.kvector");
-    s.execute("document.save", &json!({"path": path, "includeLinked": true})).unwrap();
+    s.execute("file.save", &json!({"path": path, "includeLinked": true})).unwrap();
     let v = s.execute("file.formatOptions", &json!({})).unwrap();
     assert_eq!(v["options"]["includeLinked"]["value"], true);
 }

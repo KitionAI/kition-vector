@@ -321,8 +321,8 @@ mod tests {
     fn list_flag_missing_replace_and_select() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
-        let a = s.execute("text.create", &json!({"x": 10, "y": 20, "text": "Serif", "font": "Source Serif 4"})).unwrap()["id"].as_u64().unwrap();
-        let b = s.execute("text.create", &json!({"x": 10, "y": 60, "text": "Gone", "font": "No Such Font Family"})).unwrap()["id"].as_u64().unwrap();
+        let a = s.execute("text.add", &json!({"x": 10, "y": 20, "text": "Serif", "font": "Source Serif 4"})).unwrap()["id"].as_u64().unwrap();
+        let b = s.execute("text.add", &json!({"x": 10, "y": 60, "text": "Gone", "font": "No Such Font Family"})).unwrap()["id"].as_u64().unwrap();
         let list = s.execute("text.fonts", &json!({})).unwrap();
         let missing: Vec<&str> = list.as_array().unwrap().iter().filter(|f| f["missing"] == true).map(|f| f["family"].as_str().unwrap()).collect();
         assert_eq!(missing, ["No Such Font Family"]);
@@ -351,7 +351,7 @@ mod open_tests {
         for (text, font, style) in
             [("Exact", "Source Sans 3", "Semibold"), ("Closest", "Source Sans 3", "Black Wide"), ("Gone", "No Such Font Family", "Regular")]
         {
-            s.execute("text.create", &json!({"x": 10, "y": 20, "text": text, "font": font, "style": style})).unwrap();
+            s.execute("text.add", &json!({"x": 10, "y": 20, "text": text, "font": font, "style": style})).unwrap();
         }
         let list = s.execute("text.fonts", &json!({})).unwrap();
         let rows: Vec<(String, String, String, String)> = list
@@ -372,7 +372,7 @@ mod open_tests {
         assert_eq!(row("Black Wide").1, "substitute", "{rows:?}");
         assert_eq!(row("Black Wide").2, "Source Sans 3");
         assert_eq!((row("Regular").1.as_str(), row("Regular").2.as_str()), ("missing", kition_vector_text::FALLBACK_FAMILY));
-        s.execute("text.create", &json!({"x": 10, "y": 90, "text": "Ab 雅楽", "font": "Inter"})).unwrap();
+        s.execute("text.add", &json!({"x": 10, "y": 90, "text": "Ab 雅楽", "font": "Inter"})).unwrap();
         let inter = s.execute("text.fonts", &json!({})).unwrap().as_array().unwrap().iter().find(|f| f["family"] == "Inter").cloned().unwrap();
         assert_eq!(inter["missingGlyphs"], 2, "雅 and 楽 come from a fallback font: {inter}");
     }
@@ -381,7 +381,7 @@ mod open_tests {
     fn opened_documents_have_exact_text_bounds() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 200})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 60, "text": "WIDE TRACKED", "size": 40})).unwrap()["id"].as_u64().unwrap();
+        let id = s.execute("text.add", &json!({"x": 10, "y": 60, "text": "WIDE TRACKED", "size": 40})).unwrap()["id"].as_u64().unwrap();
         s.execute("text.setStyle", &json!({"tracking": 400})).unwrap();
         let want = s.doc().unwrap().doc.node(NodeId(id)).unwrap().geometric_bounds().unwrap();
         // Save and reopen: the cache isn't in the file, yet the bounds must match.
@@ -404,7 +404,7 @@ mod dirty_tests {
         s.add_document(Document::new(100.0, 100.0), None);
         let id = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap()["id"].clone();
         s.doc_mut().unwrap().mark_saved();
-        s.execute("select.none", &json!({})).unwrap();
+        s.execute("edit.deselectAll", &json!({})).unwrap();
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
         assert!(!s.doc().unwrap().is_dirty(), "selecting is not an edit");
         s.execute("object.move", &json!({"dx": 5, "dy": 0})).unwrap();

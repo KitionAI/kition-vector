@@ -232,7 +232,7 @@ fn arrow_keys_nudge_in_perspective() {
 fn selecting_an_attached_object_switches_to_its_plane() {
     let (mut s, id) = persp_session();
     s.execute("perspective.plane.set", &json!({"plane": "left"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.select_tool("perspectiveSelection", ViewInfo::default()).unwrap();
     let c = s.doc().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap().center();
     drag(&mut s, &[c, c], Mods::default());

@@ -1,4 +1,4 @@
-//! File → Document Setup (`document.setup`): units, bleed, the transparency grid and simulated
+//! File → Document Setup (`file.setup`): units, bleed, the transparency grid and simulated
 //! paper, output options and the document's type options.
 
 use kition_vector_doc::setup::{DEFAULT_FLATTENER, GRID_COLOR_PRESETS, LANGUAGES, MAX_BLEED};
@@ -9,11 +9,11 @@ use super::flatten::{FlattenOptions, FlattenerPreset};
 
 use super::*;
 
-const C: &str = "document.setup";
+const C: &str = "file.setup";
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![cmd!(
-        "document.setup",
+        "file.setup",
         "Document Setup",
         [],
         None,
@@ -23,7 +23,7 @@ pub fn specs() -> Vec<CommandSpec> {
     )]
 }
 
-/// The setup as `document.setup` reports it (and accepts it back).
+/// The setup as `file.setup` reports it (and accepts it back).
 pub(crate) fn setup_json(d: &Document) -> Value {
     let s = &d.setup;
     let pair = |p: [char; 2]| p.iter().collect::<String>();
@@ -129,7 +129,7 @@ fn apply(s: &mut DocSetup, units: &mut kition_vector_doc::Unit, k: &str, v: &Val
         "smallCapsSize" => s.small_caps_size = percent(k, v, 1.0, 200.0)?,
         "exportText" => s.export_text = v.as_str().and_then(ExportText::parse).ok_or_else(|| bad(C, "exportText must be editable or appearance"))?,
         "backgroundContents" => s.background = background_param(v, C)?,
-        // Read-only values `document.setup` reports.
+        // Read-only values `file.setup` reports.
         "gridColorsName" => {}
         _ => return Err(bad(C, format!("unknown setting `{k}`"))),
     }

@@ -13,11 +13,11 @@ use super::*;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        cmd!("type.orientation.vertical", "Vertical", ["Type", "Orientation"], None, "{ids?|id?} set vertical writing", has_selection, |s, p| {
+        cmd!("text.orientation.vertical", "Vertical", ["Type", "Orientation"], None, "{ids?|id?} set vertical writing", has_selection, |s, p| {
             orientation(s, p, true)
         }),
         cmd!(
-            "type.orientation.horizontal",
+            "text.orientation.horizontal",
             "Horizontal",
             ["Type", "Orientation"],
             None,
@@ -26,7 +26,7 @@ pub fn specs() -> Vec<CommandSpec> {
             |s, p| orientation(s, p, false)
         ),
         cmd!(
-            "type.createOutlines",
+            "text.convertToOutlines",
             "Create Outlines",
             ["Type"],
             Some("Cmd+Shift+O"),
@@ -662,7 +662,7 @@ mod area_tests {
         use kition_vector_doc::Kinsoku;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "あカッ", "area": {"width": 40, "height": 100}})).unwrap()["id"]
+        let id = s.execute("text.add", &json!({"x": 10, "y": 10, "text": "あカッ", "area": {"width": 40, "height": 100}})).unwrap()["id"]
             .as_u64()
             .unwrap();
         let para = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
@@ -692,7 +692,7 @@ mod area_tests {
         use kition_vector_doc::Burasagari;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "雅楽、笙。", "area": {"width": 200, "height": 100}})).unwrap()["id"]
+        let id = s.execute("text.add", &json!({"x": 10, "y": 10, "text": "雅楽、笙。", "area": {"width": 200, "height": 100}})).unwrap()["id"]
             .as_u64()
             .unwrap();
         let para = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
@@ -717,7 +717,7 @@ mod area_tests {
         assert_eq!(old.burasagari, Burasagari::None);
     }
 
-    /// While the interface is in Japanese, new type (text.create, text.createInPath) starts
+    /// While the interface is in Japanese, new type (text.add, text.addInPath) starts
     /// with em box top-to-top leading and em box centre alignment, and new styles made from nothing
     /// carry them; params override; the values are journaled; imported text keeps the Roman
     /// baseline.
@@ -737,28 +737,28 @@ mod area_tests {
         let japanese = (LeadingModel::EmBoxTop, CharAlign::EmBoxCenter);
         let point = json!({"x": 10, "y": 50, "text": "雅楽"});
         assert!(!s.japanese_interface());
-        assert_eq!(made(&mut s, "text.create", point.clone()), roman, "headless, `auto`: the Roman defaults");
+        assert_eq!(made(&mut s, "text.add", point.clone()), roman, "headless, `auto`: the Roman defaults");
         s.ui_language = Some("ja".into());
-        assert_eq!(made(&mut s, "text.create", point.clone()), japanese);
-        assert_eq!(made(&mut s, "text.create", json!({"x": 10, "y": 90, "text": "笙", "area": {"width": 100, "height": 50}})), japanese);
+        assert_eq!(made(&mut s, "text.add", point.clone()), japanese);
+        assert_eq!(made(&mut s, "text.add", json!({"x": 10, "y": 90, "text": "笙", "area": {"width": 100, "height": 50}})), japanese);
         // Journaled: a replay in another language does the same.
         let (_, logged) = s.journal.last().unwrap().clone();
         assert_eq!((logged["leadingModel"].as_str(), logged["charAlign"].as_str()), (Some("emBoxTop"), Some("emBoxCenter")));
         // Params override.
         assert_eq!(
-            made(&mut s, "text.create", json!({"x": 10, "y": 120, "text": "a", "leadingModel": "romanBaseline", "charAlign": "romanBaseline"})),
+            made(&mut s, "text.add", json!({"x": 10, "y": 120, "text": "a", "leadingModel": "romanBaseline", "charAlign": "romanBaseline"})),
             roman
         );
-        assert!(s.execute("text.create", &json!({"x": 0, "y": 0, "text": "a", "leadingModel": "middle"})).is_err());
+        assert!(s.execute("text.add", &json!({"x": 0, "y": 0, "text": "a", "leadingModel": "middle"})).is_err());
         // Area type in a path.
         let path = s.execute("shape.rectangle", &json!({"x": 200, "y": 200, "width": 100, "height": 80})).unwrap()["id"].clone();
-        assert_eq!(made(&mut s, "text.createInPath", json!({"path": path, "mode": "area", "text": "篳篥"})), japanese);
+        assert_eq!(made(&mut s, "text.addInPath", json!({"path": path, "mode": "area", "text": "篳篥"})), japanese);
         // A preference set to Japanese counts without a UI; another language doesn't.
         s.ui_language = None;
         s.prefs.interface_language = "ja".into();
-        assert_eq!(made(&mut s, "text.create", point.clone()), japanese);
+        assert_eq!(made(&mut s, "text.add", point.clone()), japanese);
         s.ui_language = Some("en".into());
-        assert_eq!(made(&mut s, "text.create", point.clone()), roman);
+        assert_eq!(made(&mut s, "text.add", point.clone()), roman);
         // New styles made from nothing.
         s.execute("select.set", &json!({"ids": []})).unwrap();
         s.ui_language = Some("ja".into());
@@ -774,7 +774,7 @@ mod area_tests {
         // Imported text keeps the Roman baseline.
         s.ui_language = Some("ja".into());
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><text x="10" y="50">雅楽</text></svg>"#;
-        s.execute("document.open", &json!({"name": "t.svg", "dataBase64": kition_vector_format::base64_encode(svg.as_bytes())})).unwrap();
+        s.execute("file.open", &json!({"name": "t.svg", "dataBase64": kition_vector_format::base64_encode(svg.as_bytes())})).unwrap();
         let mut found = vec![];
         s.doc().unwrap().doc.walk(|n| {
             if let NodeKind::Text(t) = &n.kind {
@@ -790,9 +790,8 @@ mod area_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         // Exercise ink bounds with bundled glyphs; Japanese outlines require optional kition-fonts.
-        let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "A\nB", "area": {"width": 200, "height": 100}})).unwrap()["id"]
-            .as_u64()
-            .unwrap();
+        let id =
+            s.execute("text.add", &json!({"x": 10, "y": 10, "text": "A\nB", "area": {"width": 200, "height": 100}})).unwrap()["id"].as_u64().unwrap();
         let text = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => (**t).clone(),
             _ => panic!("text"),
@@ -818,7 +817,7 @@ mod area_tests {
         use kition_vector_doc::CharAlign;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽"})).unwrap()["id"].as_u64().unwrap();
+        let id = s.execute("text.add", &json!({"x": 10, "y": 50, "text": "雅楽"})).unwrap()["id"].as_u64().unwrap();
         let runs = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.runs.clone(),
             _ => panic!("text"),
@@ -850,7 +849,7 @@ mod area_tests {
         use kition_vector_doc::Mojikumi;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽。"})).unwrap()["id"].as_u64().unwrap();
+        let id = s.execute("text.add", &json!({"x": 10, "y": 50, "text": "雅楽。"})).unwrap()["id"].as_u64().unwrap();
         let para = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.para.clone(),
             _ => panic!("text"),
@@ -874,12 +873,12 @@ mod area_tests {
     fn vertical_point_type_keeps_its_anchor_on_the_column_centre_line() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
-        let id = s.execute("text.create", &json!({"x": 100, "y": 50, "text": "§§§§ abc"})).unwrap()["id"].as_u64().unwrap();
+        let id = s.execute("text.add", &json!({"x": 100, "y": 50, "text": "§§§§ abc"})).unwrap()["id"].as_u64().unwrap();
         let bounds = |s: &Session| s.doc().unwrap().doc.node(NodeId(id)).unwrap().geometric_bounds().unwrap();
         let wide = bounds(&s);
         assert!(wide.width() > wide.height());
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
-        s.execute("type.orientation.vertical", &json!({})).unwrap();
+        s.execute("text.orientation.vertical", &json!({})).unwrap();
         let tall = bounds(&s);
         assert!(tall.height() > tall.width(), "{tall:?}");
         assert!((tall.center().x - 100.0).abs() < 6.0, "the anchor stays on the column's centre line: {tall:?}");
@@ -892,9 +891,8 @@ mod area_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let text = "word ".repeat(80);
-        let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": text, "area": {"width": 300, "height": 120}})).unwrap()["id"]
-            .as_u64()
-            .unwrap();
+        let id =
+            s.execute("text.add", &json!({"x": 10, "y": 10, "text": text, "area": {"width": 300, "height": 120}})).unwrap()["id"].as_u64().unwrap();
         s.execute("select.set", &json!({"ids": [id]})).unwrap();
         let q = s.execute("text.areaOptions", &json!({})).unwrap();
         assert_eq!((q["rows"].as_u64(), q["columns"].as_u64()), (Some(1), Some(1)));
@@ -974,7 +972,7 @@ mod headline_tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s
-            .execute("text.create", &json!({"x": 10, "y": 10, "text": "HEADLINE\nbody text", "size": 24, "area": {"width": 300, "height": 120}}))
+            .execute("text.add", &json!({"x": 10, "y": 10, "text": "HEADLINE\nbody text", "size": 24, "area": {"width": 300, "height": 120}}))
             .unwrap()["id"]
             .as_u64()
             .unwrap();

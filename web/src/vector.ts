@@ -90,16 +90,16 @@ export const HOST_FILE_COMMANDS = ['file.new', 'file.close', 'file.closeAll', 'f
  * and drop them. File › Export (the editor's own dialog, through the host) stands for them; agents
  * still run them.
  */
-export const FILE_WRITERS = ['document.exportForScreens', 'document.exportSelection', 'document.exportForOffice', 'file.saveAsTemplate']
+export const FILE_WRITERS = ['file.exportForScreens', 'file.exportSelection', 'file.exportForOffice', 'file.saveAsTemplate']
 
 /** The engine commands each menu tab shows in Single line's row, by menu. */
 export const VECTOR_PRIMARY: Record<string, readonly string[]> = {
   File: ['file.place'],
-  Edit: ['edit.undo', 'edit.redo', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.pasteInFront', 'edit.clear', 'edit.findReplace'],
-  Object: ['object.group', 'object.ungroup', 'object.arrange.bringForward', 'object.arrange.sendBackward', 'object.move', 'object.rotate', 'object.scale', 'object.reflect', 'object.path.outlineStroke', 'object.compoundPath.make', 'object.clippingMask.make', 'object.lock'],
-  Type: ['type.createOutlines', 'type.changeCase', 'text.areaOptions'],
-  Select: ['select.all', 'select.none', 'select.inverse', 'select.reselect', 'select.nextAbove', 'select.nextBelow'],
-  Effect: ['document.rasterEffectsSettings'],
+  Edit: ['edit.undo', 'edit.redo', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.pasteInFront', 'edit.delete', 'edit.findReplace'],
+  Object: ['arrange.group', 'arrange.ungroup', 'arrange.bringForward', 'arrange.sendBackward', 'object.move', 'object.rotate', 'object.scale', 'object.reflect', 'object.path.outlineStroke', 'object.compoundPath.make', 'object.clippingMask.make', 'object.lock'],
+  Type: ['text.convertToOutlines', 'text.changeCase', 'text.areaOptions'],
+  Select: ['edit.selectAll', 'edit.deselectAll', 'select.inverse', 'select.reselect', 'select.nextAbove', 'select.nextBelow'],
+  Effect: ['file.rasterEffectsSettings'],
   View: ['view.guides.make', 'view.guides.lock', 'view.transparencyGrid', 'view.proofColors'],
   Window: ['object.pathfinder.unite', 'object.pathfinder.minusFront', 'object.pathfinder.intersect', 'object.pathfinder.exclude', 'layer.new', 'artboard.new'],
 }

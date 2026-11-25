@@ -124,7 +124,7 @@ fn liquify_is_deterministic_and_localized() {
         let mut s = session();
         let a = rect(&mut s, 100.0, 100.0, 200.0, 200.0);
         let b = rect(&mut s, 500.0, 400.0, 100.0, 100.0);
-        s.execute("select.all", &json!({})).unwrap();
+        s.execute("edit.selectAll", &json!({})).unwrap();
         s.execute("object.liquify", &warp_params()).unwrap();
         (path(&s, a), path(&s, b))
     };

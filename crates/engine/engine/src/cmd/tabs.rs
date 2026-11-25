@@ -104,7 +104,7 @@ mod tests {
     fn set_get_clear_tabs() {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
-        s.execute("text.create", &json!({"x": 10, "y": 20, "text": "Item\t9.99"})).unwrap();
+        s.execute("text.add", &json!({"x": 10, "y": 20, "text": "Item\t9.99"})).unwrap();
         s.execute("text.tabs.set", &json!({"stops": [{"position": 200, "align": "decimal"}, {"position": 80, "leader": "."}]})).unwrap();
         let g = s.execute("text.tabs.get", &json!({})).unwrap();
         assert_eq!(g["stops"][0]["position"], json!(80.0));

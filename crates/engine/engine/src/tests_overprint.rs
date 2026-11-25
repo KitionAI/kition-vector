@@ -1,4 +1,4 @@
-//! Overprint per fill and stroke (`object.setOverprint`, `attributes.info`), its preview, the
+//! Overprint per fill and stroke (`object.setOverprint`, `attribute.info`), its preview, the
 //! legacy Overprint Black list, and Edit → Edit Colors → Overprint Black.
 
 use kition_vector_doc::{Document, Node, NodeKind};
@@ -101,17 +101,17 @@ fn set_overprint_is_one_undo_step_and_reports_through_attributes_info() {
     let a = rect(&mut s, [0.0, 0.0, 10.0, 10.0], cyan_ink(), Some(black_ink()), 1.0);
     let b = rect(&mut s, [20.0, 0.0, 10.0, 10.0], cyan_ink(), Some(black_ink()), 1.0);
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    let info = s.execute("attributes.info", &json!({})).unwrap();
+    let info = s.execute("attribute.info", &json!({})).unwrap();
     assert_eq!((info["overprintFill"].clone(), info["overprintStroke"].clone()), (json!(false), json!(false)));
     assert_eq!(info["ids"], json!([a.0, b.0]));
 
     let before = undo_len(&s);
     s.execute("object.setOverprint", &json!({"fill": true, "stroke": true, "ids": [a.0]})).unwrap();
     assert_eq!(undo_len(&s), before + 1, "fill and stroke in one step");
-    let info = s.execute("attributes.info", &json!({})).unwrap();
+    let info = s.execute("attribute.info", &json!({})).unwrap();
     assert_eq!((info["overprintFill"].clone(), info["overprintStroke"].clone()), (Value::Null, Value::Null), "mixed");
     assert_eq!(s.attributes_info().overprint_fill, None);
-    let info = s.execute("attributes.info", &json!({"ids": [a.0]})).unwrap();
+    let info = s.execute("attribute.info", &json!({"ids": [a.0]})).unwrap();
     assert_eq!((info["overprintFill"].clone(), info["overprintStroke"].clone()), (json!(true), json!(true)));
 
     let r = s.execute("object.setOverprint", &json!({"fill": true, "ids": [a.0]})).unwrap();
@@ -129,7 +129,7 @@ fn set_overprint_reaches_groups_items_and_type() {
     let a = rect(&mut s, [0.0, 0.0, 10.0, 10.0], cyan_ink(), Some(black_ink()), 1.0);
     let b = rect(&mut s, [20.0, 0.0, 10.0, 10.0], cyan_ink(), None, 0.0);
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+    let g = NodeId(s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap());
     s.execute("object.setOverprint", &json!({"fill": true, "ids": [g.0]})).unwrap();
     assert!(node(&s, a).appearance.fill().unwrap().overprint && node(&s, b).appearance.fill().unwrap().overprint, "a group's contents");
 
@@ -145,18 +145,18 @@ fn set_overprint_reaches_groups_items_and_type() {
     assert!(s.execute("object.setOverprint", &json!({"fill": true, "item": stroke, "ids": [a.0]})).is_err(), "not a fill");
 
     // Type: its characters.
-    let t = NodeId(s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap()["id"].as_u64().unwrap());
+    let t = NodeId(s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap()["id"].as_u64().unwrap());
     s.execute("object.setOverprint", &json!({"fill": true, "ids": [t.0]})).unwrap();
     let NodeKind::Text(tx) = &node(&s, t).kind else { panic!() };
     assert!(tx.runs.iter().all(|r| r.style.overprint_fill && !r.style.overprint_stroke));
-    assert_eq!(s.execute("attributes.info", &json!({"ids": [t.0]})).unwrap()["overprintFill"], true);
+    assert_eq!(s.execute("attribute.info", &json!({"ids": [t.0]})).unwrap()["overprintFill"], true);
 }
 
 #[test]
 fn overprinting_type_previews_through() {
     let mut s = session();
     rect(&mut s, [0.0, 0.0, 100.0, 100.0], yellow_ink(), None, 0.0);
-    let t = NodeId(s.execute("text.create", &json!({"x": 5, "y": 90, "text": "H", "size": 90})).unwrap()["id"].as_u64().unwrap());
+    let t = NodeId(s.execute("text.add", &json!({"x": 5, "y": 90, "text": "H", "size": 90})).unwrap()["id"].as_u64().unwrap());
     s.execute("paint.setFill", &json!({"ids": [t.0], "color": cyan_ink()})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
     let b = kition_vector_render::Renderer::new().render(&doc, 100, 100, Affine::IDENTITY, &RenderOptions::default());
@@ -231,7 +231,7 @@ fn overprint_black_options() {
 #[test]
 fn overprint_black_covers_type_gradients_spots_and_groups() {
     let mut s = session();
-    let t = NodeId(s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap()["id"].as_u64().unwrap());
+    let t = NodeId(s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap()["id"].as_u64().unwrap());
     s.execute("paint.setFill", &json!({"ids": [t.0], "color": black_ink()})).unwrap();
     let g = rect(&mut s, [0.0, 0.0, 10.0, 10.0], black_ink(), None, 0.0);
     let stops = json!([{"offset": 0, "color": black_ink()}, {"offset": 1, "color": ink(50, 0, 0, 100)}]);
@@ -241,7 +241,7 @@ fn overprint_black_covers_type_gradients_spots_and_groups() {
         s.execute("swatch.new", &json!({"name": "Press Black", "color": black_ink(), "spot": true})).unwrap()["name"].as_str().unwrap().to_string();
     s.execute("paint.setFill", &json!({"ids": [spot.0], "swatch": name})).unwrap();
     s.execute("select.set", &json!({"ids": [t.0, g.0, spot.0]})).unwrap();
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
 
     s.execute("edit.colors.overprintBlack", &json!({})).unwrap();
     let NodeKind::Text(tx) = &node(&s, t).kind else { panic!() };

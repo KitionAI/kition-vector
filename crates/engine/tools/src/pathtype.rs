@@ -2,7 +2,7 @@
 //! with the Selection and Direct Selection tools. Dragging the start or end bracket sets where the
 //! type begins or ends along its path; dragging the centre bracket slides the type along the path
 //! (its brackets with it) and, dragged across the path, flips the type to the other side
-//! (Cmd/Ctrl held: it only slides). Each drag is one undo step of `type.pathOptions`. The tools
+//! (Cmd/Ctrl held: it only slides). Each drag is one undo step of `text.pathOptions`. The tools
 //! draw the brackets from the same geometry they hit-test.
 
 use kition_vector_doc::{NodeId, NodeKind, TextKind};
@@ -164,11 +164,11 @@ impl BracketDrag {
             out.push(Action::Begin("Move Type on a Path".into()));
         }
         let Some(u) = self.brackets.fraction_at(p) else { return out };
-        out.push(Action::Preview("type.pathOptions".into(), self.params(cx, p, u, cmd)));
+        out.push(Action::Preview("text.pathOptions".into(), self.params(cx, p, u, cmd)));
         out
     }
 
-    /// `type.pathOptions` params for the pointer at `p`, `u` along the path.
+    /// `text.pathOptions` params for the pointer at `p`, `u` along the path.
     fn params(&self, cx: &ToolContext, p: Point, u: f64, cmd: bool) -> Value {
         let b = &self.brackets;
         let closed = b.arc.is_closed();
@@ -225,7 +225,7 @@ mod tests {
 
     fn preview(a: &[Action]) -> &Value {
         let Some(Action::Preview(c, v)) = a.last() else { panic!("no preview: {a:?}") };
-        assert_eq!(c, "type.pathOptions");
+        assert_eq!(c, "text.pathOptions");
         v
     }
 

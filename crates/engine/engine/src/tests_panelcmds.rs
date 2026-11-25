@@ -138,7 +138,7 @@ fn artboard_tool_copy_and_paste_artboards_with_their_art() {
     let mut s = session();
     let r = rect(&mut s);
     s.execute("artboard.new", &json!({"x": 0, "y": 700, "width": 100, "height": 100, "name": "Small"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     // Nothing selected: Copy is off, until the Artboard tool is chosen.
     let copy_enabled = |s: &Session| (crate::find_command("edit.copy").unwrap().enabled)(s).is_ok();
     assert!(!copy_enabled(&s));
@@ -171,7 +171,7 @@ fn artboard_tool_copy_and_paste_artboards_with_their_art() {
     let out = s.execute("edit.pasteOnAllArtboards", &json!({})).unwrap();
     assert_eq!((out["artboard"].clone(), ids(&out["ids"]).len(), boards(&s).len()), (json!(null), 2, 2));
     // The clipboard still holds the artboard for the next document, and the original is untouched.
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     assert!(s.doc().unwrap().doc.node(r).is_some());
 }
 
@@ -235,7 +235,7 @@ fn graphic_style_delete_duplicate() {
 #[test]
 fn text_set_format() {
     let mut s = session();
-    let r = s.execute("text.create", &json!({"x": 10, "y": 100, "text": "Hello"})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 100, "text": "Hello"})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute(
         "text.setFormat",

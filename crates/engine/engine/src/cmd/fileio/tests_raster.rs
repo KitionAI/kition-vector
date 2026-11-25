@@ -37,7 +37,7 @@ fn png_options_resolution_background_interlace_and_anti_aliasing() {
     let mut s = session(40.0, 30.0, 1);
     s.execute("paint.setStroke", &json!({"none": true})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 5.3, "y": 4.7, "width": 25.8, "height": 21.5})).unwrap();
-    let png = |s: &mut Session, p: Value| b64(&s.execute("document.export", &p).unwrap());
+    let png = |s: &mut Session, p: Value| b64(&s.execute("file.export", &p).unwrap());
 
     let hi = png(&mut s, json!({"format": "png", "ppi": 300}));
     let ppm = (300.0f64 / 0.0254).round() as u32;
@@ -73,7 +73,7 @@ fn png_options_resolution_background_interlace_and_anti_aliasing() {
     ] {
         let mut p = bad.clone();
         p["format"] = json!("png");
-        assert!(s.execute("document.export", &p).is_err(), "{bad}");
+        assert!(s.execute("file.export", &p).is_err(), "{bad}");
     }
 }
 
@@ -85,7 +85,7 @@ fn screens_and_rasterize_take_anti_aliasing() {
     let hard = |img: &image::RgbaImage| img.pixels().all(|p| p[3] == 0 || p[3] == 255);
     let r = s
         .execute(
-            "document.exportForScreens",
+            "file.exportForScreens",
             &json!({"antiAlias": "none", "formats": [{"format": "png"}, {"format": "png", "scale": 2, "antiAlias": "art"}]}),
         )
         .unwrap();
@@ -109,7 +109,7 @@ fn screens_and_rasterize_take_anti_aliasing() {
 #[test]
 fn formats_list_the_raster_options() {
     let mut s = Session::new();
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     let opts = |id: &str| r["formats"].as_array().unwrap().iter().find(|f| f["id"] == id).unwrap()["options"].clone();
     for k in ["ppi", "scale", "background", "antiAlias", "interlaced"] {
         assert!(opts("png").get(k).is_some(), "png lists {k}");
@@ -123,7 +123,7 @@ fn formats_list_the_raster_options() {
 #[test]
 fn screens_rows_with_a_resolution_name_their_scale() {
     let mut s = session(40.0, 30.0, 1);
-    let r = s.execute("document.exportForScreens", &json!({"formats": [{"format": "png", "ppi": 144}, {"format": "svg", "ppi": 144}]})).unwrap();
+    let r = s.execute("file.exportForScreens", &json!({"formats": [{"format": "png", "ppi": 144}, {"format": "svg", "ppi": 144}]})).unwrap();
     assert_eq!((r["files"][0]["name"].as_str(), r["files"][1]["name"].as_str()), (Some("Artboard-1@2x.png"), Some("Artboard-1.svg")), "{r}");
     assert_eq!(rgba(&b64(&r["files"][0])).dimensions(), (80, 60));
 }
@@ -131,7 +131,7 @@ fn screens_rows_with_a_resolution_name_their_scale() {
 #[test]
 fn a_300_ppi_export_places_back_at_its_physical_size() {
     let mut s = session(72.0, 36.0, 1);
-    let png = b64(&s.execute("document.export", &json!({"format": "png", "ppi": 300, "background": "white"})).unwrap());
+    let png = b64(&s.execute("file.export", &json!({"format": "png", "ppi": 300, "background": "white"})).unwrap());
     assert_eq!(rgba(&png).dimensions(), (300, 150));
     assert_eq!(super::ppi::resolution(&png), Some((300.0, 300.0)), "the place reader reads the writer's pHYs");
     let r = s.execute("file.place", &json!({"name": "art.png", "dataBase64": kition_vector_format::base64_encode(&png)})).unwrap();
@@ -141,8 +141,8 @@ fn a_300_ppi_export_places_back_at_its_physical_size() {
 #[test]
 fn the_document_background_is_the_default_export_background() {
     let mut s = session(40.0, 30.0, 1);
-    s.execute("document.setup", &json!({"backgroundContents": "white"})).unwrap();
-    let png = |s: &mut Session, p: Value| rgba(&b64(&s.execute("document.export", &p).unwrap()));
+    s.execute("file.setup", &json!({"backgroundContents": "white"})).unwrap();
+    let png = |s: &mut Session, p: Value| rgba(&b64(&s.execute("file.export", &p).unwrap()));
     assert_eq!(png(&mut s, json!({"format": "png"})).get_pixel(0, 0).0, [255, 255, 255, 255], "a white document exports opaque");
     assert_eq!(png(&mut s, json!({"format": "png", "background": "transparent"})).get_pixel(0, 0)[3], 0, "the option wins");
     assert_eq!(png(&mut s, json!({"format": "webp", "background": "black"})).get_pixel(0, 0).0, [0, 0, 0, 255]);
@@ -151,11 +151,11 @@ fn the_document_background_is_the_default_export_background() {
 #[test]
 fn an_image_opens_at_the_size_its_resolution_declares() {
     let mut s = session(72.0, 36.0, 1);
-    let hi = b64(&s.execute("document.export", &json!({"format": "png", "ppi": 300, "background": "white"})).unwrap());
-    let lo = b64(&s.execute("document.export", &json!({"format": "png", "background": "white"})).unwrap());
+    let hi = b64(&s.execute("file.export", &json!({"format": "png", "ppi": 300, "background": "white"})).unwrap());
+    let lo = b64(&s.execute("file.export", &json!({"format": "png", "background": "white"})).unwrap());
     let lo = super::ppi::with_png_resolution(&lo, (72.0, 72.0));
     for (png, w, h, what) in [(hi, 72.0, 36.0, "300 ppi: 300 x 150 px is 1 x 0.5 in"), (lo, 72.0, 36.0, "72 ppi: 1 px = 1 pt")] {
-        s.execute("document.open", &json!({"name": "art.png", "dataBase64": kition_vector_format::base64_encode(&png)})).unwrap();
+        s.execute("file.open", &json!({"name": "art.png", "dataBase64": kition_vector_format::base64_encode(&png)})).unwrap();
         let doc = &s.doc().unwrap().doc;
         let ab = doc.artboards[0].rect;
         assert!((ab.width() - w).abs() < 1e-6 && (ab.height() - h).abs() < 1e-6, "{what}: artboard {ab:?}");

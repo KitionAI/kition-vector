@@ -33,7 +33,7 @@ fn undo_len(s: &Session) -> usize {
 fn stroke_options_set_with_nothing_selected_carry_to_the_next_object() {
     let mut s = session();
     let before = rect(&mut s, 20.0);
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let undo = undo_len(&s);
     run(&mut s, "stroke.set", json!({"cap": "round", "dash": [4, 2], "weight": 3, "endArrow": "Arrow"}));
     assert_eq!(undo_len(&s), undo, "no document change, no undo step");
@@ -48,7 +48,7 @@ fn stroke_options_set_with_nothing_selected_carry_to_the_next_object() {
     assert_eq!(node(&s, before).appearance.stroke().unwrap().cap, LineCap::Butt, "art drawn before keeps its stroke");
     // Editing a selected object's stroke leaves the template alone.
     run(&mut s, "stroke.set", json!({"cap": "square"}));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert_eq!(s.shown_stroke().unwrap().cap, LineCap::Round);
     // Other new art takes it too (a line still without a fill).
     let line = NodeId(run(&mut s, "shape.line", json!({"x1": 10, "y1": 200, "x2": 200, "y2": 200}))["id"].as_u64().unwrap());
@@ -77,13 +77,13 @@ fn with_basic_appearance_off_new_art_takes_the_last_selections_whole_appearance(
     let mut s = session();
     assert!(s.prefs.new_art_basic, "on by default");
     let src = fancy(&mut s);
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let basic = rect(&mut s, 120.0);
     let b = node(&s, basic);
     assert_eq!((b.appearance.items.len(), b.appearance.effects.len(), b.opacity), (2, 0, 1.0), "on: one fill and stroke");
     assert_eq!(run(&mut s, "appearance.setNewArtBasic", json!({})), json!({"on": false}), "no param toggles");
     run(&mut s, "select.set", json!({"ids": [src.0]}));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let id = rect(&mut s, 220.0);
     let (n, from) = (node(&s, id), node(&s, src));
     assert_eq!(n.appearance.items.iter().filter(|i| i.is_fill()).count(), 2, "both fills");
@@ -94,7 +94,7 @@ fn with_basic_appearance_off_new_art_takes_the_last_selections_whole_appearance(
     assert_eq!((q["basic"].clone(), q["inherited"].clone(), q["opacity"].clone()), (json!(false), json!(true), json!(50.0)));
     // Back on, new art takes only the basic fill and stroke again.
     run(&mut s, "appearance.setNewArtBasic", json!({"on": true}));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let again = rect(&mut s, 300.0);
     let again = node(&s, again);
     assert_eq!((again.appearance.items.len(), again.appearance.effects.len(), again.opacity), (2, 0, 1.0));
@@ -108,7 +108,7 @@ fn a_graphic_style_clicked_with_nothing_selected_styles_the_next_object() {
     let stops = json!([{"offset": 0, "color": "#ffffff"}, {"offset": 1, "color": "#000000"}]);
     run(&mut s, "paint.setFill", json!({"gradient": {"stops": stops, "start": [20, 40], "end": [50, 40]}}));
     let name = run(&mut s, "graphicStyle.new", json!({"name": "Fancy"}))["name"].as_str().unwrap().to_string();
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let undo = undo_len(&s);
     assert_eq!(run(&mut s, "graphicStyle.apply", json!({"name": name})), json!({"newArt": true}));
     assert_eq!(undo_len(&s), undo);
@@ -120,7 +120,7 @@ fn a_graphic_style_clicked_with_nothing_selected_styles_the_next_object() {
     let (g, linked) = s.selection_graphic_style().unwrap();
     assert_eq!((g.name.as_str(), linked), ("Fancy", true));
     // Alt-click (add) with nothing selected stacks a style on the template, unlinked.
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     run(&mut s, "graphicStyle.apply", json!({"name": name, "add": true}));
     let q = run(&mut s, "appearance.newArt", json!({}));
     assert_eq!((q["appearance"]["items"].as_array().unwrap().len(), q["graphicStyle"].clone()), (6, Value::Null));

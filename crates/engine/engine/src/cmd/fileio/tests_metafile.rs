@@ -49,7 +49,7 @@ fn two_boards() -> Session {
 #[test]
 fn export_writes_an_emf_or_wmf_of_one_artboard() {
     let mut s = two_boards();
-    let r = s.execute("document.export", &json!({"format": "emf"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "emf"})).unwrap();
     assert_eq!(r["format"], "emf");
     let emf = b64(&r);
     assert_eq!(kition_vector_metafile::sniff(&emf), Some(kition_vector_metafile::Kind::Emf));
@@ -58,26 +58,26 @@ fn export_writes_an_emf_or_wmf_of_one_artboard() {
     assert_eq!([i32_at(&emf, 24), i32_at(&emf, 28), i32_at(&emf, 32), i32_at(&emf, 36)], [0, 0, side, side]);
     assert_eq!(emf_kinds(&emf).iter().filter(|k| **k == 62).count(), 1, "one rectangle on it");
     // The second artboard alone; serialize gives the same bytes.
-    let second = b64(&s.execute("document.export", &json!({"format": "emf", "artboard": 1})).unwrap());
+    let second = b64(&s.execute("file.export", &json!({"format": "emf", "artboard": 1})).unwrap());
     assert_eq!(emf_kinds(&second).iter().filter(|k| **k == 62).count(), 1);
-    assert_eq!(b64(&s.execute("document.serialize", &json!({"format": "emf"})).unwrap()), emf);
-    let wmf = b64(&s.execute("document.export", &json!({"format": "wmf"})).unwrap());
+    assert_eq!(b64(&s.execute("file.serialize", &json!({"format": "emf"})).unwrap()), emf);
+    let wmf = b64(&s.execute("file.export", &json!({"format": "wmf"})).unwrap());
     assert_eq!(kition_vector_metafile::sniff(&wmf), Some(kition_vector_metafile::Kind::Wmf));
     assert_eq!(writable_format(None, Some("x/pic.wmf")).unwrap().id, "wmf");
     assert_eq!(writable_format(Some("EMF"), None).unwrap().id, "emf");
     // One file holds one artboard.
-    assert!(s.execute("document.export", &json!({"format": "emf", "artboards": [0, 1]})).is_err());
+    assert!(s.execute("file.export", &json!({"format": "emf", "artboards": [0, 1]})).is_err());
 }
 
 #[test]
 fn use_artboards_writes_one_picture_each_or_the_art() {
     let mut s = two_boards();
-    let r = s.execute("document.export", &json!({"format": "wmf", "useArtboards": true})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "wmf", "useArtboards": true})).unwrap();
     let files = r["files"].as_array().unwrap();
     assert_eq!(files.len(), 2);
     assert!(files[0]["name"].as_str().unwrap().ends_with("-Artboard-1.wmf"), "{files:?}");
     // Without artboards: the bounds of the art (both rectangles).
-    let r = s.execute("document.export", &json!({"format": "emf", "useArtboards": false})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "emf", "useArtboards": false})).unwrap();
     let emf = b64(&r);
     let width_pt = f64::from(i32_at(&emf, 32)) / 2540.0 * 72.0;
     let second = s.doc().unwrap().doc.artboards[1].rect.x0;
@@ -89,7 +89,7 @@ fn raster_effects_are_written_as_images() {
     let mut s = session(200.0, 200.0, 1);
     let id = s.execute("shape.rectangle", &json!({"x": 50, "y": 50, "width": 60, "height": 60})).unwrap()["id"].clone();
     s.execute("effect.apply", &json!({"effect": "stylize.dropShadow", "ids": [id]})).unwrap();
-    let r = s.execute("document.export", &json!({"format": "emf"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "emf"})).unwrap();
     assert!(r["warnings"].as_array().unwrap().iter().all(|w| !w.as_str().unwrap().contains("raster effects")), "{r}");
     let kinds = emf_kinds(&b64(&r));
     assert!(kinds.contains(&114), "the shadow is an image with transparency");
@@ -98,10 +98,10 @@ fn raster_effects_are_written_as_images() {
 #[test]
 fn metafiles_open_and_place() {
     let mut s = two_boards();
-    let emf = b64(&s.execute("document.export", &json!({"format": "emf"})).unwrap());
-    let wmf = b64(&s.execute("document.export", &json!({"format": "wmf"})).unwrap());
+    let emf = b64(&s.execute("file.export", &json!({"format": "emf"})).unwrap());
+    let wmf = b64(&s.execute("file.export", &json!({"format": "wmf"})).unwrap());
     for (name, bytes) in [("pic.emf", &emf), ("pic.wmf", &wmf)] {
-        let r = s.execute("document.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap();
+        let r = s.execute("file.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap();
         assert_eq!(r["format"], &name[4..]);
         assert_eq!(r["warnings"], json!([]));
         let st = s.doc().unwrap();
@@ -129,7 +129,7 @@ fn metafiles_open_and_place() {
 #[test]
 fn formats_list_emf_and_wmf() {
     let mut s = Session::new();
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     for k in ["readable", "writable"] {
         let ids: Vec<&str> = r[k].as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect();
         assert!(ids.contains(&"emf") && ids.contains(&"wmf"), "{k}: {ids:?}");
@@ -141,13 +141,13 @@ fn formats_list_emf_and_wmf() {
     assert!(place_filters().any(|(label, ext)| label == "WMF" && ext == ["wmf"]));
     // Export for Screens writes the screen formats only.
     let mut s = two_boards();
-    assert!(s.execute("document.exportForScreens", &json!({"formats": [{"format": "emf"}]})).is_err());
+    assert!(s.execute("file.exportForScreens", &json!({"formats": [{"format": "emf"}]})).is_err());
 }
 
 #[test]
 fn a_pasted_metafile_becomes_objects() {
     let mut src = two_boards();
-    let emf = b64(&src.execute("document.export", &json!({"format": "emf"})).unwrap());
+    let emf = b64(&src.execute("file.export", &json!({"format": "emf"})).unwrap());
     let mut s = session(300.0, 300.0, 1);
     let r = s.execute("clipboard.importEmf", &json!({"dataBase64": kition_vector_format::base64_encode(&emf), "center": [150, 150]})).unwrap();
     assert_eq!(r["count"], 1);

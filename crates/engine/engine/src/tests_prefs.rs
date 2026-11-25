@@ -202,8 +202,8 @@ fn selection_preferences_drive_the_selection_tool() {
     set(&mut s, "ctrlClickSelectsBehind", json!(false));
     assert_eq!(click(&mut s, 175.0, cmd), vec![front], "off: a plain click");
     // Double Click To Isolate (on by default) isolates a group; off, it doesn't.
-    s.execute("select.all", &json!({})).unwrap();
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
     let double = |s: &mut Session| {
         s.pointer(&PointerEvent::new(PointerKind::DoubleClick, 175.0, 150.0), ViewInfo::default()).unwrap();
         s.doc().unwrap().isolation
@@ -490,7 +490,7 @@ fn style_at(s: &Session, id: NodeId, byte: usize) -> kition_vector_doc::CharStyl
     panic!("byte {byte} past the text")
 }
 
-/// Type › Size/Leading, Tracking and Baseline Shift: the increments `type.step` and the
+/// Type › Size/Leading, Tracking and Baseline Shift: the increments `text.step` and the
 /// font size shortcuts step by, on selected type objects and on the Type tool's selected text
 /// (Alt+arrows; Cmd/Ctrl too: five steps).
 #[test]
@@ -498,17 +498,17 @@ fn type_increments_step_the_type() {
     use kition_vector_tools::PointerKind::{Down, Up};
     use kition_vector_tools::{Mods, ToolKey};
     let mut s = new_doc();
-    let id = NodeId(s.execute("text.create", &json!({"x": 100, "y": 100, "text": "Hello world", "size": 20})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("text.add", &json!({"x": 100, "y": 100, "text": "Hello world", "size": 20})).unwrap()["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
-    s.execute("type.size.increase", &json!({})).unwrap();
+    s.execute("format.increaseFontSize", &json!({})).unwrap();
     assert_eq!(style_at(&s, id, 0).size, 22.0, "Size/Leading is 2 pt");
     set_pref(&mut s, "typeSizeIncrement", json!(3));
-    s.execute("type.size.decrease", &json!({})).unwrap();
+    s.execute("format.decreaseFontSize", &json!({})).unwrap();
     assert_eq!(style_at(&s, id, 0).size, 19.0);
-    s.execute("type.step", &json!({"attribute": "leading"})).unwrap();
+    s.execute("text.step", &json!({"attribute": "leading"})).unwrap();
     assert!((style_at(&s, id, 0).leading.unwrap() - (19.0 * 1.2 + 3.0)).abs() < 1e-9, "from Auto");
     set_pref(&mut s, "baselineShiftIncrement", json!(1.5));
-    s.execute("type.step", &json!({"attribute": "baselineShift", "by": -2})).unwrap();
+    s.execute("text.step", &json!({"attribute": "baselineShift", "by": -2})).unwrap();
     assert_eq!(style_at(&s, id, 10).baseline_shift, -3.0);
     // The Type tool: Alt+→ tracks the selected text by Tracking (20/1000 em), Cmd-Alt five times.
     let v = ViewInfo::default();
@@ -534,7 +534,7 @@ fn type_increments_step_the_type() {
     s.tool_key(ToolKey::Up, Mods { shift: true, ..alt }, v).unwrap();
     assert_eq!((style_at(&s, id, 0).baseline_shift, style_at(&s, id, 6).baseline_shift), (-3.0, -1.5));
     // The font size shortcut steps the selected text while the tool edits.
-    s.execute("type.size.increase", &json!({})).unwrap();
+    s.execute("format.increaseFontSize", &json!({})).unwrap();
     assert_eq!((style_at(&s, id, 0).size, style_at(&s, id, 6).size), (19.0, 22.0));
 }
 
@@ -578,7 +578,7 @@ fn missing_glyph_protection_keeps_glyphs_a_new_font_lacks() {
         return; // Installed fonts of these names cover other characters.
     }
     let mut s = new_doc();
-    let id = NodeId(s.execute("text.create", &json!({"x": 10, "y": 50, "text": "a\u{180}c", "font": from})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("text.add", &json!({"x": 10, "y": 50, "text": "a\u{180}c", "font": from})).unwrap()["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     let fonts = |s: &Session| [0, 1, 3].map(|b| style_at(s, id, b).font_family);
     s.execute("text.setStyle", &json!({"font": to})).unwrap();
@@ -601,8 +601,8 @@ fn missing_glyph_protection_keeps_glyphs_a_new_font_lacks() {
 fn type_selection_by_path_only_picks_type_on_its_baseline() {
     use kition_vector_tools::{PointerEvent, PointerKind};
     let mut s = new_doc();
-    let id = NodeId(s.execute("text.create", &json!({"x": 100, "y": 100, "text": "Hello world", "size": 20})).unwrap()["id"].as_u64().unwrap());
-    s.execute("select.none", &json!({})).unwrap();
+    let id = NodeId(s.execute("text.add", &json!({"x": 100, "y": 100, "text": "Hello world", "size": 20})).unwrap()["id"].as_u64().unwrap());
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let b = s.doc().unwrap().doc.node(id).and_then(|n| n.geometric_bounds()).unwrap();
     assert!(b.y0 < 95.0 && b.x1 > 130.0, "the glyphs rise above the baseline at y = 100: {b:?}");
     s.select_tool("selection", ViewInfo::default()).unwrap();
@@ -634,7 +634,7 @@ fn type_selection_by_path_only_takes_every_line_and_spares_the_type_tool_and_eye
     let mut s = new_doc();
     let created = s
         .execute(
-            "text.create",
+            "text.add",
             &json!({"x": 100, "y": 100, "text": "Hello
 world", "size": 20}),
         )
@@ -665,7 +665,7 @@ world", "size": 20}),
     assert_eq!(texts(&s), 1, "no new type");
     // The Eyedropper: a click among the glyphs samples the type into the selected type.
     s.select_tool("selection", v).unwrap();
-    let dst = NodeId(s.execute("text.create", &json!({"x": 100, "y": 300, "text": "Target"})).unwrap()["id"].as_u64().unwrap());
+    let dst = NodeId(s.execute("text.add", &json!({"x": 100, "y": 300, "text": "Target"})).unwrap()["id"].as_u64().unwrap());
     click(&mut s, "eyedropper", x, first.y - 7.0);
     let NodeKind::Text(t) = &s.doc().unwrap().doc.node(dst).unwrap().kind else { panic!("not type") };
     assert_eq!((t.first_style().size, t.first_style().fill.color().map(|c| c.to_hex())), (20.0, Some("#00ff00".into())));

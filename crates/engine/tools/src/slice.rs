@@ -1,7 +1,7 @@
 //! Slice tool (Shift+K) and Slice Selection tool.
 //!
 //! The Slice tool drags out a user slice (Shift: a square, Alt: from its centre), snapping to the
-//! ruler guides and, like the drawing tools, to art: the drag previews `object.slice.create` and
+//! ruler guides and, like the drawing tools, to art: the drag previews `object.slice.add` and
 //! commits it as one undo step. The Slice Selection tool clicks a slice to select it (Shift adds or
 //! drops it), drags the selected slices to move them (`object.slice.move`: an object slice moves
 //! its object), drags a selected user slice's edge or corner handle to resize it
@@ -94,7 +94,7 @@ impl Tool for SliceTool {
                 }
                 let r = drag_rect(start, p, ev.mods);
                 if has_area(r) {
-                    out.push(Action::Preview("object.slice.create".into(), rect_json(r)));
+                    out.push(Action::Preview("object.slice.add".into(), rect_json(r)));
                 }
                 out
             }
@@ -336,7 +336,7 @@ mod tests {
 
     fn create_preview(a: &[Action]) -> Option<Value> {
         a.iter().find_map(|a| match a {
-            Action::Preview(c, v) if c == "object.slice.create" => Some(v.clone()),
+            Action::Preview(c, v) if c == "object.slice.add" => Some(v.clone()),
             _ => None,
         })
     }

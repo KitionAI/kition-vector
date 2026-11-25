@@ -13,7 +13,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "text.thread.create",
+            "text.thread.add",
             "Create",
             ["Type", "Threaded Text"],
             None,
@@ -155,7 +155,7 @@ fn frame_from_path(n: &Node, style: kition_vector_doc::CharStyle) -> Option<Node
 }
 
 fn create(s: &mut Session, _: &Value) -> Result<Value> {
-    const C: &str = "text.thread.create";
+    const C: &str = "text.thread.add";
     let ids = selected_roots(s)?;
     let d = &s.doc()?.doc;
     let style = ids.iter().find_map(|i| text_of(d, *i)).map(|t| t.first_style()).unwrap_or_default();
@@ -261,7 +261,7 @@ mod tests {
     fn setup() -> (Session, u64, u64) {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 600, "height": 300})).unwrap();
-        let a = s.execute("text.create", &json!({"x": 10, "y": 10, "text": TEXT.repeat(4), "area": {"width": 150, "height": 60}})).unwrap()["id"]
+        let a = s.execute("text.add", &json!({"x": 10, "y": 10, "text": TEXT.repeat(4), "area": {"width": 150, "height": 60}})).unwrap()["id"]
             .as_u64()
             .unwrap();
         let b = s.execute("shape.rectangle", &json!({"x": 200, "y": 10, "width": 150, "height": 200})).unwrap()["id"].as_u64().unwrap();
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn thread_flows_reflows_on_edit_and_survives_delete() {
         let (mut s, a, b) = setup();
-        s.execute("text.thread.create", &json!({})).unwrap();
+        s.execute("text.thread.add", &json!({})).unwrap();
         let (ta, tb) = (text(&s, a), text(&s, b));
         assert!(!ta.is_empty() && !tb.is_empty());
         assert_eq!(format!("{ta}{tb}"), TEXT.repeat(4));
@@ -289,7 +289,7 @@ mod tests {
         assert_ne!(text(&s, b), tb, "the overflow moved on");
         // Deleting the first frame moves all its text into the second.
         s.execute("select.set", &json!({"ids": [a]})).unwrap();
-        s.execute("edit.clear", &json!({})).unwrap();
+        s.execute("edit.delete", &json!({})).unwrap();
         assert_eq!(text(&s, b), format!("NEW {}", TEXT.repeat(4)));
         assert!(s.doc().unwrap().doc.text_threads.is_empty(), "a one-frame thread is no thread");
         s.execute("edit.undo", &json!({})).unwrap();
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn release_and_remove() {
         let (mut s, a, b) = setup();
-        s.execute("text.thread.create", &json!({})).unwrap();
+        s.execute("text.thread.add", &json!({})).unwrap();
         let tb = text(&s, b);
         s.execute("select.set", &json!({"ids": [b]})).unwrap();
         s.execute("text.thread.remove", &json!({})).unwrap();

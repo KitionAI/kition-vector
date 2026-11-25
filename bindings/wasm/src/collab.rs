@@ -483,11 +483,11 @@ mod tests {
         draft.execute("shape.rectangle", json!({ "x": 300, "y": 200, "width": 30, "height": 30 })).unwrap();
         let changes = draft.export_changes(&base).unwrap();
         // Meanwhile, here: the fixture's rectangle is recoloured, and an ellipse is added.
-        doc.execute("select.all", json!({})).unwrap();
+        doc.execute("edit.selectAll", json!({})).unwrap();
         doc.execute("paint.setFill", json!({ "color": "#00ff00" })).unwrap();
-        doc.execute("select.none", json!({})).unwrap();
+        doc.execute("edit.deselectAll", json!({})).unwrap();
         doc.execute("shape.ellipse", json!({ "x": 200, "y": 150, "width": 60, "height": 60 })).unwrap();
-        doc.execute("select.none", json!({})).unwrap();
+        doc.execute("edit.deselectAll", json!({})).unwrap();
         assert_eq!(kinds(&doc), ["Rectangle", "Ellipse"]);
         let (state, drawing) = (doc.replicated_state().unwrap(), view(&doc));
         let before = object_count(&doc);

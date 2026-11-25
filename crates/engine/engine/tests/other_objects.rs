@@ -42,12 +42,12 @@ fn select(s: &mut Session, ids: &[NodeId]) {
 }
 
 fn point_text(s: &mut Session, x: f64, text: &str) -> NodeId {
-    id(&s.execute("text.create", &json!({"x": x, "y": 100, "size": 12, "text": text})).unwrap())
+    id(&s.execute("text.add", &json!({"x": x, "y": 100, "size": 12, "text": text})).unwrap())
 }
 
 fn group_of(s: &mut Session, ids: &[NodeId]) -> NodeId {
     select(s, ids);
-    let g = id(&s.execute("object.group", &json!({})).unwrap());
+    let g = id(&s.execute("arrange.group", &json!({})).unwrap());
     select(s, &[]);
     g
 }
@@ -236,7 +236,7 @@ fn align_to_the_artboard_refuses_objects_on_no_artboard() {
     assert_eq!(node(&s, a).geometric_bounds().unwrap().x0, doc(&s).artboards[0].rect.x0);
 }
 
-// ---------- object.createTrimMarks ----------
+// ---------- object.addTrimMarks ----------
 
 #[test]
 fn trim_marks_go_into_the_layer_of_the_selection() {
@@ -247,7 +247,7 @@ fn trim_marks_go_into_the_layer_of_the_selection() {
     assert_eq!(doc(&s).parent_of(r2), Some(l2));
     s.execute("layer.setCurrent", &json!({"id": l1.0})).unwrap();
     select(&mut s, &[r2]);
-    let g = id(&s.execute("object.createTrimMarks", &json!({})).unwrap());
+    let g = id(&s.execute("object.addTrimMarks", &json!({})).unwrap());
     assert_eq!(doc(&s).layer_containing(g), Some(l2), "the marks sit with the art they mark");
 }
 
@@ -279,14 +279,14 @@ fn flatten_transparency_refuses_a_layer_id() {
     assert!(exists(&s, a) && exists(&s, b));
 }
 
-// ---------- object.mesh.create / envelope ----------
+// ---------- object.mesh.add / envelope ----------
 
 #[test]
 fn mesh_and_envelope_refuse_a_layer_id() {
     let mut s = session();
     let r = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     let l = layer(&s);
-    assert!(s.execute("object.mesh.create", &json!({"ids": [l.0, r.0]})).is_err(), "mesh: a layer is refused");
+    assert!(s.execute("object.mesh.add", &json!({"ids": [l.0, r.0]})).is_err(), "mesh: a layer is refused");
     assert!(s.execute("object.envelope.makeWithWarp", &json!({"ids": [l.0, r.0]})).is_err(), "envelope: a layer is refused");
     assert_eq!(doc(&s).parent_of(r), Some(l), "R is untouched");
 }
@@ -381,8 +381,7 @@ fn path_edits_by_id_refuse_a_locked_path() {
 #[test]
 fn cut_of_direct_selected_anchors_puts_on_the_clipboard_what_it_deletes() {
     let mut s = session();
-    let p =
-        id(&s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 100, "y": 0}, {"x": 200, "y": 0}, {"x": 300, "y": 0}]})).unwrap());
+    let p = id(&s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 100, "y": 0}, {"x": 200, "y": 0}, {"x": 300, "y": 0}]})).unwrap());
     s.execute("select.anchors", &json!({"id": p.0, "anchors": [[0, 2], [0, 3]], "mode": "set"})).unwrap();
     s.execute("edit.cut", &json!({})).unwrap();
     let xs = |pd: &kition_vector_geom::PathData| pd.subpaths.iter().flat_map(|sp| sp.anchors.iter().map(|a| a.p.x)).collect::<Vec<_>>();
@@ -423,7 +422,7 @@ fn a_blend_is_painted_the_same_way_reached_directly_or_inside_a_group() {
     );
 }
 
-// ---------- text.setFormat / type.fitHeadline on a layer ----------
+// ---------- text.setFormat / text.fitHeadlineSelection on a layer ----------
 
 #[test]
 fn set_format_on_a_layer_formats_the_text_inside() {
@@ -438,10 +437,10 @@ fn set_format_on_a_layer_formats_the_text_inside() {
 #[test]
 fn fit_headline_on_a_group_fits_the_area_type_inside() {
     let mut s = session();
-    let t = id(&s.execute("text.create", &json!({"x": 0, "y": 0, "text": "Hi", "size": 12, "area": {"width": 300, "height": 100}})).unwrap());
+    let t = id(&s.execute("text.add", &json!({"x": 0, "y": 0, "text": "Hi", "size": 12, "area": {"width": 300, "height": 100}})).unwrap());
     let r = rect(&mut s, 500.0, 0.0, 10.0, 10.0);
     let g = group_of(&mut s, &[t, r]);
-    let out = s.execute("type.fitHeadline", &json!({"ids": [g.0]}));
+    let out = s.execute("text.fitHeadlineSelection", &json!({"ids": [g.0]}));
     assert!(out.is_ok(), "the area type in the group is fitted: {out:?}");
 }
 
@@ -505,7 +504,7 @@ fn a_capture_reads_the_first_bound_object_in_document_order() {
     let t1 = point_text(&mut s, 0.0, "first made");
     let t2 = point_text(&mut s, 200.0, "second made");
     select(&mut s, &[t1]);
-    s.execute("object.arrange.bringToFront", &json!({})).unwrap();
+    s.execute("arrange.bringToFront", &json!({})).unwrap();
     s.execute("variable.define", &json!({"name": "Name", "kind": "text"})).unwrap();
     s.execute("variable.bind", &json!({"variable": "Name", "ids": [t1.0, t2.0]})).unwrap();
     let ordered = doc(&s).paint_order([t1, t2]);
@@ -551,7 +550,7 @@ fn a_group_only_named_image_trace_is_no_image_trace_object() {
     assert!(exists(&s, b), "its image stays");
 }
 
-// ---------- assets.add ----------
+// ---------- asset.add ----------
 
 #[test]
 fn assets_add_keeps_the_objects_it_is_given() {
@@ -559,7 +558,7 @@ fn assets_add_keeps_the_objects_it_is_given() {
     let c1 = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let c2 = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     let g = group_of(&mut s, &[c1, c2]);
-    let r = s.execute("assets.add", &json!({"ids": [g.0, c1.0]})).unwrap();
+    let r = s.execute("asset.add", &json!({"ids": [g.0, c1.0]})).unwrap();
     assert_eq!(r["assets"].as_array().unwrap().len(), 2, "an asset per object given, C1 included: {r}");
 }
 

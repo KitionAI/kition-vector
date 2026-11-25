@@ -34,7 +34,7 @@ fn the_font_list_names_every_available_family_with_its_styles() {
 fn refreshing_the_font_list_redraws_type_without_editing_the_document() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
-    s.execute("text.create", &json!({"x": 10, "y": 40, "text": "Type", "font": "No Such Font"})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 40, "text": "Type", "font": "No Such Font"})).unwrap();
     s.doc_mut().unwrap().mark_saved();
     let revision = s.doc().unwrap().revision;
     let r = s.execute("text.rescanFonts", &json!({})).unwrap();

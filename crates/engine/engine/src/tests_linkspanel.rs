@@ -1,4 +1,4 @@
-//! The Links panel's commands: listing images with their status (`links.list`), Go To, Embed and
+//! The Links panel's commands: listing images with their status (`linkedFile.list`), Go To, Embed and
 //! Unembed, Link Info and the Placement Options a relinked file follows.
 
 use kition_vector_doc::{NodeKind, PlacementOptions};
@@ -31,9 +31,9 @@ fn embed_keeps_the_pixels_without_the_file() {
     let id = place(&mut s, &pic);
     let placed = bounds(&s, id);
     run(&mut s, "select.set", json!({"ids": []}));
-    assert!(s.execute("links.embed", &json!({})).is_err(), "nothing selected");
+    assert!(s.execute("linkedFile.embed", &json!({})).is_err(), "nothing selected");
     run(&mut s, "select.set", json!({"ids": [id.0]}));
-    assert_eq!(run(&mut s, "links.embed", json!({})), json!({"embedded": [id.0], "missing": []}));
+    assert_eq!(run(&mut s, "linkedFile.embed", json!({})), json!({"embedded": [id.0], "missing": []}));
     let im = image(&s, id);
     assert!(im.link.is_none());
     assert_eq!(s.doc().unwrap().doc.images[&im.key].bytes.as_slice(), bytes.as_slice(), "the file's own bytes");
@@ -63,7 +63,7 @@ fn a_missing_file_showing_its_preview_stays_linked() {
     save(&mut s, &doc_path);
     std::fs::remove_file(&pic).unwrap();
     open(&mut s, &doc_path);
-    assert_eq!(run(&mut s, "links.embed", json!({"ids": [id.0]})), json!({"embedded": [], "missing": [id.0]}));
+    assert_eq!(run(&mut s, "linkedFile.embed", json!({"ids": [id.0]})), json!({"embedded": [], "missing": [id.0]}));
     assert!(image(&s, id).link.is_some());
     assert!(s.doc().unwrap().history.undo.is_empty(), "nothing changed");
 }
@@ -78,30 +78,30 @@ fn unembed_writes_the_bytes_and_links_to_them() {
     let id = place_embedded(&mut s, &pic);
     let placed = bounds(&s, id);
     // No path: the file's bytes come back and nothing changes.
-    let r = run(&mut s, "links.unembed", json!({"id": id.0}));
+    let r = run(&mut s, "linkedFile.unembed", json!({"id": id.0}));
     assert_eq!(r["name"], "photo.png");
     assert_eq!(kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap(), bytes);
     assert!(image(&s, id).link.is_none());
     // To a path: written there, and the image links to it.
     let out = dir.file("out/photo.png");
     std::fs::create_dir_all(dir.file("out")).unwrap();
-    let r = run(&mut s, "links.unembed", json!({"id": id.0, "path": out}));
+    let r = run(&mut s, "linkedFile.unembed", json!({"id": id.0, "path": out}));
     assert_eq!(r, json!({"id": id.0, "path": out}));
     assert_eq!(std::fs::read(&out).unwrap(), bytes);
     let link = image(&s, id).link.unwrap();
     assert_eq!((link.path.as_str(), link.size), (out.as_str(), Some(bytes.len() as u64)));
     assert_eq!(bounds(&s, id), placed);
-    assert_eq!(run(&mut s, "links.check", json!({}))["links"][0]["status"], "ok");
-    assert!(s.execute("links.unembed", &json!({"id": id.0, "path": out})).is_err(), "linked already");
+    assert_eq!(run(&mut s, "linkedFile.check", json!({}))["links"][0]["status"], "ok");
+    assert!(s.execute("linkedFile.unembed", &json!({"id": id.0, "path": out})).is_err(), "linked already");
     run(&mut s, "edit.undo", json!({}));
     assert!(image(&s, id).link.is_none(), "one undo step");
     // Another extension converts.
     let jpg = dir.file("photo.jpg");
-    run(&mut s, "links.unembed", json!({"id": id.0, "path": jpg}));
+    run(&mut s, "linkedFile.unembed", json!({"id": id.0, "path": jpg}));
     assert_eq!(std::fs::read(&jpg).unwrap()[..2], [0xff, 0xd8]);
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     run(&mut s, "edit.undo", json!({}));
-    assert!(s.execute("links.unembed", &json!({"id": id.0, "path": dir.file("photo.psd")})).is_err(), "not a format it writes");
+    assert!(s.execute("linkedFile.unembed", &json!({"id": id.0, "path": dir.file("photo.psd")})).is_err(), "not a format it writes");
 }
 
 #[test]
@@ -113,11 +113,11 @@ fn go_to_selects_the_image() {
     let id = place(&mut s, &pic);
     run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10}));
     assert_ne!(s.doc().unwrap().selection.objects, vec![id]);
-    let r = run(&mut s, "links.goTo", json!({"id": id.0}));
+    let r = run(&mut s, "linkedFile.goTo", json!({"id": id.0}));
     assert_eq!(r, json!({"id": id.0, "bounds": [-100.0, 0.0, 500.0, 300.0]}));
     assert_eq!(s.doc().unwrap().selection.objects, vec![id]);
     let rect = s.doc().unwrap().doc.layers[0].children().unwrap()[1].id;
-    assert!(s.execute("links.goTo", &json!({"id": rect.0})).is_err(), "not an image");
+    assert!(s.execute("linkedFile.goTo", &json!({"id": rect.0})).is_err(), "not an image");
 }
 
 #[test]
@@ -129,7 +129,7 @@ fn the_list_shows_each_image_with_its_status() {
     let mut s = session();
     let linked = place(&mut s, &a);
     let embedded = place_embedded(&mut s, &b);
-    let l = run(&mut s, "links.list", json!({}));
+    let l = run(&mut s, "linkedFile.list", json!({}));
     let rows = l["links"].as_array().unwrap();
     assert_eq!(rows.len(), 2);
     // Top first.
@@ -140,16 +140,16 @@ fn the_list_shows_each_image_with_its_status() {
     );
     assert_eq!((rows[1]["pixelWidth"].as_u64(), rows[1]["pixelHeight"].as_u64()), (Some(600), Some(300)));
     write(&a, &png(300, 300, BLUE));
-    let l = run(&mut s, "links.list", json!({"sort": "status"}));
+    let l = run(&mut s, "linkedFile.list", json!({"sort": "status"}));
     assert_eq!((l["modified"].as_u64(), l["embedded"].as_u64(), l["missing"].as_u64()), (Some(1), Some(1), Some(0)));
     assert_eq!(l["links"][0]["status"], "modified", "modified before embedded");
-    let l = run(&mut s, "links.list", json!({"show": "embedded"}));
+    let l = run(&mut s, "linkedFile.list", json!({"show": "embedded"}));
     assert_eq!(l["links"].as_array().unwrap().len(), 1);
     std::fs::remove_file(&a).unwrap();
-    assert_eq!(run(&mut s, "links.list", json!({"show": "missing"}))["links"][0]["id"], linked.0);
-    assert_eq!(run(&mut s, "links.list", json!({"sort": "name"}))["links"][0]["name"], "a.png");
-    assert!(s.execute("links.list", &json!({"show": "broken"})).is_err());
-    assert!(s.execute("links.list", &json!({"sort": "size"})).is_err());
+    assert_eq!(run(&mut s, "linkedFile.list", json!({"show": "missing"}))["links"][0]["id"], linked.0);
+    assert_eq!(run(&mut s, "linkedFile.list", json!({"sort": "name"}))["links"][0]["name"], "a.png");
+    assert!(s.execute("linkedFile.list", &json!({"show": "broken"})).is_err());
+    assert!(s.execute("linkedFile.list", &json!({"sort": "size"})).is_err());
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn link_info_has_the_file_and_placement_details() {
     write(&pic, &bytes);
     let mut s = session();
     let id = place(&mut s, &pic);
-    let i = run(&mut s, "links.info", json!({"id": id.0}));
+    let i = run(&mut s, "linkedFile.info", json!({"id": id.0}));
     assert_eq!((i["status"].as_str(), i["fileName"].as_str(), i["format"].as_str()), (Some("ok"), Some("photo.png"), Some("PNG")));
     assert_eq!(std::path::Path::new(i["location"].as_str().unwrap()), dir.0.as_path());
     assert_eq!((i["fileSize"].as_u64(), i["pixelWidth"].as_u64(), i["colorMode"].as_str()), (Some(bytes.len() as u64), Some(600), Some("RGB")));
@@ -170,12 +170,12 @@ fn link_info_has_the_file_and_placement_details() {
     run(&mut s, "select.set", json!({"ids": [id.0]}));
     run(&mut s, "object.scale", json!({"sx": 50}));
     run(&mut s, "object.rotate", json!({"angle": 30}));
-    let i = run(&mut s, "links.info", json!({}));
+    let i = run(&mut s, "linkedFile.info", json!({}));
     let num = |v: &Value, k: usize| v.get(k).and_then(Value::as_f64).unwrap();
     assert!(close(num(&i["scale"], 0), 50.0) && close(num(&i["effectivePpi"], 0), 144.0), "{i}");
     assert!(close(i["rotation"].as_f64().unwrap(), 30.0), "counter-clockwise: {i}");
     let embedded = place_embedded(&mut s, &pic);
-    let i = run(&mut s, "links.info", json!({"id": embedded.0}));
+    let i = run(&mut s, "linkedFile.info", json!({"id": embedded.0}));
     assert_eq!((i["status"].as_str(), i["linked"].as_bool(), i["fileName"].as_str()), (Some("embedded"), Some(false), None));
 }
 
@@ -190,8 +190,8 @@ fn relinked(name: &str, options: Value) -> (Session, NodeId, Folder) {
     let id = place(&mut s, &pic);
     let mut p = options;
     p["ids"] = json!([id.0]);
-    run(&mut s, "links.placementOptions", p);
-    run(&mut s, "links.relink", json!({"ids": [id.0], "path": other}));
+    run(&mut s, "linkedFile.placementOptions", p);
+    run(&mut s, "linkedFile.relink", json!({"ids": [id.0], "path": other}));
     (s, id, dir)
 }
 
@@ -221,7 +221,7 @@ fn a_relinked_file_follows_the_placement_options() {
     let (group, clip) = clip_group(&s);
     assert_eq!(clip, kition_vector_geom::Rect::new(-100.0, 0.0, 500.0, 300.0), "clipped to the old bounds");
     // Relinked again: the same clip group, its path following.
-    run(&mut s, "links.relink", json!({"ids": [id.0], "path": d.file("photo.png")}));
+    run(&mut s, "linkedFile.relink", json!({"ids": [id.0], "path": d.file("photo.png")}));
     assert_eq!(clip_group(&s).0, group);
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.undo", json!({}));
@@ -239,11 +239,11 @@ fn placement_options_read_set_and_round_trip() {
     let mut s = session();
     let id = place(&mut s, &pic);
     run(&mut s, "select.set", json!({"ids": [id.0]}));
-    assert_eq!(run(&mut s, "links.placementOptions", json!({})), json!({"placement": {"preserve": "bounds", "align": "center", "clip": false}}));
-    let r = run(&mut s, "links.placementOptions", json!({"preserve": "fill", "align": "topRight", "clip": true}));
+    assert_eq!(run(&mut s, "linkedFile.placementOptions", json!({})), json!({"placement": {"preserve": "bounds", "align": "center", "clip": false}}));
+    let r = run(&mut s, "linkedFile.placementOptions", json!({"preserve": "fill", "align": "topRight", "clip": true}));
     assert_eq!(r, json!({"ids": [id.0], "placement": {"preserve": "fill", "align": "topRight", "clip": true}}));
-    assert!(s.execute("links.placementOptions", &json!({"preserve": "stretch"})).is_err());
-    assert!(s.execute("links.placementOptions", &json!({"align": "middle"})).is_err());
+    assert!(s.execute("linkedFile.placementOptions", &json!({"preserve": "stretch"})).is_err());
+    assert!(s.execute("linkedFile.placementOptions", &json!({"align": "middle"})).is_err());
     // Saved and opened again.
     let doc_path = dir.file("poster.kvector");
     save(&mut s, &doc_path);
@@ -255,8 +255,8 @@ fn placement_options_read_set_and_round_trip() {
     open(&mut s, &doc_path);
     let want = PlacementOptions { preserve: kition_vector_doc::links::Preserve::Fill, align: kition_vector_doc::links::Align::TopRight, clip: true };
     assert_eq!(image(&s, id).placement, want);
-    run(&mut s, "select.all", json!({}));
-    run(&mut s, "links.placementOptions", json!({"preserve": "bounds", "align": "center", "clip": false}));
+    run(&mut s, "edit.selectAll", json!({}));
+    run(&mut s, "linkedFile.placementOptions", json!({"preserve": "bounds", "align": "center", "clip": false}));
     save(&mut s, &doc_path);
     let saved: Value = serde_json::from_slice(&std::fs::read(&doc_path).unwrap()).unwrap();
     assert_eq!(saved["document"]["layers"][0]["kind"]["children"][0]["kind"]["placement"], Value::Null, "the default isn't written");
@@ -265,20 +265,20 @@ fn placement_options_read_set_and_round_trip() {
 #[test]
 fn the_links_commands_are_reachable_headless() {
     for id in [
-        "links.list",
-        "links.goTo",
-        "links.embed",
-        "links.unembed",
-        "links.info",
-        "links.placementOptions",
-        "links.relink",
-        "links.update",
-        "links.check",
+        "linkedFile.list",
+        "linkedFile.goTo",
+        "linkedFile.embed",
+        "linkedFile.unembed",
+        "linkedFile.info",
+        "linkedFile.placementOptions",
+        "linkedFile.relink",
+        "linkedFile.update",
+        "linkedFile.check",
     ] {
         let c = crate::find_command(id).unwrap_or_else(|| panic!("{id} is not a command"));
         assert!(!c.params.is_empty(), "{id} documents its params");
     }
     // Without a document every one says why instead of failing silently.
     let mut s = Session::new();
-    assert!(s.execute("links.list", &json!({})).is_err());
+    assert!(s.execute("linkedFile.list", &json!({})).is_err());
 }

@@ -34,7 +34,7 @@ fn a_reflected_shape_is_clicked_by_its_fill() {
         ("shape.ellipse", json!({"x": 150, "y": 150, "width": 100, "height": 100})),
         ("shape.polygon", json!({"cx": 200, "cy": 200, "radius": 60, "sides": 5})),
         ("shape.star", json!({"cx": 200, "cy": 200, "radius1": 70, "radius2": 40, "points": 5})),
-        ("path.create", json!({"d": HEART})),
+        ("path.add", json!({"d": HEART})),
     ];
     for (cmd, params) in makers {
         for axis in ["horizontal", "vertical"] {
@@ -72,7 +72,7 @@ fn a_reflected_imported_heart_is_clicked_by_its_fill() {
         for how in ["horizontal", "vertical", "handle"] {
             let mut s = Session::new();
             s.add_document(kition_vector_svg::import(svg).unwrap(), None);
-            s.execute("select.all", &json!({})).unwrap();
+            s.execute("edit.selectAll", &json!({})).unwrap();
             let ids = s.doc().unwrap().selection.objects.clone();
             assert!(!ids.is_empty(), "file {i}: nothing imported");
             let b = s.doc().unwrap().doc.bounds_of(&ids, false).unwrap();
@@ -107,7 +107,7 @@ fn a_reflected_selected_shape_drags_by_its_fill() {
         ("shape.rectangle", json!({"x": 150, "y": 150, "width": 100, "height": 100})),
         ("shape.polygon", json!({"cx": 200, "cy": 200, "radius": 60, "sides": 3})),
         ("shape.star", json!({"cx": 200, "cy": 200, "radius1": 70, "radius2": 40, "points": 5})),
-        ("path.create", json!({"d": HEART})),
+        ("path.add", json!({"d": HEART})),
     ];
     for (cmd, params) in makers {
         for axis in ["horizontal", "vertical"] {
@@ -139,7 +139,7 @@ fn an_open_filled_path_is_clicked_by_its_fill_either_way_round() {
     for axis in [None, Some("vertical"), Some("horizontal")] {
         let mut s = Session::new();
         s.add_document(kition_vector_svg::import(svg).unwrap(), None);
-        s.execute("select.all", &json!({})).unwrap();
+        s.execute("edit.selectAll", &json!({})).unwrap();
         let ids = s.doc().unwrap().selection.objects.clone();
         if let Some(axis) = axis {
             s.execute("object.reflect", &json!({"axis": axis})).unwrap();

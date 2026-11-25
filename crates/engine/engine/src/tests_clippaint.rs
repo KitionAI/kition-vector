@@ -20,7 +20,7 @@ fn painted_clip() -> (Session, NodeId, NodeId) {
     s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
     rect(&mut s, 40.0, 60.0, "#ff0000");
     let clip = rect(&mut s, 50.0, 100.0, "#ffffff");
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     let group = NodeId(s.execute("object.clippingMask.make", &json!({})).unwrap()["id"].as_u64().unwrap());
     let n = s.doc().unwrap().doc.node(clip).unwrap().clone();
     assert!(n.clip_paint().fill.is_none() && n.clip_paint().stroke.is_none(), "Make leaves the clipping path unpainted");
@@ -74,7 +74,7 @@ fn a_clipping_paths_fill_and_stroke_show_in_render_svg_and_pdf() {
 
 #[test]
 fn release_and_ungroup_keep_the_clipping_paths_paint() {
-    for cmd in ["object.clippingMask.release", "object.ungroup"] {
+    for cmd in ["object.clippingMask.release", "arrange.ungroup"] {
         let (mut s, group, clip) = painted_clip();
         s.execute("select.set", &json!({"ids": [group.0]})).unwrap();
         s.execute(cmd, &json!({})).unwrap();
@@ -89,8 +89,8 @@ fn type_as_a_clipping_path_paints_its_characters() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
     rect(&mut s, 0.0, 200.0, "#ff0000");
-    let t = NodeId(s.execute("text.create", &json!({"x": 10, "y": 120, "text": "Clip", "size": 72})).unwrap()["id"].as_u64().unwrap());
-    s.execute("select.all", &json!({})).unwrap();
+    let t = NodeId(s.execute("text.add", &json!({"x": 10, "y": 120, "text": "Clip", "size": 72})).unwrap()["id"].as_u64().unwrap());
+    s.execute("edit.selectAll", &json!({})).unwrap();
     s.execute("object.clippingMask.make", &json!({})).unwrap();
     let paint = |s: &Session| s.doc().unwrap().doc.node(t).unwrap().clip_paint();
     assert!(paint(&s).fill.is_none() && paint(&s).stroke.is_none());

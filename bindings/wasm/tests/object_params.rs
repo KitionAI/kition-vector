@@ -166,7 +166,7 @@ fn node_ids_survive_replica_and_file_reopens() {
     let mut doc = VectorDocument::create("Ids.kvector", 320, 200).unwrap();
     let a = doc.execute("shape.rectangle", json!({"x":10,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
     let b = doc.execute("shape.rectangle", json!({"x":60,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
-    doc.execute("edit.clear", json!({"ids":[a]})).unwrap();
+    doc.execute("edit.delete", json!({"ids":[a]})).unwrap();
     let saved = doc.save(None).unwrap();
     let mut reopened = VectorDocument::open("Ids.kvector", &saved).unwrap();
     let mut exchange = Exchange::new();
@@ -199,7 +199,7 @@ fn two_rectangles() -> (VectorDocument, Value, Value) {
 }
 
 fn node(doc: &VectorDocument, id: &Value) -> Value {
-    doc.execute_query("document.node", json!({"id": id}))
+    doc.execute_query("file.node", json!({"id": id}))
 }
 
 trait Query {
@@ -241,7 +241,7 @@ fn declared_targets_act_on_the_given_objects_not_the_selection() {
 #[test]
 fn selection_only_commands_read_the_selection() {
     let commands = commands();
-    for id in ["object.move", "object.group", "object.compoundPath.make", "object.pathfinder.unite", "object.clippingMask.make"] {
+    for id in ["object.move", "arrange.group", "object.compoundPath.make", "object.pathfinder.unite", "object.clippingMask.make"] {
         let command = commands.iter().find(|c| c.id == id).unwrap();
         assert!(command.reads.contains(&kition_kit::EditorState::Selection), "{id}");
         assert_eq!(command.targets, None, "{id}");

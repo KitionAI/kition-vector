@@ -1,6 +1,6 @@
 //! Linked images: what a link records, the preview saved in place of the pixels, finding files
-//! that moved, missing and modified files (`document.open`, `links.check`, `links.update`,
-//! `links.relink`).
+//! that moved, missing and modified files (`file.open`, `linkedFile.check`, `linkedFile.update`,
+//! `linkedFile.relink`).
 
 use std::path::{Path, PathBuf};
 
@@ -90,11 +90,11 @@ fn saved_image(v: &mut Value) -> &mut Value {
 }
 
 pub(crate) fn save(s: &mut Session, path: &str) {
-    s.execute("document.save", &json!({"path": path})).unwrap();
+    s.execute("file.save", &json!({"path": path})).unwrap();
 }
 
 pub(crate) fn open(s: &mut Session, path: &str) -> Value {
-    s.execute("document.open", &json!({"path": path})).unwrap()
+    s.execute("file.open", &json!({"path": path})).unwrap()
 }
 
 #[test]
@@ -151,7 +151,7 @@ fn a_linked_photoshop_document_places_and_updates() {
     assert_eq!(link.path, pic);
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     write(&pic, &psd(400, 400, BLUE));
-    assert_eq!(s.execute("links.update", &json!({})).unwrap(), json!({"updated": [id.0], "missing": []}));
+    assert_eq!(s.execute("linkedFile.update", &json!({})).unwrap(), json!({"updated": [id.0], "missing": []}));
     let im = image(&s, id);
     assert_eq!((im.width, im.height), (400, 400));
     assert!(near(centre_colour(&s.doc().unwrap().doc), BLUE));
@@ -175,7 +175,7 @@ fn the_relative_path_finds_the_file_after_the_folder_moves() {
     let im = image(&s, id);
     assert_eq!(Path::new(&im.link.unwrap().path), Path::new(&moved), "the link follows the file");
     assert!(!s.doc().unwrap().doc.images[&im.key].is_proxy(), "the file's pixels were read");
-    let c = s.execute("links.check", &json!({})).unwrap();
+    let c = s.execute("linkedFile.check", &json!({})).unwrap();
     assert_eq!((c["links"][0]["status"].as_str(), c["missing"].as_u64()), (Some("ok"), Some(0)), "{c}");
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
 }
@@ -196,13 +196,13 @@ fn a_missing_link_renders_its_preview_and_relinks() {
     let doc = &s.doc().unwrap().doc;
     assert!(doc.images[&image(&s, id).key].is_proxy(), "the preview stands in");
     assert!(near(centre_colour(doc), RED), "missing still renders");
-    let c = s.execute("links.check", &json!({})).unwrap();
+    let c = s.execute("linkedFile.check", &json!({})).unwrap();
     assert_eq!((c["links"][0]["status"].as_str(), c["links"][0]["preview"].as_bool(), c["missing"].as_u64()), (Some("missing"), Some(true), Some(1)));
-    assert_eq!(s.execute("links.update", &json!({})).unwrap(), json!({"updated": [], "missing": [id.0]}));
+    assert_eq!(s.execute("linkedFile.update", &json!({})).unwrap(), json!({"updated": [], "missing": [id.0]}));
     // Replace: another file, smaller; the image keeps its bounds.
     let other = dir.file("other/blue.png");
     write(&other, &png(300, 100, BLUE));
-    let r = s.execute("links.relink", &json!({"ids": [id.0], "path": other})).unwrap();
+    let r = s.execute("linkedFile.relink", &json!({"ids": [id.0], "path": other})).unwrap();
     assert_eq!(r, json!({"relinked": [id.0], "notFound": []}));
     let im = image(&s, id);
     assert_eq!((im.width, im.height, im.link.unwrap().path), (300, 100, other.clone()));
@@ -213,10 +213,10 @@ fn a_missing_link_renders_its_preview_and_relinks() {
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED), "one undo step");
     // Relink to Folder: the file of the link's name there.
     write(&dir.file("found/photo.png"), &png(600, 300, BLUE));
-    let r = s.execute("links.relink", &json!({"folder": dir.file("found")})).unwrap();
+    let r = s.execute("linkedFile.relink", &json!({"folder": dir.file("found")})).unwrap();
     assert_eq!(r, json!({"relinked": [id.0], "notFound": []}), "nothing selected: every missing link");
     assert!(near(centre_colour(&s.doc().unwrap().doc), BLUE));
-    assert!(s.execute("links.relink", &json!({"ids": [id.0]})).is_err(), "path or folder");
+    assert!(s.execute("linkedFile.relink", &json!({"ids": [id.0]})).is_err(), "path or folder");
 }
 
 #[test]
@@ -230,14 +230,14 @@ fn a_modified_link_follows_the_update_links_preference() {
     let doc_path = dir.file("poster.kvector");
     save(&mut s, &doc_path);
     write(&pic, &png(400, 400, BLUE));
-    let c = s.execute("links.check", &json!({})).unwrap();
+    let c = s.execute("linkedFile.check", &json!({})).unwrap();
     assert_eq!((c["links"][0]["status"].as_str(), c["modified"].as_u64()), (Some("modified"), Some(1)), "{c}");
 
     // Ask When Modified (the default): reported, left as it was.
     let r = open(&mut s, &doc_path);
     assert_eq!((r["modifiedLinks"][0]["ids"].clone(), r["updatedLinks"].clone()), (json!([id.0]), json!([])), "{r}");
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED), "the preview until updated");
-    let r = s.execute("links.update", &json!({})).unwrap();
+    let r = s.execute("linkedFile.update", &json!({})).unwrap();
     assert_eq!(r, json!({"updated": [id.0], "missing": []}));
     let im = image(&s, id);
     assert_eq!((im.width, im.height), (400, 400));
@@ -245,9 +245,9 @@ fn a_modified_link_follows_the_update_links_preference() {
     assert!((b.width() - placed.width()).abs() < 1e-6 && (b.height() - placed.height()).abs() < 1e-6, "keeps its bounds: {b:?}");
     assert!(near(centre_colour(&s.doc().unwrap().doc), BLUE));
     assert_eq!(s.doc().unwrap().history.undo.last().unwrap().label, "Update Links");
-    let c = s.execute("links.check", &json!({})).unwrap();
+    let c = s.execute("linkedFile.check", &json!({})).unwrap();
     assert_eq!(c["links"][0]["status"], "ok");
-    assert_eq!(s.execute("links.update", &json!({})).unwrap()["updated"], json!([]), "nothing left to update");
+    assert_eq!(s.execute("linkedFile.update", &json!({})).unwrap()["updated"], json!([]), "nothing left to update");
 
     // Automatically: read again as the document opens.
     s.execute("prefs.set", &json!({"key": "updateLinks", "value": "automatically"})).unwrap();
@@ -301,11 +301,11 @@ fn without_a_file_system_the_saved_preview_shows() {
     let doc = kition_vector_format::load(&saved).unwrap();
     assert!(doc.images.values().all(|b| b.is_proxy()));
     assert!(near(centre_colour(&doc), RED), "the preview renders");
-    let r = s.execute("document.open", &json!({"name": "poster.kvector", "dataBase64": kition_vector_format::base64_encode(&saved)})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "poster.kvector", "dataBase64": kition_vector_format::base64_encode(&saved)})).unwrap();
     assert_eq!(r["missingLinks"][0]["ids"], json!([id.0]));
     assert!(near(centre_colour(&s.doc().unwrap().doc), RED));
     // Exports carry the preview.
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
     assert!(svg["text"].as_str().unwrap().contains("data:image/png;base64,"));
 }
 

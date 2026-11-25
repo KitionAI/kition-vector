@@ -23,7 +23,7 @@ fn layer(s: &Session) -> kition_vector_doc::Node {
 fn art_and_clip(s: &mut Session) -> (NodeId, NodeId) {
     let art = rect(s, 0.0, 0.0, 100.0, 100.0);
     let clip = rect(s, 25.0, 25.0, 50.0, 50.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     (art, clip)
 }
 
@@ -46,7 +46,7 @@ fn the_top_object_clips_the_layer_and_pressing_again_releases_it() {
     rect(&mut s, 0.0, 80.0, 100.0, 20.0);
     assert!(!opaque(&render(&s), 50, 90), "new art is clipped");
     // Again: released, the clipping path stays unpainted.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(!toggle(&mut s));
     let l = layer(&s);
     assert!(!l.clips());
@@ -90,7 +90,7 @@ fn a_selected_group_becomes_a_clip_group() {
     let mut s = session();
     let (art, clip) = art_and_clip(&mut s);
     select(&mut s, &[art, clip]);
-    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let g = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     select(&mut s, &[g]);
     assert!(toggle(&mut s));
     let n = s.doc().unwrap().doc.node(g).unwrap().clone();
@@ -108,8 +108,8 @@ fn the_top_object_must_be_able_to_clip() {
     let a = rect(&mut s, 0.0, 0.0, 50.0, 50.0);
     let b = rect(&mut s, 50.0, 50.0, 50.0, 50.0);
     select(&mut s, &[a, b]);
-    s.execute("object.group", &json!({})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let before = layer(&s);
     assert!(s.execute("layer.clippingMask.toggle", &json!({})).is_err(), "a group on top");
     assert_eq!(layer(&s), before);

@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use super::*;
 
-/// Text files as `file.place` reports them (not a format `document.open` reads).
+/// Text files as `file.place` reports them (not a format `file.open` reads).
 pub(super) const FORMAT: fileio::Format = fileio::Format {
     id: "txt",
     label: "Text",

@@ -34,7 +34,7 @@ fn outside(command: &str) -> bool {
         "brush.library",
     ];
     PREFIXES.iter().any(|prefix| command.starts_with(prefix))
-        || matches!(command, "command.batch" | "assets.export" | "graphicStyle.saveLibrary" | "swatch.saveLibrary" | "edit.undo" | "edit.redo")
+        || matches!(command, "command.batch" | "asset.export" | "graphicStyle.saveLibrary" | "swatch.saveLibrary" | "edit.undo" | "edit.redo")
 }
 
 impl Pass {

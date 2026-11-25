@@ -12,7 +12,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "type.changeCase",
+            "text.changeCase",
             "Change Case",
             ["Type", "Change Case"],
             None,
@@ -21,7 +21,7 @@ pub fn specs() -> Vec<CommandSpec> {
             change_case
         ),
         cmd!(
-            "type.smartPunctuation",
+            "text.smartPunctuation",
             "Smart Punctuation…",
             ["Type"],
             None,
@@ -30,7 +30,7 @@ pub fn specs() -> Vec<CommandSpec> {
             smart_punctuation
         ),
         cmd!(
-            "type.convertToAreaType",
+            "text.convertToAreaType",
             "Convert To Area Type",
             ["Type"],
             None,
@@ -39,7 +39,7 @@ pub fn specs() -> Vec<CommandSpec> {
             to_area
         ),
         cmd!(
-            "type.convertToPointType",
+            "text.convertToPointType",
             "Convert To Point Type",
             ["Type"],
             None,
@@ -48,7 +48,7 @@ pub fn specs() -> Vec<CommandSpec> {
             to_point
         ),
         cmd!(
-            "type.pathOptions",
+            "text.pathOptions",
             "Type on a Path Options…",
             ["Type", "Type on a Path"],
             None,
@@ -57,7 +57,7 @@ pub fn specs() -> Vec<CommandSpec> {
             path_options
         ),
         cmd!(
-            "type.fillPlaceholder",
+            "text.fillPlaceholder",
             "Fill with Placeholder Text",
             ["Type"],
             None,
@@ -66,7 +66,7 @@ pub fn specs() -> Vec<CommandSpec> {
             fill_placeholder
         ),
         cmd!(
-            "type.insert",
+            "text.insert",
             "Insert Character",
             ["Type"],
             None,
@@ -169,7 +169,7 @@ struct CaseState {
 }
 
 fn change_case(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "type.changeCase";
+    const C: &str = "text.changeCase";
     let case = str_param(p, "case").ok_or_else(|| bad(C, "missing case"))?.to_ascii_lowercase();
     if !["upper", "uppercase", "lower", "lowercase", "title", "sentence"].contains(&case.as_str()) {
         return Err(bad(C, "case must be upper|lower|title|sentence"));
@@ -247,11 +247,11 @@ fn smart_punctuation(s: &mut Session, p: &Value) -> Result<Value> {
         None => None,
         Some(v) => match v.as_str() {
             Some(sc @ ("selection" | "document")) => Some(sc),
-            _ => return Err(bad("type.smartPunctuation", format!("`scope` must be \"selection\" or \"document\", not {v}"))),
+            _ => return Err(bad("text.smartPunctuation", format!("`scope` must be \"selection\" or \"document\", not {v}"))),
         },
     };
     if scope == Some("selection") && st.selection.is_empty() {
-        return Err(bad("type.smartPunctuation", "scope \"selection\": select the text to change"));
+        return Err(bad("text.smartPunctuation", "scope \"selection\": select the text to change"));
     }
     let ids = if scope == Some("document") || st.selection.is_empty() {
         let mut v = vec![];
@@ -271,7 +271,7 @@ fn smart_punctuation(s: &mut Session, p: &Value) -> Result<Value> {
 // ---------- Area / Point conversion ----------
 
 fn to_area(s: &mut Session, p: &Value) -> Result<Value> {
-    let ids = texts(s, p, "type.convertToAreaType")?;
+    let ids = texts(s, p, "text.convertToAreaType")?;
     s.edit("Convert To Area Type", |d, _| {
         for id in &ids {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
@@ -313,7 +313,7 @@ fn locate(runs: &[TextRun], byte: usize) -> Option<(usize, usize)> {
 }
 
 fn to_point(s: &mut Session, p: &Value) -> Result<Value> {
-    let ids = texts(s, p, "type.convertToPointType")?;
+    let ids = texts(s, p, "text.convertToPointType")?;
     s.edit("Convert To Point Type", |d, _| {
         for id in &ids {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
@@ -369,7 +369,7 @@ fn to_point(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(ids_json(&ids))
 }
 
-/// The options `type.pathOptions` sets; with none of them given it queries.
+/// The options `text.pathOptions` sets; with none of them given it queries.
 const PATH_OPTIONS: [&str; 6] = ["start", "end", "flip", "effect", "alignToPath", "spacing"];
 
 /// Type on a path's text, if `n` is type on a path.
@@ -380,7 +380,7 @@ fn path_text(n: Option<&kition_vector_doc::Node>) -> Option<&TextObject> {
     }
 }
 
-/// Type on a Path Options of `t`, as `type.pathOptions` takes them (`flip` is an action: false).
+/// Type on a Path Options of `t`, as `text.pathOptions` takes them (`flip` is an action: false).
 fn path_options_of(t: &TextObject) -> Value {
     let (start, end) = match &t.kind {
         TextKind::OnPath { start, end, .. } => (*start, *end),
@@ -397,7 +397,7 @@ fn path_options_of(t: &TextObject) -> Value {
 }
 
 fn path_options(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "type.pathOptions";
+    const C: &str = "text.pathOptions";
     let ids: Vec<NodeId> = {
         let d = &s.doc()?.doc;
         texts(s, p, C)?.into_iter().filter(|i| path_text(d.node(*i)).is_some()).collect()
@@ -468,7 +468,7 @@ design is settled. Every line is only a stand-in that shows size, rhythm and col
 start as rough drafts like this one. Keep going until the frame is full and the page feels balanced.";
 
 fn fill_placeholder(s: &mut Session, p: &Value) -> Result<Value> {
-    let ids = texts(s, p, "type.fillPlaceholder")?;
+    let ids = texts(s, p, "text.fillPlaceholder")?;
     s.edit("Fill with Placeholder Text", |d, _| {
         for id in &ids {
             if let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) {
@@ -544,7 +544,7 @@ pub(crate) fn special_char(name: &str) -> Option<&'static str> {
 }
 
 fn insert_char(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "type.insert";
+    const C: &str = "text.insert";
     let text = match (str_param(p, "char"), str_param(p, "text")) {
         (Some(c), _) => special_char(c).ok_or_else(|| bad(C, format!("unknown character `{c}`")))?.to_string(),
         (None, Some(t)) => t.to_string(),

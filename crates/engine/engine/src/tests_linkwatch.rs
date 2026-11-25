@@ -1,4 +1,4 @@
-//! Linked files changing while their document is open (`link_watch`): `links.updateChanged`,
+//! Linked files changing while their document is open (`link_watch`): `linkedFile.updateChanged`,
 //! and the background look following Preferences → File Handling → Update Links.
 
 use serde_json::{Value, json};
@@ -37,15 +37,15 @@ fn update_changed_reads_changed_files_again_once() {
     let mut s = session();
     let id = place(&mut s, &path);
     // First look: remembered, nothing to read.
-    assert_eq!(s.execute("links.updateChanged", &json!({})).unwrap()["updated"], json!([]));
+    assert_eq!(s.execute("linkedFile.updateChanged", &json!({})).unwrap()["updated"], json!([]));
     save(&path, &png(40, 40, BLUE));
-    assert_eq!(s.execute("links.updateChanged", &json!({})).unwrap()["updated"], json!([id.0]));
+    assert_eq!(s.execute("linkedFile.updateChanged", &json!({})).unwrap()["updated"], json!([id.0]));
     assert_eq!(colour(&s), BLUE);
     // Undoing it is respected: the link stays modified until the file changes again.
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(colour(&s), RED);
-    assert_eq!(s.execute("links.updateChanged", &json!({})).unwrap()["updated"], json!([]));
-    assert_eq!(s.execute("links.check", &json!({})).unwrap()["modified"], 1);
+    assert_eq!(s.execute("linkedFile.updateChanged", &json!({})).unwrap()["updated"], json!([]));
+    assert_eq!(s.execute("linkedFile.check", &json!({})).unwrap()["modified"], 1);
 }
 
 #[test]

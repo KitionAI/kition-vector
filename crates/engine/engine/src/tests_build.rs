@@ -286,7 +286,7 @@ fn shape_builder_fills_an_area_lines_enclose() {
 #[test]
 fn shape_builder_closes_filled_open_paths() {
     let mut s = session();
-    let r = s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 100, "y": 0}, {"x": 100, "y": 100}]})).unwrap();
+    let r = s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 100, "y": 0}, {"x": 100, "y": 100}]})).unwrap();
     let p = NodeId(r["id"].as_u64().unwrap());
     set_fill(&mut s, p, Color::rgb(0.0, 1.0, 0.0));
     s.execute("select.set", &json!({"ids": [p.0]})).unwrap();

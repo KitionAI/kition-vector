@@ -341,7 +341,7 @@ pub const PREF_SPECS: &[PrefSpec] = &[
     p!("newArtBasic", "General", "Appearance Panel", "New Art Has Basic Appearance", bool),
     // File Handling (continued)
     p!("templatesFolder", "File Handling", "Files", "Templates Folder", text),
-    // Native saves (`document.save {compress}`)
+    // Native saves (`file.save {compress}`)
     p!("useCompression", "File Handling", "Files", "Use Compression", bool),
     // The W/H link of the Transform panel, the Properties panel and the Control bar
     p!("constrainProportions", "General", "Transform Panel", "Constrain Width and Height Proportions", bool),

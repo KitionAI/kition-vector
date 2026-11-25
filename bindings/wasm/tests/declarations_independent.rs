@@ -60,9 +60,9 @@ pub fn fixture() -> (Vec<u8>, Vec<(&'static str, u64)>) {
     let c1 = id(&ex("shape.rectangle", json!({"x": 10, "y": 80, "width": 30, "height": 30})));
     let c2 = id(&ex("shape.ellipse", json!({"x": 50, "y": 80, "width": 30, "height": 30})));
     ex("select.set", json!({"ids": [c1, c2]}));
-    let g = id(&ex("object.group", json!({})));
-    let p = id(&ex("path.create", json!({"anchors": [{"x": 150, "y": 20}, {"x": 200, "y": 60}, {"x": 250, "y": 20}]})));
-    let t = id(&ex("text.create", json!({"x": 20, "y": 200, "text": "Hello"})));
+    let g = id(&ex("arrange.group", json!({})));
+    let p = id(&ex("path.add", json!({"anchors": [{"x": 150, "y": 20}, {"x": 200, "y": 60}, {"x": 250, "y": 20}]})));
+    let t = id(&ex("text.add", json!({"x": 20, "y": 200, "text": "Hello"})));
     ex("graphicStyle.new", json!({"name": "Style 1", "id": e}));
     ex("charStyle.new", json!({"name": "Char 1"}));
     ex("paraStyle.new", json!({"name": "Para 1"}));
@@ -71,7 +71,7 @@ pub fn fixture() -> (Vec<u8>, Vec<(&'static str, u64)>) {
     let pr = id(&ex("shape.rectangle", json!({"x": 300, "y": 100, "width": 20, "height": 20})));
     ex("select.set", json!({"ids": [pr]}));
     ex("object.pattern.make", json!({"name": "Pat", "edit": false}));
-    let ta = id(&ex("text.create", json!({"x": 150, "y": 150, "text": "Area text", "area": {"width": 100, "height": 60}})));
+    let ta = id(&ex("text.add", json!({"x": 150, "y": 150, "text": "Area text", "area": {"width": 100, "height": 60}})));
     let ca = id(&ex("shape.ellipse", json!({"x": 20, "y": 240, "width": 40, "height": 40})));
     let ck = id(&ex("shape.rectangle", json!({"x": 10, "y": 230, "width": 60, "height": 30})));
     ex("select.set", json!({"ids": [ck, ca]}));
@@ -88,8 +88,8 @@ pub fn fixture() -> (Vec<u8>, Vec<(&'static str, u64)>) {
     let r2 = id(&ex("shape.rectangle", json!({"x": 200, "y": 200, "width": 40, "height": 30})));
     ex("artboard.new", json!({"name": "Board 2"}));
     ex("guide.add", json!({"vertical": true, "pos": 100}));
-    let sl = id(&ex("object.slice.create", json!({"x": 0, "y": 0, "width": 50, "height": 50})));
-    let asset = ex("assets.add", json!({"ids": [e]}))["assets"][0].as_u64().unwrap();
+    let sl = id(&ex("object.slice.add", json!({"x": 0, "y": 0, "width": 50, "height": 50})));
+    let asset = ex("asset.add", json!({"ids": [e]}))["assets"][0].as_u64().unwrap();
     ex("variable.define", json!({"name": "V", "kind": "text"}));
     ex("variable.bind", json!({"variable": "V", "ids": [t]}));
     ex("dataset.new", json!({"name": "D1"}));
@@ -99,7 +99,7 @@ pub fn fixture() -> (Vec<u8>, Vec<(&'static str, u64)>) {
     let tree = d.inspect().unwrap();
     let layer1 = tree["layers"].as_array().unwrap().iter().find(|layer| layer["name"] == "Layer 1").unwrap()["id"].as_u64().unwrap();
     let mut children = |id: u64| -> Vec<u64> {
-        let node = d.execute("document.node", json!({ "id": id })).unwrap();
+        let node = d.execute("file.node", json!({ "id": id })).unwrap();
         node["kind"]["children"].as_array().unwrap().iter().map(|child| child["id"].as_u64().unwrap()).collect()
     };
     let (k, b12) = (children(cp), children(b));
@@ -257,7 +257,7 @@ impl Names {
             if NOT_NODES.contains(role) {
                 continue;
             }
-            let node = doc.execute("document.node", json!({ "id": id })).unwrap();
+            let node = doc.execute("file.node", json!({ "id": id })).unwrap();
             let kind = &node["kind"];
             if let Some(list) = kind["children"].as_array().or_else(|| kind["content"].as_array()) {
                 children.insert(*id, list.len());
@@ -562,8 +562,8 @@ fn every_write_rests_on_what_its_handler_reads() {
 /// more for than this path reads (see the guide: where the guard refuses a right write).
 const HELD_MORE: &[(&str, &str, &str, &str)] = &[
     ("object.align", r#"{"horizontal":"left","to":"artboard"}"#, "$R", r#"artboard:1 held (rect), not read"#),
-    ("object.blend.spine.moveAnchor", r#"{"id":"$B","anchor":0,"x":120,"y":110}"#, "", r#"$B2.appearance held, not read"#),
-    ("object.blend.spine.moveAnchor", r#"{"anchor":1,"x":120,"y":110}"#, "$B", r#"$B1.appearance held, not read"#),
+    ("object.blend.moveSpineAnchor", r#"{"id":"$B","anchor":0,"x":120,"y":110}"#, "", r#"$B2.appearance held, not read"#),
+    ("object.blend.moveSpineAnchor", r#"{"anchor":1,"x":120,"y":110}"#, "$B", r#"$B1.appearance held, not read"#),
     ("object.clippingMask.make", r#"{}"#, "$R,$E", r#"$R.appearance held, not read; $R.data held, not read"#),
     ("object.clippingMask.release", r#"{}"#, "$CG", r#"$CA held (data), not read"#),
     ("object.envelope.makeWithTopObject", r#"{"ids":["$R","$E"]}"#, "", r#"$R: holds every field, reads -"#),
@@ -598,7 +598,7 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
     ("object.textWrap.make", r#"{"offset":4}"#, "$CG", r#"$CA held (data), not read; $T held (data,text), not read"#),
     ("object.textWrap.make", r#"{"ids":["$E"]}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
     (
-        "object.ungroup",
+        "arrange.ungroup",
         r#"{}"#,
         "$B",
         r#"$B: holds every field, reads data.type; $B: where it is held, not read; $B1 held (*), not read; $B2 held (*), not read"#,
@@ -626,7 +626,7 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
     ("path.blob", r#"{"points":[[5000,5000],[5010,5000]],"merge":false}"#, "", r#"picks held (data,locked,visible), not read"#),
     ("shaper.scribble", r#"{"ids":["$R","$E"],"points":[[20,20],[60,60]]}"#, "", r#"picks held (data,locked,visible), not read"#),
     ("shaper.scribble", r#"{"points":[[20,20],[60,60]]}"#, "", r#"$R: where it is held, not read"#),
-    ("document.exportForScreens", r#"{"artboards":[1]}"#, "", r#"$AS held (*), not read"#),
+    ("file.exportForScreens", r#"{"artboards":[1]}"#, "", r#"$AS held (*), not read"#),
     ("layer.new", r#"{"top":true,"name":"Top"}"#, "", r#"$L1: where it is held, not read"#),
     ("layer.move", r#"{"ids":["$R"],"target":"$L2","copy":true}"#, "", r#"$R: where it is held, not read"#),
     ("artboard.new", r#"{"x":0,"y":900,"width":100,"height":100,"name":"New"}"#, "", r#"artboard:1 held (rect), not read"#),
@@ -657,8 +657,8 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
         r#"$B1.locked held, not read; $B1.visible held, not read; $B2.locked held, not read; $B2.visible held, not read; $C1.locked held, not read; $C1.visible held, not read; $C2.locked held, not read; $C2.visible held, not read; $CA.locked held, not read; $CA.visible held, not read; $CK.locked held, not read; $CK.visible held, not read; $K1.locked held, not read; $K1.visible held, not read; $K2.locked held, not read; $K2.visible held, not read"#,
     ),
     ("artboard.reorder", r#"{"index":1,"to":0}"#, "", r#"artboard:0 held (*), not read"#),
-    ("document.setup", r#"{"bleed":3}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
-    ("document.setup", r#"{"flattenerPreset":"Low Resolution"}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
+    ("file.setup", r#"{"bleed":3}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
+    ("file.setup", r#"{"flattenerPreset":"Low Resolution"}"#, "", r#"$T held (data,text), not read; $TA held (data,text), not read"#),
     ("file.place", r#"{"path":"/tmp/a.png"}"#, "", r#"$L1: where it is held, not read"#),
     ("file.place", r#"{"path":"/tmp/a.svg","at":[100,100]}"#, "", r#"$L1: where it is held, not read"#),
     ("transparency.set", r#"{"ids":["$R"],"opacity":50}"#, "", r#"drawing held (settings.mask_edit), not read"#),
@@ -677,13 +677,13 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
     ("transparency.unlinkOpacityMask", r#"{"ids":["$E"]}"#, "", r#"drawing held (settings.mask_edit), not read"#),
     ("transparency.linkOpacityMask", r#"{"ids":["$E"]}"#, "", r#"drawing held (settings.mask_edit), not read"#),
     (
-        "type.orientation.vertical",
+        "text.orientation.vertical",
         r#"{"ids":["$L1"]}"#,
         "",
         r#"$B held (data), not read; $B1 held (data), not read; $B2 held (data), not read; $C1 held (data), not read; $C2 held (data), not read; $CA held (data), not read; $CG held (data), not read; $CK held (data), not read; $CP held (data), not read; $E held (data), not read; $G held (data), not read; $K1 held (data), not read; $K2 held (data), not read; $P held (data), not read; $PR held (data), not read; $R held (data), not read; $S held (data), not read"#,
     ),
     (
-        "type.orientation.horizontal",
+        "text.orientation.horizontal",
         r#"{"ids":["$L1"]}"#,
         "",
         r#"$B held (data), not read; $B1 held (data), not read; $B2 held (data), not read; $C1 held (data), not read; $C2 held (data), not read; $CA held (data), not read; $CG held (data), not read; $CK held (data), not read; $CP held (data), not read; $E held (data), not read; $G held (data), not read; $K1 held (data), not read; $K2 held (data), not read; $P held (data), not read; $PR held (data), not read; $R held (data), not read; $S held (data), not read"#,
@@ -727,7 +727,7 @@ const HELD_MORE: &[(&str, &str, &str, &str)] = &[
     ),
     ("library.use", r#"{"kind":"fillColor","item":"Red"}"#, "$R", r#"swatch:Red held (*), not read"#),
     ("imageTrace.setView", r#"{"id":"$G","view":"outlines"}"#, "", r#"$C2 held (data.type), not read"#),
-    ("assets.add", r#"{"ids":["$E"]}"#, "", r#"$E.name held, not read"#),
+    ("asset.add", r#"{"ids":["$E"]}"#, "", r#"$E.name held, not read"#),
     ("appearance.addEffect", r#"(editor state)"#, "", r#"declares mode, not read"#),
     ("appearance.setItem", r#"(editor state)"#, "", r#"declares mode, not read"#),
     ("effect.apply", r#"(editor state)"#, "", r#"declares mode, not read"#),
@@ -768,17 +768,17 @@ const ROWS: &[Row] = &[
             ("$R", "data,appearance", false),
         ],
     ),
-    // object.arrange.bringForward: selected roots, per parent; new index from own index and sibling count.
-    r("object.arrange.bringForward", r#"{}"#, &["$R"], "selection", &[("$R", "-", true), ("children:$L1", "-", false)]),
-    r("object.arrange.bringForward", r#"{}"#, &["$C1"], "selection", &[("$C1", "-", true), ("children:$G", "-", false)]),
-    // object.arrange.bringToFront: selected roots moved to the top of their own parent.
-    r("object.arrange.bringToFront", r#"{}"#, &["$R"], "selection", &[("$R", "-", true), ("children:$L1", "-", false)]),
-    // object.arrange.sendBackward: selected roots one step down in their parent.
-    r("object.arrange.sendBackward", r#"{}"#, &["$B"], "selection", &[("$B", "-", true), ("children:$L1", "-", false)]),
-    // object.arrange.sendToBack: selected roots to the bottom of their parent.
-    r("object.arrange.sendToBack", r#"{}"#, &["$B"], "selection", &[("$B", "-", true), ("children:$L1", "-", false)]),
-    // object.arrange.sendToCurrentLayer: selected roots appended on top of the current layer (active_layer if still a layer, else default layer); no lock check.
-    r("object.arrange.sendToCurrentLayer", r#"{}"#, &["$R2"], "active,selection", &[("$R2", "-", false), ("$L1", "data.type", false)]),
+    // arrange.bringForward: selected roots, per parent; new index from own index and sibling count.
+    r("arrange.bringForward", r#"{}"#, &["$R"], "selection", &[("$R", "-", true), ("children:$L1", "-", false)]),
+    r("arrange.bringForward", r#"{}"#, &["$C1"], "selection", &[("$C1", "-", true), ("children:$G", "-", false)]),
+    // arrange.bringToFront: selected roots moved to the top of their own parent.
+    r("arrange.bringToFront", r#"{}"#, &["$R"], "selection", &[("$R", "-", true), ("children:$L1", "-", false)]),
+    // arrange.sendBackward: selected roots one step down in their parent.
+    r("arrange.sendBackward", r#"{}"#, &["$B"], "selection", &[("$B", "-", true), ("children:$L1", "-", false)]),
+    // arrange.sendToBack: selected roots to the bottom of their parent.
+    r("arrange.sendToBack", r#"{}"#, &["$B"], "selection", &[("$B", "-", true), ("children:$L1", "-", false)]),
+    // arrange.sendToCurrentLayer: selected roots appended on top of the current layer (active_layer if still a layer, else default layer); no lock check.
+    r("arrange.sendToCurrentLayer", r#"{}"#, &["$R2"], "active,selection", &[("$R2", "-", false), ("$L1", "data.type", false)]),
     // object.blend.expand: selected blends (or their contents' blend) replaced in place by a group of steps keeping every own field.
     r(
         "object.blend.expand",
@@ -830,48 +830,48 @@ const ROWS: &[Row] = &[
         "selection",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data,appearance", false), ("$B2", "data,appearance", false)],
     ),
-    // object.blend.spine.addAnchor: blend by id (else first selected blend); spine pinned from the keys' centres, anchor inserted.
+    // object.blend.addSpineAnchor: blend by id (else first selected blend); spine pinned from the keys' centres, anchor inserted.
     r(
-        "object.blend.spine.addAnchor",
+        "object.blend.addSpineAnchor",
         r#"{"id":"$B","x":100,"y":100}"#,
         &[],
         "",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data", false), ("$B2", "data", false)],
     ),
     r(
-        "object.blend.spine.addAnchor",
+        "object.blend.addSpineAnchor",
         r#"{"x":100,"y":100}"#,
         &["$B"],
         "selection",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data", false), ("$B2", "data", false)],
     ),
-    // object.blend.spine.moveAnchor: blend by id (else selected); moves the spine point and the key sitting on it (anchor 0 = $B1); with handle only the handle.
+    // object.blend.moveSpineAnchor: blend by id (else selected); moves the spine point and the key sitting on it (anchor 0 = $B1); with handle only the handle.
     r(
-        "object.blend.spine.moveAnchor",
+        "object.blend.moveSpineAnchor",
         r#"{"id":"$B","anchor":0,"x":120,"y":110}"#,
         &[],
         "",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data,appearance", false), ("$B2", "data", false)],
     ),
     r(
-        "object.blend.spine.moveAnchor",
+        "object.blend.moveSpineAnchor",
         r#"{"id":"$B","anchor":0,"x":120,"y":110,"handle":"out"}"#,
         &[],
         "",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data", false), ("$B2", "data", false)],
     ),
     r(
-        "object.blend.spine.moveAnchor",
+        "object.blend.moveSpineAnchor",
         r#"{"anchor":1,"x":120,"y":110}"#,
         &["$B"],
         "selection",
         &[("$B", "data", false), ("children:$B", "-", false), ("$B1", "data", false), ("$B2", "data,appearance", false)],
     ),
-    // object.blend.spine.removeAnchor: blend by id (else selected); removes a spine point no key sits on.
+    // object.blend.removeSpineAnchor: blend by id (else selected); removes a spine point no key sits on.
     // UNSURE: on the fixture's straight two-point spine both points carry keys, so this errors; holds are what it reads.
     // Pinned after review: the reading's rows give the target; without it the handler takes the selection (the reading's own defect note: a missing or non-integer id falls back to it; the earlier table check, tests/table_check.rs), so `selection` is read.
     p(
-        "object.blend.spine.removeAnchor",
+        "object.blend.removeSpineAnchor",
         r#"{"id":"$B","anchor":1}"#,
         &[],
         "selection",
@@ -919,20 +919,20 @@ const ROWS: &[Row] = &[
         "selection",
         &[("$CP", "*", false), ("children:$CP", "-", false), ("$K1", "appearance", false), ("$K2", "appearance", false)],
     ),
-    // object.createObjectMosaic: first selected image (selection order); reads its pixels and bounds; tiles group above it.
+    // object.addObjectMosaic: first selected image (selection order); reads its pixels and bounds; tiles group above it.
     // UNSURE: the fixture has no image; the command is disabled (select an image). Holds = the kind check.
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
-    p("object.createObjectMosaic", r#"{"columns":4,"rows":4}"#, &["$R"], "mode,selection", &[("$R", "data.type", false)]),
-    // object.createTrimMarks: nothing selected -> every artboard's rect, else the selection's visual bounds; style from prefs unless given; groups appended to the current/insertion layer.
+    p("object.addObjectMosaic", r#"{"columns":4,"rows":4}"#, &["$R"], "mode,selection", &[("$R", "data.type", false)]),
+    // object.addTrimMarks: nothing selected -> every artboard's rect, else the selection's visual bounds; style from prefs unless given; groups appended to the current/insertion layer.
     r(
-        "object.createTrimMarks",
+        "object.addTrimMarks",
         r#"{}"#,
         &[],
         "active,mode,selection",
         &[("artboard:0", "rect", false), ("artboard:1", "rect", false), ("~artboards", "-", false), ("$L1", "visible,locked", false)],
     ),
     r(
-        "object.createTrimMarks",
+        "object.addTrimMarks",
         r#"{"style":"roman"}"#,
         &["$R"],
         "active,selection",
@@ -1046,9 +1046,9 @@ const ROWS: &[Row] = &[
             ("$L1", "visible,locked", false),
         ],
     ),
-    // object.group: selected roots moved, paint order, into a new group where the topmost was.
-    r("object.group", r#"{}"#, &["$R", "$E"], "selection", &[("$R", "-", true), ("$E", "-", true)]),
-    r("object.group", r#"{}"#, &["$R2", "$R"], "selection", &[("$R2", "-", true), ("$R", "-", true)]),
+    // arrange.group: selected roots moved, paint order, into a new group where the topmost was.
+    r("arrange.group", r#"{}"#, &["$R", "$E"], "selection", &[("$R", "-", true), ("$E", "-", true)]),
+    r("arrange.group", r#"{}"#, &["$R2", "$R"], "selection", &[("$R2", "-", true), ("$R", "-", true)]),
     // object.hide: selected roots' visible flag set false (the root only).
     r("object.hide", r#"{}"#, &["$R"], "selection", &[("$R", "visible", false)]),
     r("object.hide", r#"{}"#, &["$G"], "selection", &[("$G", "visible", false)]),
@@ -1136,10 +1136,10 @@ const ROWS: &[Row] = &[
     // object.mesh.addLine: gradient mesh (or mesh envelope) by id; a row and column added.
     // UNSURE: no mesh in the fixture: error "not a gradient mesh". Holds = the kind check.
     r("object.mesh.addLine", r#"{"id":"$E","x":10,"y":10}"#, &[], "", &[("$E", "data.type", false)]),
-    // object.mesh.create: ids or selected roots that are paths/compounds replaced in place by a mesh in their fill colour (keeps id, name, opacity, blend, locked, visible).
-    r("object.mesh.create", r#"{"ids":["$E"]}"#, &[], "", &[("$E", "*", false)]),
+    // object.mesh.add: ids or selected roots that are paths/compounds replaced in place by a mesh in their fill colour (keeps id, name, opacity, blend, locked, visible).
+    r("object.mesh.add", r#"{"ids":["$E"]}"#, &[], "", &[("$E", "*", false)]),
     r(
-        "object.mesh.create",
+        "object.mesh.add",
         r#"{"rows":2,"cols":2}"#,
         &["$CP"],
         "selection",
@@ -1541,8 +1541,8 @@ const ROWS: &[Row] = &[
     // UNSURE: the fixture has one slice only (fails); `on` assumed to select slices.
     // Pinned after review: `on` takes objects, not slices (the host refuses `$SL` there); the row acts on the slice selection, empty in the fixture.
     p("object.slice.combine", r#"{}"#, &[], "selection", &[]),
-    // object.slice.create: a new user slice over the rectangle given; selects it.
-    r("object.slice.create", r#"{"x":0,"y":0,"width":50,"height":50}"#, &[], "", &[]),
+    // object.slice.add: a new user slice over the rectangle given; selects it.
+    r("object.slice.add", r#"{"x":0,"y":0,"width":50,"height":50}"#, &[], "", &[]),
     // object.slice.delete: `slices` param (all must be slices) else the selected slices; user slices removed, object slices released.
     r("object.slice.delete", r#"{"slices":["$SL"]}"#, &[], "", &[("$SL", "*", false)]),
     // UNSURE: `on` assumed to put the slice in the slice selection.
@@ -1647,16 +1647,16 @@ const ROWS: &[Row] = &[
         &[("$R", "data,appearance,props.bbox_angle", true), ("$E", "data,appearance,props.bbox_angle", true)],
     ),
     r("object.transformEach", r#"{"scaleH":50,"copy":true}"#, &["$R"], "mode,selection", &[("$R", "*", true)]),
-    // object.ungroup: selected_roots; plain/clip groups removed and their children put in their place (opacity multiplied); other objects kept.
-    r("object.ungroup", r#"{}"#, &["$G"], "selection", &[("$G", "*", true), ("children:$G", "-", false), ("$C1", "*", false), ("$C2", "*", false)]),
+    // arrange.ungroup: selected_roots; plain/clip groups removed and their children put in their place (opacity multiplied); other objects kept.
+    r("arrange.ungroup", r#"{}"#, &["$G"], "selection", &[("$G", "*", true), ("children:$G", "-", false), ("$C1", "*", false), ("$C2", "*", false)]),
     r(
-        "object.ungroup",
+        "arrange.ungroup",
         r#"{}"#,
         &["$CG"],
         "selection",
         &[("$CG", "*", true), ("children:$CG", "-", false), ("$CK", "*", false), ("$CA", "*", false)],
     ),
-    r("object.ungroup", r#"{}"#, &["$B"], "selection", &[("$B", "data.type", false)]),
+    r("arrange.ungroup", r#"{}"#, &["$B"], "selection", &[("$B", "data.type", false)]),
     // object.unlockAll: every non-layer node; locked ones unlocked and selected.
     r("object.unlockAll", r#"{}"#, &[], "", &[("$ALL", "locked", false)]),
     // object.vectorHalftone: selected_roots rendered whole and sampled; dots group where the topmost was; roots removed unless keepOriginal.
@@ -1682,8 +1682,8 @@ const ROWS: &[Row] = &[
     r("shape.rectangularGrid", r#"{"x":0,"y":0,"width":100,"height":100}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
     // shape.polarGrid: as shape.rectangularGrid.
     r("shape.polarGrid", r#"{"x":0,"y":0,"width":100,"height":100}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
-    // path.create: new art from anchors/d, as shape.rectangle.
-    r("path.create", r#"{"anchors":[{"x":0,"y":0},{"x":50,"y":50}]}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
+    // path.add: new art from anchors/d, as shape.rectangle.
+    r("path.add", r#"{"anchors":[{"x":0,"y":0},{"x":50,"y":50}]}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
     // path.appendAnchor: path by id; reads whether its last subpath is open, appends (geometry only).
     r("path.appendAnchor", r#"{"id":"$P","x":300,"y":300}"#, &[], "", &[("$P", "data", false)]),
     // path.close: path by id; closes its last open subpath.
@@ -2152,10 +2152,10 @@ const ROWS: &[Row] = &[
             ("swatch:Brand", "*", false),
         ],
     ),
-    // edit.clear: `ids` (checked; layers dropped, descendants of listed ancestors dropped) else the selection (anchors → delete anchors; nothing → selected guides); deletes each whole.
-    r("edit.clear", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "*", false)]),
-    r("edit.clear", r#"{}"#, &["$R"], "selection", &[("$R", "*", false)]),
-    r("edit.clear", r#"{}"#, &["$G"], "selection", &[("$G", "*", false), ("children:$G", "-", false), ("$C1", "*", false), ("$C2", "*", false)]),
+    // edit.delete: `ids` (checked; layers dropped, descendants of listed ancestors dropped) else the selection (anchors → delete anchors; nothing → selected guides); deletes each whole.
+    r("edit.delete", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "*", false)]),
+    r("edit.delete", r#"{}"#, &["$R"], "selection", &[("$R", "*", false)]),
+    r("edit.delete", r#"{}"#, &["$G"], "selection", &[("$G", "*", false), ("children:$G", "-", false), ("$C1", "*", false), ("$C2", "*", false)]),
     // edit.duplicate: selection roots; each copied whole just above itself (its parent and index), offset dx/dy.
     r("edit.duplicate", r#"{"dx":10,"dy":0}"#, &["$R"], "selection", &[("$R", "*", true)]),
     r("edit.duplicate", r#"{}"#, &["$G"], "selection", &[("$G", "*", true), ("children:$G", "-", false), ("$C1", "*", false), ("$C2", "*", false)]),
@@ -2504,12 +2504,12 @@ const ROWS: &[Row] = &[
     r("paint.freeform.splitLine", r#"{"line":0,"segment":0}"#, &["$R"], "mode,selection", &[("$R", "appearance,data", false)]),
     // paint.freeform.selectPoint: session state only; checks the index against the freeform gradient behind the active proxy of the first selected object.
     r("paint.freeform.selectPoint", r#"{"index":0}"#, &["$R"], "mode,selection", &[("$R", "appearance", false)]),
-    // attributes.set: url/note/imageMap/showCenter on targets() (ids/id/selection.objects), attrs read and set whole (show-centre default by kind); overprint flags on the item / paint leaves.
-    r("attributes.set", r#"{"note":"n"}"#, &["$R"], "selection", &[("$R", "props.attrs", false)]),
-    r("attributes.set", r#"{"ids":["$R"],"url":"u"}"#, &[], "", &[("$R", "props.attrs", false)]),
-    r("attributes.set", r#"{"showCenter":true}"#, &["$R"], "selection", &[("$R", "props.attrs,data.type", false)]),
+    // attribute.set: url/note/imageMap/showCenter on targets() (ids/id/selection.objects), attrs read and set whole (show-centre default by kind); overprint flags on the item / paint leaves.
+    r("attribute.set", r#"{"note":"n"}"#, &["$R"], "selection", &[("$R", "props.attrs", false)]),
+    r("attribute.set", r#"{"ids":["$R"],"url":"u"}"#, &[], "", &[("$R", "props.attrs", false)]),
+    r("attribute.set", r#"{"showCenter":true}"#, &["$R"], "selection", &[("$R", "props.attrs,data.type", false)]),
     r(
-        "attributes.set",
+        "attribute.set",
         r#"{"overprintFill":true}"#,
         &["$G"],
         "selection",
@@ -2577,13 +2577,13 @@ const ROWS: &[Row] = &[
             ("$AS", "*", false),
         ],
     ),
-    // document.setUnits: compares and sets the document's units.
-    r("document.setUnits", r#"{"units":"Millimeters"}"#, &[], "", &[("drawing", "settings.units", false)]),
-    // document.open: reads a file into a new document (prefs updateLinks; Untitled-N for templates); no open document read.
-    r("document.open", r#"{"path":"/tmp/in.kvector"}"#, &[], "mode", &[]),
-    // document.exportForScreens: renders the chosen artboards (default all) / assets / whole document and stores the params whole as the document's export settings (not an undo step).
+    // file.setUnits: compares and sets the document's units.
+    r("file.setUnits", r#"{"units":"Millimeters"}"#, &[], "", &[("drawing", "settings.units", false)]),
+    // file.open: reads a file into a new document (prefs updateLinks; Untitled-N for templates); no open document read.
+    r("file.open", r#"{"path":"/tmp/in.kvector"}"#, &[], "mode", &[]),
+    // file.exportForScreens: renders the chosen artboards (default all) / assets / whole document and stores the params whole as the document's export settings (not an undo step).
     r(
-        "document.exportForScreens",
+        "file.exportForScreens",
         r#"{}"#,
         &[],
         "",
@@ -2611,14 +2611,14 @@ const ROWS: &[Row] = &[
         ],
     ),
     r(
-        "document.exportForScreens",
+        "file.exportForScreens",
         r#"{"assets":["$AS"]}"#,
         &[],
         "",
         &[("$AS", "*", false), ("$E", "*", false), ("drawing", "settings.export_settings,settings.setup", false)],
     ),
     r(
-        "document.exportForScreens",
+        "file.exportForScreens",
         r#"{"artboards":[1]}"#,
         &[],
         "",
@@ -2642,15 +2642,15 @@ const ROWS: &[Row] = &[
     // command.batch: runs its steps as one undo step; it rests on the union of what its steps rest on (here: one units step; one rename step).
     r(
         "command.batch",
-        r#"{"commands":[{"command":"document.setUnits","params":{"units":"Millimeters"}}]}"#,
+        r#"{"commands":[{"command":"file.setUnits","params":{"units":"Millimeters"}}]}"#,
         &[],
         "",
         &[("drawing", "settings.units", false)],
     ),
     r("command.batch", r#"{"commands":[{"command":"layer.setProps","params":{"ids":["$R"],"name":"Box"}}]}"#, &[], "", &[("$R", "name", false)]),
-    // document.save: encodes the whole active document (with session view, open Layers rows, compression pref); a save to a path stamps File Info modified (and created if none).
+    // file.save: encodes the whole active document (with session view, open Layers rows, compression pref); a save to a path stamps File Info modified (and created if none).
     r(
-        "document.save",
+        "file.save",
         r#"{"path":"/tmp/out.kvector"}"#,
         &[],
         "mode",
@@ -2678,7 +2678,7 @@ const ROWS: &[Row] = &[
         ],
     ),
     r(
-        "document.save",
+        "file.save",
         r#"{}"#,
         &[],
         "mode",
@@ -2705,7 +2705,7 @@ const ROWS: &[Row] = &[
             ("$AS", "*", false),
         ],
     ),
-    // file.saveAs: as document.save to a path; the document takes the new path/format.
+    // file.saveAs: as file.save to a path; the document takes the new path/format.
     r(
         "file.saveAs",
         r#"{"path":"/tmp/out2.kvector"}"#,
@@ -3213,12 +3213,12 @@ const ROWS: &[Row] = &[
         ],
     ),
     r("artboard.rearrange", r#"{"moveArtwork":false}"#, &[], "", &[("~artboards", "*", false), ("drawing", "guides", false)]),
-    // document.rasterEffectsSettings: copies ppi and the raster settings, applies the given keys, writes both back whole when they differ; colorModel reads the colour mode. No params: query.
+    // file.rasterEffectsSettings: copies ppi and the raster settings, applies the given keys, writes both back whole when they differ; colorModel reads the colour mode. No params: query.
     // Pinned after review: C8-vector-engine-2: rasterfx.rs:114-125 now writes only the keys given (resolution: settings.raster_effects_ppi).
-    p("document.rasterEffectsSettings", r#"{"resolution":"high"}"#, &[], "", &[("drawing", "settings.raster_effects_ppi", false)]),
+    p("file.rasterEffectsSettings", r#"{"resolution":"high"}"#, &[], "", &[("drawing", "settings.raster_effects_ppi", false)]),
     // Pinned after review: C8-vector-engine-2: rasterfx.rs:114-126 now writes only the keys given (colorModel, checked against the colour mode).
     p(
-        "document.rasterEffectsSettings",
+        "file.rasterEffectsSettings",
         r#"{"colorModel":"grayscale"}"#,
         &[],
         "",
@@ -3339,9 +3339,9 @@ const ROWS: &[Row] = &[
         ],
     ),
     r("file.documentColorMode", r#"{"mode":"cmyk","convert":false}"#, &[], "", &[("drawing", "settings.color_mode", false)]),
-    // file.info: copies title and metadata, applies the given fields, writes both back whole when they differ. No params: query.
+    // file.setInfo: copies title and metadata, applies the given fields, writes both back whole when they differ. No params: query.
     // Pinned after review: C8-vector-engine-2: fileinfo.rs:58 now writes only the keys given (author: settings.metadata.author).
-    p("file.info", r#"{"author":"Ann"}"#, &[], "", &[("drawing", "settings.metadata.author", false)]),
+    p("file.setInfo", r#"{"author":"Ann"}"#, &[], "", &[("drawing", "settings.metadata.author", false)]),
     // artboard.reorder: removes artboard index (positional) and inserts it at `to` (clamped) in the artboards' list.
     r("artboard.reorder", r#"{"index":1,"to":0}"#, &[], "", &[("artboard:1", "*", true), ("~artboards", "*", false)]),
     // artboard.duplicate: index, else the Artboard tool's active artboard (else 0); art, else the tool's moveArt option (default true); a copy right of the rightmost artboard, named '<name>' or '<name> copy…' by the names taken, with copies of its guides and of the art fully inside it (each just above its original).
@@ -3398,9 +3398,9 @@ const ROWS: &[Row] = &[
     // artboard.cut: artboard.copy, then deletes the artboard, its guides and that art (not the only artboard).
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
     p("artboard.cut", r#"{"index":1,"art":false}"#, &[], "mode", &[("artboard:1", "*", true), ("drawing", "guides", false)]),
-    // document.exportPdf: encodes the whole document (preset from prefs; preserveEditing carries the native document); no write to the document.
+    // file.exportPdf: encodes the whole document (preset from prefs; preserveEditing carries the native document); no write to the document.
     r(
-        "document.exportPdf",
+        "file.exportPdf",
         r#"{"path":"/tmp/o.pdf"}"#,
         &[],
         "mode",
@@ -3427,18 +3427,18 @@ const ROWS: &[Row] = &[
             ("$AS", "*", false),
         ],
     ),
-    // document.setup: copies setup and units, applies the given keys, writes both back whole; script size changes restamp text runs using them and character styles.
+    // file.setup: copies setup and units, applies the given keys, writes both back whole; script size changes restamp text runs using them and character styles.
     // Pinned after review: C8-vector-engine-2: docsetup.rs:72-74 now writes only the keys given (bleed: settings.setup.bleed).
-    p("document.setup", r#"{"bleed":3}"#, &[], "", &[("drawing", "settings.setup.bleed", false)]),
+    p("file.setup", r#"{"bleed":3}"#, &[], "", &[("drawing", "settings.setup.bleed", false)]),
     r(
-        "document.setup",
+        "file.setup",
         r#"{"superscript":{"size":50}}"#,
         &[],
         "",
         &[("drawing", "settings.setup,settings.units", false), ("$T", "data", false), ("$TA", "data", false), ("~charStyles", "*", false)],
     ),
     // Pinned after review: C8-vector-engine-2: docsetup.rs:72-74 now writes only the keys given (settings.setup.flattenerPreset).
-    p("document.setup", r#"{"flattenerPreset":"Low Resolution"}"#, &[], "mode", &[("drawing", "settings.setup.flattenerPreset", false)]),
+    p("file.setup", r#"{"flattenerPreset":"Low Resolution"}"#, &[], "mode", &[("drawing", "settings.setup.flattenerPreset", false)]),
     // file.newPresets.save: preset into the preferences (from a preset or default settings); no document.
     r("file.newPresets.save", r#"{"name":"Mine","width":300,"height":300}"#, &[], "mode", &[]),
     // file.newPresets.delete: removes a saved preset from the preferences by name.
@@ -3460,9 +3460,9 @@ const ROWS: &[Row] = &[
         "active",
         &[("artboard:0", "rect", true), ("$L1", "-", true), ("$L2", "-", false)],
     ),
-    // document.exportDxf: document.export as DXF of the whole document (one drawing per artboard by default); selectedOnly: the selected roots in their layers.
+    // file.exportDxf: file.export as DXF of the whole document (one drawing per artboard by default); selectedOnly: the selected roots in their layers.
     r(
-        "document.exportDxf",
+        "file.exportDxf",
         r#"{"path":"/tmp/o.dxf"}"#,
         &[],
         "",
@@ -3490,15 +3490,15 @@ const ROWS: &[Row] = &[
         ],
     ),
     r(
-        "document.exportDxf",
+        "file.exportDxf",
         r#"{"path":"/tmp/o.dxf","selectedOnly":true}"#,
         &["$R"],
         "selection",
         &[("$R", "*", false), ("$L1", "*", false), ("~artboards", "*", false), ("drawing", "settings.units", false)],
     ),
-    // document.exportEps: document.export as EPS of the whole document (carries the native document); prefs flattener presets.
+    // file.exportEps: file.export as EPS of the whole document (carries the native document); prefs flattener presets.
     r(
-        "document.exportEps",
+        "file.exportEps",
         r#"{"path":"/tmp/o.eps"}"#,
         &[],
         "mode",
@@ -3620,9 +3620,9 @@ const ROWS: &[Row] = &[
     r("file.recovery.restore", r#"{}"#, &[], "", &[]),
     // file.recovery.discard: deletes copies from the recovery store.
     r("file.recovery.discard", r#"{}"#, &[], "", &[]),
-    // document.exportForWeb: renders artboard 0 (default clipToArtboard) and its slices, File Info as metadata; no write to the document.
+    // file.exportForWeb: renders artboard 0 (default clipToArtboard) and its slices, File Info as metadata; no write to the document.
     r(
-        "document.exportForWeb",
+        "file.exportForWeb",
         r#"{"path":"/tmp/w.gif"}"#,
         &[],
         "",
@@ -3645,7 +3645,7 @@ const ROWS: &[Row] = &[
         ],
     ),
     r(
-        "document.exportForWeb",
+        "file.exportForWeb",
         r#"{"path":"/tmp/w.gif","slices":"selected"}"#,
         &["$R"],
         "selection",
@@ -3734,9 +3734,9 @@ const ROWS: &[Row] = &[
             ("~artboards", "*", false),
         ],
     ),
-    // text.create: new type at top of the insertion parent (isolation, else the current layer if editable, else the topmost editable layer); fill from session paint, Auto Size pref, interface language.
-    r("text.create", r#"{"x":10,"y":50,"text":"New"}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
-    r("text.create", r#"{"x":10,"y":50,"text":"New","area":{"width":100,"height":50}}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
+    // text.add: new type at top of the insertion parent (isolation, else the current layer if editable, else the topmost editable layer); fill from session paint, Auto Size pref, interface language.
+    r("text.add", r#"{"x":10,"y":50,"text":"New"}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
+    r("text.add", r#"{"x":10,"y":50,"text":"New","area":{"width":100,"height":50}}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
     // transparency.set: ids -> object.setProps on each (opacity/blend/isolate/knockout whole fields); selection -> mask-edit object else selection subjects, opacity/blend to the Appearance panel's active item if any.
     r("transparency.set", r#"{"ids":["$R"],"opacity":50}"#, &[], "", &[("$R", "props.opacity", false)]),
     r("transparency.set", r#"{"ids":["$G"],"blend":"multiply","isolate":true}"#, &[], "", &[("$G", "props.blend,props.isolate", false)]),
@@ -3789,12 +3789,12 @@ const ROWS: &[Row] = &[
     // transparency.togglePageKnockoutGroup: value given or the negation of the current flag.
     r("transparency.togglePageKnockoutGroup", r#"{}"#, &[], "", &[("drawing", "settings.page_knockout", false)]),
     r("transparency.togglePageKnockoutGroup", r#"{"value":true}"#, &[], "", &[("drawing", "settings.page_knockout", false)]),
-    // type.orientation.vertical: text among ids/selection and their descendants; sets vertical and lays out again (needs a selection even with ids).
-    r("type.orientation.vertical", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
-    r("type.orientation.vertical", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
+    // text.orientation.vertical: text among ids/selection and their descendants; sets vertical and lays out again (needs a selection even with ids).
+    r("text.orientation.vertical", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
+    r("text.orientation.vertical", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
     // Pinned after review: the reading gave `ids` and `on` together (the engine refuses `ids` with nothing selected, a defect); a host refuses a step with both, so the row gives `ids` alone.
     p(
-        "type.orientation.vertical",
+        "text.orientation.vertical",
         r#"{"ids":["$L1"]}"#,
         &[],
         "",
@@ -3808,12 +3808,12 @@ const ROWS: &[Row] = &[
             ("$TA", "data", false),
         ],
     ),
-    // type.orientation.horizontal: text among ids/selection and their descendants; sets vertical and lays out again (needs a selection even with ids).
-    r("type.orientation.horizontal", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
-    r("type.orientation.horizontal", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
+    // text.orientation.horizontal: text among ids/selection and their descendants; sets vertical and lays out again (needs a selection even with ids).
+    r("text.orientation.horizontal", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
+    r("text.orientation.horizontal", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
     // Pinned after review: the reading gave `ids` and `on` together (the engine refuses `ids` with nothing selected, a defect); a host refuses a step with both, so the row gives `ids` alone.
     p(
-        "type.orientation.horizontal",
+        "text.orientation.horizontal",
         r#"{"ids":["$L1"]}"#,
         &[],
         "",
@@ -3827,8 +3827,8 @@ const ROWS: &[Row] = &[
             ("$TA", "data", false),
         ],
     ),
-    // type.createOutlines: selection roots; each text (or text inside a root) replaced by a group of glyph outlines at its parent/index, carrying opacity/blend/name.
-    r("type.createOutlines", r#"{}"#, &["$T"], "selection", &[("$T", "*", true)]),
+    // text.convertToOutlines: selection roots; each text (or text inside a root) replaced by a group of glyph outlines at its parent/index, carrying opacity/blend/name.
+    r("text.convertToOutlines", r#"{}"#, &["$T"], "selection", &[("$T", "*", true)]),
     // text.setText: text among ids/selection (descendants); replaces runs and paragraphs keeping the first run's and paragraph's style.
     r("text.setText", r#"{"ids":["$T"],"text":"Bye"}"#, &[], "", &[("$T", "data", false)]),
     r("text.setText", r#"{"text":"Bye"}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
@@ -3861,12 +3861,12 @@ const ROWS: &[Row] = &[
             ("$TA", "data", false),
         ],
     ),
-    // type.changeCase: text among ids/selection (descendants); rewrites non-inline run text.
-    r("type.changeCase", r#"{"ids":["$T"],"case":"upper"}"#, &["$T"], "", &[("$T", "data", false)]),
-    r("type.changeCase", r#"{"case":"lower"}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
-    // type.smartPunctuation: nothing selected or scope document -> every text in the document; else the selection's text; quotes from Document Setup.
+    // text.changeCase: text among ids/selection (descendants); rewrites non-inline run text.
+    r("text.changeCase", r#"{"ids":["$T"],"case":"upper"}"#, &["$T"], "", &[("$T", "data", false)]),
+    r("text.changeCase", r#"{"case":"lower"}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
+    // text.smartPunctuation: nothing selected or scope document -> every text in the document; else the selection's text; quotes from Document Setup.
     r(
-        "type.smartPunctuation",
+        "text.smartPunctuation",
         r#"{}"#,
         &[],
         "selection",
@@ -3883,40 +3883,40 @@ const ROWS: &[Row] = &[
             ("children:$B", "-", false),
         ],
     ),
-    r("type.smartPunctuation", r#"{"quotes":false}"#, &["$T"], "selection", &[("$T", "data", false)]),
-    // type.convertToAreaType: point type among ids/selection (others skipped); frame from its layout bounds.
-    r("type.convertToAreaType", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
-    r("type.convertToAreaType", r#"{}"#, &["$T"], "selection", &[("$T", "data", false)]),
-    // type.convertToPointType: area type among ids/selection (others skipped); soft wraps become breaks, origin from the first line.
-    r("type.convertToPointType", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
-    r("type.convertToPointType", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
-    // type.pathOptions: type on a path among ids/selection (others skipped); sets the given options. Fixture has none: errors.
+    r("text.smartPunctuation", r#"{"quotes":false}"#, &["$T"], "selection", &[("$T", "data", false)]),
+    // text.convertToAreaType: point type among ids/selection (others skipped); frame from its layout bounds.
+    r("text.convertToAreaType", r#"{"ids":["$T"]}"#, &["$T"], "", &[("$T", "data", false)]),
+    r("text.convertToAreaType", r#"{}"#, &["$T"], "selection", &[("$T", "data", false)]),
+    // text.convertToPointType: area type among ids/selection (others skipped); soft wraps become breaks, origin from the first line.
+    r("text.convertToPointType", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
+    r("text.convertToPointType", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
+    // text.pathOptions: type on a path among ids/selection (others skipped); sets the given options. Fixture has none: errors.
     // UNSURE: no type on a path in the fixture; the row fails, it only shows what is read
-    r("type.pathOptions", r#"{"spacing":5}"#, &["$T"], "selection", &[("$T", "data", false)]),
-    // type.fillPlaceholder: text among ids/selection; runs replaced by placeholder text in the first style (area: sized from the frame).
-    r("type.fillPlaceholder", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
-    r("type.fillPlaceholder", r#"{}"#, &["$T"], "selection", &[("$T", "data", false)]),
-    // type.insert: text among ids/selection; appends the character to the last run (own run after an inline graphic).
-    r("type.insert", r#"{"ids":["$T"],"char":"bullet"}"#, &["$T"], "", &[("$T", "data", false)]),
-    r("type.insert", r#"{"text":"!"}"#, &["$T"], "selection", &[("$T", "data", false)]),
+    r("text.pathOptions", r#"{"spacing":5}"#, &["$T"], "selection", &[("$T", "data", false)]),
+    // text.fillPlaceholder: text among ids/selection; runs replaced by placeholder text in the first style (area: sized from the frame).
+    r("text.fillPlaceholder", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
+    r("text.fillPlaceholder", r#"{}"#, &["$T"], "selection", &[("$T", "data", false)]),
+    // text.insert: text among ids/selection; appends the character to the last run (own run after an inline graphic).
+    r("text.insert", r#"{"ids":["$T"],"char":"bullet"}"#, &["$T"], "", &[("$T", "data", false)]),
+    r("text.insert", r#"{"text":"!"}"#, &["$T"], "selection", &[("$T", "data", false)]),
     // text.editRange: text by id; replaces bytes start..end (inserted text takes the replaced text's style).
     r("text.editRange", r#"{"id":"$T","start":0,"end":1,"insert":"J"}"#, &[], "", &[("$T", "data", false)]),
     // text.setRangeStyle: id, else the one selected text; styles start..end; position/smallCaps sizes from Document Setup; missing-glyph pref.
     r("text.setRangeStyle", r#"{"id":"$T","start":0,"end":2,"size":30}"#, &[], "", &[("$T", "data", false)]),
     r("text.setRangeStyle", r#"{"position":"superscript"}"#, &["$T"], "selection", &[("drawing", "settings.setup", false), ("$T", "data", false)]),
-    // text.createInPath: the path by id becomes area/on-path type (removed and replaced at its parent/index, keeping opacity and name); style from session paint, prefs, language.
-    r("text.createInPath", r#"{"path":"$P","mode":"onPath","text":"On"}"#, &[], "mode", &[("$P", "*", true)]),
-    r("text.createInPath", r#"{"path":"$R","mode":"area","text":"In"}"#, &[], "mode", &[("$R", "*", true)]),
-    // type.fitHeadline: area type directly among ids/selection (no group expansion); tracks the first paragraph to its first line's width.
-    r("type.fitHeadline", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
-    r("type.fitHeadline", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
-    // type.step: id (range, default all) else the Type tool's range else the selection's text; increments from preferences.
-    r("type.step", r#"{"attribute":"size","id":"$T"}"#, &[], "mode", &[("$T", "data", false)]),
-    r("type.step", r#"{"attribute":"tracking","by":-2}"#, &["$TA"], "mode,selection", &[("$TA", "data", false)]),
-    // type.size.increase: type.step size without id: Type tool range else the selection's text (ids/id ignored); prefs increment.
-    r("type.size.increase", r#"{}"#, &["$T"], "mode,selection", &[("$T", "data", false)]),
-    // type.size.decrease: as increase, by -by.
-    r("type.size.decrease", r#"{"by":2}"#, &["$T"], "mode,selection", &[("$T", "data", false)]),
+    // text.addInPath: the path by id becomes area/on-path type (removed and replaced at its parent/index, keeping opacity and name); style from session paint, prefs, language.
+    r("text.addInPath", r#"{"path":"$P","mode":"onPath","text":"On"}"#, &[], "mode", &[("$P", "*", true)]),
+    r("text.addInPath", r#"{"path":"$R","mode":"area","text":"In"}"#, &[], "mode", &[("$R", "*", true)]),
+    // text.fitHeadlineSelection: area type directly among ids/selection (no group expansion); tracks the first paragraph to its first line's width.
+    r("text.fitHeadlineSelection", r#"{"ids":["$TA"]}"#, &["$TA"], "", &[("$TA", "data", false)]),
+    r("text.fitHeadlineSelection", r#"{}"#, &["$TA"], "selection", &[("$TA", "data", false)]),
+    // text.step: id (range, default all) else the Type tool's range else the selection's text; increments from preferences.
+    r("text.step", r#"{"attribute":"size","id":"$T"}"#, &[], "mode", &[("$T", "data", false)]),
+    r("text.step", r#"{"attribute":"tracking","by":-2}"#, &["$TA"], "mode,selection", &[("$TA", "data", false)]),
+    // format.increaseFontSize: text.step size without id: Type tool range else the selection's text (ids/id ignored); prefs increment.
+    r("format.increaseFontSize", r#"{}"#, &["$T"], "mode,selection", &[("$T", "data", false)]),
+    // format.decreaseFontSize: as increase, by -by.
+    r("format.decreaseFontSize", r#"{"by":2}"#, &["$T"], "mode,selection", &[("$T", "data", false)]),
     // text.discardEmpty: text by id; reads its length (non-empty: nothing changes; empty: removed or the history rolled back).
     r("text.discardEmpty", r#"{"id":"$T"}"#, &[], "", &[("$T", "data", false)]),
     // text.insertInline: text by id (else the Type tool's), at the given byte (else the tool selection or the end); symbol by name, else the current symbol, else the first one.
@@ -4169,8 +4169,8 @@ const ROWS: &[Row] = &[
             ("children:$B", "-", false),
         ],
     ),
-    // text.thread.create: selection roots in paint order (needs 2+); closed paths replaced by empty area frames (same id); existing threads merged; the story reflows.
-    r("text.thread.create", r#"{}"#, &["$TA", "$R"], "selection", &[("$TA", "data", true), ("$R", "*", true), ("drawing", "threads", false)]),
+    // text.thread.add: selection roots in paint order (needs 2+); closed paths replaced by empty area frames (same id); existing threads merged; the story reflows.
+    r("text.thread.add", r#"{}"#, &["$TA", "$R"], "selection", &[("$TA", "data", true), ("$R", "*", true), ("drawing", "threads", false)]),
     // text.thread.releaseSelection: selection roots taken out of their threads; story into the first kept frame. Fixture has no thread: disabled.
     // UNSURE: no thread in the fixture (the command is disabled); row shows what it would rest on
     r("text.thread.releaseSelection", r#"{}"#, &["$TA"], "selection", &[("drawing", "threads", false), ("$TA", "data", false)]),
@@ -4957,8 +4957,8 @@ const ROWS: &[Row] = &[
     r("graphicStyle.loadLibrary", r#"{"data":"{}","name":"x.vcstyles"}"#, &[], "", &[]),
     // library.setCurrent: the session's library panel current library; no document.
     r("library.setCurrent", r#"{"library":"My Library"}"#, &[], "", &[]),
-    // library.create: a new session library; no document.
-    r("library.create", r#"{"name":"Lib"}"#, &[], "", &[]),
+    // library.new: a new session library; no document.
+    r("library.new", r#"{"name":"Lib"}"#, &[], "", &[]),
     // library.rename: `library` else the panel's current library renamed; no document.
     r("library.rename", r#"{"name":"New"}"#, &[], "mode", &[]),
     r("library.rename", r#"{"library":"My Library","name":"New"}"#, &[], "", &[]),
@@ -4988,8 +4988,8 @@ const ROWS: &[Row] = &[
     ),
     // library.removeItem: item of `library` else the current library; no document.
     r("library.removeItem", r#"{"kind":"fillColor","item":"Red"}"#, &[], "mode", &[]),
-    // library.createGroup: group in `library` else the current library; no document.
-    r("library.createGroup", r#"{}"#, &[], "mode", &[]),
+    // library.addGroup: group in `library` else the current library; no document.
+    r("library.addGroup", r#"{}"#, &[], "mode", &[]),
     // library.renameGroup: group in `library` else the current library; no document.
     r("library.renameGroup", r#"{"group":"Group","name":"G2"}"#, &[], "mode", &[]),
     // library.deleteGroup: group in `library` else the current library; no document.
@@ -5002,9 +5002,9 @@ const ROWS: &[Row] = &[
     r("colorTheme.delete", r#"{"name":"Theme 1"}"#, &[], "mode", &[]),
     // colorTheme.addToSwatches: theme from the preferences → swatch.newGroup with its colours (names created); no document premise.
     r("colorTheme.addToSwatches", r#"{"name":"Theme 1"}"#, &[], "mode", &[]),
-    // graph.create: no object resolved; new graph group goes on top of the insertion parent: isolation, else the active layer when it and its ancestors are visible and unlocked, else silently the topmost visible unlocked layer.
+    // graph.add: no object resolved; new graph group goes on top of the insertion parent: isolation, else the active layer when it and its ancestors are visible and unlocked, else silently the topmost visible unlocked layer.
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
-    p("graph.create", r#"{"type":"column","x":100,"y":100,"width":300,"height":200}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
+    p("graph.add", r#"{"type":"column","x":100,"y":100,"width":300,"height":200}"#, &[], "active,mode", &[("$L1", "locked,visible", false)]),
     // graph.setData: `id` (walking up to the graph that holds it) else the selection's first graph; reads the whole graph spec (props.graph) and the current bounds of its generated children; replaces props.graph and regenerates every child.
     // UNSURE: the fixture has no graph; $G stands in for a graph whose generated children are $C1/$C2.
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
@@ -5155,56 +5155,56 @@ const ROWS: &[Row] = &[
         "",
         &[("$G", "name,data.type,props.trace", false), ("children:$G", "-", false), ("$C1", "data.type", false)],
     ),
-    // links.update: no ids -> every linked image/placed document in the layers (walk of every node's kind and link), probed on disk; modified or previewing ones re-read and placed per their placement options (clip may wrap in a clip group at their index). Fixture: nothing linked, no write.
-    r("links.update", r#"{}"#, &[], "", &[("$ALL", "data", false)]),
+    // linkedFile.update: no ids -> every linked image/placed document in the layers (walk of every node's kind and link), probed on disk; modified or previewing ones re-read and placed per their placement options (clip may wrap in a clip group at their index). Fixture: nothing linked, no write.
+    r("linkedFile.update", r#"{}"#, &[], "", &[("$ALL", "data", false)]),
     // UNSURE: the fixture has no linked image; $R stands in (non-image ids are silently ignored).
-    r("links.update", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "data", true)]),
-    // links.updateChanged: all linked files' stamps vs the session's last-seen stamps; changed ones go through links.update {ids}.
-    r("links.updateChanged", r#"{}"#, &[], "mode", &[("$ALL", "data", false)]),
-    // links.relink: `ids` (each must be image/placed doc) else selected ones; path or folder (by link name); install keeps bounds per placement options.
+    r("linkedFile.update", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "data", true)]),
+    // linkedFile.updateChanged: all linked files' stamps vs the session's last-seen stamps; changed ones go through linkedFile.update {ids}.
+    r("linkedFile.updateChanged", r#"{}"#, &[], "mode", &[("$ALL", "data", false)]),
+    // linkedFile.relink: `ids` (each must be image/placed doc) else selected ones; path or folder (by link name); install keeps bounds per placement options.
     // UNSURE: the fixture has no image; $R stands in.
-    r("links.relink", r#"{"ids":["$R"],"path":"/tmp/x.png"}"#, &[], "", &[("$R", "data", true)]),
+    r("linkedFile.relink", r#"{"ids":["$R"],"path":"/tmp/x.png"}"#, &[], "", &[("$R", "data", true)]),
     // folder with nothing selected: every missing link in the document.
-    r("links.relink", r#"{"folder":"/tmp"}"#, &[], "selection", &[("$ALL", "data", false)]),
-    // links.goTo: `id` else the first selected image/placed doc; changes only the selection.
+    r("linkedFile.relink", r#"{"folder":"/tmp"}"#, &[], "selection", &[("$ALL", "data", false)]),
+    // linkedFile.goTo: `id` else the first selected image/placed doc; changes only the selection.
     // UNSURE: the fixture has no image; $R stands in.
-    r("links.goTo", r#"{"id":"$R"}"#, &[], "", &[("$R", "-", false)]),
-    // links.embed: `ids` else selected linked ones; previewing images re-read from file, then the link dropped; placed documents expanded in place.
+    r("linkedFile.goTo", r#"{"id":"$R"}"#, &[], "", &[("$R", "-", false)]),
+    // linkedFile.embed: `ids` else selected linked ones; previewing images re-read from file, then the link dropped; placed documents expanded in place.
     // UNSURE: the fixture has no linked image; $R stands in.
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
-    p("links.embed", r#"{"ids":["$R"]}"#, &[], "mode", &[("$R", "data", false)]),
+    p("linkedFile.embed", r#"{"ids":["$R"]}"#, &[], "mode", &[("$R", "data", false)]),
     // UNSURE: stand-in; selection path.
-    r("links.embed", r#"{}"#, &["$R"], "selection", &[("$R", "data", false)]),
-    // links.unembed: `id` else first selected image; writes its pixels to path and links the image to it (data: link, key, size, xf).
+    r("linkedFile.embed", r#"{}"#, &["$R"], "selection", &[("$R", "data", false)]),
+    // linkedFile.unembed: `id` else first selected image; writes its pixels to path and links the image to it (data: link, key, size, xf).
     // UNSURE: the fixture has no embedded image; $R stands in.
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
-    p("links.unembed", r#"{"id":"$R","path":"/tmp/x.png"}"#, &[], "mode", &[("$R", "data", false)]),
-    // links.placementOptions: `ids` else selected images/placed docs; sets preserve/align/clip (others kept).
+    p("linkedFile.unembed", r#"{"id":"$R","path":"/tmp/x.png"}"#, &[], "mode", &[("$R", "data", false)]),
+    // linkedFile.placementOptions: `ids` else selected images/placed docs; sets preserve/align/clip (others kept).
     // UNSURE: the fixture has no image; $R stands in.
-    r("links.placementOptions", r#"{"ids":["$R"],"preserve":"fit"}"#, &[], "", &[("$R", "data", false)]),
+    r("linkedFile.placementOptions", r#"{"ids":["$R"],"preserve":"fit"}"#, &[], "", &[("$R", "data", false)]),
     // UNSURE: stand-in; selection path.
-    r("links.placementOptions", r#"{"clip":true}"#, &["$R"], "selection", &[("$R", "data", false)]),
-    // assets.add: `ids` (checked) mapped to roots in paint order (compound member -> compound, descendants of listed ancestors and layers dropped), else selection roots; reuses an asset with exactly that node list; name from the single object's name, else "Asset N" after every asset's name.
-    r("assets.add", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "name", false), ("$AS", "*", false)]),
-    r("assets.add", r#"{}"#, &["$R"], "selection", &[("$R", "name", false), ("$AS", "*", false)]),
+    r("linkedFile.placementOptions", r#"{"clip":true}"#, &["$R"], "selection", &[("$R", "data", false)]),
+    // asset.add: `ids` (checked) mapped to roots in paint order (compound member -> compound, descendants of listed ancestors and layers dropped), else selection roots; reuses an asset with exactly that node list; name from the single object's name, else "Asset N" after every asset's name.
+    r("asset.add", r#"{"ids":["$R"]}"#, &[], "", &[("$R", "name", false), ("$AS", "*", false)]),
+    r("asset.add", r#"{}"#, &["$R"], "selection", &[("$R", "name", false), ("$AS", "*", false)]),
     // $E already has asset $AS: reused, no write.
-    r("assets.add", r#"{"ids":["$E"]}"#, &[], "", &[("$E", "-", false), ("$AS", "*", false)]),
+    r("asset.add", r#"{"ids":["$E"]}"#, &[], "", &[("$E", "-", false), ("$AS", "*", false)]),
     // a compound member acts as its compound.
-    r("assets.add", r#"{"ids":["$K1"]}"#, &[], "", &[("$K1", "-", true), ("$CP", "name,data.type", false), ("$AS", "*", false)]),
+    r("asset.add", r#"{"ids":["$K1"]}"#, &[], "", &[("$K1", "-", true), ("$CP", "name,data.type", false), ("$AS", "*", false)]),
     // multiple:false: one asset, nodes in stacking order.
-    r("assets.add", r#"{"ids":["$R","$P"],"multiple":false}"#, &[], "", &[("$R", "-", true), ("$P", "-", true), ("$AS", "*", false)]),
-    // assets.remove: asset ids; drops them from the asset list.
-    r("assets.remove", r#"{"assets":["$AS"]}"#, &[], "", &[("$AS", "*", false)]),
-    // assets.rename: asset id; sets its name.
-    r("assets.rename", r#"{"asset":"$AS","name":"Hero"}"#, &[], "", &[("$AS", "*", false)]),
-    // assets.export: `assets` else all; document export settings under the params; each asset's art cloned whole into an isolated document and rendered; no document write.
+    r("asset.add", r#"{"ids":["$R","$P"],"multiple":false}"#, &[], "", &[("$R", "-", true), ("$P", "-", true), ("$AS", "*", false)]),
+    // asset.remove: asset ids; drops them from the asset list.
+    r("asset.remove", r#"{"assets":["$AS"]}"#, &[], "", &[("$AS", "*", false)]),
+    // asset.rename: asset id; sets its name.
+    r("asset.rename", r#"{"asset":"$AS","name":"Hero"}"#, &[], "", &[("$AS", "*", false)]),
+    // asset.export: `assets` else all; document export settings under the params; each asset's art cloned whole into an isolated document and rendered; no document write.
     r(
-        "assets.export",
+        "asset.export",
         r#"{}"#,
         &[],
         "",
         &[("drawing", "settings.export_settings,settings.title", false), ("$AS", "*", false), ("$E", "*", false), ("swatch:Brand", "*", false)],
     ),
-    // assets.settings.set: the document's export settings overlaid by the params and stored whole (not an undo step).
-    r("assets.settings.set", r#"{"formats":[{"format":"png","scale":"2x"}]}"#, &[], "", &[("drawing", "settings.export_settings", false)]),
+    // asset.settings.set: the document's export settings overlaid by the params and stored whole (not an undo step).
+    r("asset.settings.set", r#"{"formats":[{"format":"png","scale":"2x"}]}"#, &[], "", &[("drawing", "settings.export_settings", false)]),
 ];

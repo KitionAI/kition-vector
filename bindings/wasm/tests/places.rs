@@ -11,7 +11,7 @@ fn drawing() -> (VectorDocument, u64, u64, u64, u64) {
     let b = doc.execute("shape.ellipse", json!({"x":60,"y":10,"width":20,"height":20})).unwrap()["id"].as_u64().unwrap();
     let c = doc.execute("shape.ellipse", json!({"x":100,"y":10,"width":20,"height":20})).unwrap()["id"].as_u64().unwrap();
     doc.execute("select.set", json!({"ids":[b, c]})).unwrap();
-    let group = doc.execute("object.group", json!({})).unwrap()["id"].as_u64().unwrap();
+    let group = doc.execute("arrange.group", json!({})).unwrap()["id"].as_u64().unwrap();
     doc.execute("select.set", json!({"ids":[a]})).unwrap();
     (doc, a, b, c, group)
 }
@@ -93,13 +93,14 @@ fn an_artboard_by_index_is_its_window_in_the_drawing() {
 #[test]
 fn a_structural_write_holds_its_objects_whole() {
     let (doc, a, ..) = drawing();
-    let under = doc.under("edit.clear", &json!({"ids":[a]})).unwrap().unwrap();
+    let under = doc.under("edit.delete", &json!({"ids":[a]})).unwrap().unwrap();
     assert_eq!(premise(&under.premises, a).fields, None);
     let commands = doc.commands();
     let value: Value =
-        serde_json::to_value(commands.iter().find(|c| c.id == "object.group").unwrap().reads.iter().map(|r| r.as_str()).collect::<Vec<_>>()).unwrap();
+        serde_json::to_value(commands.iter().find(|c| c.id == "arrange.group").unwrap().reads.iter().map(|r| r.as_str()).collect::<Vec<_>>())
+            .unwrap();
     assert_eq!(value, json!(["selection"]));
-    let under = doc.under("object.group", &json!({})).unwrap().unwrap();
+    let under = doc.under("arrange.group", &json!({})).unwrap().unwrap();
     assert_eq!(premise(&under.premises, a).fields, Some(vec![]), "grouped where it is, its fields as they are");
     assert_eq!(premise(&under.premises, a).positions, Some(vec!["nodes".to_owned()]));
 }

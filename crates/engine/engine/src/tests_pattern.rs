@@ -442,6 +442,6 @@ fn repeat_commands_validate() {
     sel(&mut s, &[r]);
     assert!(s.execute("object.repeat.radial", &json!({"instances": 0})).is_err());
     assert!(s.execute("object.repeat.options", &json!({"instances": 4})).is_err(), "no repeat selected");
-    s.execute("select.none", &json!({})).ok();
+    s.execute("edit.deselectAll", &json!({})).ok();
     assert!(s.execute("object.pattern.make", &json!({})).is_err());
 }

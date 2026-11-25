@@ -435,14 +435,14 @@ impl Tool for GraphTool {
                     self.began = true;
                     out.push(Action::Begin("Graph".into()));
                 }
-                out.push(Action::Preview("graph.create".into(), self.params(s, ev.pos, ev.mods)));
+                out.push(Action::Preview("graph.add".into(), self.params(s, ev.pos, ev.mods)));
                 out
             }
             PointerKind::Up => {
                 let Some(s) = self.start.take() else { return vec![] };
                 if std::mem::take(&mut self.began) {
                     vec![
-                        Action::Preview("graph.create".into(), self.params(s, ev.pos, ev.mods)),
+                        Action::Preview("graph.add".into(), self.params(s, ev.pos, ev.mods)),
                         Action::Commit,
                         Action::Dialog("graphData".into(), json!({})),
                     ]

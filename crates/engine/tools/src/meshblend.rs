@@ -4,7 +4,7 @@
 //!   point of a path blends from that point (`starts`). Each further click adds the object as one
 //!   more key of the new blend (as does clicking a blend first). Double-click or Alt-click opens
 //!   Blend Options (dialog `blendOptions`). Clicking empty canvas starts over.
-//! - Mesh: click inside a filled path → `object.mesh.create {ids, at}` (1×1 mesh plus lines through
+//! - Mesh: click inside a filled path → `object.mesh.add {ids, at}` (1×1 mesh plus lines through
 //!   the click); click inside a mesh or a mesh envelope → `object.mesh.addLine` (a gradient mesh's
 //!   new point takes the current fill colour unless Shift); drag a mesh point, or a handle of the
 //!   point last clicked → `object.mesh.movePoint` previews ([`MeshEdit`]); Alt-click a mesh point →
@@ -204,7 +204,7 @@ impl Tool for MeshTool {
                             return vec![Action::Exec("object.mesh.addLine".into(), json!({"id": id.0, "x": p.x, "y": p.y}))];
                         }
                         Some(NodeKind::Path { guide: false, .. }) | Some(NodeKind::Compound { .. }) => {
-                            return vec![Action::Exec("object.mesh.create".into(), json!({"ids": [id.0], "at": [p.x, p.y]}))];
+                            return vec![Action::Exec("object.mesh.add".into(), json!({"ids": [id.0], "at": [p.x, p.y]}))];
                         }
                         _ => {}
                     }
@@ -325,6 +325,6 @@ mod tests {
         let c = cx(&d, &s, &p);
         let mut t = create("mesh").unwrap();
         let acts = t.pointer(&c, &PointerEvent::new(PointerKind::Down, 150.0, 160.0));
-        assert_eq!(acts, vec![Action::Exec("object.mesh.create".into(), json!({"ids": [a.0], "at": [150.0, 160.0]}))]);
+        assert_eq!(acts, vec![Action::Exec("object.mesh.add".into(), json!({"ids": [a.0], "at": [150.0, 160.0]}))]);
     }
 }

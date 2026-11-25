@@ -48,8 +48,8 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("appearance.targetContents", &[("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
     ("artboard.rearrange", &[("byColumn", Kind::Boolean)]),
     ("artboard.setProps", &[("lockedAndHidden", Kind::Boolean), ("strokes", Kind::Boolean), ("corners", Kind::Boolean), ("patterns", Kind::Boolean)]),
-    ("attributes.info", &[("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
-    ("attributes.set", &[("item", Kind::String), ("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
+    ("attribute.info", &[("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
+    ("attribute.set", &[("item", Kind::String), ("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
     ("brush.new", &[("id", Kind::IndexOrName)]),
     ("brush.options", &[("type", Kind::String)]),
     ("clipboard.conflicts", &[("center", Kind::Array), ("dx", Kind::Number), ("dy", Kind::Number), ("artboard", Kind::Integer)]),
@@ -67,18 +67,18 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("dataset.capture", &[("variable", Kind::String), ("ids", Kind::Array)]),
     ("dataset.select", &[("on", Kind::Boolean)]),
     ("dataset.update", &[("dataBase64", Kind::String), ("variable", Kind::String), ("ids", Kind::Array)]),
-    ("document.exportDxf", &[("format", Kind::String)]),
-    ("document.exportForOffice", &[("acknowledgeLoss", Kind::Boolean)]),
-    ("document.exportForScreens", &[("format", Kind::String), ("ids", Kind::Array)]),
-    ("document.exportForWeb.preview", &[("preset", Kind::String), ("reset", Kind::Boolean)]),
-    ("document.exportPdf", &[("selectionOnly", Kind::Boolean), ("ids", Kind::Array), ("id", Kind::IndexOrName), ("acknowledgeLoss", Kind::Boolean)]),
-    ("document.exportSettings", &[("ids", Kind::Array)]),
-    ("document.info", &[("text", Kind::String)]),
-    ("document.pdfInfo", &[("thumbnailSize", Kind::Number), ("thumbnail", Kind::Number)]),
-    ("document.rasterEffectsSettings", &[("ppi", Kind::Number)]),
-    ("document.save", &[("acknowledgeLoss", Kind::Boolean), ("ids", Kind::Array), ("image", Kind::Boolean)]),
-    ("document.serialize", &[("ids", Kind::Array)]),
-    ("document.setup", &[("on", Kind::Boolean)]),
+    ("file.exportDxf", &[("format", Kind::String)]),
+    ("file.exportForOffice", &[("acknowledgeLoss", Kind::Boolean)]),
+    ("file.exportForScreens", &[("format", Kind::String), ("ids", Kind::Array)]),
+    ("file.exportForWeb.preview", &[("preset", Kind::String), ("reset", Kind::Boolean)]),
+    ("file.exportPdf", &[("selectionOnly", Kind::Boolean), ("ids", Kind::Array), ("id", Kind::IndexOrName), ("acknowledgeLoss", Kind::Boolean)]),
+    ("file.exportSettings", &[("ids", Kind::Array)]),
+    ("file.getInfo", &[("text", Kind::String)]),
+    ("file.pdfInfo", &[("thumbnailSize", Kind::Number), ("thumbnail", Kind::Number)]),
+    ("file.rasterEffectsSettings", &[("ppi", Kind::Number)]),
+    ("file.save", &[("acknowledgeLoss", Kind::Boolean), ("ids", Kind::Array), ("image", Kind::Boolean)]),
+    ("file.serialize", &[("ids", Kind::Array)]),
+    ("file.setup", &[("on", Kind::Boolean)]),
     ("edit.paste", &[("artboard", Kind::Integer)]),
     ("edit.pasteInBack", &[("center", Kind::Array), ("dx", Kind::Number), ("dy", Kind::Number)]),
     ("edit.pasteInFront", &[("center", Kind::Array), ("dx", Kind::Number), ("dy", Kind::Number)]),
@@ -136,8 +136,8 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("library.add", &[("color", Kind::String), ("item", Kind::String), ("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
     ("library.export", &[("dataBase64", Kind::String)]),
     ("library.get", &[("ids", Kind::Array), ("id", Kind::IndexOrName)]),
-    ("links.info", &[("horizontal", Kind::Number), ("vertical", Kind::Number), ("bounds", Kind::String), ("to", Kind::Integer)]),
-    ("links.list", &[("on", Kind::Boolean)]),
+    ("linkedFile.info", &[("horizontal", Kind::Number), ("vertical", Kind::Number), ("bounds", Kind::String), ("to", Kind::Integer)]),
+    ("linkedFile.list", &[("on", Kind::Boolean)]),
     ("livePaint.expand", &[("ids", Kind::Array)]),
     ("livePaint.fill", &[("paint", Kind::Object), ("keepModel", Kind::Boolean), ("tint", Kind::Integer), ("id", Kind::IndexOrName)]),
     ("livePaint.info", &[("id", Kind::IndexOrName)]),
@@ -148,7 +148,7 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("object.blend.info", &[("target", Kind::IndexOrName), ("id", Kind::IndexOrName), ("starts", Kind::Array)]),
     ("object.blend.make", &[("id", Kind::IndexOrName), ("spacing", Kind::Number)]),
     ("object.blend.options", &[("smooth", Kind::Boolean)]),
-    ("object.blend.spine.moveAnchor", &[("which", Kind::String), ("subpath", Kind::Integer)]),
+    ("object.blend.moveSpineAnchor", &[("which", Kind::String), ("subpath", Kind::Integer)]),
     ("object.clippingMask.make", &[("ids", Kind::Array), ("id", Kind::IndexOrName)]),
     ("object.distort", &[("bend", Kind::Number), ("horizontal", Kind::Number), ("vertical", Kind::Number), ("orientation", Kind::String)]),
     ("object.distributeSpacing", &[("ids", Kind::Array), ("id", Kind::IndexOrName)]),
@@ -167,7 +167,7 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("object.envelope.resetWithWarp", &[("vertical", Kind::Number), ("horizontalDistortion", Kind::Number), ("verticalDistortion", Kind::Number)]),
     ("object.expand", &[("on", Kind::Boolean)]),
     ("object.liquify", &[("id", Kind::IndexOrName), ("bend", Kind::Number), ("orientation", Kind::String)]),
-    ("object.mesh.create", &[("columns", Kind::Number)]),
+    ("object.mesh.add", &[("columns", Kind::Number)]),
     ("object.pattern.make", &[("id", Kind::IndexOrName)]),
     ("object.pinWarp", &[("bend", Kind::Number), ("horizontal", Kind::Number), ("vertical", Kind::Number), ("orientation", Kind::String)]),
     ("object.scale", &[("matrix", Kind::Array), ("ids", Kind::Array), ("typeAreas", Kind::Boolean)]),
@@ -189,7 +189,7 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("paint.setStroke", &[("paint", Kind::Object), ("id", Kind::IndexOrName), ("target", Kind::IndexOrName)]),
     ("path.appendAnchor", &[("smooth", Kind::Boolean)]),
     ("path.blob", &[("x", Kind::Number), ("y", Kind::Number), ("pressure", Kind::Number)]),
-    ("path.create", &[("dataBase64", Kind::String)]),
+    ("path.add", &[("dataBase64", Kind::String)]),
     ("path.curvature", &[("x", Kind::Number), ("y", Kind::Number)]),
     ("path.eraseRegion", &[("x", Kind::Number), ("y", Kind::Number), ("pressure", Kind::Number)]),
     ("path.eraseSegments", &[("x", Kind::Number), ("y", Kind::Number), ("pressure", Kind::Number)]),
@@ -226,7 +226,7 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("recolor.colors", &[("swatch", Kind::String)]),
     ("recolor.randomize", &[("group", Kind::String), ("rename", Kind::String), ("method", Kind::String), ("limitTo", Kind::String)]),
     ("recolor.reduce", &[("swatch", Kind::String), ("group", Kind::String), ("rename", Kind::String), ("map", Kind::IndexOrName)]),
-    ("select.all", &[("stops", Kind::Array)]),
+    ("edit.selectAll", &[("stops", Kind::Array)]),
     ("select.anchors", &[("ids", Kind::Array)]),
     ("select.anchorsMany", &[("id", Kind::IndexOrName), ("anchors", Kind::Array), ("ids", Kind::Array), ("add", Kind::Boolean)]),
     ("select.magicWand", &[("reset", Kind::Boolean)]),
@@ -265,9 +265,9 @@ const EXTRA: &[(&str, &[(&str, Kind)])] = &[
     ("transparency.set", &[("target", Kind::IndexOrName)]),
     ("transparency.togglePageIsolatedBlending", &[("ids", Kind::Array), ("clip", Kind::Boolean), ("invert", Kind::Boolean)]),
     ("transparency.togglePageKnockoutGroup", &[("ids", Kind::Array), ("clip", Kind::Boolean), ("invert", Kind::Boolean)]),
-    ("type.insert", &[("text", Kind::String)]),
-    ("type.size.decrease", &[("attribute", Kind::String), ("id", Kind::IndexOrName)]),
-    ("type.size.increase", &[("attribute", Kind::String), ("id", Kind::IndexOrName)]),
+    ("text.insert", &[("text", Kind::String)]),
+    ("format.decreaseFontSize", &[("attribute", Kind::String), ("id", Kind::IndexOrName)]),
+    ("format.increaseFontSize", &[("attribute", Kind::String), ("id", Kind::IndexOrName)]),
     ("variable.makeTextDynamic", &[("kind", Kind::String), ("name", Kind::String)]),
     ("variable.makeVisibilityDynamic", &[("kind", Kind::String), ("name", Kind::String)]),
     ("variable.rename", &[("variable", Kind::String)]),
@@ -284,14 +284,14 @@ pub fn complete(id: &str, schema: &mut Value) {
     }
 }
 
-/// `document.exportBytes` takes `document.export`'s options but `path` (it writes no file), so it
+/// `file.exportBytes` takes `file.export`'s options but `path` (it writes no file), so it
 /// gets that command's schema without it.
 pub fn export_bytes(commands: &mut [kition_kit::KitCommand]) {
-    let Some(mut schema) = commands.iter().find(|command| command.id == "document.export").and_then(|command| command.schema.clone()) else { return };
+    let Some(mut schema) = commands.iter().find(|command| command.id == "file.export").and_then(|command| command.schema.clone()) else { return };
     if let Some(properties) = schema.as_object_mut() {
         properties.remove("path");
     }
-    if let Some(command) = commands.iter_mut().find(|command| command.id == "document.exportBytes") {
+    if let Some(command) = commands.iter_mut().find(|command| command.id == "file.exportBytes") {
         command.schema = Some(schema);
     }
 }

@@ -405,7 +405,7 @@ impl Tool for SelectionTool {
                 self.state = State::Idle;
                 let r = Rect::from_points(start, p);
                 if r.width() < Self::drag_threshold(cx) && r.height() < Self::drag_threshold(cx) {
-                    return if toggle { vec![] } else { vec![Action::Exec("select.none".into(), json!({}))] };
+                    return if toggle { vec![] } else { vec![Action::Exec("edit.deselectAll".into(), json!({}))] };
                 }
                 let ids: Vec<NodeId> = marquee(cx.doc, r, cx.isolation, false);
                 vec![Action::Exec(if toggle { "select.toggle" } else { "select.set" }.into(), json!({ "ids": json_ids(&ids) }))]
@@ -952,6 +952,6 @@ mod tests {
         let cx = cx(&d, &s, &p);
         let mut t = SelectionTool::default();
         t.pointer(&cx, &ev(PointerKind::Down, 400.0, 400.0));
-        assert_eq!(t.pointer(&cx, &ev(PointerKind::Up, 400.0, 400.0)), vec![Action::Exec("select.none".into(), json!({}))]);
+        assert_eq!(t.pointer(&cx, &ev(PointerKind::Up, 400.0, 400.0)), vec![Action::Exec("edit.deselectAll".into(), json!({}))]);
     }
 }

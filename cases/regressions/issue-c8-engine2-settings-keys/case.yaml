@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-engine2-settings-keys
 feature: vector.agent.premises
-intent: A command that changes one setting of a settings group (document.setup bleed, file.info author, one raster effects option, one print option, the tiling origin) writes only that setting, so another program's change of another setting of the group, made between the agent's observe and its write, is not refused and survives in the saved file.
+intent: A command that changes one setting of a settings group (file.setup bleed, file.setInfo author, one raster effects option, one print option, the tiling origin) writes only that setting, so another program's change of another setting of the group, made between the agent's observe and its write, is not refused and survives in the saved file.
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}

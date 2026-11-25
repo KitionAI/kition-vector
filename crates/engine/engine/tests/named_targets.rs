@@ -43,7 +43,7 @@ fn group(s: &mut Session) -> (NodeId, NodeId, NodeId) {
     let c1 = rect(s, 0.0, 0.0, 10.0, 10.0);
     let c2 = rect(s, 20.0, 0.0, 10.0, 10.0);
     select(s, &[c1, c2]);
-    let g = id(&s.execute("object.group", &json!({})).unwrap());
+    let g = id(&s.execute("arrange.group", &json!({})).unwrap());
     select(s, &[]);
     (g, c1, c2)
 }
@@ -63,10 +63,10 @@ fn layer(s: &Session) -> NodeId {
     doc(s).layers.first().unwrap().id
 }
 
-// ---------- type.size.increase / decrease ----------
+// ---------- format.increaseFontSize / decrease ----------
 
 fn point_text(s: &mut Session, x: f64, text: &str) -> NodeId {
-    id(&s.execute("text.create", &json!({"x": x, "y": 100, "size": 12, "text": text})).unwrap())
+    id(&s.execute("text.add", &json!({"x": x, "y": 100, "size": 12, "text": text})).unwrap())
 }
 
 fn sizes(s: &Session, t: NodeId) -> Vec<f64> {
@@ -80,11 +80,11 @@ fn type_size_steps_steps_the_text_it_is_given() {
     let t = point_text(&mut s, 0.0, "selected");
     let ta = point_text(&mut s, 300.0, "named");
     select(&mut s, &[t]);
-    s.execute("type.size.increase", &json!({"ids": [ta.0]})).unwrap();
+    s.execute("format.increaseFontSize", &json!({"ids": [ta.0]})).unwrap();
     assert_eq!(sizes(&s, t), [12.0], "the selected text is not the one named");
     assert!(sizes(&s, ta).iter().all(|z| *z > 12.0), "the named text steps up: {:?}", sizes(&s, ta));
     // A range of `id` steps only that range.
-    s.execute("type.size.decrease", &json!({"id": t.0, "start": 0, "end": 2})).unwrap();
+    s.execute("format.decreaseFontSize", &json!({"id": t.0, "start": 0, "end": 2})).unwrap();
     let NodeKind::Text(txt) = &node(&s, t).kind else { panic!() };
     let first = &txt.runs[0];
     assert!(first.style.size < 12.0 && txt.runs.iter().any(|r| r.style.size == 12.0), "only characters 0..2 step down: {:?}", sizes(&s, t));
@@ -148,7 +148,7 @@ fn sample_color_uses_id_and_refuses_what_it_does_not_take() {
 // ---------- text.areaOptions ----------
 
 fn area(s: &mut Session, x: f64) -> NodeId {
-    id(&s.execute("text.create", &json!({"x": x, "y": 0, "size": 12, "area": {"width": 200, "height": 100}, "text": "Some words to flow."})).unwrap())
+    id(&s.execute("text.add", &json!({"x": x, "y": 0, "size": 12, "area": {"width": 200, "height": 100}, "text": "Some words to flow."})).unwrap())
 }
 
 fn area_of(s: &Session, n: NodeId) -> kition_vector_doc::AreaOptions {
@@ -387,7 +387,7 @@ fn threading_a_path_keeps_the_object_it_was() {
     let p = rect(&mut s, 300.0, 0.0, 200.0, 100.0);
     s.execute("object.setProps", &json!({"id": p.0, "name": "Second frame", "opacity": 50})).unwrap();
     select(&mut s, &[a, p]);
-    s.execute("text.thread.create", &json!({})).unwrap();
+    s.execute("text.thread.add", &json!({})).unwrap();
     let n = node(&s, p);
     assert!(matches!(n.kind, NodeKind::Text(_)));
     assert_eq!((n.name.as_deref(), n.opacity), (Some("Second frame"), 0.5));
@@ -397,13 +397,13 @@ fn threading_a_path_keeps_the_object_it_was() {
 fn type_in_a_path_refuses_compound_members_and_clipping_paths() {
     let mut s = session();
     let (cp, k1, _) = compound(&mut s);
-    assert!(s.execute("text.createInPath", &json!({"path": k1.0, "text": "x"})).is_err());
+    assert!(s.execute("text.addInPath", &json!({"path": k1.0, "text": "x"})).is_err());
     assert_eq!(doc(&s).parent_of(k1), Some(cp));
     let art = rect(&mut s, 0.0, 300.0, 50.0, 50.0);
     let clip = rect(&mut s, 10.0, 310.0, 20.0, 20.0);
     select(&mut s, &[art, clip]);
     s.execute("object.clippingMask.make", &json!({})).unwrap();
-    assert!(s.execute("text.createInPath", &json!({"path": clip.0, "text": "x"})).is_err());
+    assert!(s.execute("text.addInPath", &json!({"path": clip.0, "text": "x"})).is_err());
     assert!(doc(&s).node(clip).is_some());
 }
 
@@ -450,7 +450,7 @@ fn graphic_style_from_a_library_applies_to_the_id_given() {
 #[test]
 fn graph_commands_refuse_an_id_that_is_no_graph() {
     let mut s = session();
-    let g = id(&s.execute("graph.create", &json!({"type": "column", "x": 0, "y": 0, "width": 100, "height": 100, "rows": [[1, 2]]})).unwrap());
+    let g = id(&s.execute("graph.add", &json!({"type": "column", "x": 0, "y": 0, "width": 100, "height": 100, "rows": [[1, 2]]})).unwrap());
     let r = rect(&mut s, 300.0, 0.0, 10.0, 10.0);
     select(&mut s, &[g]);
     let before = node(&s, g).graph.clone();

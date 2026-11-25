@@ -41,7 +41,7 @@ fn user_slice(s: &mut Session, r: [f64; 4]) -> u64 {
     let tmp = rect(s, r[0], r[1], r[2], r[3]);
     let id = run(s, "object.slice.fromSelection", json!({"ids": [tmp]}))["id"].as_u64().unwrap();
     run(s, "select.set", json!({"ids": [tmp]}));
-    run(s, "edit.clear", json!({}));
+    run(s, "edit.delete", json!({}));
     id
 }
 
@@ -186,7 +186,7 @@ fn slice_options_set_read_and_undo_in_one_step() {
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc().unwrap().doc.slices[0].options, Default::default());
     // An object slice of type can be HTML Text.
-    let t = run(&mut s, "text.create", json!({"x": 10, "y": 100, "text": "Hello"}))["id"].as_u64().unwrap();
+    let t = run(&mut s, "text.add", json!({"x": 10, "y": 100, "text": "Hello"}))["id"].as_u64().unwrap();
     run(&mut s, "object.slice.make", json!({"ids": [t]}));
     run(&mut s, "select.set", json!({"ids": [t]}));
     let o = run(&mut s, "object.slice.options", json!({"kind": "htmlText"}));
@@ -220,7 +220,7 @@ fn clip_to_artboard_hide_lock_select_and_delete_all() {
     assert_eq!((sel.slices.clone(), sel.objects.is_empty()), (vec![NodeId(id), NodeId(a)], true));
     assert!(slices(&mut s).iter().filter(|v| v["selected"] == true).count() == 2);
     // Selecting objects drops the slice selection.
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     assert!(s.doc().unwrap().selection.slices.is_empty());
 
     assert_eq!(run(&mut s, "object.slice.deleteAll", json!({}))["count"], 2);
@@ -300,7 +300,7 @@ fn slice_tool_gestures_are_one_undo_step_each() {
     assert_eq!(undo(&s), before);
     // The journal replays the gestures as commands.
     let journal: Vec<String> = s.journal.iter().map(|(c, _)| c.clone()).collect();
-    for c in ["object.slice.create", "object.slice.move", "object.slice.setRect", "object.slice.delete", "object.slice.select"] {
+    for c in ["object.slice.add", "object.slice.move", "object.slice.setRect", "object.slice.delete", "object.slice.select"] {
         assert!(journal.iter().any(|j| j == c), "{c} journaled: {journal:?}");
     }
 }
@@ -308,9 +308,9 @@ fn slice_tool_gestures_are_one_undo_step_each() {
 #[test]
 fn slice_commands_check_their_params() {
     let mut s = session();
-    assert!(s.execute("object.slice.create", &json!({"x": 0, "y": 0, "width": 0, "height": 10})).is_err(), "no area");
-    assert!(s.execute("object.slice.create", &json!({"x": 1e9, "y": 0, "width": 10, "height": 10})).is_err(), "off the canvas");
-    let id = run(&mut s, "object.slice.create", json!({"x": 50, "y": 60, "width": -20, "height": 10}))["id"].as_u64().unwrap();
+    assert!(s.execute("object.slice.add", &json!({"x": 0, "y": 0, "width": 0, "height": 10})).is_err(), "no area");
+    assert!(s.execute("object.slice.add", &json!({"x": 1e9, "y": 0, "width": 10, "height": 10})).is_err(), "off the canvas");
+    let id = run(&mut s, "object.slice.add", json!({"x": 50, "y": 60, "width": -20, "height": 10}))["id"].as_u64().unwrap();
     assert_eq!(rect_of(&mut s, id), [30.0, 60.0, 20.0, 10.0], "a negative size draws the other way");
     run(&mut s, "object.slice.setRect", json!({"id": id, "x": 0, "y": 0, "width": 5, "height": 5}));
     assert_eq!(rect_of(&mut s, id), [0.0, 0.0, 5.0, 5.0]);

@@ -40,13 +40,13 @@ fn only(s: &Session) -> Node {
 }
 
 fn open(s: &mut Session, name: &str, bytes: &[u8]) -> Value {
-    s.execute("document.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap()
+    s.execute("file.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap()
 }
 
 fn svg(s: &mut Session, p: Value) -> String {
     let mut p = p;
     p["format"] = json!("svg");
-    s.execute("document.serialize", &p).unwrap()["text"].as_str().unwrap().to_string()
+    s.execute("file.serialize", &p).unwrap()["text"].as_str().unwrap().to_string()
 }
 
 /// An SVG with its hidden objects (as Save writes it) brings the Region Paint group back as one:

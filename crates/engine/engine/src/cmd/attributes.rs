@@ -1,6 +1,6 @@
 //! Window → Attributes: overprint, centre point display, image map, URL and note
-//! (`attributes.set`), the fill rule (`path.setFillRule`) and, through `path.reverse`, the path
-//! direction. The panel reads everything back with `attributes.info` ([`super::overprint`]).
+//! (`attribute.set`), the fill rule (`path.setFillRule`) and, through `path.reverse`, the path
+//! direction. The panel reads everything back with `attribute.info` ([`super::overprint`]).
 
 use std::collections::BTreeSet;
 
@@ -18,11 +18,11 @@ const RECENT_URLS: usize = 10;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "attributes.set",
+            "attribute.set",
             "Attributes",
             [],
             None,
-            "{overprintFill?: bool, overprintStroke?: bool (aimed as object.setOverprint's fill and stroke, item? too), showCenter?: bool (the canvas shows the selected object's centre point), imageMap?: \"none\"|\"rectangle\"|\"polygon\", url?: string (\"\" removes it; SVG export links the object), note?: string, ids?} set the Attributes panel's values on ids or the selection, as one undo step; a URL given joins the recent URLs (attributes.info) → {changed: objects}",
+            "{overprintFill?: bool, overprintStroke?: bool (aimed as object.setOverprint's fill and stroke, item? too), showCenter?: bool (the canvas shows the selected object's centre point), imageMap?: \"none\"|\"rectangle\"|\"polygon\", url?: string (\"\" removes it; SVG export links the object), note?: string, ids?} set the Attributes panel's values on ids or the selection, as one undo step; a URL given joins the recent URLs (attribute.info) → {changed: objects}",
             has_doc,
             set
         ),
@@ -96,7 +96,7 @@ struct Edits {
 
 impl Edits {
     fn parse(p: &Value) -> Result<Self> {
-        const C: &str = "attributes.set";
+        const C: &str = "attribute.set";
         let text = |k: &str| -> Result<Option<String>> {
             p.get(k).map(|v| v.as_str().map(|s| s.trim().to_string()).ok_or_else(|| bad(C, format!("`{k}` must be a string")))).transpose()
         };
@@ -134,7 +134,7 @@ impl Edits {
 }
 
 fn set(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "attributes.set";
+    const C: &str = "attribute.set";
     let jobs = overprint_jobs(s, p, C, ["overprintFill", "overprintStroke"])?;
     let edits = Edits::parse(p)?;
     if jobs.is_empty() && edits.is_empty() {

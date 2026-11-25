@@ -22,7 +22,7 @@ fn ink_tint(img: &Image, x0: u32, x1: u32) -> (f64, f64) {
 #[test]
 fn gradient_vector_runs_across_the_text() {
     let mut s = session_with(300.0, 100.0);
-    exec(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "HHHHHH", "size": 60}));
+    exec(&mut s, "text.add", json!({"x": 10, "y": 80, "text": "HHHHHH", "size": 60}));
     exec(&mut s, "paint.setFill", json!({"gradient": {"stops": [{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#0000ff"}]}}));
     exec(&mut s, "paint.setGradientGeom", json!({"start": [10, 50], "end": [200, 50]}));
     let img = render_view(&s.doc().unwrap().doc, 300, 100);
@@ -53,7 +53,7 @@ fn pinned(doc: &Document, id: NodeId, b: Rect) -> Document {
 #[test]
 fn unplaced_run_stroke_gradients_fit_the_stroke_inflated_box() {
     let mut s = session_with(300.0, 100.0);
-    exec(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "HHHH", "size": 60}));
+    exec(&mut s, "text.add", json!({"x": 10, "y": 80, "text": "HHHH", "size": 60}));
     exec(&mut s, "paint.setFill", json!({"none": true}));
     exec(&mut s, "paint.setStroke", json!({"gradient": {"stops": [{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#0000ff"}]}}));
     let id = s.doc().unwrap().selection.objects[0];

@@ -197,7 +197,7 @@ fn unite_with_group() {
     let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    let g = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let g = s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap();
     let c = rect(&mut s, 5.0, 5.0, 20.0, 10.0);
     s.execute("select.set", &json!({"ids": [g, c.0]})).unwrap();
     let r = ids(&s.execute("object.pathfinder.unite", &json!({})).unwrap());
@@ -268,7 +268,7 @@ fn simplify_dense_polyline() {
             json!({"x": x, "y": 100.0 + 40.0 * (x / 50.0).sin()})
         })
         .collect();
-    let r = s.execute("path.create", &json!({"anchors": anchors})).unwrap();
+    let r = s.execute("path.add", &json!({"anchors": anchors})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     let before = path_of(&s, id).0.anchor_count();
     let out = s.execute("object.path.simplify", &json!({"tolerance": 1.0})).unwrap();
@@ -308,8 +308,8 @@ fn clean_up_removes_junk() {
         Ok(())
     })
     .unwrap();
-    let stray = NodeId(s.execute("path.create", &json!({"anchors": [{"x": 5, "y": 5}]})).unwrap()["id"].as_u64().unwrap());
-    let empty = NodeId(s.execute("text.create", &json!({"x": 10, "y": 10, "text": ""})).unwrap()["id"].as_u64().unwrap());
+    let stray = NodeId(s.execute("path.add", &json!({"anchors": [{"x": 5, "y": 5}]})).unwrap()["id"].as_u64().unwrap());
+    let empty = NodeId(s.execute("text.add", &json!({"x": 10, "y": 10, "text": ""})).unwrap()["id"].as_u64().unwrap());
     let r = s.execute("object.path.cleanUp", &json!({})).unwrap();
     assert_eq!(r["removed"], 3);
     let d = &s.doc().unwrap().doc;
@@ -332,7 +332,7 @@ fn divide_objects_below_cuts() {
 }
 
 fn text(s: &mut Session, t: &str, size: f64) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": 10, "y": 50, "text": t, "size": size})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 50, "text": t, "size": size})).unwrap();
     NodeId(r["id"].as_u64().unwrap())
 }
 
@@ -341,7 +341,7 @@ fn create_outlines_matches_text_bounds() {
     let mut s = session();
     let t = text(&mut s, "Hello bo", 36.0);
     let tb = bounds(&s, t);
-    let r = ids(&s.execute("type.createOutlines", &json!({})).unwrap());
+    let r = ids(&s.execute("text.convertToOutlines", &json!({})).unwrap());
     assert!(s.doc().unwrap().doc.node(t).is_none());
     let g = node(&s, r[0]);
     let ch = g.children().unwrap();
@@ -397,7 +397,7 @@ fn commands_reject_bad_input() {
         ("object.path.simplify", json!({"tolerance": -5})),
         ("object.path.splitIntoGrid", json!({"rows": 1e9, "columns": -1})),
         ("text.setStyle", json!({"size": -3})),
-        ("type.createOutlines", json!({})),
+        ("text.convertToOutlines", json!({})),
         ("object.pathfinder.divide", json!({"junk": [1, 2]})),
     ] {
         let _ = s.execute(c, &p);

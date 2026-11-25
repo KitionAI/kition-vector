@@ -120,14 +120,14 @@ pub fn check(doc: &Document, has_font: &mut dyn FnMut(&str) -> bool, can_draw: &
             NodeKind::Group { children, .. } if children.is_empty() => found.push(
                 Diagnostic::new("vector.empty-group", Severity::Info, format!("{name} is an empty group."))
                     .on(on(id))
-                    .fix("edit.clear", Some(json!({ "ids": [id] }))),
+                    .fix("edit.delete", Some(json!({ "ids": [id] }))),
             ),
             NodeKind::Text(text) => {
                 if text.runs.iter().all(|run| run.text.trim().is_empty() && run.inline.is_none()) {
                     found.push(
                         Diagnostic::new("vector.empty-text", Severity::Info, format!("{name} is a text object without text."))
                             .on(on(id))
-                            .fix("edit.clear", Some(json!({ "ids": [id] }))),
+                            .fix("edit.delete", Some(json!({ "ids": [id] }))),
                     );
                 }
                 // One diagnostic per family, on the first object that uses it.
@@ -140,7 +140,7 @@ pub fn check(doc: &Document, has_font: &mut dyn FnMut(&str) -> bool, can_draw: &
                 found.push(
                     Diagnostic::new("vector.stray-point", Severity::Info, format!("{name} is a path with a single point: it paints nothing."))
                         .on(on(id))
-                        .fix("edit.clear", Some(json!({ "ids": [id] }))),
+                        .fix("edit.delete", Some(json!({ "ids": [id] }))),
                 )
             }
             _ => {}
@@ -169,7 +169,7 @@ pub fn check(doc: &Document, has_font: &mut dyn FnMut(&str) -> bool, can_draw: &
                 "vector.missing-link",
                 Severity::Warning,
                 format!(
-                    "{name} links to \"{target}\", which was not read: it is missing, or not a path inside the workspace relative to the drawing. With the file in the workspace beside the drawing, links.update reads it; links.list lists every link."
+                    "{name} links to \"{target}\", which was not read: it is missing, or not a path inside the workspace relative to the drawing. With the file in the workspace beside the drawing, linkedFile.update reads it; linkedFile.list lists every link."
                 ),
             );
             if let Some(id) = id {
@@ -395,7 +395,7 @@ mod tests {
         assert_eq!(found, ["vector.empty-group", "vector.stray-point"]);
 
         let mut drawing = self::drawing();
-        drawing.execute("text.create", json!({ "x": 20, "y": 40, "text": "Hello" })).expect("text");
+        drawing.execute("text.add", json!({ "x": 20, "y": 40, "text": "Hello" })).expect("text");
         assert_eq!(codes(&drawing), Vec::<String>::new());
         let missing: Vec<_> = check(doc_of(&drawing), &mut |_| false, &mut |_| true).into_iter().map(|d| d.code).collect();
         assert_eq!(missing, ["vector.font-substituted"]);

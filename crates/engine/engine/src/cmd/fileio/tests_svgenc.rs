@@ -1,5 +1,5 @@
 //! SVG encodings, profiles and embedded fonts through the engine: the options reach the file,
-//! files in each encoding open again, and `document.serialize` reads them as text.
+//! files in each encoding open again, and `file.serialize` reads them as text.
 
 use serde_json::json;
 
@@ -8,12 +8,12 @@ use super::*;
 fn session() -> Session {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 200, "height": 100})).unwrap();
-    s.execute("text.create", &json!({"x": 10, "y": 40, "text": "Grüße €"})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 40, "text": "Grüße €"})).unwrap();
     s
 }
 
 fn serialize(s: &mut Session, svg: serde_json::Value) -> serde_json::Value {
-    s.execute("document.serialize", &json!({"format": "svg", "svg": svg})).unwrap()
+    s.execute("file.serialize", &json!({"format": "svg", "svg": svg})).unwrap()
 }
 
 #[test]
@@ -31,8 +31,8 @@ fn each_encoding_reopens_and_serializes_as_text() {
         assert_eq!(r.get("dataBase64").is_some(), encoding != "utf8", "{encoding}");
         for (file, data) in [("t.svg", bytes.clone()), ("t.svgz", kition_vector_svg::compress_bytes(&bytes))] {
             let mut o = Session::new();
-            o.execute("document.open", &json!({"name": file, "dataBase64": kition_vector_format::base64_encode(&data)})).unwrap();
-            let plain = o.execute("document.inspect", &json!({})).unwrap().to_string();
+            o.execute("file.open", &json!({"name": file, "dataBase64": kition_vector_format::base64_encode(&data)})).unwrap();
+            let plain = o.execute("file.inspect", &json!({})).unwrap().to_string();
             assert!(plain.contains("Grüße €"), "{encoding} {file}: {plain}");
         }
     }
@@ -46,8 +46,8 @@ fn profile_and_embedded_fonts_reach_the_writer() {
     assert!(tiny.contains("baseProfile=\"tiny\"") && !tiny.contains("<style>"), "{tiny}");
     let fonts = serialize(&mut s, json!({"embedFonts": true}));
     assert!(fonts["text"].as_str().unwrap().contains("@font-face{"));
-    assert!(s.execute("document.serialize", &json!({"format": "svg", "svg": {"profile": "svg2"}})).is_err(), "unknown profiles are refused");
-    assert!(s.execute("document.serialize", &json!({"format": "svg", "encoding": "ebcdic"})).is_err(), "unknown encodings are refused");
+    assert!(s.execute("file.serialize", &json!({"format": "svg", "svg": {"profile": "svg2"}})).is_err(), "unknown profiles are refused");
+    assert!(s.execute("file.serialize", &json!({"format": "svg", "encoding": "ebcdic"})).is_err(), "unknown encodings are refused");
 }
 
 /// An SVG of chosen artboards holds the art over each, not every artboard's art; with no
@@ -66,14 +66,14 @@ fn a_chosen_artboard_s_svg_holds_only_its_own_art() {
         (elements, svg.contains(" C") || svg.contains("<ellipse") || svg.contains("<circle"))
     };
     let text = |v: &serde_json::Value| v["text"].as_str().unwrap().to_string();
-    let third_only = text(&s.execute("document.serialize", &json!({"format": "svg", "useArtboards": true, "range": "3"})).unwrap());
+    let third_only = text(&s.execute("file.serialize", &json!({"format": "svg", "useArtboards": true, "range": "3"})).unwrap());
     assert_eq!(shapes(&third_only), (1, true), "{third_only}");
-    let all = s.execute("document.serialize", &json!({"format": "svg", "useArtboards": true, "range": "all"})).unwrap();
+    let all = s.execute("file.serialize", &json!({"format": "svg", "useArtboards": true, "range": "all"})).unwrap();
     let files: Vec<String> = all["files"].as_array().unwrap().iter().map(text).collect();
     assert_eq!(files.iter().map(|f| shapes(f)).collect::<Vec<_>>(), [(1, false), (0, false), (1, true)]);
     // Export for Screens names one artboard at a time the same way.
-    let screen = text(&s.execute("document.serialize", &json!({"format": "svg", "artboard": 0})).unwrap());
+    let screen = text(&s.execute("file.serialize", &json!({"format": "svg", "artboard": 0})).unwrap());
     assert_eq!(shapes(&screen), (1, false));
-    let whole = text(&s.execute("document.serialize", &json!({"format": "svg"})).unwrap());
+    let whole = text(&s.execute("file.serialize", &json!({"format": "svg"})).unwrap());
     assert_eq!(shapes(&whole).0, 2, "nothing named: the whole document's art");
 }

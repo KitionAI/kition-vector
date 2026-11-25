@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-engine2-given
 feature: vector.agent.premises
-intent: "Objects given to a command are the ones it acts on, or the call is refused: a layer id given to object.flattenTransparency, object.mesh.create, object.envelope.make*, brush.apply, brush.remove or a symbol command is refused, as is a locked object given to object.liquify, a locked selected Symbol Set the sprayer would add to, an id given to layer.flatten that is no top-level layer, and a Replace Spine whose selection is not exactly one blend and one path; Pin Warp at rest warps the selected roots, as without rest."
+intent: "Objects given to a command are the ones it acts on, or the call is refused: a layer id given to object.flattenTransparency, object.mesh.add, object.envelope.make*, brush.apply, brush.remove or a symbol command is refused, as is a locked object given to object.liquify, a locked selected Symbol Set the sprayer would add to, an id given to layer.flatten that is no top-level layer, and a Replace Spine whose selection is not exactly one blend and one path; Pin Warp at rest warps the selected roots, as without rest."
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}

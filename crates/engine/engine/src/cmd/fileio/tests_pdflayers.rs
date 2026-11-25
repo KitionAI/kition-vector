@@ -1,4 +1,4 @@
-//! `document.exportPdf {createLayers}` writes PDF layers that reopen as layers, and
+//! `file.exportPdf {createLayers}` writes PDF layers that reopen as layers, and
 //! `advanced.overprint` keeps overprinting in the file or drops it.
 
 use serde_json::{Value, json};
@@ -27,7 +27,7 @@ fn session() -> Session {
 #[test]
 fn export_pdf_create_layers_writes_layers_that_reopen_as_layers() {
     let mut s = session();
-    let v = s.execute("document.exportPdf", &json!({"createLayers": true, "preserveEditing": false})).unwrap();
+    let v = s.execute("file.exportPdf", &json!({"createLayers": true, "preserveEditing": false})).unwrap();
     assert!(warnings(&v).is_empty(), "{:?}", warnings(&v));
     let back = kition_vector_pdf::import(&b64(&v)).unwrap();
     let layers: Vec<(String, bool, bool)> = back
@@ -37,22 +37,22 @@ fn export_pdf_create_layers_writes_layers_that_reopen_as_layers() {
         .collect();
     assert_eq!(layers, [("Layer 1".to_string(), true, true), ("Notes".to_string(), false, false)]);
     // The default preset carries the editing data too.
-    let v = s.execute("document.exportPdf", &json!({"createLayers": true})).unwrap();
+    let v = s.execute("file.exportPdf", &json!({"createLayers": true})).unwrap();
     assert!(warnings(&v).is_empty(), "{:?}", warnings(&v));
     assert!(kition_vector_pdf::editing(&b64(&v)).is_some_and(|e| e.intact));
     // At PDF 1.4 there are no PDF layers.
-    let v = s.execute("document.exportPdf", &json!({"createLayers": true, "compatibility": "1.4"})).unwrap();
+    let v = s.execute("file.exportPdf", &json!({"createLayers": true, "compatibility": "1.4"})).unwrap();
     assert!(warnings(&v).iter().any(|w| w.contains("PDF 1.5")), "{:?}", warnings(&v));
 }
 
 #[test]
 fn export_pdf_overprint_is_preserved_or_discarded() {
     let mut s = session();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     // The rectangles' strokes are black (their white fills would knock out: discardWhiteOverprint).
     s.execute("object.setOverprint", &json!({"stroke": true})).unwrap();
     let overprints = |s: &mut Session, p: Value| {
-        let v = s.execute("document.exportPdf", &p).unwrap();
+        let v = s.execute("file.exportPdf", &p).unwrap();
         assert!(warnings(&v).iter().all(|w| !w.contains("overprint")), "{:?}", warnings(&v));
         String::from_utf8_lossy(&b64(&v)).matches("/OP true/op true/OPM 1").count()
     };
@@ -65,7 +65,7 @@ fn export_pdf_overprint_is_preserved_or_discarded() {
 #[test]
 fn ai_files_write_their_layers_and_sublayers_as_pdf_layers() {
     let mut s = session();
-    let layer1 = s.execute("document.inspect", &json!({})).unwrap()["layers"][1]["id"].as_u64().unwrap();
+    let layer1 = s.execute("file.inspect", &json!({})).unwrap()["layers"][1]["id"].as_u64().unwrap();
     let sub = s.execute("layer.newSublayer", &json!({"parent": layer1, "name": "Sketch"})).unwrap()["id"].as_u64().unwrap();
     s.execute("layer.setCurrent", &json!({"id": sub})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 10, "y": 40, "width": 20, "height": 20})).unwrap();
@@ -81,13 +81,13 @@ fn ai_files_write_their_layers_and_sublayers_as_pdf_layers() {
             })
             .collect()
     }
-    let v = s.execute("document.export", &json!({"format": "ai"})).unwrap();
+    let v = s.execute("file.export", &json!({"format": "ai"})).unwrap();
     let back = kition_vector_pdf::import(&b64(&v)).unwrap();
     let art = || "art".to_string();
     assert_eq!(rows(&back.layers), [("Layer 1".to_string(), true, vec![art(), "Sketch".into()]), ("Notes".to_string(), false, vec![art()])]);
     let sketch = back.layers.first().and_then(|l| l.children()?.last().cloned()).unwrap();
     assert_eq!(rows(&[sketch]), [("Sketch".to_string(), false, vec![art()])]);
     // Asked not to, it writes none.
-    let v = s.execute("document.export", &json!({"format": "ai", "createLayers": false})).unwrap();
+    let v = s.execute("file.export", &json!({"format": "ai", "createLayers": false})).unwrap();
     assert_eq!(kition_vector_pdf::import(&b64(&v)).unwrap().layers.len(), 1);
 }

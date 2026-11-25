@@ -23,28 +23,28 @@ pub type Write = (&'static str, Value, Option<Vec<Value>>);
 /// The objects the writes act on, made in `doc`, and one write of each command family.
 pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
     let mut run = |command: &str, params: Value| doc.execute(command, params).unwrap_or_else(|e| panic!("setup {command}: {e}"));
-    run("select.none", json!({}));
+    run("edit.deselectAll", json!({}));
     let a = run("shape.rectangle", json!({"x":10,"y":10,"width":40,"height":30}))["id"].clone();
     let b = run("shape.ellipse", json!({"x":30,"y":20,"width":40,"height":40}))["id"].clone();
     let c = run("shape.rectangle", json!({"x":120,"y":10,"width":30,"height":30}))["id"].clone();
     let d = run("shape.star", json!({"cx":200,"cy":60,"radius1":20,"radius2":10}))["id"].clone();
-    let open = run("path.create", json!({"anchors":[{"x":10,"y":100},{"x":60,"y":130},{"x":110,"y":100}]}))["id"].clone();
-    let text = run("text.create", json!({"x":10,"y":200,"text":"Saved text"}))["id"].clone();
-    let area = run("text.create", json!({"x":150,"y":150,"text":"Area one","area":{"width":80,"height":40}}))["id"].clone();
-    let area2 = run("text.create", json!({"x":250,"y":150,"text":"Area two","area":{"width":80,"height":40}}))["id"].clone();
+    let open = run("path.add", json!({"anchors":[{"x":10,"y":100},{"x":60,"y":130},{"x":110,"y":100}]}))["id"].clone();
+    let text = run("text.add", json!({"x":10,"y":200,"text":"Saved text"}))["id"].clone();
+    let area = run("text.add", json!({"x":150,"y":150,"text":"Area one","area":{"width":80,"height":40}}))["id"].clone();
+    let area2 = run("text.add", json!({"x":250,"y":150,"text":"Area two","area":{"width":80,"height":40}}))["id"].clone();
     run("swatch.new", json!({"name":"Saved","color":"#336699","global":true}));
     run("charStyle.new", json!({"name":"Saved char"}));
     run("paraStyle.new", json!({"name":"Saved para"}));
     let g1 = run("shape.rectangle", json!({"x":300,"y":10,"width":20,"height":20}))["id"].clone();
     let g2 = run("shape.rectangle", json!({"x":330,"y":10,"width":20,"height":20}))["id"].clone();
     run("select.set", json!({"ids":[g1.clone(), g2.clone()]}));
-    let group = run("object.group", json!({}))["id"].clone();
+    let group = run("arrange.group", json!({}))["id"].clone();
     let s = run("shape.rectangle", json!({"x":400,"y":10,"width":20,"height":20}))["id"].clone();
     run("symbol.new", json!({"name":"Saved symbol","ids":[s]}));
     run("graphicStyle.new", json!({"name":"Saved style","id":a.clone()}));
     // An artboard of its own (a file may have none), the last.
     let board = run("artboard.new", json!({"x":2000,"y":0,"width":100,"height":100,"name":"Setup board"}))["index"].clone();
-    run("select.none", json!({}));
+    run("edit.deselectAll", json!({}));
     let sel = |ids: &[&Value]| Some(ids.iter().map(|id| (*id).clone()).collect::<Vec<_>>());
     vec![
         ("object.setProps", json!({"ids":[a],"name":"Renamed","opacity":37}), None),
@@ -54,9 +54,9 @@ pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
         ("object.transform", json!({"ids":[d],"matrix":[1,0.1,0,1,2,3]}), None),
         ("object.lock", json!({}), sel(&[&c])),
         ("object.hide", json!({}), sel(&[&c])),
-        ("object.group", json!({}), sel(&[&a, &b])),
-        ("object.ungroup", json!({}), sel(&[&group])),
-        ("object.arrange.bringForward", json!({}), sel(&[&a])),
+        ("arrange.group", json!({}), sel(&[&a, &b])),
+        ("arrange.ungroup", json!({}), sel(&[&group])),
+        ("arrange.bringForward", json!({}), sel(&[&a])),
         ("object.align", json!({"horizontal":"left","to":"selection"}), sel(&[&a, &c])),
         ("object.pathfinder.unite", json!({}), sel(&[&a, &b])),
         ("object.pathfinder.minusFront", json!({}), sel(&[&a, &b])),
@@ -65,14 +65,14 @@ pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
         ("object.compoundPath.make", json!({}), sel(&[&a, &c])),
         ("object.blend.make", json!({"ids":[a, c],"steps":3}), None),
         ("object.envelope.makeWithWarp", json!({"style":"arc","bend":30}), sel(&[&c])),
-        ("object.mesh.create", json!({"rows":2,"cols":2}), sel(&[&c])),
+        ("object.mesh.add", json!({"rows":2,"cols":2}), sel(&[&c])),
         ("object.expand", json!({}), sel(&[&d])),
         ("object.rasterize", json!({"ppi":72}), sel(&[&c])),
         ("object.slice.make", json!({}), sel(&[&c])),
         ("object.pattern.make", json!({"name":"Saved pattern","edit":false}), sel(&[&c])),
         ("object.textWrap.make", json!({}), sel(&[&c])),
         ("path.join", json!({}), sel(&[&open])),
-        ("edit.clear", json!({"ids":[b]}), None),
+        ("edit.delete", json!({"ids":[b]}), None),
         ("edit.duplicate", json!({"dx":5,"dy":5}), sel(&[&a])),
         ("node.move", json!({"id":a,"parent":group,"index":0}), None),
         ("layer.new", json!({"name":"Saved layer"}), None),
@@ -86,7 +86,7 @@ pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
         ("appearance.setItem", json!({"ids":[a],"index":0,"opacity":50}), None),
         ("effect.apply", json!({"ids":[a],"effect":"stylize.dropShadow","params":{"x":3,"y":3}}), None),
         ("graphicStyle.apply", json!({"name":"Saved style","ids":[c]}), None),
-        ("attributes.set", json!({"overprintFill":true}), sel(&[&a])),
+        ("attribute.set", json!({"overprintFill":true}), sel(&[&a])),
         ("swatch.new", json!({"name":"Another","color":"#abcdef"}), None),
         ("swatch.edit", json!({"name":"Saved","color":"#ff0000"}), None),
         ("swatch.delete", json!({"names":["Saved"]}), None),
@@ -94,8 +94,8 @@ pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
         ("text.editRange", json!({"id":text,"start":0,"end":5,"insert":"Changed"}), None),
         ("text.setStyle", json!({"ids":[text],"size":17.5,"tracking":25}), None),
         ("text.setFormat", json!({"ids":[text],"baselineShift":1.5}), None),
-        ("text.thread.create", json!({}), sel(&[&area, &area2])),
-        ("type.createOutlines", json!({}), sel(&[&text])),
+        ("text.thread.add", json!({}), sel(&[&area, &area2])),
+        ("text.convertToOutlines", json!({}), sel(&[&text])),
         ("charStyle.setAttrs", json!({"name":"Saved char","attrs":{"size":13.25}}), None),
         ("charStyle.apply", json!({"name":"Saved char","ids":[text]}), None),
         ("paraStyle.setAttrs", json!({"name":"Saved para","attrs":{"space_before":3.25}}), None),
@@ -106,7 +106,7 @@ pub fn writes(doc: &mut VectorDocument) -> Vec<Write> {
         ("livePaint.make", json!({"ids":[a, c]}), None),
         ("dataset.new", json!({"name":"Saved data"}), None),
         ("recolor.apply", json!({"map":{"#000000":"#ff00ff"}}), sel(&[&a])),
-        ("document.setup", json!({"bleed":4.25}), None),
+        ("file.setup", json!({"bleed":4.25}), None),
         ("shape.polygon", json!({"cx":500,"cy":300,"radius":20,"sides":7}), None),
         ("perspective.grid.set", json!({"cell":37.5,"horizon":211.25}), None),
     ]

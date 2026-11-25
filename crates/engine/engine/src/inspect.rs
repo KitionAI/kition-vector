@@ -22,7 +22,7 @@ pub struct SummaryOpts {
     pub child_limit: Option<u64>,
 }
 
-/// Compact tree summary of a node (for `document.inspect`): the whole subtree.
+/// Compact tree summary of a node (for `file.inspect`): the whole subtree.
 pub fn node_summary(n: &Node) -> Value {
     node_summary_opts(n, SummaryOpts::default())
 }
@@ -166,7 +166,7 @@ pub fn document_opts(s: &Session, opts: SummaryOpts) -> Value {
     })
 }
 
-/// What `document.find` matches: every given filter must hit (AND). All matching is
+/// What `file.find` matches: every given filter must hit (AND). All matching is
 /// case-insensitive; `name` and `text` are substrings, `kind` is the exact panel label
 /// (`Layer`, `Group`, `Path`, `Type`, `Image`, ...).
 pub struct FindFilter {

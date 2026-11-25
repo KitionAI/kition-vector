@@ -22,7 +22,7 @@ fn rect(s: &mut Session, x: f64, y: f64, w: f64, h: f64) -> NodeId {
 
 fn path(s: &mut Session, pts: &[(f64, f64)], closed: bool) -> NodeId {
     let anchors: Vec<Value> = pts.iter().map(|(x, y)| json!({"x": x, "y": y})).collect();
-    id_of(&s.execute("path.create", &json!({"anchors": anchors, "closed": closed})).unwrap())
+    id_of(&s.execute("path.add", &json!({"anchors": anchors, "closed": closed})).unwrap())
 }
 
 fn select(s: &mut Session, ids: &[NodeId]) {
@@ -222,7 +222,7 @@ fn mirror_cut_closes_an_open_half() {
 fn cut_commands_need_paths() {
     let mut s = session();
     assert!(s.execute("path.lineCut", &json!({"from": [0, 0], "to": [1, 1]})).is_err(), "nothing selected");
-    let t = id_of(&s.execute("text.create", &json!({"x": 10, "y": 10, "text": "A"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 10, "y": 10, "text": "A"})).unwrap());
     select(&mut s, &[t]);
     assert!(s.execute("path.lineCut", &json!({"from": [0, 0], "to": [1, 1]})).is_err());
 }

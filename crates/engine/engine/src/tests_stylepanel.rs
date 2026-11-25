@@ -106,7 +106,7 @@ fn move_reorders_and_undoes_in_one_step() {
 fn override_character_color_clears_the_run_fill() {
     let mut s = session();
     make(&mut s, "Blue", "#0000ff", "#000000", 1.0, 100.0, None);
-    let text = |s: &mut Session, y: f64| id_of(&run(s, "text.create", json!({"x": 10, "y": y, "text": "Hi", "size": 40})));
+    let text = |s: &mut Session, y: f64| id_of(&run(s, "text.add", json!({"x": 10, "y": y, "text": "Hi", "size": 40})));
     let runs = |s: &Session, id: NodeId| match &s.doc().unwrap().doc.node(id).unwrap().kind {
         NodeKind::Text(t) => t.runs.iter().map(|r| (r.style.fill.clone(), r.style.stroke.clone())).collect::<Vec<_>>(),
         _ => panic!("type"),

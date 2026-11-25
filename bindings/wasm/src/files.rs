@@ -6,13 +6,13 @@ use kition_kit::files::FileParam;
 
 /// Every file or folder parameter of the kit's commands.
 pub const FILES: &[FileParam] = &[
-    FileParam::read("document.open", "path", &[]),
+    FileParam::read("file.open", "path", &[]),
     FileParam::read("file.revert", "path", &[]),
     FileParam::read("swatch.library.list", "path", &[]),
     FileParam::read("swatch.library.copyToUser", "path", &[]),
     FileParam::read("file.place", "path", &[]),
     FileParam::read("file.place.info", "path", &[]),
-    FileParam::read("links.relink", "path", &[]),
+    FileParam::read("linkedFile.relink", "path", &[]),
     FileParam::read("pdf.preset.import", "path", &[]),
     FileParam::read("print.presets.import", "path", &[]),
     FileParam::read("perspective.presets.import", "path", &[]),
@@ -20,13 +20,13 @@ pub const FILES: &[FileParam] = &[
     FileParam::read("flattener.presets.import", "path", &[]),
     FileParam::read("graphicStyle.loadLibrary", "path", &[]),
     FileParam::read("library.import", "path", &[]),
-    FileParam::folder("links.relink", "folder"),
-    FileParam::create("document.export", "path", &[]),
-    FileParam::create("document.exportSelection", "path", &[]),
-    FileParam::folder("document.exportForScreens", "folder"),
-    FileParam::read("document.pdfInfo", "path", &[]),
-    FileParam::create("document.exportForOffice", "path", &[]),
-    FileParam::write("document.save", "path", &[]),
+    FileParam::folder("linkedFile.relink", "folder"),
+    FileParam::create("file.export", "path", &[]),
+    FileParam::create("file.exportSelection", "path", &[]),
+    FileParam::folder("file.exportForScreens", "folder"),
+    FileParam::read("file.pdfInfo", "path", &[]),
+    FileParam::create("file.exportForOffice", "path", &[]),
+    FileParam::write("file.save", "path", &[]),
     FileParam::create("file.saveAs", "path", &[]),
     FileParam::create("file.saveCopy", "path", &[]),
     FileParam::create("file.saveAsTemplate", "path", &[]),
@@ -38,19 +38,19 @@ pub const FILES: &[FileParam] = &[
     FileParam::create("flattener.presets.export", "path", &[]),
     FileParam::create("graphicStyle.saveLibrary", "path", &[]),
     FileParam::create("library.export", "path", &[]),
-    FileParam::create("document.exportPdf", "path", &[]),
+    FileParam::create("file.exportPdf", "path", &[]),
     FileParam::read("file.place.queue", "paths", &[]),
-    FileParam::create("links.unembed", "path", &[]),
+    FileParam::create("linkedFile.unembed", "path", &[]),
     FileParam::create("pdf.preset.export", "path", &[]),
-    FileParam::create("document.exportDxf", "path", &[]),
-    FileParam::create("document.exportEps", "path", &[]),
+    FileParam::create("file.exportDxf", "path", &[]),
+    FileParam::create("file.exportEps", "path", &[]),
     FileParam::folder("file.package", "folder"),
     FileParam::create("file.print", "path", &[]),
     FileParam::read("file.recovery.restore", "file", &[]),
     FileParam::write("file.recovery.discard", "file", &[]),
-    FileParam::read("document.dxfInfo", "path", &[]),
-    FileParam::create("document.exportForWeb", "path", &[]),
-    FileParam::folder("assets.export", "folder"),
+    FileParam::read("file.dxfInfo", "path", &[]),
+    FileParam::create("file.exportForWeb", "path", &[]),
+    FileParam::folder("asset.export", "folder"),
     FileParam::create("css.export", "path", &[]),
     FileParam::create("print.presets.export", "path", &[]),
     FileParam::read("plugin.install", "path", &[]),
@@ -66,7 +66,7 @@ mod tests {
 
     /// Parameters whose names read like files but are not: ids, property paths, directions,
     /// folders of the kit's own panels, in-memory data.
-    const NOT_FILES: &[(&str, &str)] = &[("text.createInPath", "path"), ("file.place.queue", "files")];
+    const NOT_FILES: &[(&str, &str)] = &[("text.addInPath", "path"), ("file.place.queue", "files")];
 
     #[test]
     fn every_file_parameter_is_declared() {

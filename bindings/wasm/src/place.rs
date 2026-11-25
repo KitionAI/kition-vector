@@ -666,7 +666,7 @@ fn setting_fields(command: &str, params: &Value) -> Option<Vec<String>> {
     let keys = |value: &Value| value.as_object().map(|keys| keys.keys().cloned().collect::<Vec<_>>()).unwrap_or_default();
     let mut fields = Vec::new();
     match command {
-        "document.setup" => {
+        "file.setup" => {
             for key in keys(params) {
                 match key.as_str() {
                     "units" => fields.push("settings.units".to_owned()),
@@ -679,12 +679,12 @@ fn setting_fields(command: &str, params: &Value) -> Option<Vec<String>> {
                 }
             }
         }
-        "file.info" => {
+        "file.setInfo" => {
             for key in keys(params) {
                 fields.push(if key == "title" { "settings.title".to_owned() } else { format!("settings.metadata.{key}") });
             }
         }
-        "document.rasterEffectsSettings" => {
+        "file.rasterEffectsSettings" => {
             for key in keys(params) {
                 match key.as_str() {
                     "resolution" => fields.push("settings.raster_effects_ppi".to_owned()),

@@ -18,13 +18,13 @@ const READERS: &[&str] = &[
     "artboard.setProps",
     "edit.copy",
     "edit.cut",
-    "graph.create",
+    "graph.add",
     "graph.setData",
     "graph.setType",
-    "links.embed",
-    "links.unembed",
+    "linkedFile.embed",
+    "linkedFile.unembed",
     "object.align",
-    "object.createObjectMosaic",
+    "object.addObjectMosaic",
     "object.distribute",
     "object.distributeSpacing",
     "object.move",
@@ -73,7 +73,7 @@ fn the_editor_state_shows_the_preferences_and_a_call_puts_them_back() {
 fn the_interface_language_is_a_mode_and_a_call_puts_it_back() {
     let mut doc = VectorDocument::create("Prefs.kvector", 100, 100).unwrap();
     let commands = doc.commands();
-    for id in ["charStyle.new", "paraStyle.new", "text.create", "text.createInPath"] {
+    for id in ["charStyle.new", "paraStyle.new", "text.add", "text.addInPath"] {
         let command = commands.iter().find(|command| command.id == id).unwrap_or_else(|| panic!("no {id}"));
         assert!(command.reads.contains(&EditorState::Mode), "{id} reads the interface language without declaring Mode");
     }

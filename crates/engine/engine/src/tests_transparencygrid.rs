@@ -19,10 +19,10 @@ fn transparency_grid_is_per_document_view_state() {
     s.execute("file.new", &json!({})).unwrap();
     assert!(!grid(&s));
     assert_eq!(s.execute("view.transparencyGrid", &json!({"on": false})).unwrap(), json!({"on": false}));
-    s.execute("document.activate", &json!({"index": 0})).unwrap();
+    s.execute("file.activate", &json!({"index": 0})).unwrap();
     assert!(grid(&s));
     assert_eq!(s.execute("view.transparencyGrid", &json!({})).unwrap(), json!({"on": false}));
     assert_eq!(s.execute("view.transparencyGrid", &json!({"on": true})).unwrap(), json!({"on": true}));
-    s.execute("document.activate", &json!({"index": 1})).unwrap();
+    s.execute("file.activate", &json!({"index": 1})).unwrap();
     assert!(!grid(&s));
 }

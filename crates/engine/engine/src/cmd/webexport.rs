@@ -23,12 +23,12 @@ use serde_json::{Value, json};
 
 use super::*;
 
-const C: &str = "document.exportForWeb";
+const C: &str = "file.exportForWeb";
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "document.exportForWeb",
+            "file.exportForWeb",
             "Save for Web",
             [],
             None,
@@ -37,11 +37,11 @@ pub fn specs() -> Vec<CommandSpec> {
             export
         ),
         cmd!(
-            query "document.exportForWeb.preview",
+            query "file.exportForWeb.preview",
             "Save for Web Preview",
             [],
             None,
-            "{…the settings of document.exportForWeb (preset?, format?…), slice?: n (1-based, from slice.list; default the whole image), kbps?: 56.6 (connection speed for the download time), image?: false (also the optimised file as dataBase64)} what Save writes for the whole image (or one slice) → {format, width, height, bytes (exactly the file's size), seconds (to download at kbps), kbps, colors?: [{color: \"#rrggbb\", source: \"#rrggbb\" (the colour the reduction made, as colorTable lists it), transparent, locked, webShifted, webSafe}] (gif/png8: the colour table in file order), mappedToTransparent?: [\"#rrggbb\"…], slices: images an export writes, dataBase64?}",
+            "{…the settings of file.exportForWeb (preset?, format?…), slice?: n (1-based, from slice.list; default the whole image), kbps?: 56.6 (connection speed for the download time), image?: false (also the optimised file as dataBase64)} what Save writes for the whole image (or one slice) → {format, width, height, bytes (exactly the file's size), seconds (to download at kbps), kbps, colors?: [{color: \"#rrggbb\", source: \"#rrggbb\" (the colour the reduction made, as colorTable lists it), transparent, locked, webShifted, webSafe}] (gif/png8: the colour table in file order), mappedToTransparent?: [\"#rrggbb\"…], slices: images an export writes, dataBase64?}",
             has_doc,
             preview
         ),
@@ -50,7 +50,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Save for Web Settings",
             [],
             None,
-            "{reset?: false, preset?, …the settings of document.exportForWeb} remember settings for the Save for Web dialog (it opens on them): the keys given change the remembered ones, a preset replaces them, reset goes back to the defaults; {} reads them → {settings}",
+            "{reset?: false, preset?, …the settings of file.exportForWeb} remember settings for the Save for Web dialog (it opens on them): the keys given change the remembered ones, a preset replaces them, reset goes back to the defaults; {} reads them → {settings}",
             always,
             settings
         ),
@@ -59,7 +59,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Save for Web Presets",
             [],
             None,
-            "{} → {presets: [{name, builtIn, settings}]} the built-in presets, then the saved ones; any name works as `preset` in document.exportForWeb",
+            "{} → {presets: [{name, builtIn, settings}]} the built-in presets, then the saved ones; any name works as `preset` in file.exportForWeb",
             always,
             presets_list
         ),
@@ -68,7 +68,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Save Save for Web Preset",
             [],
             None,
-            "{name, newName?: rename it, preset?: start from this preset (default: the saved preset `name`, else the defaults), settings?: {…}, …the settings of document.exportForWeb} create or change a saved preset (built-in ones can't change) → {name, settings, created}",
+            "{name, newName?: rename it, preset?: start from this preset (default: the saved preset `name`, else the defaults), settings?: {…}, …the settings of file.exportForWeb} create or change a saved preset (built-in ones can't change) → {name, settings, created}",
             always,
             presets_save
         ),
@@ -339,7 +339,7 @@ impl ColorTable {
     }
 }
 
-/// Save for Web's settings: the params of `document.exportForWeb`, a preset's content and what the
+/// Save for Web's settings: the params of `file.exportForWeb`, a preset's content and what the
 /// dialog opens on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -529,7 +529,7 @@ impl Session {
         start.merged(p)
     }
 
-    /// The settings of a `document.exportForWeb` call: the defaults (or its preset) with its keys.
+    /// The settings of a `file.exportForWeb` call: the defaults (or its preset) with its keys.
     pub fn web_settings(&self, p: &Value) -> std::result::Result<WebSettings, String> {
         self.web_settings_over(&WebSettings::default(), p)
     }
@@ -992,7 +992,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn preview(s: &mut Session, p: &Value) -> Result<Value> {
-    const P: &str = "document.exportForWeb.preview";
+    const P: &str = "file.exportForWeb.preview";
     let settings = s.web_settings(p).map_err(|e| bad(P, e))?;
     let kbps = f64_or(p, "kbps", 56.6);
     if !(kbps.is_finite() && kbps > 0.0) {

@@ -32,7 +32,7 @@ fn the_whole_session_comes_back_after_an_agents_steps() {
     assert_eq!(doc.inspect().unwrap()["selection"], json!([b]));
     // The agent changes what its later steps read: the current layer, the tool, the new-art paint.
     doc.execute("layer.setCurrent", json!({"id": doc.inspect().unwrap()["layers"][1]["id"]})).unwrap();
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     doc.execute("paint.setFill", json!({"color":"#ff0000"})).unwrap();
     assert_ne!(doc.editor_state(), saved);
     doc.restore_editor_state(&saved).unwrap();

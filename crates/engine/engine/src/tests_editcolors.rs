@@ -80,7 +80,7 @@ fn mesh_colors(s: &Session, id: NodeId) -> Vec<Color> {
 /// A selected 1×1 gradient mesh: red, with one green corner.
 fn mesh(s: &mut Session) -> NodeId {
     let a = rect(s, json!("#ff0000"));
-    s.execute("object.mesh.create", &json!({"rows": 1, "cols": 1})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 1, "cols": 1})).unwrap();
     s.execute("object.mesh.setPointColor", &json!({"id": a.0, "index": 0, "color": "#00ff00"})).unwrap();
     s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
     a

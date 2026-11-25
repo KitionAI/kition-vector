@@ -21,7 +21,7 @@ fn area(s: &mut Session, w: f64, h: f64, text: &str, extra: Value) -> NodeId {
     if let (Some(a), Some(e)) = (a.as_object_mut(), extra.as_object()) {
         a.extend(e.clone());
     }
-    let id = s.execute("text.create", &json!({"x": 40, "y": 40, "size": 12, "area": a, "text": text})).unwrap()["id"].as_u64().unwrap();
+    let id = s.execute("text.add", &json!({"x": 40, "y": 40, "size": 12, "area": a, "text": text})).unwrap()["id"].as_u64().unwrap();
     NodeId(id)
 }
 
@@ -89,8 +89,8 @@ fn area_options_set_and_report_the_fit() {
 fn inspect_reports_overflow_and_fit_scale() {
     let mut s = session();
     let id = area(&mut s, 120.0, 30.0, STORY, json!({"fit": "shrinkText", "fitMinPercent": 10}));
-    s.execute("text.create", &json!({"x": 10, "y": 500, "text": "point"})).unwrap();
-    let doc = s.execute("document.inspect", &json!({})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 500, "text": "point"})).unwrap();
+    let doc = s.execute("file.inspect", &json!({})).unwrap();
     let kids = doc["layers"][0]["children"].as_array().unwrap();
     let node = kids.iter().find(|k| k["id"] == id.0).unwrap();
     assert_eq!(node["overflow"], false);
@@ -100,7 +100,7 @@ fn inspect_reports_overflow_and_fit_scale() {
     assert!(point.get("overflow").is_none() && point.get("fitScale").is_none(), "point type never overflows");
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.execute("text.areaOptions", &json!({"fit": "none"})).unwrap();
-    let doc = s.execute("document.inspect", &json!({})).unwrap();
+    let doc = s.execute("file.inspect", &json!({})).unwrap();
     let node = doc["layers"][0]["children"].as_array().unwrap().iter().find(|k| k["id"] == id.0).unwrap().clone();
     assert_eq!((node["overflow"].as_bool(), node["fitScale"].as_f64(), node["fit"].as_str()), (Some(true), Some(1.0), Some("none")));
 }
@@ -203,7 +203,7 @@ fn auto_height_in_columns_and_by_hand() {
     assert_eq!(text(&s, id).area.fit, AreaFit::AutoHeight);
     assert!(frame(&s, id).height() < b.height());
     // Point type has no frame to size.
-    let p = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "x"})).unwrap()["id"].as_u64().unwrap();
+    let p = s.execute("text.add", &json!({"x": 10, "y": 10, "text": "x"})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [p]})).unwrap();
     assert!(s.execute("text.areaOptions", &json!({"fit": "autoHeight"})).is_err(), "point type has no area options");
 }

@@ -51,13 +51,13 @@ fn a_click_outside_an_outside_stroke_selects_it() {
     let r = id_of(&s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 200, "height": 200})).unwrap());
     s.execute("paint.setFill", &json!({"none": true})).unwrap();
     s.execute("stroke.set", &json!({"weight": 20, "align": "outside"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     // 0.8 × the weight outside the path: past where a centred stroke (plus the tolerance) reaches.
     assert_eq!(click(&mut s, 84.0, 200.0), [r]);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(click(&mut s, 116.0, 200.0).is_empty(), "nothing paints inside");
     s.execute("stroke.set", &json!({"ids": [r.0], "align": "center"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(click(&mut s, 84.0, 200.0).is_empty(), "a centred stroke doesn't reach");
 }
 
@@ -66,9 +66,9 @@ fn a_click_at_the_lens_maximum_selects_its_stroke() {
     let mut s = session();
     let l = id_of(&s.execute("shape.line", &json!({"x1": 100, "y1": 200, "x2": 300, "y2": 200})).unwrap());
     s.execute("stroke.set", &json!({"weight": 20, "profile": "lens"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(click(&mut s, 200.0, 209.0), [l], "the widest point");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(click(&mut s, 110.0, 209.0).is_empty(), "the thin end");
     // Fitted bounds take the profile in too.
     s.execute("select.set", &json!({"ids": [l.0]})).unwrap();

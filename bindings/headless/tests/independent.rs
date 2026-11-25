@@ -50,14 +50,14 @@ fn drawing() -> Vec<u8> {
     ex("object.setProps", json!({"ids": [g0], "name": "G0"}));
     ex("object.setProps", json!({"ids": [g1], "name": "G1"}));
     ex("select.set", json!({"ids": [g0, g1]}));
-    let g = id(&ex("object.group", json!({})));
+    let g = id(&ex("arrange.group", json!({})));
     ex("object.setProps", json!({"ids": [g], "name": "G"}));
     let k0 = id(&ex("shape.rectangle", json!({"x": 200, "y": 300, "width": 40, "height": 40})));
     let k1 = id(&ex("shape.rectangle", json!({"x": 210, "y": 310, "width": 10, "height": 10})));
     ex("select.set", json!({"ids": [k0, k1]}));
     let cp = id(&ex("object.compoundPath.make", json!({})));
     ex("object.setProps", json!({"ids": [cp], "name": "CP"}));
-    let members = ex("document.node", json!({"id": cp}))["kind"]["children"].clone();
+    let members = ex("file.node", json!({"id": cp}))["kind"]["children"].clone();
     for (n, member) in members.as_array().unwrap().iter().enumerate() {
         ex("object.setProps", json!({"ids": [member["id"]], "name": format!("K{n}")}));
     }
@@ -71,7 +71,7 @@ fn drawing() -> Vec<u8> {
     let t0 = id(&ex("shape.rectangle", json!({"x": 600, "y": 500, "width": 20, "height": 20})));
     ex("object.setProps", json!({"ids": [t0], "name": "T0"}));
     let _ = top;
-    ex("select.none", json!({}));
+    ex("edit.deselectAll", json!({}));
     doc.save(None).unwrap()
 }
 
@@ -247,9 +247,9 @@ async fn w3_a_write_from_the_drawings_settings_rests_on_them() {
 async fn w4_a_restack_rests_on_where_its_object_is_among_its_siblings() {
     refused_then_applied(
         "bring forward after a sibling restacked",
-        |n| vec![("select.set", json!({"ids": [n["R3"]]})), ("object.arrange.sendToBack", json!({}))],
+        |n| vec![("select.set", json!({"ids": [n["R3"]]})), ("arrange.sendToBack", json!({}))],
         |n| vec![fill(n["R5"], "#ff0000")],
-        |n| json!({"command": "object.arrange.bringForward", "on": [n["R2"]], "params": {}}),
+        |n| json!({"command": "arrange.bringForward", "on": [n["R2"]], "params": {}}),
     )
     .await;
 }
@@ -352,7 +352,7 @@ async fn w12_a_step_on_the_selection_an_earlier_step_made_rests_on_it() {
     .await;
 }
 
-/// A step that acts on what an earlier write of the same run selected (the group `object.group`
+/// A step that acts on what an earlier write of the same run selected (the group `arrange.group`
 /// just made) rests on what that write would leave: a fill of the new group paints its members.
 #[tokio::test(flavor = "multi_thread")]
 async fn w14_a_step_on_what_an_earlier_write_selected_rests_on_it() {
@@ -360,7 +360,7 @@ async fn w14_a_step_on_what_an_earlier_write_selected_rests_on_it() {
         "fill of the group the run made after a member's fill",
         |n| vec![fill(n["R2"], "#00ff00")],
         |n| vec![fill(n["R5"], "#00ff00")],
-        |n| json!([{"command": "object.group", "on": [n["R2"], n["R3"]], "params": {}}, {"command": "paint.setFill", "params": {"color": "#ff0000"}}]),
+        |n| json!([{"command": "arrange.group", "on": [n["R2"], n["R3"]], "params": {}}, {"command": "paint.setFill", "params": {"color": "#ff0000"}}]),
     )
     .await;
 }
@@ -387,7 +387,7 @@ async fn m1_a_restack_does_not_rest_on_its_objects_paint() {
     applies_after(
         "bring forward after the object's fill",
         |n| vec![fill(n["R2"], "#ff0000")],
-        |n| json!({"command": "object.arrange.bringForward", "on": [n["R2"]], "params": {}}),
+        |n| json!({"command": "arrange.bringForward", "on": [n["R2"]], "params": {}}),
     )
     .await;
 }
@@ -413,12 +413,12 @@ async fn m5_a_group_rests_on_where_its_objects_are_and_merges_their_edits() {
             f.colleague(&[(theirs.0, params)]);
         }
         let ran = f
-            .write(&basis, json!({"command": "object.group", "on": [r2, r3], "params": {}}))
+            .write(&basis, json!({"command": "arrange.group", "on": [r2, r3], "params": {}}))
             .await
             .unwrap_or_else(|e| panic!("group after a {what}: {e}"));
         let group = ran["changes"]["created"].as_array().and_then(|c| c.first()).and_then(|c| c["id"].as_u64()).unwrap_or_else(|| panic!("{ran}"));
         let mut doc = VectorDocument::open(FILE, &std::fs::read(f.workspace.join(FILE)).unwrap()).unwrap();
-        let saved = doc.execute("document.node", json!({"id": group})).unwrap();
+        let saved = doc.execute("file.node", json!({"id": group})).unwrap();
         let members: Vec<Value> = saved["kind"]["children"].as_array().unwrap().clone();
         assert_eq!(members.len(), 2, "{saved}");
         let mine = members.iter().find(|m| m["id"] == json!(r2)).unwrap_or_else(|| panic!("R2 not in the group: {saved}"));
@@ -433,7 +433,7 @@ async fn m5_a_group_rests_on_where_its_objects_are_and_merges_their_edits() {
     let f = Fixture::new();
     let (n, basis) = f.inspect().await;
     f.colleague(&[("node.move", json!({"id": n["R2"], "parent": n["G"], "index": 0}))]);
-    match f.write(&basis, json!({"command": "object.group", "on": [n["R2"], n["R3"]], "params": {}})).await {
+    match f.write(&basis, json!({"command": "arrange.group", "on": [n["R2"], n["R3"]], "params": {}})).await {
         Err(refused) => assert_eq!(refused["error"]["code"], "conflict", "{refused}"),
         Ok(ran) => panic!("group after a member was moved into another group: {ran}"),
     }
@@ -456,7 +456,7 @@ async fn m2_a_fill_by_name_does_not_rest_on_the_swatch_order() {
 async fn m3_pathfinder_rests_on_where_its_frontmost_object_is_only() {
     applies_after(
         "unite after the back object was sent to the back",
-        |n| vec![("select.set", json!({"ids": [n["R2"]]})), ("object.arrange.sendToBack", json!({}))],
+        |n| vec![("select.set", json!({"ids": [n["R2"]]})), ("arrange.sendToBack", json!({}))],
         |n| json!({"command": "object.pathfinder.unite", "on": [n["R2"], n["R3"]], "params": {}}),
     )
     .await;

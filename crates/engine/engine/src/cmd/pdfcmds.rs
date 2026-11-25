@@ -1,7 +1,7 @@
 //! Edit → PDF Presets: `pdf.preset.list`, `save`, `delete`, `export` and `import`. The built-in
 //! presets are generated in code ([`kition_vector_pdf::builtin_presets`]) and read-only; the user's
 //! live in [`crate::Prefs::pdf_presets`]. Any of their names works as `preset` wherever PDF
-//! options are taken (`document.exportPdf`, `document.export`, a `.ai` save…).
+//! options are taken (`file.exportPdf`, `file.export`, a `.ai` save…).
 
 use kition_vector_pdf::{PdfPreset, builtin_preset, builtin_presets};
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "PDF Presets",
             [],
             None,
-            "{} → {presets: [{name, builtIn, supported (the writer produces its standard), description, settings (as document.pdfSettings)}]} the built-in presets (Kition Vector Default first), then the saved ones; any of these names works as `preset` wherever PDF options are taken",
+            "{} → {presets: [{name, builtIn, supported (the writer produces its standard), description, settings (as file.pdfSettings)}]} the built-in presets (Kition Vector Default first), then the saved ones; any of these names works as `preset` wherever PDF options are taken",
             always,
             list
         ),
@@ -40,7 +40,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Save PDF Preset",
             [],
             None,
-            "{name?: (default: a new \"PDF Preset N\"), newName?: rename it, description?, preset?: the preset to start from (default: the saved preset `name`, else Kition Vector Default), …document.exportPdf options} create or change a saved preset (built-in presets are read-only; passwords are never stored) → {name, created, settings}",
+            "{name?: (default: a new \"PDF Preset N\"), newName?: rename it, description?, preset?: the preset to start from (default: the saved preset `name`, else Kition Vector Default), …file.exportPdf options} create or change a saved preset (built-in presets are read-only; passwords are never stored) → {name, created, settings}",
             always,
             save
         ),

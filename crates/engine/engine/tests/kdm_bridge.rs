@@ -22,7 +22,7 @@ fn new_session() -> Session {
     rect(&mut s, "B", 300.0, 100.0);
     s.execute("layer.new", &json!({"name": "Notes"})).unwrap();
     rect(&mut s, "C", 100.0, 400.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s
 }
 
@@ -145,7 +145,7 @@ fn one_command_one_transaction_reproduces_in_a_peer() {
         ("group", |s| {
             let (a, b) = (named(doc(s), "A"), named(doc(s), "B"));
             s.execute("select.set", &json!({"ids": [a, b]})).unwrap();
-            s.execute("object.group", &json!({})).unwrap();
+            s.execute("arrange.group", &json!({})).unwrap();
         }),
         ("reparent", |s| {
             let a = named(doc(s), "A");
@@ -155,11 +155,11 @@ fn one_command_one_transaction_reproduces_in_a_peer() {
         ("bring to front", |s| {
             let a = named(doc(s), "A");
             s.execute("select.set", &json!({"ids": [a]})).unwrap();
-            s.execute("object.arrange.bringToFront", &json!({})).unwrap();
+            s.execute("arrange.bringToFront", &json!({})).unwrap();
         }),
         ("delete", |s| {
             let b = named(doc(s), "B");
-            s.execute("edit.clear", &json!({"ids": [b]})).unwrap();
+            s.execute("edit.delete", &json!({"ids": [b]})).unwrap();
         }),
         ("drag", |s| drag(s, (150.0, 140.0), (190.0, 160.0))),
         ("new artboard", |s| {
@@ -172,7 +172,7 @@ fn one_command_one_transaction_reproduces_in_a_peer() {
             s.execute("guide.add", &json!({"vertical": false, "pos": 50})).unwrap();
         }),
         ("text", |s| {
-            s.execute("text.create", &json!({"x": 10, "y": 500, "text": "point"})).unwrap();
+            s.execute("text.add", &json!({"x": 10, "y": 500, "text": "point"})).unwrap();
         }),
         ("new layer", |s| {
             s.execute("layer.new", &json!({"name": "Ink"})).unwrap();
@@ -319,8 +319,8 @@ fn selection_only_changes_write_nothing() {
     let version = a.version().unwrap();
     let aid = named(doc(&a), "A");
     a.execute("select.set", &json!({"ids": [aid]})).unwrap();
-    a.execute("select.all", &json!({})).unwrap();
-    a.execute("select.none", &json!({})).unwrap();
+    a.execute("edit.selectAll", &json!({})).unwrap();
+    a.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(a.version().unwrap(), version, "selecting is this person's own");
 }
 
@@ -351,7 +351,7 @@ fn a_remote_deletion_of_the_selection_fixes_it() {
     let aid = named(doc(&a), "A");
     a.execute("select.set", &json!({"ids": [aid]})).unwrap();
     let bid = named(doc(&b), "A");
-    b.execute("edit.clear", &json!({"ids": [bid]})).unwrap();
+    b.execute("edit.delete", &json!({"ids": [bid]})).unwrap();
     send(&mut b, &mut a);
     assert!(a.active().unwrap().selection.objects.is_empty(), "the deleted object left the selection");
     assert_holds(&a, "after the remote deletion");
@@ -485,7 +485,7 @@ fn a_draft_and_the_persons_meanwhile_edit_adding_to_one_layer_both_land() {
     a.execute("layer.setCurrent", &json!({"id": in_a})).unwrap();
     let e = a.execute("shape.ellipse", &json!({"x": 500, "y": 300, "width": 60, "height": 60})).unwrap()["id"].as_u64().unwrap();
     a.execute("layer.setProps", &json!({"id": e, "name": "E"})).unwrap();
-    a.execute("select.none", &json!({})).unwrap();
+    a.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "E"]);
     let (hash, view) = (a.state_hash().unwrap(), canonical(doc(&a)));
 
@@ -513,14 +513,14 @@ fn a_draft_moving_the_object_the_person_moved_meanwhile_is_refused() {
     let (mut b, base) = draft_of(&mut a);
     let in_b = named(doc(&b), "A");
     b.execute("select.set", &json!({"ids": [in_b]})).unwrap();
-    b.execute("object.arrange.bringToFront", &json!({})).unwrap();
+    b.execute("arrange.bringToFront", &json!({})).unwrap();
     assert_eq!(siblings(doc(&b), "A"), vec!["B", "A"]);
     let changes = b.export_changes(&base).unwrap();
 
     let (in_a, c) = (named(doc(&a), "A"), named(doc(&a), "C"));
     a.execute("layer.setCurrent", &json!({"id": c})).unwrap();
     a.execute("select.set", &json!({"ids": [in_a]})).unwrap();
-    a.execute("object.arrange.sendToCurrentLayer", &json!({})).unwrap();
+    a.execute("arrange.sendToCurrentLayer", &json!({})).unwrap();
     assert_eq!(siblings(doc(&a), "A"), vec!["C", "A"], "the person moved A to the layer Notes");
     let (version, hash, view) = (a.version().unwrap(), a.state_hash().unwrap(), canonical(doc(&a)));
     let history = history_of(&mut a, None);
@@ -567,11 +567,11 @@ fn a_threaded_story_shows_as_a_fresh_read_lays_it_out() {
         .map(|k| {
             let area =
                 json!({"x": 100.0 + 130.0 * f64::from(k), "y": 300, "text": if k == 0 { "Once" } else { "" }, "area": {"width": 120, "height": 40}});
-            s.execute("text.create", &area).unwrap()["id"].as_u64().unwrap()
+            s.execute("text.add", &area).unwrap()["id"].as_u64().unwrap()
         })
         .collect();
     s.execute("select.set", &json!({"ids": frames})).unwrap();
-    s.execute("text.thread.create", &json!({})).unwrap();
+    s.execute("text.thread.add", &json!({})).unwrap();
     assert_eq!(doc(&s).text_threads.len(), 1, "one thread of three frames");
     assert_holds(&s, "threaded");
     let first = doc(&s).text_threads[0][0].0;
@@ -649,18 +649,18 @@ fn random_command(s: &mut Session, rng: &mut Rng) -> String {
         6 => {
             let ids: Vec<u64> = [pick(rng), pick(rng)].into_iter().flatten().collect();
             let _ = s.execute("select.set", &json!({"ids": ids}));
-            ("object.group", json!({}))
+            ("arrange.group", json!({}))
         }
         7 => {
             let _ = s.execute("select.set", &json!({"ids": pick(rng).into_iter().collect::<Vec<_>>()}));
-            ("object.ungroup", json!({}))
+            ("arrange.ungroup", json!({}))
         }
         8 => ("layer.move", json!({"ids": pick(rng).into_iter().collect::<Vec<_>>(), "target": layer(rng)})),
         9 => {
             let _ = s.execute("select.set", &json!({"ids": pick(rng).into_iter().collect::<Vec<_>>()}));
-            ("object.arrange.bringToFront", json!({}))
+            ("arrange.bringToFront", json!({}))
         }
-        10 => ("edit.clear", json!({"ids": pick(rng).into_iter().collect::<Vec<_>>()})),
+        10 => ("edit.delete", json!({"ids": pick(rng).into_iter().collect::<Vec<_>>()})),
         11 => ("edit.undo", json!({})),
         _ => ("layer.new", json!({})),
     };

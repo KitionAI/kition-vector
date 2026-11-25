@@ -340,7 +340,7 @@ fn act_writes(root: &Path) {
     let _ = agent.run(&id, "plugin.reload", json!({}));
     agent.refused(&id, "plugin.reload", &json!({ "path": path(&outside, "plugins") }));
     // V1: what the audit wrote outside, and the font search that walked folders.
-    agent.refused(&id, "document.export", &json!({ "path": path(&outside, "via-batch.svg") }));
+    agent.refused(&id, "file.export", &json!({ "path": path(&outside, "via-batch.svg") }));
     agent.refused(&id, "file.saveAs", &json!({ "path": path(&outside, "saved-as.kvector") }));
     agent.refused(&id, "file.package", &json!({ "folder": path(&outside, "package") }));
     agent.refused(&id, "text.findFontFiles", &json!({ "folder": path(&outside, "fonts") }));
@@ -431,16 +431,16 @@ fn act_reads(root: &Path) {
         agent.problems.push(format!("the check reports no vector.missing-link: {checked}"));
     }
     for format in ["svg", "png", "pdf"] {
-        let _ = agent.run(&svg, "document.exportBytes", json!({ "format": format }));
+        let _ = agent.run(&svg, "file.exportBytes", json!({ "format": format }));
     }
-    for command in ["links.list", "links.check", "links.update", "links.updateChanged", "file.package"] {
+    for command in ["linkedFile.list", "linkedFile.check", "linkedFile.update", "linkedFile.updateChanged", "file.package"] {
         let _ = agent.run(&svg, command, json!({}));
     }
 
     // V4: a native drawing linking a picture and a drawing outside by their absolute paths.
     let native = agent.open("hostile.kvector").expect("the drawing opens");
     agent.screenshot(&native);
-    for command in ["links.list", "links.check", "links.update", "links.updateChanged", "links.embed"] {
+    for command in ["linkedFile.list", "linkedFile.check", "linkedFile.update", "linkedFile.updateChanged", "linkedFile.embed"] {
         let _ = agent.run(&native, command, json!({}));
     }
     agent.screenshot(&native);
@@ -451,7 +451,7 @@ fn act_reads(root: &Path) {
         agent.problems.push(format!("inspect should report the drawing's 2 links outside the workspace as not existing: {links:?}"));
     }
     for format in ["svg", "png", "pdf"] {
-        let _ = agent.run(&native, "document.exportBytes", json!({ "format": format }));
+        let _ = agent.run(&native, "file.exportBytes", json!({ "format": format }));
     }
     let _ = agent.run(&native, "file.package", json!({}));
     let _ = agent.batch(&native, "file.package", json!({}));
@@ -464,7 +464,7 @@ fn act_reads(root: &Path) {
     );
     let _ = agent.run(&native, "clipboard.importSvg", json!({ "svg": pasted }));
     let _ = agent.run(&native, "edit.pasteInPlace", json!({}));
-    let _ = agent.run(&native, "links.list", json!({}));
+    let _ = agent.run(&native, "linkedFile.list", json!({}));
     let _ = agent.run(&native, "file.package", json!({}));
     agent.refused(&native, "file.saveAs", &json!({ "path": path(&outside, "saved.kvector") }));
     let _ = agent.batch(&native, "file.package", json!({}));
@@ -478,12 +478,12 @@ fn act_reads(root: &Path) {
         agent.screenshot(&opened);
         let text = agent.kit.text(&opened, 10_000).unwrap_or_default();
         agent.record(&text);
-        let _ = agent.run(&opened, "document.exportBytes", json!({ "format": "svg" }));
+        let _ = agent.run(&opened, "file.exportBytes", json!({ "format": "svg" }));
     }
     let text = agent.kit.text(&native, 10_000).unwrap_or_default();
     agent.record(&text);
     for format in ["svg", "png"] {
-        let _ = agent.run(&native, "document.exportBytes", json!({ "format": format }));
+        let _ = agent.run(&native, "file.exportBytes", json!({ "format": format }));
     }
     agent.assert_nothing_leaked(&outside);
 }

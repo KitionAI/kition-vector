@@ -18,14 +18,14 @@ const ID_OR_NAME: &[&str] = &["appearance.addEffect", "effect.apply"];
 /// key a scan found in the handler's answer): a number there names nothing, and
 /// the command refuses it as it refuses any key it does not take (engine rule E7a).
 const UNREAD: &[(&str, &str)] = &[
-    ("document.exportPdf", "id"),
+    ("file.exportPdf", "id"),
     ("eyedropper.setOptions", "id"),
     ("graphicStyle.library", "id"),
     ("graphicStyle.list", "id"),
     ("graphicStyle.merge", "id"),
     ("library.add", "id"),
     ("library.get", "id"),
-    ("links.info", "to"),
+    ("linkedFile.info", "to"),
     ("recolor.apply", "swatch"),
     ("recolor.colors", "swatch"),
     ("recolor.reduce", "swatch"),
@@ -43,8 +43,8 @@ const UNREAD: &[(&str, &str)] = &[
     ("swatch.merge", "id"),
     ("text.findFontFiles", "id"),
     ("transparency.makeOpacityMask", "id"),
-    ("type.size.decrease", "id"),
-    ("type.size.increase", "id"),
+    ("format.decreaseFontSize", "id"),
+    ("format.increaseFontSize", "id"),
 ];
 
 /// Parameters that take a string the handler looks up as a name or catalogue id, never a number.

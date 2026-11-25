@@ -181,7 +181,7 @@ fn free_distort_maps_gradients_once() {
 // ---------- M3.16: the active proxy and type objects ----------
 
 fn text(s: &mut Session, x: f64, y: f64) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": x, "y": y, "text": "Gradient", "size": 40})).unwrap();
+    let r = s.execute("text.add", &json!({"x": x, "y": y, "text": "Gradient", "size": 40})).unwrap();
     NodeId(r["id"].as_u64().unwrap())
 }
 
@@ -316,7 +316,7 @@ fn annotator_gestures_edit_the_gradient_as_single_undo_steps() {
     assert_eq!((g.start, g.end), (Point::new(100.0, 150.0), Point::new(220.0, 170.0)));
     assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1);
     s.execute("edit.undo", &json!({})).unwrap();
-    // The selected stop takes Delete ahead of edit.clear; the object stays.
+    // The selected stop takes Delete ahead of edit.delete; the object stays.
     let view = crate::ViewInfo::default();
     assert!(s.tool_claims_key(ToolKey::Delete, view));
     s.tool_key(ToolKey::Delete, Mods::default(), view).unwrap();

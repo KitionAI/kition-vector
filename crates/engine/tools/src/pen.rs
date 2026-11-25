@@ -219,7 +219,7 @@ impl Tool for PenTool {
                 }
                 (self.drawing, self.path) = (true, None);
                 self.drag = Some(Place { at: p, path: None, closing: false });
-                vec![Action::Begin("Pen".into()), Action::Preview("path.create".into(), json!({"anchors": [{"x": p.x, "y": p.y}]}))]
+                vec![Action::Begin("Pen".into()), Action::Preview("path.add".into(), json!({"anchors": [{"x": p.x, "y": p.y}]}))]
             }
             PointerKind::Drag => {
                 if let Some(t) = &mut self.convert {
@@ -250,7 +250,7 @@ impl Tool for PenTool {
                     // First anchor of a new path: re-issue create with handles.
                     let in_h = a - (out_h - a);
                     return vec![Action::Preview(
-                        "path.create".into(),
+                        "path.add".into(),
                         json!({"anchors": [{"x": a.x, "y": a.y, "out": [out_h.x, out_h.y], "in": [in_h.x, in_h.y]}]}),
                     )];
                 };
@@ -345,7 +345,7 @@ impl Tool for PenTool {
         }
         if !self.drawing {
             match spine_click(cx, p, tol).as_deref() {
-                Some([Action::Exec(c, _)]) if c == "object.blend.spine.removeAnchor" => return Cursor::PenDelete,
+                Some([Action::Exec(c, _)]) if c == "object.blend.removeSpineAnchor" => return Cursor::PenDelete,
                 Some([_]) => return Cursor::PenAdd,
                 _ => {}
             }
@@ -412,10 +412,10 @@ fn spine_click(cx: &ToolContext, p: Point, tol: f64) -> Option<Vec<Action>> {
             if keys.contains(&ai) {
                 return Some(vec![]);
             }
-            return Some(vec![Action::Exec("object.blend.spine.removeAnchor".into(), json!({"id": id.0, "anchor": ai}))]);
+            return Some(vec![Action::Exec("object.blend.removeSpineAnchor".into(), json!({"id": id.0, "anchor": ai}))]);
         }
         if path.nearest(p).is_some_and(|n| n.4 <= tol) {
-            return Some(vec![Action::Exec("object.blend.spine.addAnchor".into(), json!({"id": id.0, "x": p.x, "y": p.y}))]);
+            return Some(vec![Action::Exec("object.blend.addSpineAnchor".into(), json!({"id": id.0, "x": p.x, "y": p.y}))]);
         }
     }
     None
@@ -436,7 +436,7 @@ mod tests {
         let mut t = PenTool::default();
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 10.0, 10.0));
         assert_eq!(a[0], Action::Begin("Pen".into()));
-        assert!(matches!(&a[1], Action::Preview(c, _) if c == "path.create"));
+        assert!(matches!(&a[1], Action::Preview(c, _) if c == "path.add"));
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 10.0, 10.0)), vec![Action::Commit]);
     }
 
@@ -483,7 +483,7 @@ mod tests {
         t.pointer(&cx0, &PointerEvent::new(PointerKind::Down, 400.0, 420.0));
         t.pointer(&cx0, &PointerEvent::new(PointerKind::Drag, 450.0, 420.0));
         let created = |acts: Vec<Action>| match acts.as_slice() {
-            [Action::Preview(c, v)] if c == "path.create" => v["anchors"][0].clone(),
+            [Action::Preview(c, v)] if c == "path.add" => v["anchors"][0].clone(),
             other => panic!("not a create preview: {other:?}"),
         };
         let a = created(t.pointer(&cx0, &PointerEvent::new(PointerKind::Drag, 450.0, 380.0).with_mods(space)));
@@ -616,7 +616,7 @@ mod tests {
         let mut t = PenTool::default();
         assert_eq!(t.cursor(&cx, Point::new(160.0, 311.0), Mods::default()), Cursor::PenAdd);
         let a = t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 160.0, 311.0));
-        assert_eq!(a, vec![Action::Exec("object.blend.spine.addAnchor".into(), json!({"id": g.0, "x": 160.0, "y": 310.0}))]);
+        assert_eq!(a, vec![Action::Exec("object.blend.addSpineAnchor".into(), json!({"id": g.0, "x": 160.0, "y": 310.0}))]);
         // A key's own point is left alone (the click snaps to the spine line).
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Down, 110.0, 310.0)), vec![]);
     }
@@ -657,13 +657,13 @@ mod tests {
         assert_eq!(t.cursor(&cx, Point::new(325.0, 351.0), shift), Cursor::Pen);
         assert_eq!(t.cursor(&off, Point::new(350.0, 302.0), none), Cursor::Pen);
         let a = click(&mut t, &off, 350.0, 302.0, none);
-        assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.create"), "{a:?}");
+        assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.add"), "{a:?}");
         // While a path is being drawn, a click goes on drawing it.
         let a = click(&mut t, &cx, 325.0, 351.0, none);
         assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.appendAnchor"), "{a:?}");
         let mut t = PenTool::default();
         let a = click(&mut t, &cx, 325.0, 351.0, shift);
-        assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.create"), "{a:?}");
+        assert!(matches!(&a[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.add"), "{a:?}");
     }
 
     /// Each anchor snaps to Smart Guides: hovering shows where it goes (the rubber band ends
@@ -688,7 +688,7 @@ mod tests {
         // The first anchor of a new path lands on the rect's corner.
         let mut t = PenTool::default();
         let a = click(&mut t, &cx, 102.0, 99.0, Mods::default());
-        assert_eq!(a[1], Action::Preview("path.create".into(), json!({"anchors": [{"x": 100.0, "y": 100.0}]})));
+        assert_eq!(a[1], Action::Preview("path.add".into(), json!({"anchors": [{"x": 100.0, "y": 100.0}]})));
     }
 
     #[test]
@@ -775,6 +775,6 @@ mod tests {
         let cx_b = cx(&d, &sb, &p);
         assert_eq!(t.cursor(&cx_b, Point::new(150.0, 350.0), Mods::default()), Cursor::Pen);
         let acts = click(&mut t, &cx_b, 150.0, 350.0, Mods::default());
-        assert!(matches!(&acts[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.create"), "{acts:?}");
+        assert!(matches!(&acts[..], [Action::Begin(_), Action::Preview(c, _)] if c == "path.add"), "{acts:?}");
     }
 }

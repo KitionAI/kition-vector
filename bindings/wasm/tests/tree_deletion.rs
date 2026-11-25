@@ -7,12 +7,12 @@ use serde_json::json;
 
 #[test]
 fn deleting_and_ungrouping_containers_preserves_the_replica() {
-    for command in ["object.ungroup", "edit.clear"] {
+    for command in ["arrange.ungroup", "edit.delete"] {
         let mut doc = VectorDocument::create("Tree.kvector", 200, 100).unwrap();
         let a = doc.execute("shape.rectangle", json!({"x":10,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
         let b = doc.execute("shape.rectangle", json!({"x":50,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
         doc.execute("select.set", json!({"ids":[a,b]})).unwrap();
-        doc.execute("object.group", json!({})).unwrap();
+        doc.execute("arrange.group", json!({})).unwrap();
         doc.version().unwrap();
         let identity = doc.doc_id();
         doc.execute(command, json!({})).unwrap();

@@ -61,15 +61,15 @@ fn preview_opens_with_a_warning_and_never_saves_to_the_source() {
         assert!(OPEN_EXTS.contains(&ext) && PLACE_EXTS.contains(&ext), "{ext}");
     }
     assert!(!SAVE_FORMATS.contains(&"affinity"));
-    assert!(s.execute("document.serialize", &json!({"format":"af"})).is_err());
-    assert!(s.execute("document.export", &json!({"format":"affinity"})).is_err());
+    assert!(s.execute("file.serialize", &json!({"format":"af"})).is_err());
+    assert!(s.execute("file.export", &json!({"format":"affinity"})).is_err());
     assert!(save_format(None, Some("drawing.af")).is_err());
 }
 
 #[test]
 fn preview_reaches_the_document_open_command() {
     let mut s = Session::new();
-    let r = s.execute("document.open", &json!({"name":"test.af", "dataBase64":kition_vector_format::base64_encode(&file(&png()))})).unwrap();
+    let r = s.execute("file.open", &json!({"name":"test.af", "dataBase64":kition_vector_format::base64_encode(&file(&png()))})).unwrap();
     assert_eq!(r["format"], "affinity");
     assert_eq!(r["warnings"].as_array().unwrap().len(), 1);
 }
@@ -154,7 +154,7 @@ fn a_previewless_file_fails_without_replacing_the_active_document() {
     let original = s.doc().unwrap().doc.clone();
     let mut bytes = file(&png());
     bytes[24..32].copy_from_slice(&0u64.to_le_bytes());
-    let e = s.execute("document.open", &json!({"name":"no-preview.af", "dataBase64":kition_vector_format::base64_encode(&bytes)})).unwrap_err();
+    let e = s.execute("file.open", &json!({"name":"no-preview.af", "dataBase64":kition_vector_format::base64_encode(&bytes)})).unwrap_err();
     assert!(e.to_string().contains("no embedded preview"));
     assert_eq!(s.documents().len(), 1);
     assert_eq!(s.doc().unwrap().doc, original);
@@ -309,7 +309,7 @@ mod native {
         let reopened = kition_vector_format::load_file(&kition_vector_format::save_file(&doc)).unwrap();
         assert_eq!(reopened.doc.layers, doc.layers);
         for format in ["svg", "pdf", "png"] {
-            assert!(s.execute("document.export", &json!({"format": format})).is_ok(), "{format}");
+            assert!(s.execute("file.export", &json!({"format": format})).is_ok(), "{format}");
         }
         let p = json!({"name":"native.afdesign", "dataBase64":kition_vector_format::base64_encode(&bytes)});
         s.execute("file.new", &json!({"width":100,"height":100})).unwrap();

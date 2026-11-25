@@ -1,23 +1,23 @@
 //! Document file I/O for every frontend (desktop, web, CLI, control channel, headless MCP): open,
 //! save, export and serialize by path or bytes (base64), the format table, and `command.batch`.
 //!
-//! - `load`: `document.open` (native, legacy, SVG/SVGZ, PDF/.ai/.ait, DXF, raster images).
+//! - `load`: `file.open` (native, legacy, SVG/SVGZ, PDF/.ai/.ait, DXF, raster images).
 //! - `encode`: one encoder per writable format, with typed options parsed from the params.
 //! - `svg`: the SVG Options (styling, fonts, images, object ids, artboards…).
-//! - `export`: `document.export` / `serialize` / `exportSelection` / `exportForOffice`.
-//! - `screens`: Export for Screens (`document.exportForScreens`, `document.exportSettings`); `zip`
+//! - `export`: `file.export` / `serialize` / `exportSelection` / `exportForOffice`.
+//! - `screens`: Export for Screens (`file.exportForScreens`, `file.exportSettings`); `zip`
 //!   packs its files as one download.
-//! - `save`: `document.save`, Save As / a Copy / as Template, New from Template, Revert and the
+//! - `save`: `file.save`, Save As / a Copy / as Template, New from Template, Revert and the
 //!   per-format options (`file.formatOptions`); [`save_with`] is the one save path of every frontend.
-//! - `pdf`: PDF settings and presets for every PDF export, `document.exportPdf`.
-//! - `pdfimport`: the PDF pages, box and password `document.open` and Place read, `document.pdfInfo`.
-//! - `dxf`: DXF export options, `document.exportDxf`, and the formats that can't be written (DWG, PICT).
-//! - `eps`: EPS export options (flattened transparency, previews, the embedded document), `document.exportEps`.
-//! - `dxfimport`: the DXF options `document.open` and Place read, `document.dxfInfo`.
+//! - `pdf`: PDF settings and presets for every PDF export, `file.exportPdf`.
+//! - `pdfimport`: the PDF pages, box and password `file.open` and Place read, `file.pdfInfo`.
+//! - `dxf`: DXF export options, `file.exportDxf`, and the formats that can't be written (DWG, PICT).
+//! - `eps`: EPS export options (flattened transparency, previews, the embedded document), `file.exportEps`.
+//! - `dxfimport`: the DXF options `file.open` and Place read, `file.dxfInfo`.
 //! - `metafile`: EMF and WMF export, open and place.
 //!
 //! [`FORMATS`] is the single list of formats (append-only); open dialogs use [`open_filters`],
-//! agents query `document.formats`.
+//! agents query `file.formats`.
 
 mod affinity;
 mod batch;
@@ -78,62 +78,62 @@ use crate::EngineError;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "document.open",
+            "file.open",
             "Open Document",
             [],
             None,
-            "{path} or {name, dataBase64}, PDF/.ai: pages?: \"2-3, 5\" (1-based, default all; one artboard each) | page?: n, cropTo?: bounding|art|crop (default)|trim|bleed|media (the box each artboard gets; bounding: the art's bounds), password? (encrypted PDFs; see document.pdfInfo), textAs?: text (default: point type per line, lines wrapped in a frame as area type where they lay out the same, in the file's fonts by name; missing ones are listed in warnings) | outlines (glyph paths), layers?: true (default: optional content groups become layers with their visibility, print state and lock — art that is off comes in as a hidden layer; other art goes to a layer per page) | false (one layer per page, without the art that is off; Save then asks for a name), editingData?: true (default: an EPS or .ai that carries its editor's own copy of the art opens from it, with its layers, hidden objects, guides, artboards and the art outside them; a .ai whose type shows opens from its PDF part with textAs: outlines) | false (only what its page or PDF part prints, for print pipelines; a .ai saved without PDF compatibility then can't be opened), colorMode?: rgb|cmyk (the mode the document opens in, its colours converted as file.documentColorMode does, grays? as there; default: the file's — a PDF keeps CMYK, Gray and spot inks (spot swatches at a tint) and opens in CMYK when painted mostly in CMYK), DXF: dxf?: {layout?: \"Model\" (default) | a paper layout's name (document.dxfInfo lists them), unit?, scale? (the ratio: 1 unit of the art = scale drawing units; default: the drawing at 1:1 in its own unit), fit?: false (scale to fit an artboard of fitTo?: [612, 792], turned to the art's orientation), scaleLineweights?: false (lineweights scale with the art), center?: true (false: the drawing's origin on the artboard's bottom-left corner; fitted art's bottom-left corner), mergeLayers?: false (all art on one layer)} → {index, title, format, warnings, restored, missingLinks, modifiedLinks, updatedLinks: [{name, path, ids}]}; any readable format (see document.formats): .kvector/.kvector, .svg/.svgz, .pdf/.ai, .ait, ASCII .dxf (each DXF layer with art a layer; blocks symbols; what can't come in is listed in warnings), PNG/JPEG/GIF/WebP/TIFF/BMP (an image opens as a document of its size at the resolution it declares, as file.place sizes it; 72 ppi, 1 px = 1 pt, when it declares none), .emf/.wmf (one artboard, the picture's frame; records Kition Vector doesn't read are skipped with one warning), .eps and PostScript .ai (one artboard, the bounding box: an EPS file Kition Vector wrote restores the document it carries, restored: true; other files are read by a PostScript interpreter — paths, colours and spot inks, clips, gradients, images, type in the fonts named — and come in as their TIFF preview, with a warning, when their PostScript can't be read). A PDF/.ai/.ait or SVG saved with Preserve Editing restores the native document it carries (restored: true; a PDF only when no pages are picked), unless the file was changed elsewhere since or the data can't be read: then its artwork is imported and the first warning says why. Templates (native templates, .ait) open as a new untitled document; a restored .ai keeps its path (Save writes .ai again). Linked images are read from their files (looked for at their path, then relative to the document): missing ones show their saved preview (links.relink), modified ones are read again only with Preferences › Update Links: Automatically (else links.update). An SVG's <image> files (relative links from the SVG's folder) stay linked, SVG files become art, missing ones a placeholder in their box (a warning and missingLinks)",
+            "{path} or {name, dataBase64}, PDF/.ai: pages?: \"2-3, 5\" (1-based, default all; one artboard each) | page?: n, cropTo?: bounding|art|crop (default)|trim|bleed|media (the box each artboard gets; bounding: the art's bounds), password? (encrypted PDFs; see file.pdfInfo), textAs?: text (default: point type per line, lines wrapped in a frame as area type where they lay out the same, in the file's fonts by name; missing ones are listed in warnings) | outlines (glyph paths), layers?: true (default: optional content groups become layers with their visibility, print state and lock — art that is off comes in as a hidden layer; other art goes to a layer per page) | false (one layer per page, without the art that is off; Save then asks for a name), editingData?: true (default: an EPS or .ai that carries its editor's own copy of the art opens from it, with its layers, hidden objects, guides, artboards and the art outside them; a .ai whose type shows opens from its PDF part with textAs: outlines) | false (only what its page or PDF part prints, for print pipelines; a .ai saved without PDF compatibility then can't be opened), colorMode?: rgb|cmyk (the mode the document opens in, its colours converted as file.documentColorMode does, grays? as there; default: the file's — a PDF keeps CMYK, Gray and spot inks (spot swatches at a tint) and opens in CMYK when painted mostly in CMYK), DXF: dxf?: {layout?: \"Model\" (default) | a paper layout's name (file.dxfInfo lists them), unit?, scale? (the ratio: 1 unit of the art = scale drawing units; default: the drawing at 1:1 in its own unit), fit?: false (scale to fit an artboard of fitTo?: [612, 792], turned to the art's orientation), scaleLineweights?: false (lineweights scale with the art), center?: true (false: the drawing's origin on the artboard's bottom-left corner; fitted art's bottom-left corner), mergeLayers?: false (all art on one layer)} → {index, title, format, warnings, restored, missingLinks, modifiedLinks, updatedLinks: [{name, path, ids}]}; any readable format (see file.formats): .kvector/.kvector, .svg/.svgz, .pdf/.ai, .ait, ASCII .dxf (each DXF layer with art a layer; blocks symbols; what can't come in is listed in warnings), PNG/JPEG/GIF/WebP/TIFF/BMP (an image opens as a document of its size at the resolution it declares, as file.place sizes it; 72 ppi, 1 px = 1 pt, when it declares none), .emf/.wmf (one artboard, the picture's frame; records Kition Vector doesn't read are skipped with one warning), .eps and PostScript .ai (one artboard, the bounding box: an EPS file Kition Vector wrote restores the document it carries, restored: true; other files are read by a PostScript interpreter — paths, colours and spot inks, clips, gradients, images, type in the fonts named — and come in as their TIFF preview, with a warning, when their PostScript can't be read). A PDF/.ai/.ait or SVG saved with Preserve Editing restores the native document it carries (restored: true; a PDF only when no pages are picked), unless the file was changed elsewhere since or the data can't be read: then its artwork is imported and the first warning says why. Templates (native templates, .ait) open as a new untitled document; a restored .ai keeps its path (Save writes .ai again). Linked images are read from their files (looked for at their path, then relative to the document): missing ones show their saved preview (linkedFile.relink), modified ones are read again only with Preferences › Update Links: Automatically (else linkedFile.update). An SVG's <image> files (relative links from the SVG's folder) stay linked, SVG files become art, missing ones a placeholder in their box (a warning and missingLinks)",
             always,
             load::open
         ),
         cmd!(
-            query "document.serialize",
+            query "file.serialize",
             "Serialize Document",
             [],
             None,
-            "{format?: kvector (default)|template|svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd, …the format's options (see document.formats; SVG ones also as svg: {…}), selectedOnly?: false (the selected objects alone, in their layers)} → {text, warnings} for svg (plus dataBase64, the file, when its encoding isn't UTF-8), else {dataBase64, warnings}; an SVG of several artboards also gives files: [{name, text}], linked images linked: [{name, dataBase64}]",
+            "{format?: kvector (default)|template|svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd, …the format's options (see file.formats; SVG ones also as svg: {…}), selectedOnly?: false (the selected objects alone, in their layers)} → {text, warnings} for svg (plus dataBase64, the file, when its encoding isn't UTF-8), else {dataBase64, warnings}; an SVG of several artboards also gives files: [{name, text}], linked images linked: [{name, dataBase64}]",
             has_doc,
             export::serialize
         ),
         cmd!(
-            "document.export",
+            "file.export",
             "Export Document",
             [],
             None,
-            "{path?, format?: svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd|kvector|template (default: from the path's extension, else png; png8 writes an indexed .png), selectedOnly?: false (the selected objects alone, in their layers), artboard?: 0, artboards?: [i…], range?: \"1-3, 5\" | \"all\" (1-based; PDF writes one page per artboard, default all; SVG writes one file per artboard, {stem}-{artboard}.svg; raster formats write one artboard), useArtboards?: true (raster: one file per chosen artboard, default all, {stem}-{artboard}.{ext}; pdf: every page; emf/wmf: one file per chosen artboard) | false (pdf/raster/emf/wmf: the bounds of the visible art; SVG has it as an SVG option), ppi?: number=72 (raster: pixels per inch, stored in the file; wins over scale), scale?: number=1 (raster: pixels per point), background?: transparent|white|black|\"#rrggbb\" (raster; jpg: white when transparent), antiAlias?: none|art (default)|type (raster; type: text snapped to pixels), interlaced?: false (png: Adam7; gif and png8), quality?: 90 (jpg: 0–100; webp: for when lossy WebP is available), colorModel?: rgb|cmyk|gray (jpg, tiff, psd; bmp: rgb|gray; tiff: rgb keeps transparency as an alpha channel), method?: baseline|optimized|progressive (jpg), scans?: 3 (jpg: 3–5, progressive), embedIcc?: true (jpg, tiff, psd), imageMap?: none|client|server (jpg: an HTML or NCSA map of the objects with a URL, written as <stem>.html / <stem>.map), colors?: 256 (gif and png8: 2–256), reduction?: perceptual|selective (default)|adaptive|web|blackWhite|gray (gif and png8), dither?: none|diffusion (default)|pattern|noise (gif and png8), ditherAmount?: 100 (gif and png8), transparency?: true (gif and png8), matte?: white|\"#rrggbb\"|none (gif and png8), lossless?: true (webp: lossy WebP isn't available yet: written lossless, with a warning), encoding?: utf8|utf16 (txt, the stories in stacking order, back to front, a thread once: utf16 with a byte order mark; also an SVG option), lineEndings?: lf|crlf (txt), selectionOnly?: false (txt), svg?: {…SVG options} (styling, outlineText, images, objectIds, decimals, minify, responsive, useArtboards, preserveEditing, metadata, fewerTspans, hiddenLayers, encoding, profile, embedFonts: see document.formats; SVG options flat or in svg), …the PDF options of document.exportPdf, …the DXF options of document.exportDxf (useArtboards: one drawing per artboard), …the EPS options of document.exportEps (useArtboards: one file per artboard, {stem}_{artboard}.eps; else the visible art), lzw?: true (tiff), byteOrder?: little|big (tiff), depth?: 24 (bmp: 1 black and white, 4|8 a palette by reduction and dither, 16, 24, 32 with alpha; tga: 16 one-bit alpha, 24, 32 with alpha), fileFormat?: windows|os2 (bmp: 1, 4, 8 or 24 bits), rle?: false (bmp: 4 and 8 bits, windows), flipRows?: false (bmp: top-down rows), layers?: true (psd: each top-level layer a pixel layer with its opacity and blend mode; a background colour is a Background layer; false: one flat image, on white), maxEditability?: false (psd: layers and sublayers become groups, each object a layer named as in the Layers panel, text by its text; clipping, masked or knockout layers stay one layer), hiddenLayers?: false (psd: hidden layers and objects written hidden instead of left out; also an SVG option)} → {path, format, bytes, warnings, files?: [path…] (several), linked?: [path…] (linked images, image maps)}; no path → {dataBase64, format, bytes, warnings, files?: [{name, dataBase64}], linked?: [{name, dataBase64}]}. emf/wmf write one picture of the artboard: EMF keeps curves, clipping, transparent images and gradients as images clipped to their shape; WMF flattens curves into polygons behind a placeable header; what a format leaves out comes back in warnings. Raster images are at most 30000 pixels a side; formats without alpha are flattened on white. Never changes the document's path",
+            "{path?, format?: svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd|kvector|template (default: from the path's extension, else png; png8 writes an indexed .png), selectedOnly?: false (the selected objects alone, in their layers), artboard?: 0, artboards?: [i…], range?: \"1-3, 5\" | \"all\" (1-based; PDF writes one page per artboard, default all; SVG writes one file per artboard, {stem}-{artboard}.svg; raster formats write one artboard), useArtboards?: true (raster: one file per chosen artboard, default all, {stem}-{artboard}.{ext}; pdf: every page; emf/wmf: one file per chosen artboard) | false (pdf/raster/emf/wmf: the bounds of the visible art; SVG has it as an SVG option), ppi?: number=72 (raster: pixels per inch, stored in the file; wins over scale), scale?: number=1 (raster: pixels per point), background?: transparent|white|black|\"#rrggbb\" (raster; jpg: white when transparent), antiAlias?: none|art (default)|type (raster; type: text snapped to pixels), interlaced?: false (png: Adam7; gif and png8), quality?: 90 (jpg: 0–100; webp: for when lossy WebP is available), colorModel?: rgb|cmyk|gray (jpg, tiff, psd; bmp: rgb|gray; tiff: rgb keeps transparency as an alpha channel), method?: baseline|optimized|progressive (jpg), scans?: 3 (jpg: 3–5, progressive), embedIcc?: true (jpg, tiff, psd), imageMap?: none|client|server (jpg: an HTML or NCSA map of the objects with a URL, written as <stem>.html / <stem>.map), colors?: 256 (gif and png8: 2–256), reduction?: perceptual|selective (default)|adaptive|web|blackWhite|gray (gif and png8), dither?: none|diffusion (default)|pattern|noise (gif and png8), ditherAmount?: 100 (gif and png8), transparency?: true (gif and png8), matte?: white|\"#rrggbb\"|none (gif and png8), lossless?: true (webp: lossy WebP isn't available yet: written lossless, with a warning), encoding?: utf8|utf16 (txt, the stories in stacking order, back to front, a thread once: utf16 with a byte order mark; also an SVG option), lineEndings?: lf|crlf (txt), selectionOnly?: false (txt), svg?: {…SVG options} (styling, outlineText, images, objectIds, decimals, minify, responsive, useArtboards, preserveEditing, metadata, fewerTspans, hiddenLayers, encoding, profile, embedFonts: see file.formats; SVG options flat or in svg), …the PDF options of file.exportPdf, …the DXF options of file.exportDxf (useArtboards: one drawing per artboard), …the EPS options of file.exportEps (useArtboards: one file per artboard, {stem}_{artboard}.eps; else the visible art), lzw?: true (tiff), byteOrder?: little|big (tiff), depth?: 24 (bmp: 1 black and white, 4|8 a palette by reduction and dither, 16, 24, 32 with alpha; tga: 16 one-bit alpha, 24, 32 with alpha), fileFormat?: windows|os2 (bmp: 1, 4, 8 or 24 bits), rle?: false (bmp: 4 and 8 bits, windows), flipRows?: false (bmp: top-down rows), layers?: true (psd: each top-level layer a pixel layer with its opacity and blend mode; a background colour is a Background layer; false: one flat image, on white), maxEditability?: false (psd: layers and sublayers become groups, each object a layer named as in the Layers panel, text by its text; clipping, masked or knockout layers stay one layer), hiddenLayers?: false (psd: hidden layers and objects written hidden instead of left out; also an SVG option)} → {path, format, bytes, warnings, files?: [path…] (several), linked?: [path…] (linked images, image maps)}; no path → {dataBase64, format, bytes, warnings, files?: [{name, dataBase64}], linked?: [{name, dataBase64}]}. emf/wmf write one picture of the artboard: EMF keeps curves, clipping, transparent images and gradients as images clipped to their shape; WMF flattens curves into polygons behind a placeable header; what a format leaves out comes back in warnings. Raster images are at most 30000 pixels a side; formats without alpha are flattened on white. Never changes the document's path",
             has_doc,
             export::export
         ),
         cmd!(
-            query "document.exportBytes",
+            query "file.exportBytes",
             "Export to Data",
             [],
             None,
-            "{format?: svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd (default png), …the options of document.export but path} the export without a file, for the host to write → {data (the file, base64; the first when the format writes several), format, bytes, warnings, files?: [{name, data}] (several), linked?: [{name, data}]}. Never changes the document",
+            "{format?: svg|svgz|pdf|png|jpg|webp|gif|png8|txt|dxf|eps|emf|wmf|tiff|bmp|tga|psd (default png), …the options of file.export but path} the export without a file, for the host to write → {data (the file, base64; the first when the format writes several), format, bytes, warnings, files?: [{name, data}] (several), linked?: [{name, data}]}. Never changes the document",
             has_doc,
             export::export_bytes
         ),
         cmd!(
-            "document.exportSelection",
+            "file.exportSelection",
             "Export Selection…",
             ["File"],
             None,
-            "{path?, format?: png|jpg|webp|svg|svgz|pdf (default: from the extension, else png), scale?: 1, …the format's options} the selected objects cropped to their bounds (template layers left out) → {path, format, bytes, warnings, bounds} (no path → {dataBase64, format, bytes, warnings, bounds}); warnings say what the format approximated or left out, as for document.export",
+            "{path?, format?: png|jpg|webp|svg|svgz|pdf (default: from the extension, else png), scale?: 1, …the format's options} the selected objects cropped to their bounds (template layers left out) → {path, format, bytes, warnings, bounds} (no path → {dataBase64, format, bytes, warnings, bounds}); warnings say what the format approximated or left out, as for file.export",
             has_selection,
             export::export_selection
         ),
         cmd!(
-            "document.exportForScreens",
+            "file.exportForScreens",
             "Export for Screens",
             ["File", "Export"],
             None,
-            "{folder?, zip?: false (one store-only .zip of every file: no folder → {name, dataBase64, bytes, files: [name…]}; with a folder it is written there → {path, bytes, files}), artboards?: [index…] | range?: \"1-3\" (default all), assets?: [asset id…] (instead of artboards: each asset's art alone, cropped to its bounds and named after the asset; see assets.list), fullDocument?: false (one file per format instead: a PDF of every artboard, other formats the bounds of all visible art, named after the document), includeBleed?: false (artboards grown by the document's bleed), subfolders?: false (each row's files in a sub-folder: its folder, else its size for raster (1x, 2x, 100w…) or its format (SVG, PDF)), preset?: mobile (PNG 1x, 2x, 3x) | density (PNG 0.75x–4x in ldpi…xxxhdpi sub-folders) instead of formats (turns subfolders on), formats?: [{format: png|png8|jpg|webp|gif|svg|svgz|pdf, scale?: 1 | \"2x\" | \"100w\" | \"100h\" | \"72ppi\", width?: px | height?: px | ppi? (raster only; width, then height, then ppi win over scale), suffix?: (raster default: @2x, @100w, @100h, none at 1x; vector formats drop size suffixes), folder?: (its sub-folder), quality?: (jpg 0–100), …the format's options (antiAlias, background, preset (pdf)…)}], settings?: {png|png8|jpg|webp|gif|svg|pdf: {…options for every row of that format}} (rows' own options win), prefix?, antiAlias?: none|art|type (raster rows without their own), openLocation?: (remembered; the app shows the files after exporting)} one file per artboard and format (a PDF holds its artboard alone; artboards with the same name, in any case, get -2, -3…; an unnamed one is Artboard-N) → {files: [path…]}; no folder → {files: [{name, dataBase64}]} (names include sub-folders: 2x/Icon@2x.png). The params (but zip and assets) are remembered in the document (document.exportSettings; not an undo step)",
+            "{folder?, zip?: false (one store-only .zip of every file: no folder → {name, dataBase64, bytes, files: [name…]}; with a folder it is written there → {path, bytes, files}), artboards?: [index…] | range?: \"1-3\" (default all), assets?: [asset id…] (instead of artboards: each asset's art alone, cropped to its bounds and named after the asset; see asset.list), fullDocument?: false (one file per format instead: a PDF of every artboard, other formats the bounds of all visible art, named after the document), includeBleed?: false (artboards grown by the document's bleed), subfolders?: false (each row's files in a sub-folder: its folder, else its size for raster (1x, 2x, 100w…) or its format (SVG, PDF)), preset?: mobile (PNG 1x, 2x, 3x) | density (PNG 0.75x–4x in ldpi…xxxhdpi sub-folders) instead of formats (turns subfolders on), formats?: [{format: png|png8|jpg|webp|gif|svg|svgz|pdf, scale?: 1 | \"2x\" | \"100w\" | \"100h\" | \"72ppi\", width?: px | height?: px | ppi? (raster only; width, then height, then ppi win over scale), suffix?: (raster default: @2x, @100w, @100h, none at 1x; vector formats drop size suffixes), folder?: (its sub-folder), quality?: (jpg 0–100), …the format's options (antiAlias, background, preset (pdf)…)}], settings?: {png|png8|jpg|webp|gif|svg|pdf: {…options for every row of that format}} (rows' own options win), prefix?, antiAlias?: none|art|type (raster rows without their own), openLocation?: (remembered; the app shows the files after exporting)} one file per artboard and format (a PDF holds its artboard alone; artboards with the same name, in any case, get -2, -3…; an unnamed one is Artboard-N) → {files: [path…]}; no folder → {files: [{name, dataBase64}]} (names include sub-folders: 2x/Icon@2x.png). The params (but zip and assets) are remembered in the document (file.exportSettings; not an undo step)",
             has_doc,
             screens::export_for_screens
         ),
         cmd!("command.batch", "Batch", [], None, "{label?, commands: [{command, params}]} run several commands as ONE undo step (one in each document they edit: steps may open, switch, close or revert documents); stops at the first error and rolls everything back, documents included", has_doc, batch::batch),
         cmd!(
-            query "document.formats",
+            query "file.formats",
             "File Formats",
             [],
             None,
@@ -142,7 +142,7 @@ pub fn specs() -> Vec<CommandSpec> {
             formats
         ),
         cmd!(
-            query "document.pdfInfo",
+            query "file.pdfInfo",
             "PDF Info",
             [],
             None,
@@ -151,7 +151,7 @@ pub fn specs() -> Vec<CommandSpec> {
             pdfimport::pdf_info
         ),
         cmd!(
-            "document.exportForOffice",
+            "file.exportForOffice",
             "Save for Office Documents…",
             ["File"],
             None,
@@ -160,11 +160,11 @@ pub fn specs() -> Vec<CommandSpec> {
             export::export_for_office
         ),
         cmd!(
-            query "document.exportSettings",
+            query "file.exportSettings",
             "Export for Screens Settings",
             [],
             None,
-            "{} → {settings}: the document.exportForScreens params the document last exported with ({} when never; saved with the document, the dialog reopens on them)",
+            "{} → {settings}: the file.exportForScreens params the document last exported with ({} when never; saved with the document, the dialog reopens on them)",
             has_doc,
             screens::export_settings
         ),
@@ -185,7 +185,7 @@ pub struct FormatOption {
     pub description: &'static str,
 }
 
-/// One file format: how `document.open` recognises it and what `document.export` writes.
+/// One file format: how `file.open` recognises it and what `file.export` writes.
 #[derive(Clone, Copy, Debug)]
 pub struct Format {
     /// The `format` param value (`svg`, `png`, …).
@@ -296,7 +296,7 @@ const IMAGE_MAP: FormatOption = FormatOption {
     name: "imageMap",
     ty: "string",
     default: "\"none\"",
-    description: "none, client (an HTML page with <map>, <stem>.html) or server (an NCSA <stem>.map): the areas of objects with a URL and an Image Map shape (attributes.set)",
+    description: "none, client (an HTML page with <map>, <stem>.html) or server (an NCSA <stem>.map): the areas of objects with a URL and an Image Map shape (attribute.set)",
 };
 
 const COLORS: FormatOption =
@@ -443,7 +443,7 @@ const PSD_OPTIONS: &[FormatOption] = &[
     EMBED_ICC,
 ];
 
-/// A format `document.open` reads but nothing writes yet.
+/// A format `file.open` reads but nothing writes yet.
 const fn reader(id: &'static str, label: &'static str, extensions: &'static [&'static str], mime: &'static str, raster: bool) -> Format {
     Format { id, label, extensions, mime, read: true, write: false, raster, options: &[] }
 }
@@ -575,7 +575,7 @@ pub const FORMATS: &[Format] = &[
     reader("psb", "PSB", &["psb"], "image/x-psb", true),
 ];
 
-/// Every extension `document.open` reads (the "All readable files" filter of open dialogs).
+/// Every extension `file.open` reads (the "All readable files" filter of open dialogs).
 pub const OPEN_EXTS: &[&str] = &[
     "kvector",
     "kvector",
@@ -706,11 +706,11 @@ pub fn writable_format(format_param: Option<&str>, path: Option<&str>) -> std::r
     // Formats that can't be written say what to use instead.
     let unknown = |what: String, key: &str| unsupported(key).map_or(what, |u| u.hint.to_string());
     let f = match (format_param, path.map(extension).filter(|e| !e.is_empty())) {
-        (Some(f), _) => format(f).ok_or_else(|| unknown(format!("unknown format `{f}` (see document.formats)"), f))?,
-        (None, Some(e)) => format(&e).ok_or_else(|| unknown(format!("unknown extension `.{e}`: pass `format` (see document.formats)"), &e))?,
+        (Some(f), _) => format(f).ok_or_else(|| unknown(format!("unknown format `{f}` (see file.formats)"), f))?,
+        (None, Some(e)) => format(&e).ok_or_else(|| unknown(format!("unknown extension `.{e}`: pass `format` (see file.formats)"), &e))?,
         (None, None) => format("png").ok_or("no PNG encoder")?,
     };
-    if f.write { Ok(f) } else { Err(format!("{} files can be opened but not written (see document.formats)", f.label)) }
+    if f.write { Ok(f) } else { Err(format!("{} files can be opened but not written (see file.formats)", f.label)) }
 }
 
 /// [`writable_format`] for command `cmd`.

@@ -1,7 +1,7 @@
 //! EMF and WMF for every path that writes or reads Windows metafiles (`kition_vector_metafile`):
-//! `document.export {format: emf|wmf}` and Export As (one picture of an artboard, or one per
+//! `file.export {format: emf|wmf}` and Export As (one picture of an artboard, or one per
 //! artboard with Use Artboards; raster effects as images, rendered at the document's raster
-//! effects resolution), `document.open` and File → Place (one artboard, the picture's frame).
+//! effects resolution), `file.open` and File → Place (one artboard, the picture's frame).
 
 use kition_vector_doc::Document;
 use kition_vector_metafile::Kind;
@@ -10,9 +10,9 @@ use serde_json::Value;
 use super::super::*;
 use super::{ArtboardPick, Encoded, FormatOption};
 
-const C: &str = "document.export";
+const C: &str = "file.export";
 
-/// The options `document.formats` lists for EMF and WMF.
+/// The options `file.formats` lists for EMF and WMF.
 pub(super) const OPTIONS: &[FormatOption] = &[super::ARTBOARD, super::ARTBOARDS, super::RANGE, super::USE_ARTBOARDS];
 
 /// Encode `doc` as `kind`: the chosen artboard (default the first), or with `use_artboards` one

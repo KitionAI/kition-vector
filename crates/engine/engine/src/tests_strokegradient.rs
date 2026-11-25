@@ -27,7 +27,7 @@ fn doc(s: &Session) -> &Document {
 fn setup(mode: &str) -> (Session, NodeId) {
     let mut s = session();
     let anchors = json!([{"x": 20, "y": 40}, {"x": 160, "y": 40}, {"x": 160, "y": 180}]);
-    let id = run(&mut s, "path.create", json!({"anchors": anchors}))["id"].as_u64().unwrap();
+    let id = run(&mut s, "path.add", json!({"anchors": anchors}))["id"].as_u64().unwrap();
     run(&mut s, "select.set", json!({"ids": [id]}));
     run(&mut s, "paint.setFill", json!({"none": true}));
     run(&mut s, "stroke.set", json!({"weight": 20}));
@@ -63,7 +63,7 @@ fn stroke_mode_sets_how_the_gradient_lies_with_one_undo_step() {
     let (mut s, id) = setup("along");
     assert_eq!(mode_of(&s, id), StrokeGradientMode::Along);
     assert!(matches!(doc(&s).node(id).unwrap().appearance.stroke_paint(), Paint::Gradient(_)), "a solid stroke became a gradient");
-    let o = &run(&mut s, "document.inspect", json!({}))["layers"][0]["children"][0]["strokeOptions"];
+    let o = &run(&mut s, "file.inspect", json!({}))["layers"][0]["children"][0]["strokeOptions"];
     assert_eq!(o["gradientMode"], "along");
     run(&mut s, "paint.editGradient", json!({"stroke": true, "strokeMode": "across"}));
     assert_eq!(mode_of(&s, id), StrokeGradientMode::Across);

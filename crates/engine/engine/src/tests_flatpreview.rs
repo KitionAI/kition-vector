@@ -35,7 +35,7 @@ fn ids(v: &Value) -> Vec<u64> {
 #[test]
 fn type_under_a_transparent_rectangle_counts_as_affected() {
     let mut s = session();
-    let text = run(&mut s, "text.create", json!({"x": 20, "y": 80, "text": "Under", "size": 48}))["id"].as_u64().unwrap();
+    let text = run(&mut s, "text.add", json!({"x": 20, "y": 80, "text": "Under", "size": 48}))["id"].as_u64().unwrap();
     let top = rect(&mut s, 10.0, 30.0, 200.0, 80.0, "#3366cc");
     run(&mut s, "transparency.set", json!({"ids": [top], "opacity": 50}));
     // Apart from them: an opaque stroked square nothing overlaps.
@@ -65,7 +65,7 @@ fn an_opaque_document_reports_nothing() {
     let mut s = session();
     rect(&mut s, 10.0, 10.0, 100.0, 100.0, "#ff0000");
     rect(&mut s, 50.0, 50.0, 100.0, 100.0, "#0000ff");
-    run(&mut s, "text.create", json!({"x": 20, "y": 200, "text": "Solid", "size": 30}));
+    run(&mut s, "text.add", json!({"x": 20, "y": 200, "text": "Solid", "size": 30}));
     for h in Highlight::ALL {
         let v = preview(&mut s, json!({ "highlight": h.id(), "preset": "low" }));
         assert!(v["regions"].as_array().unwrap().is_empty(), "{}", h.id());

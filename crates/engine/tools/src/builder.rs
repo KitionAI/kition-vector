@@ -747,7 +747,7 @@ impl Tool for RegionPaintSelectionTool {
                     (Some(id), true) => vec![Action::Exec("select.toggle".into(), json!({ "id": id.0 }))],
                     (Some(id), false) => vec![Action::Exec("select.set".into(), json!({ "ids": [id.0] }))],
                     (None, true) => vec![],
-                    (None, false) => vec![Action::Exec("select.none".into(), json!({}))],
+                    (None, false) => vec![Action::Exec("edit.deselectAll".into(), json!({}))],
                 }
             }
             _ => vec![],
@@ -1011,7 +1011,7 @@ mod tests {
         let acts = t.pointer(&cx, &ev(PointerKind::Down, 51.0, 25.0).with_mods(alt));
         assert_eq!(acts, vec![Action::Exec("select.set".into(), json!({ "ids": [e.0] }))]);
         let acts = t.pointer(&cx, &ev(PointerKind::Down, 300.0, 300.0));
-        assert_eq!(acts, vec![Action::Exec("select.none".into(), json!({}))]);
+        assert_eq!(acts, vec![Action::Exec("edit.deselectAll".into(), json!({}))]);
     }
 
     #[test]

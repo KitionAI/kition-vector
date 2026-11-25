@@ -333,7 +333,7 @@ pub struct ParaStyle {
     /// Paragraph style (Paragraph Styles panel) these attributes come from; None = Normal.
     pub style_name: Option<String>,
     /// Japanese composition: the spacing of punctuation (Paragraph panel › Mojikumi). Type made
-    /// with the Type tools and `text.create` takes [`Mojikumi::LineEndHalf`]; documents from before
+    /// with the Type tools and `text.add` takes [`Mojikumi::LineEndHalf`]; documents from before
     /// it and imported text (already set) keep [`Mojikumi::None`].
     pub mojikumi: Mojikumi,
     /// Paragraph direction (Paragraph panel): the base direction of each paragraph for

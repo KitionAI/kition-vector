@@ -107,7 +107,7 @@ fn fixture(code: &str) -> VectorDocument {
             rectangle(&mut drawing, 600.0, 20.0);
         }
         "vector.font-substituted" => {
-            let id = run(&mut drawing, "text.create", json!({ "x": 20, "y": 90, "text": "Hello" }))["id"].as_u64().expect("id");
+            let id = run(&mut drawing, "text.add", json!({ "x": 20, "y": 90, "text": "Hello" }))["id"].as_u64().expect("id");
             let doc = doc_mut(&mut drawing);
             let mut node = doc.node(NodeId(id)).expect("text").clone();
             let NodeKind::Text(text) = &mut node.kind else { panic!("text") };
@@ -123,14 +123,14 @@ fn fixture(code: &str) -> VectorDocument {
         }
         "vector.missing-glyphs" => {
             // Ethiopic: no bundled font has it.
-            run(&mut drawing, "text.create", json!({ "x": 20, "y": 90, "text": "ሰላም" }));
+            run(&mut drawing, "text.add", json!({ "x": 20, "y": 90, "text": "ሰላም" }));
         }
         "vector.empty-group" => {
             let id = rectangle(&mut drawing, 30.0, 30.0);
             add_like(&mut drawing, id, 1000, |node| node.kind = NodeKind::Group { children: Vec::new(), clip: false });
         }
         "vector.empty-text" => {
-            run(&mut drawing, "text.create", json!({ "x": 20, "y": 90, "text": " " }));
+            run(&mut drawing, "text.add", json!({ "x": 20, "y": 90, "text": " " }));
         }
         "vector.stray-point" => {
             let id = rectangle(&mut drawing, 30.0, 30.0);

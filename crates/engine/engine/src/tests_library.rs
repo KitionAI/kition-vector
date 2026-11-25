@@ -30,8 +30,8 @@ fn hex_of(s: &Session, id: &Value, stroke: bool) -> String {
 fn libraries_are_made_renamed_and_deleted() {
     let mut s = session();
     assert_eq!(run(&mut s, "library.list", json!({}))["libraries"], json!([]));
-    let id = run(&mut s, "library.create", json!({"name": "Brand"}))["id"].as_str().unwrap().to_string();
-    let other = run(&mut s, "library.create", json!({"name": "Brand"}))["id"].as_str().unwrap().to_string();
+    let id = run(&mut s, "library.new", json!({"name": "Brand"}))["id"].as_str().unwrap().to_string();
+    let other = run(&mut s, "library.new", json!({"name": "Brand"}))["id"].as_str().unwrap().to_string();
     assert_ne!(id, other, "two libraries of one name are two files");
     run(&mut s, "library.rename", json!({"library": other, "name": "Client"}));
     let list = run(&mut s, "library.list", json!({}));
@@ -82,7 +82,7 @@ fn a_graphic_goes_into_a_library_and_comes_out_in_another_document() {
 #[test]
 fn colours_come_from_the_selection_and_paint_it() {
     let mut s = session();
-    let lib = run(&mut s, "library.create", json!({}))["id"].as_str().unwrap().to_string();
+    let lib = run(&mut s, "library.new", json!({}))["id"].as_str().unwrap().to_string();
     let a = run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 20, "height": 20}))["id"].clone();
     run(&mut s, "paint.setFill", json!({"color": "#123456", "ids": [a]}));
     run(&mut s, "paint.setStroke", json!({"color": "#abcdef", "ids": [a]}));
@@ -102,16 +102,16 @@ fn colours_come_from_the_selection_and_paint_it() {
 #[test]
 fn text_styles_come_from_the_selected_type_and_apply_in_one_step() {
     let mut s = session();
-    let lib = run(&mut s, "library.create", json!({}))["id"].as_str().unwrap().to_string();
+    let lib = run(&mut s, "library.new", json!({}))["id"].as_str().unwrap().to_string();
     assert!(s.execute("library.add", &json!({"library": lib, "kind": "charStyle"})).is_err(), "no type selected");
-    let t = run(&mut s, "text.create", json!({"x": 10, "y": 50, "text": "Heading", "size": 31}))["id"].clone();
+    let t = run(&mut s, "text.add", json!({"x": 10, "y": 50, "text": "Heading", "size": 31}))["id"].clone();
     run(&mut s, "select.set", json!({"ids": [t]}));
     let name = run(&mut s, "library.add", json!({"library": lib, "kind": "charStyle"}))["name"].as_str().unwrap().to_string();
     assert!(name.ends_with("31 pt"), "{name}");
     run(&mut s, "library.add", json!({"library": lib, "kind": "paraStyle"}));
     // Another document: the style is added and applied, and one undo takes both back.
     run(&mut s, "file.new", json!({"width": 200, "height": 200}));
-    let u = run(&mut s, "text.create", json!({"x": 10, "y": 50, "text": "Body", "size": 9}))["id"].clone();
+    let u = run(&mut s, "text.add", json!({"x": 10, "y": 50, "text": "Body", "size": 9}))["id"].clone();
     run(&mut s, "select.set", json!({"ids": [u]}));
     let undo = s.doc().unwrap().history.undo.len();
     let r = run(&mut s, "library.use", json!({"library": lib, "kind": "charStyle", "item": name}));
@@ -139,7 +139,7 @@ fn libraries_are_kept_in_files_across_sessions() {
     let folder = dir.to_string_lossy().to_string();
     let mut s = session();
     s.libraries.set_dir(Some(folder.clone()));
-    let lib = run(&mut s, "library.create", json!({"name": "Kept"}))["id"].as_str().unwrap().to_string();
+    let lib = run(&mut s, "library.new", json!({"name": "Kept"}))["id"].as_str().unwrap().to_string();
     let id = run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10}))["id"].clone();
     run(&mut s, "select.set", json!({"ids": [id]}));
     run(&mut s, "library.add", json!({"library": lib, "kind": "graphic", "name": "Square"}));
@@ -166,13 +166,13 @@ fn libraries_are_kept_in_files_across_sessions() {
 /// selection → (session, the graphic's id, the colour's name, the style's name).
 fn brand() -> (Session, String, String, String) {
     let mut s = session();
-    run(&mut s, "library.create", json!({"name": "Brand"}));
+    run(&mut s, "library.new", json!({"name": "Brand"}));
     let r = run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 20, "height": 20}))["id"].clone();
     run(&mut s, "paint.setFill", json!({"color": "#336699", "ids": [r]}));
     run(&mut s, "select.set", json!({"ids": [r]}));
     let g = run(&mut s, "library.add", json!({"kind": "graphic", "name": "Logo"}))["id"].as_str().unwrap().to_string();
     let c = run(&mut s, "library.add", json!({"kind": "fillColor"}))["name"].as_str().unwrap().to_string();
-    let t = run(&mut s, "text.create", json!({"x": 10, "y": 80, "text": "Type", "size": 18}))["id"].clone();
+    let t = run(&mut s, "text.add", json!({"x": 10, "y": 80, "text": "Type", "size": 18}))["id"].clone();
     run(&mut s, "select.set", json!({"ids": [t]}));
     let st = run(&mut s, "library.add", json!({"kind": "charStyle"}))["name"].as_str().unwrap().to_string();
     (s, g, c, st)
@@ -200,7 +200,7 @@ fn refs(v: &[(&str, &str)]) -> Vec<(String, String)> {
 #[test]
 fn every_graphic_gets_an_id_of_its_own() {
     let mut s = session();
-    run(&mut s, "library.create", json!({}));
+    run(&mut s, "library.new", json!({}));
     let mut ids = vec![];
     for x in [0, 30, 60, 90] {
         let r = run(&mut s, "shape.rectangle", json!({"x": x, "y": 0, "width": 10 + x, "height": 10}))["id"].clone();
@@ -215,11 +215,11 @@ fn items_are_grouped_moved_and_ungrouped() {
     let (mut s, g, c, st) = brand();
     assert!(groups(&mut s).is_empty(), "no groups yet");
     // A group made with items; a graphic is named by its name or its id.
-    let r = run(&mut s, "library.createGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": "Logo"}]}));
+    let r = run(&mut s, "library.addGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": "Logo"}]}));
     assert_eq!(r["group"], "Logos");
     assert_eq!(groups(&mut s), [("Logos".into(), refs(&[("graphic", &g)]))]);
     // A name taken (ignoring case) gets a number.
-    assert_eq!(run(&mut s, "library.createGroup", json!({"name": "logos"}))["group"], "logos 2");
+    assert_eq!(run(&mut s, "library.addGroup", json!({"name": "logos"}))["group"], "logos 2");
     run(&mut s, "library.renameGroup", json!({"group": "logos 2", "name": "Palette"}));
     assert!(s.execute("library.renameGroup", &json!({"group": "Palette", "name": "LOGOS"})).is_err(), "another group's name");
     assert!(s.execute("library.renameGroup", &json!({"group": "Nope", "name": "X"})).is_err());
@@ -233,7 +233,7 @@ fn items_are_grouped_moved_and_ungrouped() {
     assert!(run(&mut s, "library.moveItem", json!({"kind": "fillColor", "item": c}))["group"].is_null());
     assert!(s.execute("library.moveItem", &json!({"kind": "fillColor", "item": c, "group": "Nope"})).is_err());
     assert!(s.execute("library.moveItem", &json!({"kind": "fillColor", "item": "#nope", "group": "Palette"})).is_err());
-    assert!(s.execute("library.createGroup", &json!({"items": [{"kind": "graphic", "item": "nope"}]})).is_err(), "no such item");
+    assert!(s.execute("library.addGroup", &json!({"items": [{"kind": "graphic", "item": "nope"}]})).is_err(), "no such item");
     assert_eq!(groups(&mut s).len(), 2, "a failed command makes no group");
     // A deleted item leaves its group.
     run(&mut s, "library.removeItem", json!({"kind": "charStyle", "item": st}));
@@ -250,7 +250,7 @@ fn items_are_grouped_moved_and_ungrouped() {
 #[test]
 fn a_library_is_exported_and_imported() {
     let (mut s, g, c, _) = brand();
-    run(&mut s, "library.createGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}, {"kind": "fillColor", "item": c}]}));
+    run(&mut s, "library.addGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}, {"kind": "fillColor", "item": c}]}));
     let out = run(&mut s, "library.export", json!({}));
     assert_eq!(out["name"], "Brand");
     let data = out["data"].as_str().unwrap().to_string();
@@ -324,7 +324,7 @@ fn a_library_is_exported_to_a_file_and_imported_from_it() {
     let dir = kition_vector_testkit::temp_dir("library-export");
     let path = dir.join("Brand.vclibrary").to_string_lossy().to_string();
     let (mut s, g, ..) = brand();
-    run(&mut s, "library.createGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}]}));
+    run(&mut s, "library.addGroup", json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}]}));
     assert_eq!(run(&mut s, "library.export", json!({"library": "Brand", "path": path}))["path"], path.as_str());
     let mut t = session();
     let r = run(&mut t, "library.import", json!({"path": path}));

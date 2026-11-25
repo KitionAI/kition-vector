@@ -31,7 +31,7 @@ fn group(s: &mut Session) -> (NodeId, [NodeId; 2]) {
     let b = id_of(&run(s, "shape.rectangle", json!({"x": 100, "y": 20, "width": 40, "height": 40})));
     run(s, "select.set", json!({"ids": [a.0, b.0]}));
     run(s, "paint.setFill", json!({"color": "#ff0000"}));
-    (id_of(&run(s, "object.group", json!({}))), [a, b])
+    (id_of(&run(s, "arrange.group", json!({}))), [a, b])
 }
 
 fn pixel(s: &Session, x: u32, y: u32) -> [u8; 4] {
@@ -93,7 +93,7 @@ fn effects_and_fills_apply_to_layers_by_id() {
     let mut s = session();
     let (g, _) = group(&mut s);
     let layer = s.doc().unwrap().doc.layers[0].id;
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let r = run(&mut s, "effect.apply", json!({"effect": "stylize.dropShadow", "ids": [layer.0]}));
     assert_eq!(r["ids"], json!([layer.0]));
     run(&mut s, "appearance.addFill", json!({"ids": [layer.0]}));
@@ -111,7 +111,7 @@ fn effects_and_fills_apply_to_layers_by_id() {
 #[test]
 fn type_fills_go_above_or_below_the_characters() {
     let mut s = session();
-    let t = id_of(&run(&mut s, "text.create", json!({"x": 20, "y": 100, "text": "Hi"})));
+    let t = id_of(&run(&mut s, "text.add", json!({"x": 20, "y": 100, "text": "Hi"})));
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     // A new fill on type copies its characters' fill (it has none of its own).
     run(&mut s, "appearance.addFill", json!({}));

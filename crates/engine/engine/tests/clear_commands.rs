@@ -21,7 +21,7 @@ fn compound() -> (Session, NodeId, NodeId, NodeId) {
 fn clear_selected_compound_member_preserves_its_sibling_and_is_undoable() {
     let (mut s, a, b, c) = compound();
     s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert!(s.active().unwrap().doc.node(a).is_none());
     assert_eq!(s.active().unwrap().doc.parent_of(b), Some(c));
     assert!(s.active().unwrap().selection.is_empty());
@@ -36,16 +36,16 @@ fn clear_selected_compound_member_preserves_its_sibling_and_is_undoable() {
 #[test]
 fn clear_explicit_ids_works_without_a_selection_and_overrides_selected_anchors() {
     let (mut s, a, b, c) = compound();
-    s.execute("select.none", &json!({})).unwrap();
-    let info = s.commands().into_iter().find(|info| info.id == "edit.clear").unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
+    let info = s.commands().into_iter().find(|info| info.id == "edit.delete").unwrap();
     assert!(!info.enabled, "the menu stays disabled with no selection");
-    s.execute("edit.clear", &json!({"ids": [a.0]})).unwrap();
+    s.execute("edit.delete", &json!({"ids": [a.0]})).unwrap();
     assert!(s.active().unwrap().doc.node(a).is_none());
     assert_eq!(s.active().unwrap().doc.parent_of(b), Some(c));
     s.execute("edit.undo", &json!({})).unwrap();
     s.execute("select.anchors", &json!({"id": b.0, "anchors": [[0, 0]]})).unwrap();
     let sibling = s.active().unwrap().doc.node(b).unwrap().clone();
-    s.execute("edit.clear", &json!({"ids": [a.0]})).unwrap();
+    s.execute("edit.delete", &json!({"ids": [a.0]})).unwrap();
     assert!(s.active().unwrap().doc.node(a).is_none());
     assert_eq!(s.active().unwrap().doc.node(b).unwrap(), &sibling);
 }
@@ -53,16 +53,16 @@ fn clear_explicit_ids_works_without_a_selection_and_overrides_selected_anchors()
 #[test]
 fn clear_explicit_targets_are_validated_atomically() {
     let (mut s, a, _, _) = compound();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     for ids in [json!([a.0, 999]), json!([a.0, -1]), json!([a.0, "bad"]), json!([a.0, 2.5]), json!(null), json!(a.0)] {
         let doc = s.active().unwrap().doc.clone();
         let journal = s.journal.clone();
-        assert!(matches!(s.execute("edit.clear", &json!({"ids": ids})), Err(EngineError::BadParams { .. })), "{ids}");
+        assert!(matches!(s.execute("edit.delete", &json!({"ids": ids})), Err(EngineError::BadParams { .. })), "{ids}");
         assert_eq!(s.active().unwrap().doc, doc);
         assert_eq!(s.journal, journal);
     }
-    assert!(s.execute("edit.clear", &json!({})).is_err());
-    assert!(Session::new().execute("edit.clear", &json!({"ids": [a.0]})).is_err());
+    assert!(s.execute("edit.delete", &json!({})).is_err());
+    assert!(Session::new().execute("edit.delete", &json!({"ids": [a.0]})).is_err());
 }
 
 #[test]
@@ -70,7 +70,7 @@ fn clear_compound_and_member_together_deletes_the_compound() {
     for explicit in [false, true] {
         let (mut s, a, b, c) = compound();
         s.execute("select.set", &json!({"ids": [a.0, c.0]})).unwrap();
-        s.execute("edit.clear", &if explicit { json!({"ids": [a.0, c.0, c.0]}) } else { json!({}) }).unwrap();
+        s.execute("edit.delete", &if explicit { json!({"ids": [a.0, c.0, c.0]}) } else { json!({}) }).unwrap();
         for id in [a, b, c] {
             assert!(s.active().unwrap().doc.node(id).is_none());
         }
@@ -101,7 +101,7 @@ fn cut_compound_member_keeps_copy_and_delete_targets_consistent() {
 fn clear_direct_selected_anchors_keeps_the_rest_of_the_path() {
     let (mut s, a, b, c) = compound();
     s.execute("select.anchors", &json!({"id": a.0, "anchors": [[0, 0]]})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert_eq!(s.active().unwrap().doc.node(a).unwrap().path_data().unwrap().anchor_count(), 3);
     assert_eq!(s.active().unwrap().doc.parent_of(b), Some(c));
 }
@@ -113,11 +113,11 @@ fn clear_guides_and_empty_explicit_targets_keep_their_separate_behavior() {
     s.execute("guide.select", &json!({"indexes": [0]})).unwrap();
     let history = s.active().unwrap().history.undo.len();
     let selection = s.active().unwrap().selection.clone();
-    s.execute("edit.clear", &json!({"ids": []})).unwrap();
+    s.execute("edit.delete", &json!({"ids": []})).unwrap();
     assert_eq!(s.active().unwrap().history.undo.len(), history);
     assert_eq!(s.active().unwrap().selection, selection);
     assert_eq!(s.active().unwrap().doc.guides.len(), 1);
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert!(s.active().unwrap().doc.guides.is_empty());
     assert!(s.active().unwrap().doc.node(a).is_some());
     s.execute("edit.undo", &json!({})).unwrap();
@@ -128,8 +128,8 @@ fn clear_guides_and_empty_explicit_targets_keep_their_separate_behavior() {
 fn clear_keeps_layers_but_deletes_an_explicitly_targeted_child() {
     let (mut s, a, b, c) = compound();
     let layer = s.active().unwrap().doc.layers[0].id;
-    s.execute("select.none", &json!({})).unwrap();
-    s.execute("edit.clear", &json!({"ids": [layer.0, a.0]})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({"ids": [layer.0, a.0]})).unwrap();
     assert!(s.active().unwrap().doc.node(layer).is_some());
     assert!(s.active().unwrap().doc.node(a).is_none());
     assert_eq!(s.active().unwrap().doc.parent_of(b), Some(c));

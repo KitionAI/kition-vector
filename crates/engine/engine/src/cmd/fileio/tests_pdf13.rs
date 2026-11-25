@@ -1,4 +1,4 @@
-//! `document.exportPdf {compatibility: "1.3", flattenerPreset?, flattener?}`: a PDF 1.3 file has
+//! `file.exportPdf {compatibility: "1.3", flattenerPreset?, flattener?}`: a PDF 1.3 file has
 //! no transparency (no soft masks, blend modes, constant opacity or transparency groups): it is
 //! flattened with the chosen preset, and reads back looking like the canvas.
 
@@ -34,7 +34,7 @@ fn session() -> Session {
 }
 
 fn export(s: &mut Session, p: Value) -> (Vec<u8>, Vec<String>) {
-    let v = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
+    let v = s.execute("file.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
     let bytes = kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (bytes, v["warnings"].as_array().unwrap().iter().map(|w| w.as_str().unwrap().to_string()).collect())
 }
@@ -126,13 +126,13 @@ fn the_flattener_preset_and_options_apply() {
     let (saved, _) = export(&mut s, p(json!({"flattenerPreset": "All Raster"})));
     assert_eq!(saved.len(), raster.len());
     let v = s
-        .execute("document.export", &json!({"format": "pdf", "compatibility": "1.3", "flattenerPreset": "All Raster", "preserveEditing": false}))
+        .execute("file.export", &json!({"format": "pdf", "compatibility": "1.3", "flattenerPreset": "All Raster", "preserveEditing": false}))
         .unwrap();
     assert_eq!(kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap().len(), raster.len());
     s.execute("pdf.preset.save", &json!({"name": "Old Press", "compatibility": "1.3", "flattenerPreset": "All Raster", "preserveEditing": false}))
         .unwrap();
     assert_eq!(export(&mut s, json!({"preset": "Old Press"})).0.len(), raster.len(), "a PDF preset keeps its flattener preset");
-    assert!(s.execute("document.exportPdf", &p(json!({"flattenerPreset": "Nope"}))).is_err());
+    assert!(s.execute("file.exportPdf", &p(json!({"flattenerPreset": "Nope"}))).is_err());
     // Other versions keep their transparency, whatever the preset.
     let (kept, warnings) = export(&mut s, json!({"flattenerPreset": "low", "compression": {"compressText": false}}));
     assert!(!transparency(&kept).is_empty() && !warnings.iter().any(|w| w.contains("flattened")));
@@ -150,11 +150,10 @@ fn pdf_1_3_files_are_encrypted_with_40_bit_rc4_and_can_be_linearised() {
     assert!(text.contains("/V 1/R 2/Length 40") && text.contains("/Linearized 1") && text.contains("/Thumb "));
     for password in ["open", "owner"] {
         s.execute("document.close", &json!({"force": true})).ok();
-        s.execute("document.open", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf), "name": "old.pdf", "password": password}))
-            .unwrap();
+        s.execute("file.open", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf), "name": "old.pdf", "password": password})).unwrap();
         assert_eq!(s.doc().unwrap().doc.artboards.len(), 1, "{password}");
     }
     assert!(
-        s.execute("document.open", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf), "name": "old.pdf", "password": "nope"})).is_err()
+        s.execute("file.open", &json!({"dataBase64": kition_vector_format::base64_encode(&pdf), "name": "old.pdf", "password": "nope"})).is_err()
     );
 }

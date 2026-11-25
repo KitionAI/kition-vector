@@ -219,7 +219,7 @@ proptest! {
         effect in any::<bool>(),
     ) {
         let mut s = rich_session();
-        s.execute("select.all", &json!({})).unwrap();
+        s.execute("edit.selectAll", &json!({})).unwrap();
         let st = s.doc().unwrap();
         let inputs: Vec<u64> = kition_vector_plugins::objects::filter_targets(&st.doc, &st.selection.objects).iter().map(|i| i.0).collect();
         let out = output(&objects, &inputs, junk);
@@ -257,7 +257,7 @@ proptest! {
             bytes.truncate(c.index(bytes.len()));
         }
         let mut s = rich_session();
-        s.execute("select.all", &json!({})).unwrap();
+        s.execute("edit.selectAll", &json!({})).unwrap();
         for module in [bytes, [b"\0asm\x01\0\0\0".as_slice(), &garbage].concat(), garbage.clone()] {
             let r = catch_quiet(|| {
                 if let Ok(info) = install(&mut s, &module) {

@@ -23,8 +23,8 @@ use families::{first_difference, fixtures, labelled, writes};
 
 const VOLATILE: &[&str] = kition_vector_kit::EDITOR_STATE;
 
-/// The drawing written as SVG by this kit's SVG writer (as `document.export` writes one file of
-/// every artboard's art), with or without its editing data. (`document.exportBytes` takes no SVG
+/// The drawing written as SVG by this kit's SVG writer (as `file.export` writes one file of
+/// every artboard's art), with or without its editing data. (`file.exportBytes` takes no SVG
 /// options through the kit: see the item's report.)
 fn svg_of(doc: &mut VectorDocument, preserve: bool) -> Vec<u8> {
     let drawing = kition_vector_format::load(&doc.save(Some("Drawing.kvector")).unwrap()).unwrap();

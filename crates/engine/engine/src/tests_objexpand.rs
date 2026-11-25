@@ -200,7 +200,7 @@ fn a_freeform_gradient_expands_to_a_mesh_shaped_like_the_object() {
 fn create_gradient_mesh_takes_its_colours_from_the_gradient() {
     let mut s = session();
     let id = gradient_rect(&mut s, Rect::new(0.0, 0.0, 100.0, 50.0), white_black(), false);
-    run(&mut s, "object.mesh.create", json!({"rows": 1, "cols": 2}));
+    run(&mut s, "object.mesh.add", json!({"rows": 1, "cols": 2}));
     let NodeKind::Mesh(m) = &node(&s, id).kind else { panic!() };
     let hex = |r: usize, c: usize| m.points[m.idx(r, c)].color.to_hex();
     for r in 0..=1 {
@@ -212,7 +212,7 @@ fn create_gradient_mesh_takes_its_colours_from_the_gradient() {
     let mut s = session();
     let id = NodeId(run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 100, "height": 50}))["id"].as_u64().unwrap());
     run(&mut s, "paint.setFill", json!({"color": "#ff0000"}));
-    run(&mut s, "object.mesh.create", json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100}));
+    run(&mut s, "object.mesh.add", json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100}));
     let NodeKind::Mesh(m) = &node(&s, id).kind else { panic!() };
     assert_eq!(m.points[m.idx(0, 0)].color.to_hex(), "#ff0000");
     assert_eq!(m.points[m.idx(1, 1)].color.to_hex(), "#ffffff");

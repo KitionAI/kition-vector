@@ -53,7 +53,7 @@ fn close(a: f64, b: f64) -> bool {
 }
 
 fn serialize(s: &mut Session, format: &str) -> Vec<u8> {
-    let v = s.execute("document.serialize", &json!({"format": format})).unwrap();
+    let v = s.execute("file.serialize", &json!({"format": format})).unwrap();
     kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()
 }
 

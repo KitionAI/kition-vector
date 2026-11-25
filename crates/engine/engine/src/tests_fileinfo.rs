@@ -1,4 +1,4 @@
-//! File → File Info (`file.info`): editing as one undo step, the native round trip, and the PDF,
+//! File → File Info (`file.setInfo`): editing as one undo step, the native round trip, and the PDF,
 //! PNG and SVG metadata it writes.
 
 use kition_vector_doc::{CopyrightStatus, DocMetadata};
@@ -32,7 +32,7 @@ fn b64(v: &Value) -> Vec<u8> {
 #[test]
 fn file_info_is_one_undo_step_and_reports_everything() {
     let mut s = session();
-    let r = s.execute("file.info", &info()).unwrap();
+    let r = s.execute("file.setInfo", &info()).unwrap();
     assert_eq!(r["keywords"], json!(["fair", "Poster", "print"]), "keywords split, trimmed, each once ignoring case");
     assert_eq!((r["rating"].as_u64(), r["copyrightStatus"].as_str()), (Some(4), Some("copyrighted")));
     assert_eq!(r["description"], "A poster\nfor the fair");
@@ -43,7 +43,7 @@ fn file_info_is_one_undo_step_and_reports_everything() {
     assert_eq!(st.history.undo.len(), 1);
     assert_eq!(st.doc.metadata.author, "Ada Lovelace");
     // The report fed back changes nothing (read-only values are ignored).
-    let again = s.execute("file.info", &r).unwrap();
+    let again = s.execute("file.setInfo", &r).unwrap();
     assert_eq!(again, r);
     assert_eq!(s.doc().unwrap().history.undo.len(), 1);
     s.execute("edit.undo", &json!({})).unwrap();
@@ -51,7 +51,7 @@ fn file_info_is_one_undo_step_and_reports_everything() {
     assert_eq!((m.author.as_str(), m.keywords.len()), ("", 0));
     // Clearing a field with null.
     s.execute("edit.redo", &json!({})).unwrap();
-    s.execute("file.info", &json!({"author": null, "keywords": []})).unwrap();
+    s.execute("file.setInfo", &json!({"author": null, "keywords": []})).unwrap();
     let m = &s.doc().unwrap().doc.metadata;
     assert_eq!((m.author.as_str(), m.keywords.len(), m.rating), ("", 0, 4));
 }
@@ -75,7 +75,7 @@ fn junk_is_rejected() {
         json!([1, 2]),
         json!({"keywords": "x".repeat(300)}),
     ] {
-        assert!(s.execute("file.info", &bad).is_err(), "{bad}");
+        assert!(s.execute("file.setInfo", &bad).is_err(), "{bad}");
     }
     assert_eq!(s.doc().unwrap().history.undo.len(), 0);
     assert_eq!(s.doc().unwrap().doc.metadata, DocMetadata { created: s.doc().unwrap().doc.metadata.created, ..Default::default() });
@@ -84,7 +84,7 @@ fn junk_is_rejected() {
 #[test]
 fn file_info_round_trips_and_old_files_load() {
     let mut s = session();
-    s.execute("file.info", &info()).unwrap();
+    s.execute("file.setInfo", &info()).unwrap();
     let d = &s.doc().unwrap().doc;
     let back = kition_vector_format::load(&kition_vector_format::save_file(d)).unwrap();
     assert_eq!(back.metadata, d.metadata);
@@ -102,20 +102,20 @@ fn saving_to_a_file_stamps_the_modified_date() {
     let mut s = session();
     let created = s.doc().unwrap().doc.metadata.created;
     let path = std::env::temp_dir().join(format!("vc-fileinfo-{}.kvector", std::process::id()));
-    s.execute("document.save", &json!({"path": path.to_string_lossy()})).unwrap();
+    s.execute("file.save", &json!({"path": path.to_string_lossy()})).unwrap();
     let st = s.doc().unwrap();
     assert!(st.doc.metadata.modified.is_some() && st.doc.metadata.created == created);
     assert!(!st.is_dirty(), "the stamped document is the saved one");
     let back = kition_vector_format::load(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(back.metadata.modified, st.doc.metadata.modified);
     let _ = std::fs::remove_file(&path);
-    assert!(s.execute("file.info", &json!({})).unwrap()["modified"].is_string());
+    assert!(s.execute("file.setInfo", &json!({})).unwrap()["modified"].is_string());
 }
 
 #[test]
 fn pdf_info_carries_author_subject_and_keywords() {
     let mut s = session();
-    s.execute("file.info", &info()).unwrap();
+    s.execute("file.setInfo", &info()).unwrap();
     let pdf = crate::export_pdf(&s.doc().unwrap().doc, &kition_vector_pdf::PdfOptions::uncompressed()).unwrap();
     let text = String::from_utf8_lossy(&pdf);
     // (The description has a line break, so it is written as UTF-16.)
@@ -129,8 +129,8 @@ fn pdf_info_carries_author_subject_and_keywords() {
 #[test]
 fn png_exports_carry_text_chunks() {
     let mut s = session();
-    s.execute("file.info", &info()).unwrap();
-    let png = b64(&s.execute("document.export", &json!({"format": "png"})).unwrap());
+    s.execute("file.setInfo", &info()).unwrap();
+    let png = b64(&s.execute("file.export", &json!({"format": "png"})).unwrap());
     let text = crate::cmd::fileio::pngtext::text(&png);
     let get = |k: &str| text.iter().find(|(key, _)| key == k).map(|(_, v)| v.as_str());
     assert_eq!(get("Title"), Some("Poster"));
@@ -144,8 +144,8 @@ fn png_exports_carry_text_chunks() {
 #[test]
 fn svg_metadata_carries_file_info_as_dublin_core() {
     let mut s = session();
-    s.execute("file.info", &info()).unwrap();
-    let svg = String::from_utf8(b64(&s.execute("document.export", &json!({"format": "svg", "metadata": true})).unwrap())).unwrap();
+    s.execute("file.setInfo", &info()).unwrap();
+    let svg = String::from_utf8(b64(&s.execute("file.export", &json!({"format": "svg", "metadata": true})).unwrap())).unwrap();
     for want in [
         "<dc:title>Poster</dc:title>",
         "<dc:creator>Ada Lovelace</dc:creator>",
@@ -158,6 +158,6 @@ fn svg_metadata_carries_file_info_as_dublin_core() {
         assert!(svg.contains(want), "SVG has {want}");
     }
     // Without the option: no <metadata>, but the title and description stay.
-    let plain = String::from_utf8(b64(&s.execute("document.export", &json!({"format": "svg"})).unwrap())).unwrap();
+    let plain = String::from_utf8(b64(&s.execute("file.export", &json!({"format": "svg"})).unwrap())).unwrap();
     assert!(!plain.contains("<metadata>") && plain.contains("<desc>"));
 }

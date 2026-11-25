@@ -59,10 +59,10 @@ fn an_agents_brush_that_names_nothing_is_refused() {
 #[test]
 fn smart_punctuation_of_the_selection_needs_one() {
     let mut s = session();
-    s.execute("text.create", &json!({"x": 10, "y": 40, "text": "a -- b..."})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
-    refused(&mut s, "type.smartPunctuation", json!({"scope": "selection"}));
-    s.execute("type.smartPunctuation", &json!({})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 40, "text": "a -- b..."})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
+    refused(&mut s, "text.smartPunctuation", json!({"scope": "selection"}));
+    s.execute("text.smartPunctuation", &json!({})).unwrap();
 }
 
 #[test]

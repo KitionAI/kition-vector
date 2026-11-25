@@ -16,7 +16,7 @@ fn open(s: &mut Session, name: &str, bytes: &[u8], params: Value) -> Result<Valu
     if let (Some(p), Some(extra)) = (p.as_object_mut(), params.as_object()) {
         p.extend(extra.clone());
     }
-    s.execute("document.open", &p)
+    s.execute("file.open", &p)
 }
 
 /// The `.ai` private data of `data`, compressed as older `.ai` files compress it.
@@ -61,7 +61,7 @@ fn an_illustrator_eps_opens_with_its_layers() {
     assert_eq!((&r["format"], &r["warnings"]), (&json!("eps"), &json!([])), "{r}");
     check_sample(&s);
     // Saved as EPS and opened again, it comes back the same.
-    let eps = s.execute("document.exportEps", &json!({})).unwrap();
+    let eps = s.execute("file.exportEps", &json!({})).unwrap();
     let bytes = kition_vector_format::base64_decode(eps["dataBase64"].as_str().unwrap()).unwrap();
     let r = open(&mut s, "again.eps", &bytes, json!({})).unwrap();
     assert_eq!(r["restored"], json!(true), "{r}");

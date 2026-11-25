@@ -1,7 +1,7 @@
 edit.colorSettings | - | - | - | - | - | -
-document.formats | - | - | - | - | - | -
+file.formats | - | - | - | - | - | -
 select.key | id | - | id:Node | - | - | Selection
-type.fillPlaceholder | ids | id | ids:Node id:Node | - | - | Selection
+text.fillPlaceholder | ids | id | ids:Node id:Node | - | - | Selection
 text.missingFonts | - | - | - | - | - | -
 select.same.symbolInstance | - | - | - | - | - | Selection
 layer.template | ids | id | ids:Node id:Node | - | - | Active Selection
@@ -12,20 +12,20 @@ layer.collectInNew | ids | - | ids:Node | - | - | Selection
 transparency.releaseOpacityMask | ids | id | ids:Node id:Node | - | - | Mode Selection
 object.transform | ids | - | ids:Node | - | - | Mode Selection
 colorTheme.delete | - | - | - | - | - | Mode
-links.placementOptions | ids | - | ids:Node | - | - | Selection
+linkedFile.placementOptions | ids | - | ids:Node | - | - | Selection
 text.fontList | - | - | - | - | - | -
 transparency.stopEditingOpacityMask | - | - | - | - | - | Active Mode
 shapeBuilder.merge | ids | id | ids:Node id:Node fill.swatch:Swatch+Pattern fill.gradient.stops[].swatch:Swatch | - | fill.swatch fill.gradient.stops[].swatch | Mode Selection
 swatch.library.get | - | - | - | - | - | -
-type.createOutlines | - | - | - | - | - | Selection
+text.convertToOutlines | - | - | - | - | - | Selection
 appearance.targetContents | ids | id | ids:Node id:Node | - | - | Selection
 webExport.presets.list | - | - | - | - | - | -
 object.slice.select | slices | - | slices:Slice | - | - | Selection
-document.find | - | - | - | - | - | -
+file.find | - | - | - | - | - | -
 file.newFromTemplate | - | - | - | - | - | Mode
 brush.new | ids | id | ids:Node id:Node | - | - | Selection
 guide.select | - | - | - | - | - | Selection
-type.step | ids | id | id:Node ids:Node | - | - | Mode Selection
+text.step | ids | id | id:Node ids:Node | - | - | Mode Selection
 text.discardEmpty | id | - | id:Node | - | - | -
 symbol.replace | ids | id | ids:Node id:Node name:Symbol | - | name | Selection
 stroke.widthProfile.reset | - | - | - | - | - | Mode
@@ -56,11 +56,11 @@ swatch.library.save | - | - | names:Swatch+SwatchGroup | - | names | -
 object.textWrap.make | ids | - | ids:Node | - | - | Selection
 file.recovery.list | - | - | - | - | - | -
 shape.rectangularGrid | - | - | - | - | - | Active Mode
-links.embed | ids | - | ids:Node | - | - | Mode Selection
+linkedFile.embed | ids | - | ids:Node | - | - | Mode Selection
 stroke.widthPoint.remove | id | - | id:Node | - | - | -
 brush.freehand | - | extend.id | extend.id:Node | - | - | Active Mode Selection
 graphicStyle.library | - | - | - | - | - | -
-object.ungroup | - | - | - | - | - | Selection
+arrange.ungroup | - | - | - | - | - | Selection
 dataset.next | - | - | - | - | - | -
 text.setFormat | ids | id | ids:Node id:Node | - | - | Selection
 edit.colors.blendVertically | - | - | - | - | - | Selection
@@ -68,15 +68,15 @@ library.moveItem | - | - | - | - | - | Mode
 file.place.queue | - | - | - | - | - | Mode
 select.same.textStrokeColor | - | - | - | - | - | Selection
 symbol.list | - | - | - | - | - | -
-file.info | - | - | - | - | - | -
+file.setInfo | - | - | - | - | - | -
 clipboard.conflicts | - | - | - | - | - | Mode
 livePaint.make | ids | id | ids:Node id:Node | - | - | Selection
 transparency.enableOpacityMask | ids | id | ids:Node id:Node | - | - | Mode Selection
-document.exportForScreens | - | assets | assets:Asset | artboard artboards | - | -
+file.exportForScreens | - | assets | assets:Asset | artboard artboards | - | -
 object.lock | - | - | - | - | - | Selection
 layer.unlockAll | - | - | - | - | - | Selection
-document.pdfInfo | - | - | - | - | - | -
-document.node | id | - | id:Node | - | - | -
+file.pdfInfo | - | - | - | - | - | -
+file.node | id | - | id:Node | - | - | -
 command.batch | - | - | - | - | - | -
 appearance.addEffect | ids | id | id:Node ids:Node | - | - | Mode Selection
 appearance.addFill | ids | id | ids:Node id:Node | - | - | Mode Selection
@@ -120,9 +120,9 @@ object.blend.release | - | - | - | - | - | Selection
 object.blend.replaceSpine | - | - | - | - | - | Selection
 object.blend.reverseFrontToBack | - | - | - | - | - | Selection
 object.blend.reverseSpine | - | - | - | - | - | Selection
-object.blend.spine.addAnchor | id | - | id:Node | - | - | Selection
-object.blend.spine.moveAnchor | id | - | id:Node | - | - | Selection
-object.blend.spine.removeAnchor | id | - | id:Node | - | - | Selection
+object.blend.addSpineAnchor | id | - | id:Node | - | - | Selection
+object.blend.moveSpineAnchor | id | - | id:Node | - | - | Selection
+object.blend.removeSpineAnchor | id | - | id:Node | - | - | Selection
 object.clippingMask.editContents | - | - | - | - | - | Selection
 object.clippingMask.editMask | - | - | - | - | - | Selection
 object.clippingMask.make | - | - | - | - | - | Selection
@@ -140,7 +140,7 @@ object.envelope.resetWithMesh | - | - | - | - | - | Selection
 object.envelope.resetWithWarp | - | - | - | - | - | Selection
 object.envelope.setMeshPoint | id | - | id:Node | - | - | -
 object.mesh.addLine | id | - | id:Node | - | - | -
-object.mesh.create | ids | - | ids:Node | - | - | Selection
+object.mesh.add | ids | - | ids:Node | - | - | Selection
 object.mesh.deletePoint | id | - | id:Node | - | - | -
 object.mesh.expand | - | - | - | - | - | Selection
 object.mesh.movePoint | id | - | id:Node | - | - | -
@@ -167,11 +167,11 @@ symbol.selectInstances | - | - | name:Symbol | - | name | -
 symbol.setCurrent | - | - | name:Symbol | - | name | -
 symbol.spray | - | - | name:Symbol | - | name | Active Selection
 symbol.update | ids | id | ids:Node id:Node name:Symbol | - | name | Selection
-text.thread.create | - | - | - | - | - | Selection
+text.thread.add | - | - | - | - | - | Selection
 text.thread.info | - | - | - | - | - | -
 text.thread.releaseSelection | - | - | - | - | - | Selection
 text.thread.remove | - | - | - | - | - | Selection
-type.pathOptions | ids | id | ids:Node id:Node | - | - | Selection
+text.pathOptions | ids | id | ids:Node id:Node | - | - | Selection
 paint.setFill | ids | id | ids:Node id:Node swatch:Swatch+Pattern gradient.stops[].swatch:Swatch gradient.swatch:Swatch | - | swatch gradient.stops[].swatch gradient.swatch | Mode Selection
 swatch.edit | - | - | name:Swatch paint.swatch:Swatch+Pattern paint.gradient.stops[].swatch:Swatch | - | name paint.swatch paint.gradient.stops[].swatch | Mode
-text.createInPath | - | path | path:Node | - | - | Mode
+text.addInPath | - | path | path:Node | - | - | Mode

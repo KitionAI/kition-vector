@@ -71,17 +71,17 @@ fn a_save_records_its_date_and_replays_it() {
     let path = kition_vector_testkit::temp_dir("journal-save").join("a.kvector").to_string_lossy().into_owned();
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": null})).unwrap();
-    s.execute("document.save", &json!({"path": path})).unwrap();
+    s.execute("file.save", &json!({"path": path})).unwrap();
     let m = &s.doc().unwrap().doc.metadata;
     assert!(m.modified.is_some() && m.created == m.modified, "a save dates a document without one");
     let (id, p) = s.journal.last().unwrap().clone();
-    assert_eq!((id.as_str(), &p["modified"]), ("document.save", &json!(m.modified)));
+    assert_eq!((id.as_str(), &p["modified"]), ("file.save", &json!(m.modified)));
     // A given date is used as is; null leaves the dates alone.
-    s.execute("document.save", &json!({"path": path, "modified": 2_000_000_000})).unwrap();
+    s.execute("file.save", &json!({"path": path, "modified": 2_000_000_000})).unwrap();
     assert_eq!(s.doc().unwrap().doc.metadata.modified, Some(2_000_000_000));
-    s.execute("document.save", &json!({"path": path, "modified": null})).unwrap();
+    s.execute("file.save", &json!({"path": path, "modified": null})).unwrap();
     assert_eq!(s.doc().unwrap().doc.metadata.modified, Some(2_000_000_000));
-    assert!(s.execute("document.save", &json!({"path": path, "modified": "today"})).is_err());
+    assert!(s.execute("file.save", &json!({"path": path, "modified": "today"})).is_err());
     // Save As stamps the same way; Save a Copy leaves the document's dates (and records none).
     let dir = kition_vector_testkit::temp_dir("journal-save");
     s.execute("file.saveAs", &json!({"path": dir.join("b.kvector").to_string_lossy(), "modified": 2_000_000_100})).unwrap();
@@ -113,7 +113,7 @@ fn a_save_in_a_batch_records_its_date_and_replays_it() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": 1_000_000_000})).unwrap();
     let rect = json!({"x": 10, "y": 10, "width": 50, "height": 40});
-    let steps = json!([{"command": "shape.rectangle", "params": rect}, {"command": "document.save", "params": {"path": path}}]);
+    let steps = json!([{"command": "shape.rectangle", "params": rect}, {"command": "file.save", "params": {"path": path}}]);
     s.execute("command.batch", &json!({ "commands": steps })).unwrap();
     let modified = s.doc().unwrap().doc.metadata.modified;
     assert!(modified.is_some(), "the save in the batch dates the document");
@@ -220,7 +220,7 @@ fn a_failed_batch_brings_back_a_document_it_reverted() {
     let path = kition_vector_testkit::temp_dir("journal-batch").join("revert.kvector").to_string_lossy().into_owned();
     let mut s = Session::new();
     s.execute("file.new", &json!({"created": null})).unwrap();
-    s.execute("document.save", &json!({"path": path, "modified": null})).unwrap();
+    s.execute("file.save", &json!({"path": path, "modified": null})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 0, "y": 0, "width": 30, "height": 30})).unwrap();
     let (before, revision) = (documents(&s), s.doc().unwrap().revision);
     let steps = json!([rect_step(10), {"command": "file.revert", "params": {}}, rect_step(30), {"command": "no.such.command"}]);

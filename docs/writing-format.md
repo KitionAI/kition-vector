@@ -27,66 +27,66 @@ Themes, layouts and every other parameter that takes one of a fixed list of valu
 
 | Parameter | Values | Commands |
 |---|---|---|
-| `align` | `topLeft`, `top`, `topRight`, `left`, `center`, `right`, `bottomLeft`, `bottom`, `bottomRight` | `links.placementOptions` |
+| `align` | `topLeft`, `top`, `topRight`, `left`, `center`, `right`, `bottomLeft`, `bottom`, `bottomRight` | `linkedFile.placementOptions` |
 | `align` | `center`, `inside`, `outside` | `stroke.set` |
-| `alignToPath` | `ascender`, `descender`, `center`, `baseline` | `type.pathOptions` |
-| `antiAlias` | `none`, `art`, `type` | `document.export`, `document.exportForScreens`, `document.exportForWeb`, `assets.export`, `assets.settings.set` |
-| `appearance` | `flat`, `center`, `edge` | `object.mesh.create` |
+| `alignToPath` | `ascender`, `descender`, `center`, `baseline` | `text.pathOptions` |
+| `antiAlias` | `none`, `art`, `type` | `file.export`, `file.exportForScreens`, `file.exportForWeb`, `asset.export`, `asset.settings.set` |
+| `appearance` | `flat`, `center`, `edge` | `object.mesh.add` |
 | `apply` | `fill`, `stroke` | `swatch.library.add` |
 | `arrowAlign` | `extend`, `tip` | `stroke.set` |
-| `attribute` | `size`, `leading`, `tracking`, `kerning`, `baselineShift` | `type.step` |
+| `attribute` | `size`, `leading`, `tracking`, `kerning`, `baselineShift` | `text.step` |
 | `axis` | `horizontal`, `vertical` | `object.shear`, `object.distributeSpacing` |
 | `axis` | `horizontal`, `vertical`, `both` | `path.average` |
 | `axis` | `vertical`, `horizontal`, `free` | `path.mirrorCut` |
-| `background` | `transparent`, `white` | `document.rasterEffectsSettings` |
+| `background` | `transparent`, `white` | `file.rasterEffectsSettings` |
 | `background` | ``, `matte`, `#rrggbb` | `object.slice.options` |
-| `backgroundContents` | `transparent`, `white` | `file.new`, `document.setup` |
+| `backgroundContents` | `transparent`, `white` | `file.new`, `file.setup` |
 | `bounds` | `preview`, `geometric` | `object.align`, `object.distribute`, `object.distributeSpacing` |
 | `burasagari` | `none`, `standard`, `forced` | `text.setFormat` |
-| `byteOrder` | `little`, `big` | `document.export` |
+| `byteOrder` | `little`, `big` | `file.export` |
 | `cap` | `butt`, `round`, `square` | `stroke.set` |
-| `case` | `upper`, `lower`, `title`, `sentence` | `type.changeCase` |
-| `category` | `document`, `objects`, `graphicStyles`, `spotColors`, `patterns`, `gradients`, `symbols`, `fonts`, `fontDetails`, `linkedImages`, `embeddedImages` | `document.info` |
+| `case` | `upper`, `lower`, `title`, `sentence` | `text.changeCase` |
+| `category` | `document`, `objects`, `graphicStyles`, `spotColors`, `patterns`, `gradients`, `symbols`, `fonts`, `fontDetails`, `linkedImages`, `embeddedImages` | `file.getInfo` |
 | `category` | `Recent`, `Saved`, `Mobile`, `Web`, `Print`, `Film & Video`, `Art & Illustration`, `Branding`, `Social` | `file.newPresets` |
 | `categoryTickLength` | `none`, `short`, `full` | `graph.setType` |
-| `charAlign` | `romanBaseline`, `emBoxTop`, `emBoxCenter`, `emBoxBottom`, `icfTop`, `icfBottom` | `text.create`, `text.setRangeStyle`, `text.setFormat` |
+| `charAlign` | `romanBaseline`, `emBoxTop`, `emBoxCenter`, `emBoxBottom`, `icfTop`, `icfBottom` | `text.add`, `text.setRangeStyle`, `text.setFormat` |
 | `colorMode` | `rgb`, `cmyk` | `file.new` |
-| `colorModel` | `rgb`, `cmyk`, `gray` | `document.export` |
-| `colorModel` | `rgb`, `cmyk`, `grayscale`, `bitmap` | `object.rasterize`, `document.rasterEffectsSettings` |
+| `colorModel` | `rgb`, `cmyk`, `gray` | `file.export` |
+| `colorModel` | `rgb`, `cmyk`, `grayscale`, `bitmap` | `object.rasterize`, `file.rasterEffectsSettings` |
 | `composer` | `singleLine`, `everyLine` | `text.setFormat` |
 | `copies` | `3`, `5`, `7`, `9` | `pattern.options` |
-| `copyrightStatus` | `unknown`, `copyrighted`, `publicDomain` | `file.info` |
+| `copyrightStatus` | `unknown`, `copyrighted`, `publicDomain` | `file.setInfo` |
 | `crop` | `crop`, `bounding`, `art`, `trim`, `bleed`, `media` | `file.place` |
 | `direction` | `auto`, `leftToRight`, `rightToLeft` | `text.setFormat` |
-| `dither` | `none`, `diffusion`, `pattern`, `noise` | `document.export`, `document.exportForWeb` |
+| `dither` | `none`, `diffusion`, `pattern`, `noise` | `file.export`, `file.exportForWeb` |
 | `dx` | `-1`, `0`, `1` | `object.nudge` |
 | `dy` | `-1`, `0`, `1` | `object.nudge`, `perspective.nudge` |
-| `effect` | `rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity` | `type.pathOptions` |
-| `encoding` | `utf8`, `utf16` | `document.export` |
+| `effect` | `rainbow`, `skew`, `3dRibbon`, `stairStep`, `gravity` | `text.pathOptions` |
+| `encoding` | `utf8`, `utf16` | `file.export` |
 | `end` | `start`, `end` | `path.curvatureEdit` |
-| `exportText` | `editable`, `appearance` | `document.setup` |
-| `fileFormat` | `windows`, `os2` | `document.export` |
+| `exportText` | `editable`, `appearance` | `file.setup` |
+| `fileFormat` | `windows`, `os2` | `file.export` |
 | `firstBaseline` | `ascent`, `capHeight`, `xHeight`, `leading`, `fixed` | `text.areaOptions` |
-| `fit` | `none`, `autoHeight`, `shrinkText` | `text.areaOptions`, `text.createInPath` |
+| `fit` | `none`, `autoHeight`, `shrinkText` | `text.areaOptions`, `text.addInPath` |
 | `flipProfile` | `along`, `across` | `stroke.setAdvanced` |
-| `format` | `svg`, `svgz`, `pdf`, `png`, `jpg`, `webp`, `gif`, `png8`, `txt`, `dxf`, `eps`, `emf`, `wmf`, `tiff`, `bmp`, `tga`, `psd`, `kvector`, `template` | `document.export` |
-| `format` | `gif`, `jpg`, `png8`, `png24` | `document.exportForWeb` |
-| `format` | `png`, `jpg`, `webp`, `svg`, `svgz`, `pdf` | `document.exportSelection` |
-| `format` | `kvector`, `template`, `pdf`, `svg`, `svgz`, `ai` | `document.save`, `file.saveAs`, `file.saveCopy` |
-| `format` | `kvector`, `template`, `svg`, `svgz`, `pdf`, `png`, `jpg`, `webp`, `gif`, `png8`, `txt`, `dxf`, `eps`, `emf`, `wmf`, `tiff`, `bmp`, `tga`, `psd` | `document.serialize` |
+| `format` | `svg`, `svgz`, `pdf`, `png`, `jpg`, `webp`, `gif`, `png8`, `txt`, `dxf`, `eps`, `emf`, `wmf`, `tiff`, `bmp`, `tga`, `psd`, `kvector`, `template` | `file.export` |
+| `format` | `gif`, `jpg`, `png8`, `png24` | `file.exportForWeb` |
+| `format` | `png`, `jpg`, `webp`, `svg`, `svgz`, `pdf` | `file.exportSelection` |
+| `format` | `kvector`, `template`, `pdf`, `svg`, `svgz`, `ai` | `file.save`, `file.saveAs`, `file.saveCopy` |
+| `format` | `kvector`, `template`, `svg`, `svgz`, `pdf`, `png`, `jpg`, `webp`, `gif`, `png8`, `txt`, `dxf`, `eps`, `emf`, `wmf`, `tiff`, `bmp`, `tga`, `psd` | `file.serialize` |
 | `format` | `pdf`, `postscript` | `file.print` |
 | `format` | `vcswatches`, `gpl`, `ase`, `css` | `swatch.library.save` |
 | `from` | `keep`, `smooth`, `corner` | `path.curvatureEdit` |
 | `gradient` | `objects`, `mesh` | `object.expand` |
 | `grays` | `profile`, `black` | `file.documentColorMode` |
-| `gridSize` | `small`, `medium`, `large` | `document.setup` |
+| `gridSize` | `small`, `medium`, `large` | `file.setup` |
 | `hAlign` | `default`, `left`, `center`, `right` | `object.slice.options` |
-| `handle` | `in`, `out` | `object.blend.spine.moveAnchor` |
+| `handle` | `in`, `out` | `object.blend.moveSpineAnchor` |
 | `handle` | `0`, `1`, `2`, `3` | `object.envelope.setMeshPoint`, `object.mesh.movePoint` |
 | `highlight` | `none`, `rasterizedRegions`, `transparentObjects`, `allAffected`, `expandedPatterns`, `outlinedStrokes`, `outlinedText`, `allRasterized` | `flattener.preview` |
 | `horizontal` | `left`, `center`, `right` | `object.align`, `object.distribute` |
-| `imageMap` | `none`, `rectangle`, `polygon` | `attributes.set` |
-| `imageMap` | `none`, `client`, `server` | `document.export` |
+| `imageMap` | `none`, `rectangle`, `polygon` | `attribute.set` |
+| `imageMap` | `none`, `client`, `server` | `file.export` |
 | `intent` | `perceptual`, `relative`, `saturation`, `absolute` | `edit.colorSettings`, `color.convert`, `view.proofSetup`, `file.documentColorMode` |
 | `join` | `miter`, `round`, `bevel` | `stroke.set` |
 | `joins` | `miter`, `round`, `bevel` | `object.path.offsetPath` |
@@ -100,12 +100,12 @@ Themes, layouts and every other parameter that takes one of a fixed list of valu
 | `kind` | `text`, `visibility` | `variable.define` |
 | `kinsoku` | `none`, `hard`, `soft` | `text.setFormat` |
 | `layout` | `gridByRow`, `gridByColumn`, `row`, `column` | `artboard.rearrange` |
-| `leadingModel` | `romanBaseline`, `emBoxTop` | `text.create`, `text.createInPath`, `text.setFormat` |
-| `level` | `2`, `3` | `document.exportEps` |
+| `leadingModel` | `romanBaseline`, `emBoxTop` | `text.add`, `text.addInPath`, `text.setFormat` |
+| `level` | `2`, `3` | `file.exportEps` |
 | `level` | `3`, `2` | `file.print` |
-| `lineEndings` | `lf`, `crlf` | `document.export` |
-| `metadata` | `none`, `copyright`, `contact`, `all` | `document.exportForWeb` |
-| `method` | `baseline`, `optimized`, `progressive` | `document.export` |
+| `lineEndings` | `lf`, `crlf` | `file.export` |
+| `metadata` | `none`, `copyright`, `contact`, `all` | `file.exportForWeb` |
+| `method` | `baseline`, `optimized`, `progressive` | `file.export` |
 | `method` | `exact`, `preserveTints`, `scaleTints`, `tintsShades`, `hueShift` | `recolor.apply`, `recolor.reduce` |
 | `mode` | `rgb`, `cmyk`, `gray`, `global` | `edit.colors.adjustBalance` |
 | `mode` | `cmyk`, `rgb` | `file.documentColorMode` |
@@ -115,7 +115,7 @@ Themes, layouts and every other parameter that takes one of a fixed list of valu
 | `mode` | `set`, `add`, `toggle`, `subtract` | `select.anchorsMany` |
 | `mode` | `set`, `add`, `subtract` | `select.magicWand` |
 | `mode` | `gray`, `rgb`, `hsb`, `lab`, `cmyk`, `web` | `swatch.new`, `swatch.edit` |
-| `mode` | `area`, `onPath` | `text.createInPath` |
+| `mode` | `area`, `onPath` | `text.addInPath` |
 | `mode` | `normal`, `behind`, `inside` | `view.drawMode` |
 | `mojikumi` | `none`, `lineEndHalf` | `text.setFormat` |
 | `objects` | `none`, `move`, `copy` | `perspective.plane.move` |
@@ -124,40 +124,40 @@ Themes, layouts and every other parameter that takes one of a fixed list of valu
 | `orientation` | `portrait`, `landscape` | `file.new` |
 | `orientation` | `page`, `path` | `object.blend.make`, `object.blend.options` |
 | `orientation` | `horizontal`, `vertical` | `object.envelope.resetWithWarp` |
-| `output` | `images`, `html` | `document.exportForWeb` |
-| `overprints` | `preserve`, `discard` | `document.exportEps` |
+| `output` | `images`, `html` | `file.exportForWeb` |
+| `overprints` | `preserve`, `discard` | `file.exportEps` |
 | `overprints` | `preserve`, `simulate`, `discard` | `flattener.preview` |
 | `place` | `above`, `below`, `inside` | `layer.move` |
 | `plane` | `left`, `right`, `ground` | `perspective.attach`, `perspective.move`, `perspective.draw`, `perspective.transform`, `perspective.plane.move` |
 | `plane` | `left`, `right`, `ground`, `none` | `perspective.grid.set`, `perspective.plane.set` |
 | `position` | `topLeft`, `topRight`, `bottomLeft`, `bottomRight` | `perspective.widget.options` |
 | `position` | `normal`, `superscript`, `subscript` | `text.setRangeStyle`, `text.setFormat` |
-| `preserve` | `appearance`, `editability` | `document.exportDxf` |
-| `preserve` | `transforms`, `bounds`, `fileDimensions`, `fit`, `fill` | `links.placementOptions` |
+| `preserve` | `appearance`, `editability` | `file.exportDxf` |
+| `preserve` | `transforms`, `bounds`, `fileDimensions`, `fit`, `fill` | `linkedFile.placementOptions` |
 | `preserveShape` | `clippingMask`, `transparency` | `object.envelope.options` |
-| `preset` | `mobile`, `density`, `` | `assets.settings.set` |
-| `preset` | `mobile`, `density` | `document.exportForScreens` |
-| `previewFormat` | `none`, `tiffBw`, `tiffColor` | `document.exportEps` |
+| `preset` | `mobile`, `density`, `` | `asset.settings.set` |
+| `preset` | `mobile`, `density` | `file.exportForScreens` |
+| `previewFormat` | `none`, `tiffBw`, `tiffColor` | `file.exportEps` |
 | `previewMode` | `default`, `pixel`, `overprint` | `file.new` |
-| `range` | `1-3, 5`, `all` | `document.export` |
+| `range` | `1-3, 5`, `all` | `file.export` |
 | `rasterEffectsPpi` | `72`, `150`, `300` | `file.new` |
-| `rasterFormat` | `png`, `jpeg` | `document.exportDxf` |
-| `reduction` | `perceptual`, `selective`, `adaptive`, `web`, `blackWhite`, `gray` | `document.export` |
+| `rasterFormat` | `png`, `jpeg` | `file.exportDxf` |
+| `reduction` | `perceptual`, `selective`, `adaptive`, `web`, `blackWhite`, `gray` | `file.export` |
 | `rightTickLength` | `none`, `short`, `full` | `graph.setType` |
 | `rule` | `complementary`, `complementary2`, `splitComplementary`, `leftComplement`, `rightComplement`, `analogous`, `analogous2`, `monochromatic`, `shades`, `triad`, `triad2`, `triad3`, `tetrad`, `tetrad2`, `tetrad3`, `compound`, `compound2`, `highContrast`, `highContrast2`, `highContrast3`, `pentagram` | `color.harmony` |
 | `rule` | `nonZero`, `evenOdd` | `path.setFillRule` |
 | `sampleSize` | `1`, `3`, `5` | `eyedropper.setOptions` |
 | `scope` | `selection`, `all` | `css.export` |
 | `scope` | `person`, `agent` | `edit.undo`, `edit.redo` |
-| `scope` | `selection`, `document` | `type.smartPunctuation` |
+| `scope` | `selection`, `document` | `text.smartPunctuation` |
 | `shape` | `circle`, `ellipse`, `square`, `diamond`, `line` | `object.vectorHalftone` |
-| `show` | `all`, `missing`, `modified`, `embedded` | `links.list` |
-| `slices` | `all`, `selected`, `none` | `document.exportForWeb` |
-| `sort` | `name`, `kind`, `status` | `links.list` |
+| `show` | `all`, `missing`, `modified`, `embedded` | `linkedFile.list` |
+| `slices` | `all`, `selected`, `none` | `file.exportForWeb` |
+| `sort` | `name`, `kind`, `status` | `linkedFile.list` |
 | `spacing` | `smooth`, `steps`, `distance` | `object.blend.options` |
-| `standard` | `none`, `pdfA2b`, `pdfX1a`, `pdfX3`, `pdfX4` | `document.exportPdf` |
+| `standard` | `none`, `pdfA2b`, `pdfX1a`, `pdfX3`, `pdfX4` | `file.exportPdf` |
 | `strokeMode` | `within`, `along`, `across` | `paint.editGradient` |
-| `style` | `roman`, `japanese` | `object.createTrimMarks` |
+| `style` | `roman`, `japanese` | `object.addTrimMarks` |
 | `style` | `arc`, `arcLower`, `arcUpper`, `arch`, `bulge`, `shellLower`, `shellUpper`, `flag`, `wave`, `fish`, `rise`, `fisheye`, `inflate`, `squeeze`, `twist` | `object.envelope.makeWithWarp` |
 | `style` | `pencil`, `brush` | `path.freehand` |
 | `target` | `object`, `contents` | `appearance.addFill`, `appearance.addStroke`, `appearance.clear`, `appearance.reduceToBasic`, `appearance.setItem`, `appearance.removeItem`, `appearance.duplicateItem`, `appearance.moveItem`, `appearance.showAllHidden`, `graphicStyle.apply`, `effect.apply`, `effect.expandAppearance` |
@@ -171,15 +171,15 @@ Themes, layouts and every other parameter that takes one of a fixed list of valu
 | `tool` | `warp`, `twirl`, `pucker`, `bloat`, `scallop`, `crystallize`, `wrinkle` | `object.liquify` |
 | `tool` | `shift`, `scrunch`, `size`, `spin`, `stain`, `screen`, `style` | `symbol.adjust` |
 | `type` | `calligraphic`, `scatter`, `art`, `pattern`, `bristle` | `brush.new` |
-| `type` | `column`, `stackedColumn`, `bar`, `stackedBar`, `line`, `area`, `scatter`, `pie`, `radar` | `graph.create`, `graph.setType` |
+| `type` | `column`, `stackedColumn`, `bar`, `stackedBar`, `line`, `area`, `scatter`, `pie`, `radar` | `graph.add`, `graph.setType` |
 | `units` | `px`, `pt`, `mm`, `cm`, `in` | `css.selection` |
-| `units` | `Points`, `Picas`, `Inches`, `Millimeters`, `Centimeters`, `Pixels`, `Feet & Inches`, `Meters`, `Yards`, `Feet` | `document.setUnits` |
+| `units` | `Points`, `Picas`, `Inches`, `Millimeters`, `Centimeters`, `Pixels`, `Feet & Inches`, `Meters`, `Yards`, `Feet` | `file.setUnits` |
 | `units` | `Pixels`, `Points`, `Picas`, `Inches`, `Millimeters`, `Centimeters`, `Feet`, `Yards`, `Meters`, `Feet & Inches` | `file.new` |
-| `useArtboards` | `true`, `false` | `document.export`, `document.exportDxf`, `document.exportEps` |
+| `useArtboards` | `true`, `false` | `file.export`, `file.exportDxf`, `file.exportEps` |
 | `vAlign` | `default`, `top`, `middle`, `baseline`, `bottom` | `object.slice.options` |
 | `valueAxis` | `left`, `right`, `both` | `graph.setType` |
 | `variation` | `tintsShades`, `warmCool`, `vividMuted` | `color.harmony` |
-| `version` | `R12`, `R13`, `R14`, `2000`, `2004`, `2007`, `2010`, `2013`, `2018` | `document.exportDxf` |
+| `version` | `R12`, `R13`, `R14`, `2000`, `2004`, `2007`, `2010`, `2013`, `2018` | `file.exportDxf` |
 | `vertical` | `top`, `center`, `bottom` | `object.align`, `object.distribute` |
 | `verticalAlign` | `top`, `center`, `bottom`, `justify` | `text.areaOptions` |
 | `view` | `tracingResult`, `tracingResultWithOutlines`, `outlines`, `outlinesWithSourceImage`, `sourceImage` | `imageTrace.make`, `imageTrace.setView` |
@@ -199,33 +199,33 @@ Defaults the engine states in its schemas (other defaults are named in the param
 | `recolor.randomize` | `order` | `true` |
 | `recolor.randomize` | `saturationBrightness` | `false` |
 | `recolor.randomize` | `seed` | `0` |
-| `document.serialize` | `selectedOnly` | `false` |
-| `document.export` | `artboard` | `0` |
-| `document.export` | `depth` | `24` |
-| `document.export` | `ditherAmount` | `100` |
-| `document.export` | `embedIcc` | `true` |
-| `document.export` | `flipRows` | `false` |
-| `document.export` | `hiddenLayers` | `false` |
-| `document.export` | `layers` | `true` |
-| `document.export` | `lzw` | `true` |
-| `document.export` | `maxEditability` | `false` |
-| `document.export` | `rle` | `false` |
-| `document.export` | `scale` | `1` |
-| `document.export` | `scans` | `3` |
-| `document.export` | `selectedOnly` | `false` |
-| `document.export` | `transparency` | `true` |
-| `document.exportSelection` | `scale` | `1` |
-| `document.exportForScreens` | `fullDocument` | `false` |
-| `document.exportForScreens` | `includeBleed` | `false` |
-| `document.exportForScreens` | `subfolders` | `false` |
-| `document.exportForScreens` | `zip` | `false` |
-| `document.exportForOffice` | `artboard` | `0` |
-| `document.exportForOffice` | `ppi` | `150` |
-| `document.exportForOffice` | `transparent` | `false` |
-| `document.save` | `embedProfiles` | `true` |
-| `document.save` | `includeLinked` | `false` |
-| `document.save` | `version` | `3` |
-| `text.create` | `vertical` | `false` |
+| `file.serialize` | `selectedOnly` | `false` |
+| `file.export` | `artboard` | `0` |
+| `file.export` | `depth` | `24` |
+| `file.export` | `ditherAmount` | `100` |
+| `file.export` | `embedIcc` | `true` |
+| `file.export` | `flipRows` | `false` |
+| `file.export` | `hiddenLayers` | `false` |
+| `file.export` | `layers` | `true` |
+| `file.export` | `lzw` | `true` |
+| `file.export` | `maxEditability` | `false` |
+| `file.export` | `rle` | `false` |
+| `file.export` | `scale` | `1` |
+| `file.export` | `scans` | `3` |
+| `file.export` | `selectedOnly` | `false` |
+| `file.export` | `transparency` | `true` |
+| `file.exportSelection` | `scale` | `1` |
+| `file.exportForScreens` | `fullDocument` | `false` |
+| `file.exportForScreens` | `includeBleed` | `false` |
+| `file.exportForScreens` | `subfolders` | `false` |
+| `file.exportForScreens` | `zip` | `false` |
+| `file.exportForOffice` | `artboard` | `0` |
+| `file.exportForOffice` | `ppi` | `150` |
+| `file.exportForOffice` | `transparent` | `false` |
+| `file.save` | `embedProfiles` | `true` |
+| `file.save` | `includeLinked` | `false` |
+| `file.save` | `version` | `3` |
+| `text.add` | `vertical` | `false` |
 | `object.setLiveShape` | `invertPie` | `true` |
 | `object.setLiveShape` | `makeSidesEqual` | `true` |
 | `paint.setFill` | `focus` | `true` |
@@ -260,12 +260,12 @@ Defaults the engine states in its schemas (other defaults are named in the param
 | `edit.colors.overprintBlack` | `remove` | `false` |
 | `edit.colors.overprintBlack` | `stroke` | `true` |
 | `swatch.setSpot` | `spot` | `true` |
-| `type.smartPunctuation` | `dashes` | `true` |
-| `type.smartPunctuation` | `ellipsis` | `true` |
-| `type.smartPunctuation` | `quotes` | `true` |
+| `text.smartPunctuation` | `dashes` | `true` |
+| `text.smartPunctuation` | `ellipsis` | `true` |
+| `text.smartPunctuation` | `quotes` | `true` |
 | `edit.findReplace` | `matchCase` | `false` |
 | `edit.findReplace` | `wholeWord` | `false` |
-| `text.createInPath` | `vertical` | `false` |
+| `text.addInPath` | `vertical` | `false` |
 | `text.findFontFiles` | `maxSeconds` | `60` |
 | `text.findFontFiles` | `stop` | `false` |
 | `file.documentColorMode` | `convert` | `true` |
@@ -284,48 +284,48 @@ Defaults the engine states in its schemas (other defaults are named in the param
 | `object.expand` | `fill` | `true` |
 | `object.expand` | `object` | `true` |
 | `object.expand` | `stroke` | `true` |
-| `document.exportPdf` | `compatibility` | `1.3` |
-| `document.pdfSettings` | `includeDocument` | `false` |
+| `file.exportPdf` | `compatibility` | `1.3` |
+| `file.pdfSettings` | `includeDocument` | `false` |
 | `file.place` | `link` | `true` |
 | `file.place` | `page` | `1` |
 | `file.place` | `replace` | `false` |
 | `file.place` | `template` | `false` |
-| `links.placementOptions` | `clip` | `false` |
+| `linkedFile.placementOptions` | `clip` | `false` |
 | `pdf.preset.import` | `replace` | `false` |
-| `document.exportDxf` | `alterPaths` | `false` |
-| `document.exportDxf` | `artboard` | `0` |
-| `document.exportDxf` | `outlineText` | `false` |
-| `document.exportDxf` | `scale` | `1` |
-| `document.exportDxf` | `scaleLineweights` | `false` |
-| `document.exportDxf` | `selectedOnly` | `false` |
-| `document.exportEps` | `cmykPostScript` | `true` |
-| `document.exportEps` | `compatibleGradients` | `false` |
-| `document.exportEps` | `embedFonts` | `true` |
-| `document.exportEps` | `includeLinkedFiles` | `false` |
-| `document.exportEps` | `selectedOnly` | `false` |
-| `document.exportEps` | `thumbnails` | `true` |
-| `document.exportEps` | `transparentPreview` | `true` |
+| `file.exportDxf` | `alterPaths` | `false` |
+| `file.exportDxf` | `artboard` | `0` |
+| `file.exportDxf` | `outlineText` | `false` |
+| `file.exportDxf` | `scale` | `1` |
+| `file.exportDxf` | `scaleLineweights` | `false` |
+| `file.exportDxf` | `selectedOnly` | `false` |
+| `file.exportEps` | `cmykPostScript` | `true` |
+| `file.exportEps` | `compatibleGradients` | `false` |
+| `file.exportEps` | `embedFonts` | `true` |
+| `file.exportEps` | `includeLinkedFiles` | `false` |
+| `file.exportEps` | `selectedOnly` | `false` |
+| `file.exportEps` | `thumbnails` | `true` |
+| `file.exportEps` | `transparentPreview` | `true` |
 | `file.package` | `copyFonts` | `true` |
 | `file.package` | `copyLinks` | `true` |
 | `file.package` | `linksFolder` | `true` |
 | `file.package` | `relink` | `true` |
 | `file.package` | `report` | `true` |
-| `document.exportForWeb` | `artboard` | `0` |
-| `document.exportForWeb` | `clipToArtboard` | `true` |
-| `document.exportForWeb` | `colors` | `128` |
-| `document.exportForWeb` | `convertToSrgb` | `true` |
-| `document.exportForWeb` | `ditherAmount` | `100` |
-| `document.exportForWeb` | `embedProfile` | `false` |
-| `document.exportForWeb` | `interlaced` | `false` |
-| `document.exportForWeb` | `lossy` | `0` |
-| `document.exportForWeb` | `optimized` | `true` |
-| `document.exportForWeb` | `progressive` | `false` |
-| `document.exportForWeb` | `transparency` | `true` |
-| `document.exportForWeb` | `webSnap` | `0` |
-| `document.exportForWeb.preview` | `image` | `false` |
-| `document.exportForWeb.preview` | `kbps` | `56.6` |
+| `file.exportForWeb` | `artboard` | `0` |
+| `file.exportForWeb` | `clipToArtboard` | `true` |
+| `file.exportForWeb` | `colors` | `128` |
+| `file.exportForWeb` | `convertToSrgb` | `true` |
+| `file.exportForWeb` | `ditherAmount` | `100` |
+| `file.exportForWeb` | `embedProfile` | `false` |
+| `file.exportForWeb` | `interlaced` | `false` |
+| `file.exportForWeb` | `lossy` | `0` |
+| `file.exportForWeb` | `optimized` | `true` |
+| `file.exportForWeb` | `progressive` | `false` |
+| `file.exportForWeb` | `transparency` | `true` |
+| `file.exportForWeb` | `webSnap` | `0` |
+| `file.exportForWeb.preview` | `image` | `false` |
+| `file.exportForWeb.preview` | `kbps` | `56.6` |
 | `webExport.settings` | `reset` | `false` |
-| `assets.add` | `multiple` | `true` |
+| `asset.add` | `multiple` | `true` |
 | `css.selection` | `dimensions` | `true` |
 | `css.selection` | `position` | `false` |
 | `css.selection` | `rasterize` | `false` |
@@ -341,7 +341,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### File
 
-- `file.new` (writes): Creates a new document and makes it active, optionally from a named preset with its own size, units, orientation, artboards, bleed and colour mode; answers the new document's index. Use document.open for an existing file.
+- `file.new` (writes): Creates a new document and makes it active, optionally from a named preset with its own size, units, orientation, artboards, bleed and colour mode; answers the new document's index. Use file.open for an existing file.
   - `artboardLayout` object, default: all in one row
   - `artboards` integer, 1–1000
   - `backgroundContents` string, one of `transparent` | `white`, a white artboard background, not an object
@@ -357,13 +357,13 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `title` string
   - `units` string, one of `Pixels` | `Points` | `Picas` | `Inches` | `Millimeters` | `Centimeters` | `Feet` | `Yards` | `Meters` | `Feet & Inches`, default: prefs unitsGeneral, as print presets; screen presets: Pixels
   - `width` number, points; default 612|"210 mm"
-- `file.close` (writes): Closes the document at index (default the active one) without saving; use document.save first to keep changes.
+- `file.close` (writes): Closes the document at index (default the active one) without saving; use file.save first to keep changes.
   - `index` integer, a position counted from 0 (the first is 0)
-- `document.exportSelection` (reads): Exports only the selected objects, cropped to their bounds, as PNG, JPEG, WebP, SVG or PDF; answers the file or its data with the bounds.
+- `file.exportSelection` (reads): Exports only the selected objects, cropped to their bounds, as PNG, JPEG, WebP, SVG or PDF; answers the file or its data with the bounds.
   - `format` string, one of `png` | `jpg` | `webp` | `svg` | `svgz` | `pdf`, default: from the extension, else png
   - `path` file
   - `scale` integer, default `1`
-- `document.exportForOffice` (reads): Writes one artboard as a PNG at a chosen resolution for office documents and slides, or answers its data when no path is given.
+- `file.exportForOffice` (reads): Writes one artboard as a PNG at a chosen resolution for office documents and slides, or answers its data when no path is given.
   - `artboard` integer, default `0`
   - `path` file
   - `ppi` integer, default `150`, 72, 150, 300… pixels per inch
@@ -386,7 +386,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `path` file
 - `file.revert` (writes): Discards unsaved changes by reloading the document's saved file into the same tab and clearing its history; only for saved, modified documents. No parameters.
 - `file.closeAll` (writes): Closes every open document without saving; answers how many closed. No parameters.
-- `file.info` (writes): Sets the document's File Info metadata (title, author, description, keywords, rating, copyright) in one undo step.
+- `file.setInfo` (writes): Sets the document's File Info metadata (title, author, description, keywords, rating, copyright) in one undo step.
   - `author` string
   - `authorTitle` string
   - `copyrightNotice` string
@@ -400,7 +400,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `at` number[]
   - `crop` string, one of `crop` | `bounding` | `art` | `trim` | `bleed` | `media`, clipped to that page or artboard, default; the art's bounds; a PDF page's boxes
   - `dxf` object, a .dxf drawing: fit fills the artboard under at, else the first; fitted or uncentred art lands with its drawing's artboard on that artboard, else it is centred on at
-  - `link` boolean, default `true`, a raster image keeps its file's path; a Kition Vector document at path becomes one locked placed document showing artboard `page`, linked to the file and read again when it changes (links.update; saving it in this app updates it at once), drawn as vectors in every output; false: an editable copy of its art, as from dataBase64; other files are embedded
+  - `link` boolean, default `true`, a raster image keeps its file's path; a Kition Vector document at path becomes one locked placed document showing artboard `page`, linked to the file and read again when it changes (linkedFile.update; saving it in this app updates it at once), drawn as vectors in every output; false: an editable copy of its art, as from dataBase64; other files are embedded
   - `page` integer, default `1`, PDF/.ai page, or a native document's artboard
   - `password` string
   - `rect` number[]
@@ -410,23 +410,23 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### (no menu)
 
-- `document.activate` (reads): Makes the open document at index the active one, so later commands act on it.
+- `file.activate` (reads): Makes the open document at index the active one, so later commands act on it.
   - `index` integer, a position counted from 0 (the first is 0)
-- `document.inspect` (reads): Answers the active document's layer tree, artboards, selection and history; depth and childLimit slice large trees. Start here before editing, and use document.node for one object.
+- `file.inspect` (reads): Answers the active document's layer tree, artboards, selection and history; depth and childLimit slice large trees. Start here before editing, and use file.node for one object.
   - `childLimit` integer
   - `depth` integer
-- `document.node` (reads): Answers one object by id: its kind, geometry, paint and children; summary gives a compact form, depth and childLimit bound the children shown.
+- `file.node` (reads): Answers one object by id: its kind, geometry, paint and children; summary gives a compact form, depth and childLimit bound the children shown.
   - `childLimit` integer
   - `depth` integer
   - `id` integer or string, an id
   - `summary` boolean
-- `document.find` (reads): Searches the document's objects by Layers panel name, kind or text content and answers the matches with their ids and paths; limit 0 only counts.
+- `file.find` (reads): Searches the document's objects by Layers panel name, kind or text content and answers the matches with their ids and paths; limit 0 only counts.
   - `Path` string
   - `kind` string
   - `limit` integer
   - `name` string
   - `text` string
-- `document.json` (reads): Answers the complete document model as JSON; large, so prefer document.inspect or document.node unless you need everything. No parameters.
+- `file.json` (reads): Answers the complete document model as JSON; large, so prefer file.inspect or file.node unless you need everything. No parameters.
 - `edit.duplicate` (writes): Duplicates the selection in place, optionally offset by dx/dy, and selects the copies.
   - `dx` number
   - `dy` number
@@ -467,12 +467,12 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `order` boolean, default `true`, shuffle the new colours among the rows that aren't excluded
   - `saturationBrightness` boolean, default `false`, random saturation and brightness, hue kept
   - `seed` integer, default `0`
-- `document.open` (writes): Opens a file by path or from base64 bytes (native, SVG, PDF, AI, EPS, DXF, images and more) as a new active document; PDF options pick pages, the box and how text comes in.
+- `file.open` (writes): Opens a file by path or from base64 bytes (native, SVG, PDF, AI, EPS, DXF, images and more) as a new active document; PDF options pick pages, the box and how text comes in.
   - `path` file
-- `document.serialize` (reads): Answers the active document as file data in a format (native by default, SVG, PDF, raster and more) without writing a file or changing the document.
+- `file.serialize` (reads): Answers the active document as file data in a format (native by default, SVG, PDF, raster and more) without writing a file or changing the document.
   - `format` string, one of `kvector` | `template` | `svg` | `svgz` | `pdf` | `png` | `jpg` | `webp` | `gif` | `png8` | `txt` | `dxf` | `eps` | `emf` | `wmf` | `tiff` | `bmp` | `tga` | `psd`, default
   - `selectedOnly` boolean, default `false`, the selected objects alone, in their layers
-- `document.export` (reads): Writes the document, its selection or chosen artboards to a file in a format (SVG, PDF, PNG, JPEG, TIFF, PSD, DXF, EPS and more) with that format's options, or answers the data when no path is given. Never changes the document's own path.
+- `file.export` (reads): Writes the document, its selection or chosen artboards to a file in a format (SVG, PDF, PNG, JPEG, TIFF, PSD, DXF, EPS and more) with that format's options, or answers the data when no path is given. Never changes the document's own path.
   - `antiAlias` string, one of `none` | `art` | `type`, default; text snapped to pixels
   - `artboard` integer, default `0`
   - `artboards` array
@@ -517,11 +517,11 @@ Defaults the engine states in its schemas (other defaults are named in the param
 - `command.batch` (writes): Runs a list of commands as one undo step and stops at the first error, rolling everything back; use it for multi-step edits that must succeed together.
   - `commands` object[], [{command, params}]
   - `label` string
-- `document.formats` (reads): Answers every file format the kit can open or write with its extensions and options, plus formats it cannot handle with what to use instead. No parameters.
-- `document.pdfInfo` (reads): Answers a PDF's page count, page sizes and boxes, and optionally a thumbnail, without opening it; also says whether a password is needed.
+- `file.formats` (reads): Answers every file format the kit can open or write with its extensions and options, plus formats it cannot handle with what to use instead. No parameters.
+- `file.pdfInfo` (reads): Answers a PDF's page count, page sizes and boxes, and optionally a thumbnail, without opening it; also says whether a password is needed.
   - `path` file
-- `document.exportSettings` (reads): Answers the Export for Screens settings the document last exported with, or {} when it never was. No parameters.
-- `document.save` (writes): Saves the document to its own file or to path in a format (native, template, PDF, SVG, AI) with that format's options; without a known path it answers the data and stays modified.
+- `file.exportSettings` (reads): Answers the Export for Screens settings the document last exported with, or {} when it never was. No parameters.
+- `file.save` (writes): Saves the document to its own file or to path in a format (native, template, PDF, SVG, AI) with that format's options; without a known path it answers the data and stays modified.
   - `embedProfiles` boolean, default `true`, carry the ICC profiles loaded from files that the document is tagged with; opening the file installs them where missing
   - `format` string, one of `kvector` | `template` | `pdf` | `svg` | `svgz` | `ai`, default: the path's extension, else the document's own format
   - `includeLinked` boolean, default `false`, keep linked files' own pixels, not just their previews; they stay linked
@@ -590,13 +590,13 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `width` number
   - `x` number
   - `y` number
-- `path.create` (writes): Creates a path from anchors with optional in/out handles, or from SVG path data, open or closed, with the current paint; answers its id.
+- `path.add` (writes): Creates a path from anchors with optional in/out handles, or from SVG path data, open or closed, with the current paint; answers its id.
   - `anchors` object[]
   - `closed` boolean
   - `d` string
 - `view.drawMode` (reads): Sets where new objects go: drawn normally, behind the selection, or inside the one selected path (no mode cycles through them).
   - `mode` string, one of `normal` | `behind` | `inside`
-- `text.create` (writes): Creates point or area type at x, y with text, size, font, colour and alignment options; answers its id. Use text.setText to change existing type.
+- `text.add` (writes): Creates point or area type at x, y with text, size, font, colour and alignment options; answers its id. Use text.setText to change existing type.
   - `area` object, {width, height, fit?: none|autoHeight|shrinkText, fitMinPercent?}
   - `charAlign` string, one of `romanBaseline` | `emBoxTop` | `emBoxCenter` | `emBoxBottom` | `icfTop` | `icfBottom`, default: emBoxTop and emBoxCenter while the interface is in Japanese, else romanBaseline
   - `color` string
@@ -627,7 +627,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 - `object.exitIsolation` (reads): Leaves isolation mode so edits apply to the whole document again; the document is unchanged. No parameters.
 - `object.setProps` (writes): Sets object properties on ids or the selection: name, visibility, lock, opacity, blend mode, isolation, knockout and custom data attributes.
   - `blend` string
-  - `data` object, {key: "value" | null (removes it)} (the object's own data, SVG data-* attributes: {pivot: "100,180"} is data-pivot; document.node → attrs.data); removes it; the object's own data, SVG data-* attributes: {pivot: "100,180"} is data-pivot; document.node → attrs.data
+  - `data` object, {key: "value" | null (removes it)} (the object's own data, SVG data-* attributes: {pivot: "100,180"} is data-pivot; file.node → attrs.data); removes it; the object's own data, SVG data-* attributes: {pivot: "100,180"} is data-pivot; file.node → attrs.data
   - `isolate` boolean
   - `knockout` string or boolean
   - `knockoutShape` boolean
@@ -973,18 +973,18 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `tracking` number
 - `object.maskImage` (writes): Clips the selected image with a rectangle around it and selects that clipping path for cropping by its handles. No parameters.
 - `object.blend.info` (reads): Answers the options of the first selected blend (spacing, steps, distance, orientation, keys, spine), else the defaults new blends get. No parameters.
-- `object.blend.spine.moveAnchor` (writes): Moves a point of a blend's spine, or one of its handles, to x, y.
+- `object.blend.moveSpineAnchor` (writes): Moves a point of a blend's spine, or one of its handles, to x, y.
   - `anchor` integer, a position counted from 0 (the first is 0)
   - `handle` string, one of `in` | `out`
   - `id` integer or string, an id; default: the selected blend
   - `independent` boolean
   - `x` number
   - `y` number
-- `object.blend.spine.addAnchor` (writes): Adds a point to a blend's spine where it passes nearest x, y; answers its index.
+- `object.blend.addSpineAnchor` (writes): Adds a point to a blend's spine where it passes nearest x, y; answers its index.
   - `id` integer or string, an id; default: the selected blend
   - `x` number
   - `y` number
-- `object.blend.spine.removeAnchor` (writes): Deletes a spine point that no key object sits on.
+- `object.blend.removeSpineAnchor` (writes): Deletes a spine point that no key object sits on.
   - `anchor` integer, a position counted from 0 (the first is 0)
   - `id` integer or string, an id; default: the selected blend
 - `object.envelope.info` (reads): Answers the selected envelope's type and settings, or the defaults new envelopes get. No parameters.
@@ -1073,30 +1073,30 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `end` number
   - `id` integer or string, an id
   - `start` number
-- `text.createInPath` (writes): Puts new type inside a closed path (area type) or along a path (type on a path) with text, font and fit options; answers its id.
+- `text.addInPath` (writes): Puts new type inside a closed path (area type) or along a path (type on a path) with text, font and fit options; answers its id.
   - `at` number[], on-path start: nearest point
   - `charAlign` string
-  - `color` string, as text.create
+  - `color` string, as text.add
   - `fit` string, one of `none` | `autoHeight` | `shrinkText`
   - `fitMinPercent` number
   - `font` string
   - `leadingModel` string, one of `romanBaseline` | `emBoxTop`
   - `mode` string, one of `area` | `onPath`
   - `path` integer, an id
-  - `placeholder` boolean, placeholder text instead, as text.create
+  - `placeholder` boolean, placeholder text instead, as text.add
   - `size` number
   - `style` string
   - `text` string, like
   - `vertical` boolean, default `false`
-- `type.step` (writes): Steps a type attribute (size, leading, tracking, kerning, baseline shift) up or down by the preference increments.
+- `text.step` (writes): Steps a type attribute (size, leading, tracking, kerning, baseline shift) up or down by the preference increments.
   - `attribute` string, one of `size` | `leading` | `tracking` | `kerning` | `baselineShift`
   - `by` integer
   - `end` integer, 0 to 255
   - `id` integer or string, an id
   - `start` integer, 0 to 255
-- `type.size.increase` (writes): Increases the selected text's font size by a number of preference steps.
+- `format.increaseFontSize` (writes): Increases the selected text's font size by a number of preference steps.
   - `by` integer
-- `type.size.decrease` (writes): Decreases the selected text's font size by a number of preference steps.
+- `format.decreaseFontSize` (writes): Decreases the selected text's font size by a number of preference steps.
   - `by` integer
 - `text.discardEmpty` (writes): Removes type object id when it has no characters, dropping the steps that created it when nothing else changed.
   - `id` integer or string, an id
@@ -1141,7 +1141,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 - `text.addFontFiles` (reads): Copies font files found by text.findFontFiles into the kit's own Fonts folder so they become available.
   - `files` file[], [paths the last text.findFontFiles search found] (1 to 1000); 1 to 1000
 - `text.thread.info` (reads): Answers every text thread in the document as ordered lists of frame ids. No parameters.
-- `graph.create` (writes): Creates a graph (column, bar, line, area, scatter, pie, radar) in a box from series, categories and rows or CSV; answers its id.
+- `graph.add` (writes): Creates a graph (column, bar, line, area, scatter, pie, radar) in a box from series, categories and rows or CSV; answers its id.
   - `categories` json[], [..]
   - `csv` string
   - `height` number
@@ -1465,7 +1465,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `ids` array
   - `item` integer or null
   - `stroke` boolean
-- `attributes.info` (reads): Answers the Attributes panel values of the selection: overprint, centre point, image map, URL, note, fill rule and path direction.
+- `attribute.info` (reads): Answers the Attributes panel values of the selection: overprint, centre point, image map, URL, note, fill rule and path direction.
   - `ids` array
   - `item` integer
 - `swatch.library.list` (reads): Answers every swatch library (built-in, user and loaded) with its category and swatch count. No parameters.
@@ -1531,7 +1531,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `library` string
 - `library.setCurrent` (writes): Sets which library the Libraries panel shows and library commands without a library act on.
   - `library` string
-- `library.create` (writes): Creates a new empty library and makes it current; answers its id and name.
+- `library.new` (writes): Creates a new empty library and makes it current; answers its id and name.
   - `name` string, like My Library
 - `library.rename` (writes): Renames a library (default the current one).
   - `library` string
@@ -1553,7 +1553,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `item` string, graphic: id or name
   - `kind` string, one of `graphic` | `fillColor` | `strokeColor` | `charStyle` | `paraStyle`
   - `library` string
-- `library.createGroup` (writes): Creates a group of library items, moving the given items into it.
+- `library.addGroup` (writes): Creates a group of library items, moving the given items into it.
   - `items` object[], [{kind, item}] (moved into it out of their groups); moved into it out of their groups
   - `library` string
   - `name` string, like Group; a name the library's groups have, ignoring case, gets a number
@@ -1575,7 +1575,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 - `library.import` (reads): Adds the library of a .vclibrary file as a new current library.
   - `name` string
 - `object.expand.info` (reads): Answers what each Expand option (object, fill, stroke) would change in the selection. No parameters.
-- `attributes.set` (writes): Sets Attributes panel values on the selection: overprint fill and stroke, centre point display, image map, URL and note.
+- `attribute.set` (writes): Sets Attributes panel values on the selection: overprint fill and stroke, centre point display, image map, URL and note.
   - `ids` array
   - `imageMap` string, one of `none` | `rectangle` | `polygon`
   - `note` string
@@ -1588,8 +1588,8 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `rule` string, one of `nonZero` | `evenOdd`
 - `appearance.newArt` (reads): Answers the appearance, opacity, blend and graphic style the next object drawn will get. No parameters.
 - `colorTheme.list` (reads): Answers the saved colour themes with their colours and harmony rules. No parameters.
-- `document.exportPdf` (writes): Writes the document's artboards as a PDF with a preset or options (standard, compression, marks, bleed, layers, security), or answers the data.
-  - `advanced` object, below 100 is accepted with a warning: fonts are always embedded as subsets; type as real, selectable and searchable text in embedded subset fonts with a ToUnicode map; fonts whose licence forbids embedding, or allows only whole fonts, stay outlines with a warning; true: every glyph as an outline; overprinting fills and strokes set /OP /op true, /OPM 1; white ones knock out with document.setup discardWhiteOverprint; they knock out
+- `file.exportPdf` (writes): Writes the document's artboards as a PDF with a preset or options (standard, compression, marks, bleed, layers, security), or answers the data.
+  - `advanced` object, below 100 is accepted with a warning: fonts are always embedded as subsets; type as real, selectable and searchable text in embedded subset fonts with a ToUnicode map; fonts whose licence forbids embedding, or allows only whole fonts, stay outlines with a warning; true: every glyph as an outline; overprinting fills and strokes set /OP /op true, /OPM 1; white ones knock out with file.setup discardWhiteOverprint; they knock out
   - `bleed` number or array or object
   - `compatibility` number, default `1.3`, no transparency: it is flattened with flattenerPreset; images keep no see-through pixels; default; choosing a standard sets its version: 1.7 for pdfA2b, 1.6 for pdfX4, 1.3 for pdfX1a and pdfX3, which write 1.4 as 1.3 too; pdfA2b refuses 1.3
   - `compression` object, {color?, gray?: {downsample: none|average|subsample|bicubic, ppi: 300, abovePpi: 450, compression: none|zip|jpeg|jpeg2000|auto, quality: minimum|low|medium|high|maximum}, mono?: {downsample, ppi: 1200, abovePpi: 1800, compression: none|ccittG3|ccittG4|zip|runLength} (black-and-white images), compressText?: true} (images above abovePpi are resampled to ppi; auto keeps JPEGs JPEG, the others lossless; JPEG needs opaque images; none, jpeg2000, CCITT and runLength are written as ZIP with a warning); black-and-white images; images above abovePpi are resampled to ppi; auto keeps JPEGs JPEG, the others lossless; JPEG needs opaque images; none, jpeg2000, CCITT and runLength are written as ZIP with a warning
@@ -1601,16 +1601,16 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `marks` object, {trim, registration, colorBars, pageInfo, kind: roman|japanese, weight: 0.25 (trim marks and targets), offset: 6 (pt from the artboard, at least the bleed)} (printer's marks in [Registration], every plate: trim marks, registration targets mid-side, CMYK/spot/black-tint colour bars on top, page information (title, artboard, date UTC) below); trim marks and targets; pt from the artboard, at least the bleed; printer's marks in [Registration], every plate: trim marks, registration targets mid-side, CMYK/spot/black-tint colour bars on top, page information (title, artboard, date UTC) below
   - `output` object, {conversion: none (default)|destination (every colour into the destination profile's model, CMYK or RGB, also colours of that model in another profile)|preserveNumbers (only colours of the other model and Lab; those in the destination's model keep their numbers) (grey stays grey; images are converted too, printer's marks are not), destination: profile name (edit.colorSettings lists them; default: the document's profile for its colour mode), profiles: none (device colours)|all|destination|taggedSource (documents assigned a profile: edit.assignProfile) (ICC-based colours: CMYK with the destination or document CMYK profile, RGB as sRGB, grey with the sRGB tone curve; PDF/A always), outputIntent: profile name (embedded as the catalog's /GTS_PDFX output intent; a name that isn't a profile is only named, which pdfX1a and pdfX3 allow only with a registry and pdfX4 refuses; pdfX1a needs a CMYK one), outputCondition, outputConditionId (default: outputIntent), registry, trapped (/Trapped /True; /False when an output intent is written)} (PDF/A files keep their own output intent); default; every colour into the destination profile's model, CMYK or RGB, also colours of that model in another profile; only colours of the other model and Lab; those in the destination's model keep their numbers; grey stays grey; images are converted too, printer's marks are not; edit.colorSettings lists them; default: the document's profile for its colour mode; device colours; documents assigned a profile: edit.assignProfile; ICC-based colours: CMYK with the destination or document CMYK profile, RGB as sRGB, grey with the sRGB tone curve; PDF/A always; embedded as the catalog's /GTS_PDFX output intent; a name that isn't a profile is only named, which pdfX1a and pdfX3 allow only with a registry and pdfX4 refuses; pdfX1a needs a CMYK one; default: outputIntent; /Trapped /True; /False when an output intent is written; PDF/A files keep their own output intent
   - `path` file
-  - `preserveEditing` boolean, on in Kition Vector Default: the native document as an embedded file, which document.open restores; choosing a standard turns it off, a standard refuses it
+  - `preserveEditing` boolean, on in Kition Vector Default: the native document as an embedded file, which file.open restores; choosing a standard turns it off, a standard refuses it
   - `preset` string, like Kition Vector Default; built-in or saved: pdf.preset.list
   - `security` object, {openPassword, permissionsPassword, printing: none|low|high, changes: none|pages|forms|comments|any, copy, screenReader, plaintextMetadata}
   - `standard` string, one of `none` | `pdfA2b` | `pdfX1a` | `pdfX3` | `pdfX4`, CMYK, grey and spot colours only: colours and images converted to output.destination or the CMYK output intent, untagged; transparency flattened with flattenerPreset; PDF 1.3; colours ICC-tagged; transparency flattened; PDF 1.3; transparency and layers kept; colours ICC-tagged; PDF 1.6 at most; PDF/X: a /GTS_PDFX output intent, by default the CMYK profile in effect, embedded; TrimBox, Trapped, GTS_PDFXVersion, title and dates; fonts embedded or outlined
   - `thumbnails` boolean
   - `viewAfterSaving` boolean
-- `document.pdfSettings` (reads): Answers the PDF settings a preset gives with options applied and how they differ from it, without writing a file.
+- `file.pdfSettings` (reads): Answers the PDF settings a preset gives with options applied and how they differ from it, without writing a file.
   - `includeDocument` boolean, default `false`
   - `preset` string
-- `document.setup` (writes): Sets Document Setup options: units, bleed, outline images, font substitution highlighting, transparency grid, type options and language.
+- `file.setup` (writes): Sets Document Setup options: units, bleed, outline images, font substitution highlighting, transparency grid, type options and language.
   - `backgroundContents` string, one of `transparent` | `white`, white: raster exports are white behind the art
   - `bleed` number or array or object
   - `discardWhiteOverprint` boolean
@@ -1653,26 +1653,26 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `template` boolean
   - `text` string
   - `thumbnail` number, pixels
-- `links.check` (reads): Answers whether each linked file is where it was and whether it changed since it was read.
+- `linkedFile.check` (reads): Answers whether each linked file is where it was and whether it changed since it was read.
   - `ids` json[], [image or placed document ids] (default: every linked image and placed document); default: every linked image and placed document
-- `links.update` (writes): Reads modified linked files again, keeping each object's bounds; answers what was updated and what is missing.
+- `linkedFile.update` (writes): Reads modified linked files again, keeping each object's bounds; answers what was updated and what is missing.
   - `ids` json[], [image or placed document ids] (default: the linked images whose file was modified or is showing its preview, and placed documents whose file was modified); default: the linked images whose file was modified or is showing its preview, and placed documents whose file was modified
-- `links.updateChanged` (writes): Reads again every linked file that changed on disk since it was last seen. No parameters.
-- `links.relink` (writes): Links images or placed documents to another file, or each to a same-named file in a folder.
+- `linkedFile.updateChanged` (writes): Reads again every linked file that changed on disk since it was last seen. No parameters.
+- `linkedFile.relink` (writes): Links images or placed documents to another file, or each to a same-named file in a folder.
   - `ids` json[], [image or placed document ids] (default: the selected ones; with folder and nothing selected, every missing link); default: the selected ones; with folder and nothing selected, every missing link
-- `links.list` (reads): Answers every image and placed document as the Links panel lists them, filtered and sorted.
+- `linkedFile.list` (reads): Answers every image and placed document as the Links panel lists them, filtered and sorted.
   - `show` string, one of `all` | `missing` | `modified` | `embedded`, default
   - `sort` string, one of `name` | `kind` | `status`
-- `links.goTo` (writes): Selects a linked image or placed document and answers its bounds.
+- `linkedFile.goTo` (writes): Selects a linked image or placed document and answers its bounds.
   - `id` integer or string, an id
-- `links.embed` (writes): Embeds linked images (keeping their pixels) or turns placed documents into editable art, breaking the links.
+- `linkedFile.embed` (writes): Embeds linked images (keeping their pixels) or turns placed documents into editable art, breaking the links.
   - `ids` json[], [image or placed document ids] (default: the selected linked ones); default: the selected linked ones
-- `links.unembed` (writes): Writes an embedded image's pixels to a file and links the image to it.
+- `linkedFile.unembed` (writes): Writes an embedded image's pixels to a file and links the image to it.
   - `id` integer
   - `path` file
-- `links.info` (reads): Answers an image's or placed document's Link Info: file, status, format, colour mode, size and effective resolution.
+- `linkedFile.info` (reads): Answers an image's or placed document's Link Info: file, status, format, colour mode, size and effective resolution.
   - `id` integer or string, an id
-- `links.placementOptions` (writes): Sets how linked art fits its bounds when the file is updated or relinked: preserve transforms, bounds, file size, fit or fill, with alignment.
+- `linkedFile.placementOptions` (writes): Sets how linked art fits its bounds when the file is updated or relinked: preserve transforms, bounds, file size, fit or fill, with alignment.
   - `align` string, one of `topLeft` | `top` | `topRight` | `left` | `center` | `right` | `bottomLeft` | `bottom` | `bottomRight`, default; where the new art sits; not for bounds
   - `clip` boolean, default `false`, clip it to the old bounds where it is larger
   - `ids` json[], [image or placed document ids] (default: the selected ones); default: the selected ones
@@ -1690,7 +1690,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `path` file
 - `pdf.preset.import` (reads): Imports PDF presets from a .vcpdfpresets file.
   - `replace` boolean, default `false`, replace saved presets of the same names; else imported ones whose name is taken get a number
-- `document.exportDxf` (writes): Writes the document as a DXF drawing with a version, unit, scale and colour depth, or answers the data.
+- `file.exportDxf` (writes): Writes the document as a DXF drawing with a version, unit, scale and colour depth, or answers the data.
   - `alterPaths` boolean, default `false`, every stroke as its filled outline
   - `artboard` integer, default `0`, the origin is its bottom-left corner
   - `colors` integer or boolean
@@ -1704,7 +1704,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `unit` string
   - `useArtboards` string, one of `true` | `false`, one drawing per chosen artboard, artboards?/range?, holding the art over it: {stem}-{artboard}.dxf; the origin at the art's bounds
   - `version` string, one of `R12` | `R13` | `R14` | `2000` | `2004` | `2007` | `2010` | `2013` | `2018`
-- `document.exportEps` (writes): Writes the document as EPS with a PostScript level, preview and transparency options, or answers the data.
+- `file.exportEps` (writes): Writes the document as EPS with a PostScript level, preview and transparency options, or answers the data.
   - `cmykPostScript` boolean, default `true`, RGB documents written in CMYK
   - `compatibleGradients` boolean, default `false`, stepped gradients at level 3 too
   - `embedFonts` boolean, default `true`, type is always written as outlines, so no fonts are needed
@@ -1728,7 +1728,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `relink` boolean, default `true`, the packaged document links to the copies
   - `report` boolean, default `true`, <document> Report.txt
 - `slice.list` (reads): Answers the slices as laid out, numbered left to right and top to bottom, with their sources, rectangles and options. No parameters.
-- `object.slice.create` (writes): Creates a user slice over a rectangle, as dragging with the Slice tool does.
+- `object.slice.add` (writes): Creates a user slice over a rectangle, as dragging with the Slice tool does.
   - `height` number
   - `width` number
   - `x` number
@@ -1749,7 +1749,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `slices` array, user slice ids or ids of objects with an object slice; none: deselect the slices
   - `toggle` boolean, Shift: add the unselected ones, drop the selected ones
 - `print.setup` (writes): Sets the document's print settings: copies, artboards, media, orientation, scaling, tiling, marks, bleed, output and separations.
-  - `settings` object, {copies: 1 (1–999), collate: true, reverse, artboards: all|range|ignore (all the art as one page), range: "1-3, 5" (1-based, with artboards: range), skipBlank (leave out artboards with no art that prints), media: letter|legal|tabloid|a3|a4|a5|b4|b5|custom, width, height (custom paper, 72–14400 pt), orientation: portrait|landscape|portraitFlipped|landscapeFlipped, autoRotate: true (turn the paper to each artboard; orientation ignored), transverse (the page a quarter turn on the paper), printLayers: visiblePrintable|visible|all (template layers never print), placement: {origin: topLeft|top|topRight|left|center|right|bottomLeft|bottom|bottomRight (the point of the printed area, the artboard with its bleed and marks, on the same point of the imageable area), x, y (pt, right and down)}, scaling: none|fit|custom|tileFull|tileImageable, scale: {width: 100, height: 100} (% with custom and tiling), overlap: 0 (pt between tiles), tileRange: "" (1-based tiles across then down; empty: all), margin: 0 (pt the device can't print around the paper: the imageable area is inside it), marks: {trim, registration, colorBars, pageInfo, kind: roman|japanese, weight: 0.25, offset: 6} (as document.exportPdf, at the paper's scale; page information adds the tile and the ink), bleed: {useDocument: true (the document's bleed, document.setup), top, bottom, left, right} (pt), output: {mode: composite|separations (one grey page per ink that prints), emulsion: up|down (down mirrors), image: positive|negative, spotsToProcess, inks: [{name: "Cyan"|…|a spot swatch, print: true, frequency (lpi, default 60), angle (default C 15, M 75, Y 0, K 45, spots 45)}]}, graphics: {autoFlatness: true, flatness: 1 (0.2–100), fonts: none|subset|complete}, color: {intent: perceptual|relativeColorimetric|saturation|absoluteColorimetric, preserveNumbers: true (CMYK colours keep their values), profile: "" (the printer profile, an RGB or CMYK one: composite PDF colours are converted to it with the intent, separations separate with a CMYK one; empty: as they are)}, advanced: {printAsBitmap (composite pages print as one image each, at the document's raster effects resolution), overprints: preserve|discard|simulate (composite output; preserve writes them to overprint (/OP), simulate prints them as Overprint Preview shows them; separations always keep them), flattenerPreset: "" (a flattener preset, built-in or saved: transparency is flattened before printing; empty: it prints live; PostScript defaults to medium)}, tileOrigin: {placed: false, x, y} (where the Print Tiling tool put the pages: print.tiling.set)}; 1–999; all the art as one page; 1-based, with artboards: range; leave out artboards with no art that prints; custom paper, 72–14400 pt; turn the paper to each artboard; orientation ignored; the page a quarter turn on the paper; template layers never print; the point of the printed area, the artboard with its bleed and marks, on the same point of the imageable area; pt, right and down; % with custom and tiling; pt between tiles; 1-based tiles across then down; empty: all; pt the device can't print around the paper: the imageable area is inside it; as document.exportPdf, at the paper's scale; page information adds the tile and the ink; the document's bleed, document.setup; pt; one grey page per ink that prints; down mirrors; lpi, default 60; default C 15, M 75, Y 0, K 45, spots 45; 0.2–100; CMYK colours keep their values; the printer profile, an RGB or CMYK one: composite PDF colours are converted to it with the intent, separations separate with a CMYK one; empty: as they are; composite pages print as one image each, at the document's raster effects resolution; composite output; preserve writes them to overprint (/OP), simulate prints them as Overprint Preview shows them; separations always keep them; a flattener preset, built-in or saved: transparency is flattened before printing; empty: it prints live; PostScript defaults to medium; where the Print Tiling tool put the pages: print.tiling.set
+  - `settings` object, {copies: 1 (1–999), collate: true, reverse, artboards: all|range|ignore (all the art as one page), range: "1-3, 5" (1-based, with artboards: range), skipBlank (leave out artboards with no art that prints), media: letter|legal|tabloid|a3|a4|a5|b4|b5|custom, width, height (custom paper, 72–14400 pt), orientation: portrait|landscape|portraitFlipped|landscapeFlipped, autoRotate: true (turn the paper to each artboard; orientation ignored), transverse (the page a quarter turn on the paper), printLayers: visiblePrintable|visible|all (template layers never print), placement: {origin: topLeft|top|topRight|left|center|right|bottomLeft|bottom|bottomRight (the point of the printed area, the artboard with its bleed and marks, on the same point of the imageable area), x, y (pt, right and down)}, scaling: none|fit|custom|tileFull|tileImageable, scale: {width: 100, height: 100} (% with custom and tiling), overlap: 0 (pt between tiles), tileRange: "" (1-based tiles across then down; empty: all), margin: 0 (pt the device can't print around the paper: the imageable area is inside it), marks: {trim, registration, colorBars, pageInfo, kind: roman|japanese, weight: 0.25, offset: 6} (as file.exportPdf, at the paper's scale; page information adds the tile and the ink), bleed: {useDocument: true (the document's bleed, file.setup), top, bottom, left, right} (pt), output: {mode: composite|separations (one grey page per ink that prints), emulsion: up|down (down mirrors), image: positive|negative, spotsToProcess, inks: [{name: "Cyan"|…|a spot swatch, print: true, frequency (lpi, default 60), angle (default C 15, M 75, Y 0, K 45, spots 45)}]}, graphics: {autoFlatness: true, flatness: 1 (0.2–100), fonts: none|subset|complete}, color: {intent: perceptual|relativeColorimetric|saturation|absoluteColorimetric, preserveNumbers: true (CMYK colours keep their values), profile: "" (the printer profile, an RGB or CMYK one: composite PDF colours are converted to it with the intent, separations separate with a CMYK one; empty: as they are)}, advanced: {printAsBitmap (composite pages print as one image each, at the document's raster effects resolution), overprints: preserve|discard|simulate (composite output; preserve writes them to overprint (/OP), simulate prints them as Overprint Preview shows them; separations always keep them), flattenerPreset: "" (a flattener preset, built-in or saved: transparency is flattened before printing; empty: it prints live; PostScript defaults to medium)}, tileOrigin: {placed: false, x, y} (where the Print Tiling tool put the pages: print.tiling.set)}; 1–999; all the art as one page; 1-based, with artboards: range; leave out artboards with no art that prints; custom paper, 72–14400 pt; turn the paper to each artboard; orientation ignored; the page a quarter turn on the paper; template layers never print; the point of the printed area, the artboard with its bleed and marks, on the same point of the imageable area; pt, right and down; % with custom and tiling; pt between tiles; 1-based tiles across then down; empty: all; pt the device can't print around the paper: the imageable area is inside it; as file.exportPdf, at the paper's scale; page information adds the tile and the ink; the document's bleed, file.setup; pt; one grey page per ink that prints; down mirrors; lpi, default 60; default C 15, M 75, Y 0, K 45, spots 45; 0.2–100; CMYK colours keep their values; the printer profile, an RGB or CMYK one: composite PDF colours are converted to it with the intent, separations separate with a CMYK one; empty: as they are; composite pages print as one image each, at the document's raster effects resolution; composite output; preserve writes them to overprint (/OP), simulate prints them as Overprint Preview shows them; separations always keep them; a flattener preset, built-in or saved: transparency is flattened before printing; empty: it prints live; PostScript defaults to medium; where the Print Tiling tool put the pages: print.tiling.set
 - `print.preview` (reads): Answers the print layout the settings give: page count and each sheet's artboard, tile, size, orientation and scale.
   - `settings` object, over the document's
 - `file.print` (writes): Prints the document by writing a print-ready PDF or PostScript file with the print settings.
@@ -1764,9 +1764,9 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `file` file
 - `file.recovery.discard` (writes): Deletes recovery copies left by a crash.
   - `file` file
-- `document.dxfInfo` (reads): Answers what a DXF drawing holds (version, units, layouts, layers, default scale) without opening it.
+- `file.dxfInfo` (reads): Answers what a DXF drawing holds (version, units, layouts, layers, default scale) without opening it.
   - `path` file
-- `document.exportForWeb` (writes): Writes an optimised GIF, JPEG or PNG for the web with a preset and settings (colours, dither, quality, size), or answers the data.
+- `file.exportForWeb` (writes): Writes an optimised GIF, JPEG or PNG for the web with a preset and settings (colours, dither, quality, size), or answers the data.
   - `antiAlias` string, one of `none` | `art` | `type`, default
   - `artboard` integer, default `0`, 0-based
   - `clipToArtboard` boolean, default `true`, the artboard; false: the art and the slices
@@ -1791,7 +1791,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `transparency` boolean, default `true`, gif/png8/png24
   - `webSnap` integer, default `0`, 0–100 %: colours that close to a web-safe one become it
   - `width` number
-- `document.exportForWeb.preview` (reads): Answers what Save for Web would write: file size, colours and download time, optionally with the image data.
+- `file.exportForWeb.preview` (reads): Answers what Save for Web would write: file size, colours and download time, optionally with the image data.
   - `image` boolean, default `false`, also the optimised file as dataBase64
   - `kbps` number, default `56.6`, connection speed for the download time
   - `slice` integer, 1-based, from slice.list; default the whole image
@@ -1806,13 +1806,13 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `settings` object
 - `webExport.presets.delete` (reads): Deletes a saved Save for Web preset.
   - `name` string
-- `assets.remove` (writes): Removes assets from the Asset Export panel (their art stays).
+- `asset.remove` (writes): Removes assets from the Asset Export panel (their art stays).
   - `assets` array
-- `assets.rename` (writes): Renames an asset, which names its exported files.
+- `asset.rename` (writes): Renames an asset, which names its exported files.
   - `asset` integer, an id
   - `name` string
-- `assets.list` (reads): Answers the Asset Export panel's assets with their objects and bounds. No parameters.
-- `assets.export` (writes): Exports each asset's art, cropped to it, in every format row of the export settings, to a folder or zip.
+- `asset.list` (reads): Answers the Asset Export panel's assets with their objects and bounds. No parameters.
+- `asset.export` (writes): Exports each asset's art, cropped to it, in every format row of the export settings, to a folder or zip.
   - `antiAlias` string, one of `none` | `art` | `type`
   - `assets` array, default all
   - `folder` file
@@ -1823,7 +1823,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `settings` object
   - `subfolders` boolean
   - `zip` boolean
-- `assets.settings.set` (writes): Changes the export settings the Asset Export panel and Export for Screens share.
+- `asset.settings.set` (writes): Changes the export settings the Asset Export panel and Export for Screens share.
   - `antiAlias` string, one of `none` | `art` | `type`
   - `formats` object[]
   - `prefix` string
@@ -1922,7 +1922,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### File > Document Setup
 
-- `document.setUnits` (writes): Sets the document's units, which every length the editor shows and reads uses; drawing coordinates passed to commands stay in points.
+- `file.setUnits` (writes): Sets the document's units, which every length the editor shows and reads uses; drawing coordinates passed to commands stay in points.
   - `units` string, one of `Points` | `Picas` | `Inches` | `Millimeters` | `Centimeters` | `Pixels` | `Feet & Inches` | `Meters` | `Yards` | `Feet`
 
 ### Edit
@@ -1949,7 +1949,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `swatchConflict` string or object
 - `edit.pasteOnAllArtboards` (writes): Pastes a copy of the clipboard on every artboard at the offset the objects had to their original artboard; answers the new ids.
   - `swatchConflict` string or object
-- `edit.clear` (writes): Deletes the objects ids, else the selection (direct-selected anchors, else whole objects, else selected ruler guides).
+- `edit.delete` (writes): Deletes the objects ids, else the selection (direct-selected anchors, else whole objects, else selected ruler guides).
   - `ids` array
 - `edit.colorSettings` (reads): Sets the RGB and CMYK working spaces, rendering intent and black point compensation; answers them with the available profiles.
   - `bpc` boolean
@@ -2045,10 +2045,10 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### File > Export
 
-- `document.exportForScreens` (writes): Exports each chosen artboard or asset in one or more formats and sizes (as the Export for Screens dialog does), to a folder or a zip; answers the files written. Remembers the settings in the document.
+- `file.exportForScreens` (writes): Exports each chosen artboard or asset in one or more formats and sizes (as the Export for Screens dialog does), to a folder or a zip; answers the files written. Remembers the settings in the document.
   - `antiAlias` string, one of `none` | `art` | `type`, raster rows without their own
   - `artboards` integer[]
-  - `assets` array, instead of artboards: each asset's art alone, cropped to its bounds and named after the asset; see assets.list
+  - `assets` array, instead of artboards: each asset's art alone, cropped to its bounds and named after the asset; see asset.list
   - `folder` file
   - `formats` object[], [{format: png|png8|jpg|webp|gif|svg|svgz|pdf, scale?: 1 | "2x" | "100w" | "100h" | "72ppi", width?: px | height?: px | ppi? (raster only; width, then height, then ppi win over scale), suffix?: (raster default: @2x, @100w, @100h, none at 1x; vector formats drop size suffixes), folder?: (its sub-folder), quality?: (jpg 0–100), …the format's options (antiAlias, background, preset (pdf)…)}]; raster only; width, then height, then ppi win over scale; raster default: @2x, @100w, @100h, none at 1x; vector formats drop size suffixes; its sub-folder; jpg 0–100; antiAlias, background, preset (pdf)…
   - `fullDocument` boolean, default `false`, one file per format instead: a PDF of every artboard, other formats the bounds of all visible art, named after the document
@@ -2112,16 +2112,16 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Object > Arrange
 
-- `object.arrange.bringToFront` (writes): Moves the selected objects to the top of their layer's stacking order. No parameters.
-- `object.arrange.bringForward` (writes): Moves the selected objects one step up in the stacking order. No parameters.
-- `object.arrange.sendBackward` (writes): Moves the selected objects one step down in the stacking order. No parameters.
-- `object.arrange.sendToBack` (writes): Moves the selected objects to the bottom of their layer's stacking order. No parameters.
-- `object.arrange.sendToCurrentLayer` (writes): Moves the selected objects to the top of the current layer. No parameters.
+- `arrange.bringToFront` (writes): Moves the selected objects to the top of their layer's stacking order. No parameters.
+- `arrange.bringForward` (writes): Moves the selected objects one step up in the stacking order. No parameters.
+- `arrange.sendBackward` (writes): Moves the selected objects one step down in the stacking order. No parameters.
+- `arrange.sendToBack` (writes): Moves the selected objects to the bottom of their layer's stacking order. No parameters.
+- `arrange.sendToCurrentLayer` (writes): Moves the selected objects to the top of the current layer. No parameters.
 
 ### Object
 
-- `object.group` (writes): Groups the selected objects into one group in place and answers the group's id. No parameters.
-- `object.ungroup` (writes): Ungroups the selected groups, leaving their children selected in the same stacking position. No parameters.
+- `arrange.group` (writes): Groups the selected objects into one group in place and answers the group's id. No parameters.
+- `arrange.ungroup` (writes): Ungroups the selected groups, leaving their children selected in the same stacking position. No parameters.
 - `object.unlockAll` (writes): Unlocks every locked object in the document and selects them. No parameters.
 - `object.showAll` (writes): Shows every hidden object in the document and selects them. No parameters.
 - `effect.expandAppearance` (writes): Expands each object's appearance into plain objects: every fill and stroke becomes its own object and geometry effects are baked in.
@@ -2135,21 +2135,21 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `colorModel` string, one of `rgb` | `cmyk` | `grayscale` | `bitmap`
   - `padding` number, points; 0–1000; one of several alternative parameters
   - `ppi` number
-- `object.createObjectMosaic` (writes): Builds a group of rectangles coloured by the selected image's tile colours (a mosaic), optionally deleting the image.
+- `object.addObjectMosaic` (writes): Builds a group of rectangles coloured by the selected image's tile colours (a mosaic), optionally deleting the image.
   - `deleteRaster` boolean
   - `gray` boolean
   - `height` number, new size in pt; default the image's
   - `width` number
 - `object.cropImage` (writes): Crops the selected embedded image to a rectangle, its artboard or its non-transparent pixels.
   - `rect` number[]
-- `object.createTrimMarks` (writes): Draws trim marks around the selection or every artboard, in Roman or Japanese style.
+- `object.addTrimMarks` (writes): Draws trim marks around the selection or every artboard, in Roman or Japanese style.
   - `allArtboards` boolean, default: true when nothing is selected
   - `bleed` number, points; 8.5, japanese
   - `length` number, points; 18
   - `offset` number, points; 9, roman
   - `style` string, one of `roman` | `japanese`, default: the japaneseCropMarks preference; japanese: double lines at the trim and bleed edges plus centre marks
   - `weight` number, points; 0.3
-- `object.mesh.create` (writes): Converts the selected filled paths into gradient meshes of rows by columns, flat or highlighted at the centre or edge.
+- `object.mesh.add` (writes): Converts the selected filled paths into gradient meshes of rows by columns, flat or highlighted at the centre or edge.
   - `appearance` string, one of `flat` | `center` | `edge`
   - `at` number[]
   - `cols` integer, 4
@@ -2266,10 +2266,10 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Select
 
-- `select.all` (reads): Selects every unlocked, visible object (or all text while the Type tool edits) and answers the count. No parameters.
+- `edit.selectAll` (reads): Selects every unlocked, visible object (or all text while the Type tool edits) and answers the count. No parameters.
 - `select.allOnArtboard` (reads): Selects every object on the active (or given) artboard.
   - `artboard` integer, a position counted from 0 (the first is 0)
-- `select.none` (reads): Clears the selection, deselecting every object, anchor and guide. No parameters.
+- `edit.deselectAll` (reads): Clears the selection, deselecting every object, anchor and guide. No parameters.
 - `select.reselect` (reads): Repeats the last Select Same or Select Object command with the current selection. No parameters.
 - `select.inverse` (reads): Selects every object that is not selected and deselects the others. No parameters.
 - `select.nextAbove` (reads): Selects the next object above the selected one in the stacking order. No parameters.
@@ -2626,12 +2626,12 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Type > Orientation
 
-- `type.orientation.vertical` (writes): Sets the selected or given type objects to vertical writing. No parameters.
-- `type.orientation.horizontal` (writes): Sets the selected or given type objects to horizontal writing. No parameters.
+- `text.orientation.vertical` (writes): Sets the selected or given type objects to vertical writing. No parameters.
+- `text.orientation.horizontal` (writes): Sets the selected or given type objects to horizontal writing. No parameters.
 
 ### Type
 
-- `type.createOutlines` (writes): Converts the selected text into groups of compound paths, one per glyph; the text is no longer editable. No parameters.
+- `text.convertToOutlines` (writes): Converts the selected text into groups of compound paths, one per glyph; the text is no longer editable. No parameters.
 - `text.areaOptions` (writes): Sets area type options of the selected type: frame size, rows, columns, gutter, inset, first baseline, vertical alignment and auto-fit.
   - `columns` integer
   - `firstBaseline` string, one of `ascent` | `capHeight` | `xHeight` | `leading` | `fixed`
@@ -2647,20 +2647,20 @@ Defaults the engine states in its schemas (other defaults are named in the param
   - `width` number, points
 - `text.fitHeadline` (writes): Tracks the first line of area type so it fills the frame width; answers the tracking used.
   - `ids` array
-- `type.smartPunctuation` (writes): Replaces straight quotes, double hyphens and triple dots with typographic quotes, dashes and ellipses in the selection or document.
+- `text.smartPunctuation` (writes): Replaces straight quotes, double hyphens and triple dots with typographic quotes, dashes and ellipses in the selection or document.
   - `dashes` boolean, default `true`, -- → en dash, --- → em dash
   - `ellipsis` boolean, default `true`, ... → …
   - `quotes` boolean, default `true`, straight quotes become the Document Setup quotes
   - `scope` string, one of `selection` | `document`
-- `type.convertToAreaType` (writes): Converts point type to area type framed by its current bounds; answers the ids.
+- `text.convertToAreaType` (writes): Converts point type to area type framed by its current bounds; answers the ids.
   - `ids` array
-- `type.convertToPointType` (writes): Converts area type to point type, turning soft wraps into line breaks; answers the ids.
+- `text.convertToPointType` (writes): Converts area type to point type, turning soft wraps into line breaks; answers the ids.
   - `ids` array
-- `type.fillPlaceholder` (writes): Replaces the selected text with placeholder text (area type fills its frame).
+- `text.fillPlaceholder` (writes): Replaces the selected text with placeholder text (area type fills its frame).
   - `ids` array
-- `type.insert` (writes): Inserts a special character (bullet, dash, quote, space, hyphen or symbol) at the Type tool's caret.
+- `text.insert` (writes): Inserts a special character (bullet, dash, quote, space, hyphen or symbol) at the Type tool's caret.
   - `char` string
-- `type.fitHeadline` (writes): Tracks the first line of the selected area type so it fills the frame width; answers the tracking.
+- `text.fitHeadlineSelection` (writes): Tracks the first line of the selected area type so it fills the frame width; answers the tracking.
   - `ids` array
 - `text.insertInline` (writes): Inserts a symbol inline into text at a byte offset, scaled and shifted relative to the font size.
   - `at` integer
@@ -2765,13 +2765,13 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Type > Change Case
 
-- `type.changeCase` (writes): Changes the case of the selected text or ids to upper, lower, title or sentence case.
+- `text.changeCase` (writes): Changes the case of the selected text or ids to upper, lower, title or sentence case.
   - `case` string, one of `upper` | `lower` | `title` | `sentence`
   - `ids` array
 
 ### Type > Type on a Path
 
-- `type.pathOptions` (writes): Sets type-on-a-path options: start and end brackets, flip, effect (rainbow, skew, ribbon, stair step, gravity), alignment and spacing.
+- `text.pathOptions` (writes): Sets type-on-a-path options: start and end brackets, flip, effect (rainbow, skew, ribbon, stair step, gravity), alignment and spacing.
   - `alignToPath` string, one of `ascender` | `descender` | `center` | `baseline`
   - `effect` string, one of `rainbow` | `skew` | `3dRibbon` | `stairStep` | `gravity`
   - `end` number or null
@@ -2810,7 +2810,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Type > Threaded Text
 
-- `text.thread.create` (writes): Threads the selected area type and closed paths in stacking order so text flows from one frame to the next; answers the ids. No parameters.
+- `text.thread.add` (writes): Threads the selected area type and closed paths in stacking order so text flows from one frame to the next; answers the ids. No parameters.
 - `text.thread.releaseSelection` (writes): Takes the selected frames out of their threads; the story reflows through the rest. No parameters.
 - `text.thread.remove` (writes): Breaks the selected frames' threads, each frame keeping the text it shows. No parameters.
 
@@ -2867,7 +2867,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Effect
 
-- `document.rasterEffectsSettings` (writes): Sets the document's raster effects settings: resolution, colour model, background, anti-aliasing and clipping mask.
+- `file.rasterEffectsSettings` (writes): Sets the document's raster effects settings: resolution, colour model, background, anti-aliasing and clipping mask.
   - `addAround` number, points; 0–1000, room around the art
   - `antiAlias` boolean, off: hard edges
   - `background` string, one of `transparent` | `white`
@@ -2943,7 +2943,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Window > Document Info
 
-- `document.info` (reads): Answers the Document Info report: objects, styles, swatches, patterns, gradients, symbols, fonts and images, for the document or the selection.
+- `file.getInfo` (reads): Answers the Document Info report: objects, styles, swatches, patterns, gradients, symbols, fonts and images, for the document or the selection.
   - `category` string, one of `document` | `objects` | `graphicStyles` | `spotColors` | `patterns` | `gradients` | `symbols` | `fonts` | `fontDetails` | `linkedImages` | `embeddedImages`, only that one in sections and the text
   - `format` string, like text; → {text}: the report Document Info › Save… and Package write
   - `selectionOnly` boolean
@@ -3112,7 +3112,7 @@ Defaults the engine states in its schemas (other defaults are named in the param
 
 ### Object > Collect for Export
 
-- `assets.add` (writes): Collects the selected art as assets for asset export, one per object or one for all; answers the assets.
+- `asset.add` (writes): Collects the selected art as assets for asset export, one per object or one for all; answers the assets.
   - `ids` array, default: the selected objects
   - `multiple` boolean, default `true`, an asset per object; false: one asset of them all
   - `name` string, the asset's name, when it makes one
@@ -3131,11 +3131,11 @@ From [`agent/guide.md`](../agent/guide.md).
 ```json
 vector_run {"path": "Badge.kvector", "steps": [
   {"command": "shape.rectangle", "params": {"x": 10, "y": 10, "width": 180, "height": 80, "radius": 12}},
-  {"command": "text.create", "params": {"x": 100, "y": 58, "text": "Kition", "size": 28, "color": "#ffffff"}}
+  {"command": "text.add", "params": {"x": 100, "y": 58, "text": "Kition", "size": 28, "color": "#ffffff"}}
 ]}
 ```
 
-Answer: `completed: [{command: "shape.rectangle", result: {id: 4}}, {command: "text.create",
+Answer: `completed: [{command: "shape.rectangle", result: {id: 4}}, {command: "text.add",
 result: {id: 5}}]`. Use those ids:
 
 ```json
@@ -3177,8 +3177,8 @@ A diagnostic with a fix is applied as given:
 ```json
 vector_check {"path": "Icons.kvector"}
 → {"diagnostics": [{"code": "vector.empty-group", "severity": "info", "target": {"path": "object:1004"},
-    "fix": {"command": "edit.clear", "params": {"ids": [1004]}}}]}
-vector_run {"path": "Icons.kvector", "steps": [{"command": "edit.clear", "params": {"ids": [1004]}}]}
+    "fix": {"command": "edit.delete", "params": {"ids": [1004]}}}]}
+vector_run {"path": "Icons.kvector", "steps": [{"command": "edit.delete", "params": {"ids": [1004]}}]}
 vector_check {"path": "Icons.kvector"}
 → {"diagnostics": []}
 ```

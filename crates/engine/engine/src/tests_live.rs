@@ -256,7 +256,7 @@ fn blend_replace_spine_follows_path() {
     let mut s = session();
     let (_, _, g) = blend(&mut s, json!({"steps": 5}));
     // Half circle of radius 100 around (200, 300).
-    let arc = id_of(&s.execute("path.create", &json!({"d": "M100 300 C100 245 145 200 200 200 C255 200 300 245 300 300"})).unwrap());
+    let arc = id_of(&s.execute("path.add", &json!({"d": "M100 300 C100 245 145 200 200 200 C255 200 300 245 300 300"})).unwrap());
     sel(&mut s, &[g, arc]);
     s.execute("object.blend.replaceSpine", &json!({})).unwrap();
     assert!(s.doc().unwrap().doc.node(arc).is_none(), "the path is consumed");
@@ -278,7 +278,7 @@ fn blend_align_to_path_rotates_steps() {
     let b = rect(&mut s, 100.0, 0.0, 40.0, 4.0);
     sel(&mut s, &[a, b]);
     let g = id_of(&s.execute("object.blend.make", &json!({"steps": 1, "orientation": "path"})).unwrap());
-    let spine = id_of(&s.execute("path.create", &json!({"d": "M300 100 L300 300"})).unwrap());
+    let spine = id_of(&s.execute("path.add", &json!({"d": "M300 100 L300 300"})).unwrap());
     sel(&mut s, &[g, spine]);
     s.execute("object.blend.replaceSpine", &json!({})).unwrap();
     let st = steps_of(&s, g);
@@ -372,7 +372,7 @@ fn envelope_top_object_maps_corners() {
     let mut s = session();
     let a = text_rect(&mut s);
     // A trapezoid on top.
-    let t = id_of(&s.execute("path.create", &json!({"d": "M400 100 L500 100 L550 250 L350 250 Z"})).unwrap());
+    let t = id_of(&s.execute("path.add", &json!({"d": "M400 100 L500 100 L550 250 L350 250 Z"})).unwrap());
     sel(&mut s, &[a, t]);
     let e = id_of(&s.execute("object.envelope.makeWithTopObject", &json!({})).unwrap());
     assert!(s.doc().unwrap().doc.node(t).is_none(), "top object consumed");
@@ -473,7 +473,7 @@ fn mesh_create_flat() {
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     fill(&mut s, a, "#0000ff");
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 3, "cols": 2})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 3, "cols": 2})).unwrap();
     let m = mesh_of(&s, a);
     assert_eq!((m.rows, m.cols, m.points.len()), (3, 2, 12));
     assert!(m.points.iter().all(|p| p.color.to_hex() == "#0000ff"));
@@ -487,7 +487,7 @@ fn mesh_to_center_highlight() {
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     fill(&mut s, a, "#ff0000");
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100})).unwrap();
     let m = mesh_of(&s, a);
     assert_eq!(m.points[4].color.to_hex(), "#ffffff");
     assert_eq!(m.points[0].color.to_hex(), "#ff0000");
@@ -503,7 +503,7 @@ fn mesh_renders_corner_and_centre_colours() {
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     fill(&mut s, a, "#ff0000");
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 2, "cols": 2, "appearance": "center", "highlight": 100})).unwrap();
     let img = render(&s, Rect::new(0.0, 0.0, 100.0, 100.0));
     let c = img.pixel(50, 50);
     assert!(c[0] > 240 && c[1] > 220 && c[2] > 220, "centre near white {c:?}");
@@ -518,7 +518,7 @@ fn mesh_point_colour_move_and_undo() {
     let mut s = session();
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 1, "cols": 1})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 1, "cols": 1})).unwrap();
     s.execute("object.mesh.setPointColor", &json!({"id": a.0, "index": 3, "color": "#00ff00", "opacity": 0.5})).unwrap();
     let m = mesh_of(&s, a);
     assert_eq!(m.points[3].color.to_hex(), "#00ff00");
@@ -538,7 +538,7 @@ fn mesh_add_line_and_delete_point() {
     let mut s = session();
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 1, "cols": 1})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 1, "cols": 1})).unwrap();
     let r = s.execute("object.mesh.addLine", &json!({"id": a.0, "x": 40, "y": 70, "color": "#123456"})).unwrap();
     let i = r["index"].as_u64().unwrap() as usize;
     let m = mesh_of(&s, a);
@@ -558,7 +558,7 @@ fn mesh_create_at_point_single_undo() {
     let a = id_of(&s.execute("shape.ellipse", &json!({"x": 0, "y": 0, "width": 100, "height": 80})).unwrap());
     sel(&mut s, &[a]);
     let n = undo_len(&s);
-    let r = s.execute("object.mesh.create", &json!({"at": [50, 40]})).unwrap();
+    let r = s.execute("object.mesh.add", &json!({"at": [50, 40]})).unwrap();
     assert_eq!(undo_len(&s), n + 1);
     let m = mesh_of(&s, a);
     assert_eq!((m.rows, m.cols), (2, 2));
@@ -574,7 +574,7 @@ fn mesh_expand_to_flat_pieces() {
     let mut s = session();
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 1, "cols": 2})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 1, "cols": 2})).unwrap();
     s.execute("object.mesh.expand", &json!({})).unwrap();
     let g = node(&s, a);
     assert!(matches!(g.kind, NodeKind::Group { .. }));
@@ -587,7 +587,7 @@ fn mesh_hit_test_inside() {
     let mut s = session();
     let a = rect(&mut s, 0.0, 0.0, 100.0, 100.0);
     sel(&mut s, &[a]);
-    s.execute("object.mesh.create", &json!({"rows": 2, "cols": 2})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 2, "cols": 2})).unwrap();
     let d = &s.doc().unwrap().doc;
     let h = kition_vector_doc::hit::hit_test(d, Point::new(50.0, 30.0), kition_vector_doc::hit::HitOptions { tol: 1.0, ..Default::default() });
     assert_eq!(h.map(|h| h.leaf), Some(a));
@@ -601,7 +601,7 @@ fn blend_of_meshes_interpolates_mesh_points() {
     fill(&mut s, a, "#000000");
     fill(&mut s, b, "#ffffff");
     sel(&mut s, &[a, b]);
-    s.execute("object.mesh.create", &json!({"rows": 1, "cols": 1})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 1, "cols": 1})).unwrap();
     sel(&mut s, &[a, b]);
     let g = id_of(&s.execute("object.blend.make", &json!({"steps": 1})).unwrap());
     let st = steps_of(&s, g);
@@ -626,7 +626,7 @@ fn live_doc() -> Session {
     s.execute("object.envelope.makeWithWarp", &json!({"style": "wave", "bend": 30})).unwrap();
     let m = rect(&mut s, 400.0, 300.0, 100.0, 100.0);
     sel(&mut s, &[m]);
-    s.execute("object.mesh.create", &json!({"rows": 2, "cols": 2, "appearance": "edge", "highlight": 50})).unwrap();
+    s.execute("object.mesh.add", &json!({"rows": 2, "cols": 2, "appearance": "edge", "highlight": 50})).unwrap();
     s
 }
 
@@ -681,7 +681,7 @@ fn live_commands_have_menus_and_params() {
         "object.envelope.expand",
         "object.envelope.editContents",
         "object.envelope.options",
-        "object.mesh.create",
+        "object.mesh.add",
     ] {
         let c = crate::cmd::find_command(id).unwrap_or_else(|| panic!("{id}"));
         assert!(!c.params.is_empty() && !c.menu.is_empty(), "{id}");

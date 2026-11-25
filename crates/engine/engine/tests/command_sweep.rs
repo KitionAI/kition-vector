@@ -143,7 +143,7 @@ fn bug_artboard_huge_props_break_svg() {
 
 /// Commands too slow to fuzz exhaustively get a reduced junk set (they still run).
 fn heavy(id: &str) -> bool {
-    id.starts_with("document.serialize") || id.starts_with("document.export") || id == "document.open"
+    id.starts_with("file.serialize") || id.starts_with("file.export") || id == "file.open"
 }
 
 #[test]
@@ -199,11 +199,11 @@ fn structured_junk() {
         ("object.rotate", json!({"angle": 1e308, "origin": [1e308, -1e308]})),
         ("object.distort", json!({"corners": [[0, 0], [0, 0], [0, 0], [0, 0]]})),
         ("object.distort", json!({"corners": [[0, 0]], "from": [0, 0, 0, 0]})),
-        ("path.create", json!({"anchors": []})),
-        ("path.create", json!({"anchors": [{"x": 1e308, "y": -1e308}, {"x": 0, "y": 0, "in": [1e308, 1e308]}], "closed": true})),
-        ("path.create", json!({"d": "M 0 0 L"})),
-        ("path.create", json!({"d": "M0 0 C 1e308 1e308 -1e308 -1e308 0 0 Z"})),
-        ("path.create", json!({"d": "Z Z Z m 1 1 z"})),
+        ("path.add", json!({"anchors": []})),
+        ("path.add", json!({"anchors": [{"x": 1e308, "y": -1e308}, {"x": 0, "y": 0, "in": [1e308, 1e308]}], "closed": true})),
+        ("path.add", json!({"d": "M 0 0 L"})),
+        ("path.add", json!({"d": "M0 0 C 1e308 1e308 -1e308 -1e308 0 0 Z"})),
+        ("path.add", json!({"d": "Z Z Z m 1 1 z"})),
         ("path.setAnchors", json!({"id": 2, "subpaths": [{"anchors": [], "closed": true}]})),
         ("path.setAnchors", json!({"id": 1, "subpaths": [{"anchors": [{"x": 0, "y": 0}], "closed": true}]})),
         ("path.insertAnchor", json!({"id": 2, "subpath": 0, "segment": 99, "t": 5})),
@@ -353,8 +353,8 @@ fn structured_junk() {
         ("node.move", json!({"id": 1, "parent": null, "index": 1000})),
         ("layer.setProps", json!({"id": 1, "color": 1000})),
         ("layer.newSublayer", json!({"parent": 2})),
-        ("text.create", json!({"x": 0, "y": 0, "text": "\u{0}\u{FFFF}\u{1F600}", "size": -1})),
-        ("text.create", json!({"x": 0, "y": 0, "text": "a", "size": 1e308, "area": {"width": -1, "height": 0}})),
+        ("text.add", json!({"x": 0, "y": 0, "text": "\u{0}\u{FFFF}\u{1F600}", "size": -1})),
+        ("text.add", json!({"x": 0, "y": 0, "text": "a", "size": 1e308, "area": {"width": -1, "height": 0}})),
         ("text.setStyle", json!({"size": 0, "leading": -1, "tracking": 1e308})),
         ("text.setStyle", json!({"justify": "center", "start": u64::MAX, "end": 0})),
         ("text.setStyle", json!({"justify": "right", "start": -1, "end": "x"})),
@@ -365,12 +365,12 @@ fn structured_junk() {
         ("text.tabs.get", json!({"start": -5})),
         ("paraStyle.apply", json!({"name": "[Normal Paragraph Style]", "id": 2, "start": u64::MAX, "end": 1})),
         ("paraStyle.new", json!({"id": 2, "start": u64::MAX})),
-        ("document.setUnits", json!({"units": "Parsecs"})),
-        ("document.open", json!({"name": "x.svg", "dataBase64": "!!!"})),
-        ("document.open", json!({"name": "x.svg", "dataBase64": "PHN2Zz4="})),
-        ("document.open", json!({"name": "x.pdf", "dataBase64": "JVBERi0xLjQK"})),
-        ("document.open", json!({"name": "x.kvector", "dataBase64": "e30="})),
-        ("document.activate", json!({"index": 99})),
+        ("file.setUnits", json!({"units": "Parsecs"})),
+        ("file.open", json!({"name": "x.svg", "dataBase64": "!!!"})),
+        ("file.open", json!({"name": "x.svg", "dataBase64": "PHN2Zz4="})),
+        ("file.open", json!({"name": "x.pdf", "dataBase64": "JVBERi0xLjQK"})),
+        ("file.open", json!({"name": "x.kvector", "dataBase64": "e30="})),
+        ("file.activate", json!({"index": 99})),
         ("file.close", json!({"index": 99})),
         ("file.new", json!({"width": -1, "height": 0, "artboards": 1000000})),
         ("command.batch", json!({"commands": [{"command": 5}, {"params": 3}]})),
@@ -383,9 +383,9 @@ fn structured_junk() {
         ("object.blend.make", json!({"ids": [1, 2, 3], "starts": [u64::MAX, -1, "x", null, 1e308]})),
         ("object.blend.make", json!({"ids": [2, 2], "starts": {"a": 1}, "steps": 1e308})),
         ("object.blend.options", json!({"spacing": "distance", "value": -1e308, "orientation": 5})),
-        ("object.blend.spine.moveAnchor", json!({"id": 2, "anchor": u64::MAX, "x": 1e308, "y": -1e308, "handle": "sideways"})),
-        ("object.blend.spine.addAnchor", json!({"id": u64::MAX, "x": 0, "y": 0})),
-        ("object.blend.spine.removeAnchor", json!({"anchor": -1})),
+        ("object.blend.moveSpineAnchor", json!({"id": 2, "anchor": u64::MAX, "x": 1e308, "y": -1e308, "handle": "sideways"})),
+        ("object.blend.addSpineAnchor", json!({"id": u64::MAX, "x": 0, "y": 0})),
+        ("object.blend.removeSpineAnchor", json!({"anchor": -1})),
         ("object.pinWarp", json!({"rest": true, "pins": [], "moved": []})),
         ("object.pinWarp", json!({"rest": true, "pins": [[1e308, 0]], "moved": [[0, 0]], "expand": -5})),
         ("object.pinWarp", json!({"rest": true, "ids": [u64::MAX], "pins": [[0, 0]], "moved": [[0, 0]]})),
@@ -429,7 +429,7 @@ fn area_options_fit_junk() {
     for (size, (w, h)) in [(12.0, (120.0, 40.0)), (0.1, (1.0, 1.0)), (1296.0, (100_000.0, 1.0))] {
         for p in &cases {
             let mut s = Fixture::Multi.session();
-            let made = s.execute("text.create", &json!({"x": 10, "y": 10, "size": size, "text": story, "area": {"width": w, "height": h}}));
+            let made = s.execute("text.add", &json!({"x": 10, "y": 10, "size": size, "text": story, "area": {"width": w, "height": h}}));
             let Ok(made) = made else { continue };
             let id = made["id"].as_u64().unwrap_or(0);
             let r = catch_quiet(|| s.execute("text.areaOptions", p));
@@ -628,7 +628,7 @@ fn text_commands_with_junk_params_on_inline_graphics() {
         let e = ellipse(&mut s, 400.0, 300.0, 20.0, 20.0);
         select(&mut s, &[e]);
         exec(&mut s, "symbol.new", json!({"name": "Dot"}));
-        let t = id_of(&exec(&mut s, "text.create", json!({"x": 20, "y": 200, "text": "ab cd", "size": 20})));
+        let t = id_of(&exec(&mut s, "text.add", json!({"x": 20, "y": 200, "text": "ab cd", "size": 20})));
         exec(&mut s, "text.insertInline", json!({"id": t.0, "at": 2, "symbol": "Dot", "scale": 2}));
         select(&mut s, &[t]);
         (s, t)
@@ -654,11 +654,11 @@ fn text_commands_with_junk_params_on_inline_graphics() {
         ("text.editRange", json!({"id": t, "runs": [{"text": "\u{FFFC}", "style": style, "inline": {"symbol": 5}}]})),
         ("text.setRangeStyle", json!({"id": t, "start": 3, "end": 4, "size": 1e308, "tracking": -1e308})),
         ("text.getRange", json!({"id": t, "start": 3, "end": 4})),
-        ("type.insert", json!({"text": "\u{FFFC}"})),
-        ("type.changeCase", json!({"case": "upper"})),
-        ("type.smartPunctuation", json!({"quotes": true, "dashes": true, "ellipsis": true, "scope": "selection"})),
-        ("type.convertToAreaType", json!({})),
-        ("type.createOutlines", json!({})),
+        ("text.insert", json!({"text": "\u{FFFC}"})),
+        ("text.changeCase", json!({"case": "upper"})),
+        ("text.smartPunctuation", json!({"quotes": true, "dashes": true, "ellipsis": true, "scope": "selection"})),
+        ("text.convertToAreaType", json!({})),
+        ("text.convertToOutlines", json!({})),
         ("symbol.delete", json!({"name": "Dot"})),
         ("symbol.delete", json!({"name": "Dot", "expandInstances": false})),
         ("symbol.update", json!({"name": "Dot"})),
@@ -684,7 +684,7 @@ fn text_commands_with_junk_params_on_inline_graphics() {
     for (id, p) in &structured {
         run(id, p);
     }
-    for id in ["text.insertInline", "text.editRange", "text.getRange", "text.setRangeStyle", "type.insert"] {
+    for id in ["text.insertInline", "text.editRange", "text.getRange", "text.setRangeStyle", "text.insert"] {
         let spec = command_specs().iter().find(|c| c.id == id).unwrap();
         for p in std::iter::once(json!({})).chain(junk_params(spec.params, &path)) {
             run(id, &p);

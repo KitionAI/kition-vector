@@ -43,7 +43,7 @@ fn aligned_left(on: bool, p: Value) -> f64 {
     let a = rect(&mut s, 100.0, 50.0, 10.0);
     rect(&mut s, 20.0, 50.0, 0.0);
     preview(&mut s, on);
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     let mut p = p;
     p["horizontal"] = json!("left");
     run(&mut s, "object.align", p);

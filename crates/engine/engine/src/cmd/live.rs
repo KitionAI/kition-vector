@@ -87,7 +87,7 @@ pub fn specs() -> Vec<CommandSpec> {
             blend_info
         ),
         cmd!(
-            "object.blend.spine.moveAnchor",
+            "object.blend.moveSpineAnchor",
             "Move Spine Point",
             [],
             None,
@@ -96,7 +96,7 @@ pub fn specs() -> Vec<CommandSpec> {
             spine_move_anchor
         ),
         cmd!(
-            "object.blend.spine.addAnchor",
+            "object.blend.addSpineAnchor",
             "Add Spine Point",
             [],
             None,
@@ -105,7 +105,7 @@ pub fn specs() -> Vec<CommandSpec> {
             spine_add_anchor
         ),
         cmd!(
-            "object.blend.spine.removeAnchor",
+            "object.blend.removeSpineAnchor",
             "Delete Spine Point",
             [],
             None,
@@ -224,7 +224,7 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         // ---------- Gradient mesh ----------
         cmd!(
-            "object.mesh.create",
+            "object.mesh.add",
             "Create Gradient Mesh…",
             ["Object"],
             None,
@@ -595,7 +595,7 @@ fn finite_point(p: &Value, cmd: &str) -> Result<Point> {
 }
 
 fn spine_move_anchor(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.blend.spine.moveAnchor";
+    const C: &str = "object.blend.moveSpineAnchor";
     let index = index_param(p, "anchor", C)?;
     let q = finite_point(p, C)?;
     let handle = match str_param(p, "handle") {
@@ -625,7 +625,7 @@ fn spine_move_anchor(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn spine_add_anchor(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.blend.spine.addAnchor";
+    const C: &str = "object.blend.addSpineAnchor";
     let q = finite_point(p, C)?;
     let index = edit_spine(s, p, C, "Add Spine Point", |sp, anchors, _| {
         let (_, seg, t, _, _) = PathData::single(sp.clone()).nearest(q).ok_or_else(|| bad(C, "the spine has no segments"))?;
@@ -639,7 +639,7 @@ fn spine_add_anchor(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn spine_remove_anchor(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.blend.spine.removeAnchor";
+    const C: &str = "object.blend.removeSpineAnchor";
     let index = index_param(p, "anchor", C)?;
     edit_spine(s, p, C, "Delete Spine Point", |sp, anchors, _| {
         if index >= sp.anchors.len() {
@@ -1299,7 +1299,7 @@ fn env_set_mesh_point(s: &mut Session, p: &Value) -> Result<Value> {
 // ---------- Gradient mesh ----------
 
 fn mesh_create(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "object.mesh.create";
+    const C: &str = "object.mesh.add";
     let (rows, cols) = rows_cols(p, C, (4, 4))?;
     let app = match str_param(p, "appearance") {
         Some(a) => MeshAppearance::parse(a).ok_or_else(|| bad(C, "appearance must be flat|center|edge"))?,

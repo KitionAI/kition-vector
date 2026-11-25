@@ -11,7 +11,7 @@ fn b64(v: &Value) -> Vec<u8> {
 }
 
 fn open(s: &mut Session, name: &str, bytes: &[u8]) -> Result<Value> {
-    s.execute("document.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)}))
+    s.execute("file.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)}))
 }
 
 /// `bytes` with `from` replaced by `to` (the same length: the preview header's offsets stay).
@@ -36,7 +36,7 @@ fn objects(s: &Session) -> usize {
 fn an_eps_file_of_ours_reopens_as_the_same_document() {
     let mut s = rich();
     let before = comparable(&s.doc().unwrap().doc);
-    let eps = b64(&s.execute("document.exportEps", &json!({})).unwrap());
+    let eps = b64(&s.execute("file.exportEps", &json!({})).unwrap());
     let r = open(&mut s, "rich.eps", &eps).unwrap();
     assert_eq!((&r["warnings"], &r["restored"], &r["format"]), (&json!([]), &json!(true), &json!("eps")), "{r}");
     assert_eq!(comparable(&s.doc().unwrap().doc), before, "the document came back exactly");
@@ -55,7 +55,7 @@ fn other_eps_files_are_read_by_the_postscript_interpreter() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 20, "y": 30, "width": 100, "height": 50})).unwrap();
-    let eps = foreign(&b64(&s.execute("document.exportEps", &json!({"previewFormat": "none", "cmykPostScript": false})).unwrap()));
+    let eps = foreign(&b64(&s.execute("file.exportEps", &json!({"previewFormat": "none", "cmykPostScript": false})).unwrap()));
     let r = open(&mut s, "plain.eps", &eps).unwrap();
     assert_eq!((&r["restored"], &r["format"]), (&json!(false), &json!("eps")), "{r}");
     let d = &s.doc().unwrap().doc;
@@ -70,7 +70,7 @@ fn an_unreadable_eps_file_comes_in_as_its_preview() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 20, "y": 30, "width": 100, "height": 50})).unwrap();
-    let eps = foreign(&b64(&s.execute("document.exportEps", &json!({"previewFormat": "tiffColor"})).unwrap()));
+    let eps = foreign(&b64(&s.execute("file.exportEps", &json!({"previewFormat": "tiffColor"})).unwrap()));
     // An operator the interpreter doesn't know (another app's own).
     let eps = patched(&eps, b"showpage", b"frobnica");
     let r = open(&mut s, "art.eps", &eps).unwrap();
@@ -130,7 +130,7 @@ showpage
 #[test]
 fn eps_files_place_as_one_group_clipped_to_their_bounding_box() {
     let mut s = rich();
-    let eps = b64(&s.execute("document.exportEps", &json!({"useArtboards": true, "artboards": [0]})).unwrap());
+    let eps = b64(&s.execute("file.exportEps", &json!({"useArtboards": true, "artboards": [0]})).unwrap());
     s.execute("file.new", &json!({"width": 600, "height": 600})).unwrap();
     let r = s.execute("file.place", &json!({"name": "rich.eps", "dataBase64": kition_vector_format::base64_encode(&eps), "at": [300, 300]})).unwrap();
     assert_eq!(r["format"], "eps", "{r}");

@@ -30,7 +30,7 @@ fn knockout_group(s: &mut Session) -> u64 {
     let b = run(s, "shape.rectangle", json!({"x": 60, "y": 60, "width": 100, "height": 100}))["id"].clone();
     run(s, "transparency.set", json!({"ids": [a, b], "opacity": 50}));
     run(s, "select.set", json!({"ids": [a, b]}));
-    run(s, "object.group", json!({}))["id"].as_u64().unwrap()
+    run(s, "arrange.group", json!({}))["id"].as_u64().unwrap()
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn pdf_and_svg_write_knockout_groups_as_masks() {
 
     // A neutral group passes its children through: still one mask per element below the top one.
     run(&mut s, "select.set", json!({"ids": [g]}));
-    let outer = run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap();
+    let outer = run(&mut s, "arrange.group", json!({}))["id"].as_u64().unwrap();
     run(&mut s, "transparency.set", json!({"ids": [g], "knockout": "neutral"}));
     run(&mut s, "transparency.set", json!({"ids": [outer], "knockout": "on"}));
     assert_eq!(svg(&s.doc().unwrap().doc).matches("mask=\"url(#knockout-").count(), 1);

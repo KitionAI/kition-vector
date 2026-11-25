@@ -14,7 +14,7 @@ fn session() -> Session {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 800, "height": 600})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 100, "height": 100})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s
 }
 

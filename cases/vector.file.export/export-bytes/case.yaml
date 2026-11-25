@@ -2,7 +2,7 @@ format: 1
 id: vector.file.export/export-bytes
 feature: vector.file.export
 intent: >-
-  document.exportBytes answers an SVG, a PDF, or a PNG of every artboard (one file each, by name)
+  file.exportBytes answers an SVG, a PDF, or a PNG of every artboard (one file each, by name)
   in base64 `data` without writing a file or changing the drawing, so the editor's File › Export
   and an agent's export hand the file to the host to write; an unknown format is refused.
 layer: gate

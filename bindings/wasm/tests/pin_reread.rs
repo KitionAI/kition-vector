@@ -20,12 +20,12 @@ fn drawing() -> (Vec<u8>, u64, u64) {
         doc.execute("object.setProps", json!({"ids": [id], "name": name})).unwrap();
         ids.push(id.as_u64().unwrap());
     }
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     (doc.save(None).unwrap(), ids[0], ids[1])
 }
 
 fn name(doc: &mut VectorDocument, id: u64) -> Value {
-    doc.execute("document.node", json!({"id": id})).unwrap()["name"].clone()
+    doc.execute("file.node", json!({"id": id})).unwrap()["name"].clone()
 }
 
 /// Another program's session: opens `bytes`, runs `steps`, answers what it saves.
@@ -82,12 +82,12 @@ fn a_reread_refuses_a_selection_the_file_deleted() {
     live.execute("select.set", json!({"ids": [mine]})).unwrap();
     let state = live.editor_state();
 
-    let mut fresh = VectorDocument::open(FILE, &elsewhere(&bytes, &[("edit.clear", json!({"ids": [mine]}))])).unwrap();
+    let mut fresh = VectorDocument::open(FILE, &elsewhere(&bytes, &[("edit.delete", json!({"ids": [mine]}))])).unwrap();
     let refused = fresh.restore_editor_state(&state).unwrap_err();
     assert!(refused.contains(&format!("deleted active selection {mine}")), "{refused}");
 
     // A file that keeps the selected object restores it.
-    let mut fresh = VectorDocument::open(FILE, &elsewhere(&bytes, &[("edit.clear", json!({"ids": [theirs]}))])).unwrap();
+    let mut fresh = VectorDocument::open(FILE, &elsewhere(&bytes, &[("edit.delete", json!({"ids": [theirs]}))])).unwrap();
     fresh.restore_editor_state(&state).unwrap();
     assert_eq!(fresh.editor_state()["selection"]["objects"], json!([mine]));
 }

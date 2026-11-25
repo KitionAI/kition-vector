@@ -1,6 +1,6 @@
 //! Window → Asset Export and Object → Collect for Export: art collected as assets
 //! ([`kition_vector_doc::ExportAsset`]), exported each on its own, cropped to its art, at the export
-//! settings Export for Screens shares (`document.exportSettings`). File → Export Selection collects
+//! settings Export for Screens shares (`file.exportSettings`). File → Export Selection collects
 //! the selection this way and opens Export for Screens on its Assets tab (a UI command).
 
 use kition_vector_doc::{ExportAsset, NodeId};
@@ -16,7 +16,7 @@ const MAX_NAME: usize = 255;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "assets.add",
+            "asset.add",
             "Collect for Export",
             ["Object", "Collect for Export"],
             None,
@@ -25,7 +25,7 @@ pub fn specs() -> Vec<CommandSpec> {
             add
         ),
         cmd!(
-            "assets.remove",
+            "asset.remove",
             "Remove Asset",
             [],
             None,
@@ -33,9 +33,9 @@ pub fn specs() -> Vec<CommandSpec> {
             has_doc,
             remove
         ),
-        cmd!("assets.rename", "Rename Asset", [], None, "{asset: id, name} rename an asset (its files' names)", has_doc, rename),
+        cmd!("asset.rename", "Rename Asset", [], None, "{asset: id, name} rename an asset (its files' names)", has_doc, rename),
         cmd!(
-            query "assets.list",
+            query "asset.list",
             "Assets",
             [],
             None,
@@ -44,20 +44,20 @@ pub fn specs() -> Vec<CommandSpec> {
             list
         ),
         cmd!(
-            "assets.export",
+            "asset.export",
             "Export Assets",
             [],
             None,
-            "{assets?: [asset id…] (default all), folder?, zip?, openLocation?, formats?, preset?, settings?, prefix?, subfolders?, antiAlias?} each asset's art alone, cropped to it, in every format row: document.exportForScreens {assets} at the document's export settings (document.exportSettings) under the ones given → what document.exportForScreens returns (no folder: the files, or one zip, as dataBase64). Leaves the remembered settings as they are (assets.settings.set changes them)",
+            "{assets?: [asset id…] (default all), folder?, zip?, openLocation?, formats?, preset?, settings?, prefix?, subfolders?, antiAlias?} each asset's art alone, cropped to it, in every format row: file.exportForScreens {assets} at the document's export settings (file.exportSettings) under the ones given → what file.exportForScreens returns (no folder: the files, or one zip, as dataBase64). Leaves the remembered settings as they are (asset.settings.set changes them)",
             has_doc,
             export
         ),
         cmd!(
-            "assets.settings.set",
+            "asset.settings.set",
             "Asset Export Settings",
             [],
             None,
-            "{formats?, preset?: mobile|density|\"\" (none), settings?, prefix?, subfolders?, antiAlias?} change the export settings the Asset Export panel and Export for Screens share (document.exportSettings; the values of document.exportForScreens; null removes one): formats replace a preset, a preset replaces the formats → {settings}. Not an undo step",
+            "{formats?, preset?: mobile|density|\"\" (none), settings?, prefix?, subfolders?, antiAlias?} change the export settings the Asset Export panel and Export for Screens share (file.exportSettings; the values of file.exportForScreens; null removes one): formats replace a preset, a preset replaces the formats → {settings}. Not an undo step",
             has_doc,
             settings_set
         ),
@@ -79,7 +79,7 @@ fn clean_name(name: &str) -> Option<String> {
 }
 
 fn add(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "assets.add";
+    const C: &str = "asset.add";
     let multiple = bool_or(p, "multiple", true);
     let ids = if p.get("ids").is_some_and(|v| !v.is_null()) {
         // An explicit list is authoritative: never silently drop malformed or stale ids, nor
@@ -139,16 +139,16 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The asset ids of param `key`.
 fn asset_ids(p: &Value, key: &str, cmd: &str) -> Result<Vec<u64>> {
-    let ids = p.get(key).and_then(Value::as_array).ok_or_else(|| bad(cmd, format!("`{key}` must be an array of asset ids (see assets.list)")))?;
+    let ids = p.get(key).and_then(Value::as_array).ok_or_else(|| bad(cmd, format!("`{key}` must be an array of asset ids (see asset.list)")))?;
     ids.iter().map(|v| v.as_u64().ok_or_else(|| bad(cmd, format!("{v} is not an asset id")))).collect()
 }
 
 fn remove(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "assets.remove";
+    const C: &str = "asset.remove";
     let ids = asset_ids(p, "assets", C)?;
     let n = s.doc()?.doc.assets.iter().filter(|a| ids.contains(&a.id)).count();
     if n == 0 {
-        return Err(bad(C, "no such assets (see assets.list)"));
+        return Err(bad(C, "no such assets (see asset.list)"));
     }
     s.edit("Remove Asset", |d, _| {
         d.assets.retain(|a| !ids.contains(&a.id));
@@ -157,8 +157,8 @@ fn remove(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn rename(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "assets.rename";
-    let id = p.get("asset").and_then(Value::as_u64).ok_or_else(|| bad(C, "`asset` is the asset id (see assets.list)"))?;
+    const C: &str = "asset.rename";
+    let id = p.get("asset").and_then(Value::as_u64).ok_or_else(|| bad(C, "`asset` is the asset id (see asset.list)"))?;
     let name = str_param(p, "name").and_then(clean_name).ok_or_else(|| bad(C, "give the asset a name"))?;
     if !s.doc()?.doc.assets.iter().any(|a| a.id == id) {
         return Err(bad(C, format!("no asset {id}")));
@@ -215,7 +215,7 @@ fn overlay(base: &mut Map<String, Value>, p: &Map<String, Value>) {
 }
 
 fn export(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "assets.export";
+    const C: &str = "asset.export";
     let mut q = shared_settings(s)?;
     if let Some(o) = p.as_object() {
         overlay(&mut q, o);
@@ -223,7 +223,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
     if !q.contains_key("assets") {
         let all: Vec<u64> = s.doc()?.doc.assets.iter().map(|a| a.id).collect();
         if all.is_empty() {
-            return Err(bad(C, "no assets yet: collect art for export first (assets.add)"));
+            return Err(bad(C, "no assets yet: collect art for export first (asset.add)"));
         }
         q.insert("assets".into(), json!(all));
     }
@@ -231,7 +231,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn settings_set(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "assets.settings.set";
+    const C: &str = "asset.settings.set";
     let o = p.as_object().ok_or_else(|| bad(C, "give the settings to change, e.g. {\"formats\": [{\"format\": \"png\", \"scale\": \"2x\"}]}"))?;
     if let Some(k) = o.keys().find(|k| !SCREEN_SETTINGS_KEYS.contains(&k.as_str())) {
         return Err(bad(C, format!("`{k}` isn't an export setting: {}", SCREEN_SETTINGS_KEYS.join(", "))));

@@ -22,7 +22,7 @@ fn rect(s: &mut Session, x: f64, y: f64, w: f64, h: f64) -> NodeId {
 }
 
 fn text(s: &mut Session, t: &str) -> NodeId {
-    id_of(&s.execute("text.create", &json!({"x": 50, "y": 50, "text": t})).unwrap())
+    id_of(&s.execute("text.add", &json!({"x": 50, "y": 50, "text": t})).unwrap())
 }
 
 fn node(s: &Session, id: NodeId) -> Node {
@@ -185,7 +185,7 @@ fn expand_live_shape_and_text_in_one_undo_step() {
 #[test]
 fn expand_nothing_errors() {
     let mut s = session();
-    let p = id_of(&s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 10, "y": 10}]})).unwrap());
+    let p = id_of(&s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 10, "y": 10}]})).unwrap());
     sel(&mut s, &[p]);
     // A plain path: nothing to expand for object/fill.
     let r = s.execute("object.expand", &json!({"stroke": false}));
@@ -265,7 +265,7 @@ fn trim_marks_around_selection() {
     fill(&mut s, a, "#00ff00");
     s.execute("stroke.set", &json!({"ids": [a.0], "weight": 0})).unwrap();
     sel(&mut s, &[a]);
-    let g = id_of(&s.execute("object.createTrimMarks", &json!({"offset": 10, "length": 20})).unwrap());
+    let g = id_of(&s.execute("object.addTrimMarks", &json!({"offset": 10, "length": 20})).unwrap());
     let n = node(&s, g);
     assert_eq!(n.children().unwrap().len(), 8);
     assert_eq!(n.name.as_deref(), Some("Trim Marks"));
@@ -280,7 +280,7 @@ fn trim_marks_around_selection() {
 fn convert_rectangle_path_to_live_shape() {
     let mut s = session();
     let p = id_of(
-        &s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 40, "y": 0}, {"x": 40, "y": 20}, {"x": 0, "y": 20}], "closed": true}))
+        &s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 40, "y": 0}, {"x": 40, "y": 20}, {"x": 0, "y": 20}], "closed": true}))
             .unwrap(),
     );
     sel(&mut s, &[p]);
@@ -294,11 +294,8 @@ fn convert_rectangle_path_to_live_shape() {
 fn convert_rotated_rectangle_and_ellipse() {
     let mut s = session();
     let p = id_of(
-        &s.execute(
-            "path.create",
-            &json!({"anchors": [{"x": 50, "y": 0}, {"x": 100, "y": 50}, {"x": 50, "y": 100}, {"x": 0, "y": 50}], "closed": true}),
-        )
-        .unwrap(),
+        &s.execute("path.add", &json!({"anchors": [{"x": 50, "y": 0}, {"x": 100, "y": 50}, {"x": 50, "y": 100}, {"x": 0, "y": 50}], "closed": true}))
+            .unwrap(),
     );
     let e = id_of(&s.execute("shape.ellipse", &json!({"x": 0, "y": 200, "width": 80, "height": 40})).unwrap());
     sel(&mut s, &[e]);
@@ -313,7 +310,7 @@ fn convert_rotated_rectangle_and_ellipse() {
 #[test]
 fn convert_to_shape_rejects_other_paths() {
     let mut s = session();
-    let p = id_of(&s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 40, "y": 0}, {"x": 10, "y": 20}], "closed": true})).unwrap());
+    let p = id_of(&s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 40, "y": 0}, {"x": 10, "y": 20}], "closed": true})).unwrap());
     sel(&mut s, &[p]);
     assert!(s.execute("object.shape.convertToShape", &json!({})).is_err());
 }
@@ -450,7 +447,7 @@ fn blend_front_to_back_uses_stacking() {
 #[test]
 fn paste_without_formatting_resets_text_style() {
     let mut s = session();
-    let t = id_of(&s.execute("text.create", &json!({"x": 10, "y": 10, "text": "Bold", "size": 40})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 10, "y": 10, "text": "Bold", "size": 40})).unwrap());
     sel(&mut s, &[t]);
     s.execute("edit.copy", &json!({})).unwrap();
     let n = undo_len(&s);
@@ -485,7 +482,7 @@ fn find_next_cycles_through_text_objects() {
     let a = text(&mut s, "apple");
     let _ = text(&mut s, "banana");
     let c = text(&mut s, "pineapple");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(id_of(&s.execute("edit.findNext", &json!({"find": "APPLE"})).unwrap()), a);
     assert_eq!(id_of(&s.execute("edit.findNext", &json!({"find": "apple"})).unwrap()), c);
     assert_eq!(id_of(&s.execute("edit.findNext", &json!({"find": "apple"})).unwrap()), a);
@@ -497,9 +494,9 @@ fn find_next_cycles_through_text_objects() {
 #[test]
 fn select_same_font_size_and_fill() {
     let mut s = session();
-    let a = id_of(&s.execute("text.create", &json!({"x": 0, "y": 20, "text": "a", "size": 20})).unwrap());
-    let b = id_of(&s.execute("text.create", &json!({"x": 0, "y": 60, "text": "b", "size": 20})).unwrap());
-    let c = id_of(&s.execute("text.create", &json!({"x": 0, "y": 90, "text": "c", "size": 30, "font": "Inter"})).unwrap());
+    let a = id_of(&s.execute("text.add", &json!({"x": 0, "y": 20, "text": "a", "size": 20})).unwrap());
+    let b = id_of(&s.execute("text.add", &json!({"x": 0, "y": 60, "text": "b", "size": 20})).unwrap());
+    let c = id_of(&s.execute("text.add", &json!({"x": 0, "y": 90, "text": "c", "size": 30, "font": "Inter"})).unwrap());
     sel(&mut s, &[a]);
     assert_eq!(s.execute("select.same.fontSize", &json!({})).unwrap()["count"], 2);
     assert_eq!(selected(&s), vec![a, b]);
@@ -526,7 +523,7 @@ fn select_direction_handles_selects_all_anchors() {
 fn select_point_and_area_text() {
     let mut s = session();
     let p = text(&mut s, "point");
-    let a = id_of(&s.execute("text.create", &json!({"x": 0, "y": 0, "text": "area", "area": {"width": 100, "height": 50}})).unwrap());
+    let a = id_of(&s.execute("text.add", &json!({"x": 0, "y": 0, "text": "area", "area": {"width": 100, "height": 50}})).unwrap());
     let _ = rect(&mut s, 0.0, 0.0, 5.0, 5.0);
     assert_eq!(s.execute("select.object.pointText", &json!({})).unwrap()["count"], 1);
     assert_eq!(selected(&s), vec![p]);
@@ -542,7 +539,7 @@ fn save_and_recall_selection() {
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     sel(&mut s, &[a, b]);
     assert_eq!(s.execute("select.save", &json!({})).unwrap()["name"], "Selection 1");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(s.execute("select.recall", &json!({"name": "Selection 1"})).unwrap()["count"], 2);
     s.execute("select.editSaved", &json!({"name": "Selection 1", "newName": "Pair"})).unwrap();
     assert_eq!(s.execute("select.savedList", &json!({})).unwrap(), json!(["Pair"]));
@@ -588,14 +585,14 @@ fn saved_selections_live_in_the_document() {
     // An existing name is replaced by the current selection.
     sel(&mut s, &[b]);
     s.execute("select.save", &json!({"name": "A"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(s.execute("select.recall", &json!({"name": "A"})).unwrap()["count"], 1);
     assert_eq!(selected(&s), vec![b]);
     // Objects deleted since are left out of a recall.
     sel(&mut s, &[a, b]);
     s.execute("select.save", &json!({"name": "Pair"})).unwrap();
     sel(&mut s, &[a]);
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert_eq!(s.execute("select.recall", &json!({"name": "Pair"})).unwrap()["count"], 1);
 }
 
@@ -643,15 +640,15 @@ fn change_case_variants() {
     let mut s = session();
     let t = text(&mut s, "hello wORLD. again here");
     sel(&mut s, &[t]);
-    s.execute("type.changeCase", &json!({"case": "upper"})).unwrap();
+    s.execute("text.changeCase", &json!({"case": "upper"})).unwrap();
     assert_eq!(plain(&s, t), "HELLO WORLD. AGAIN HERE");
-    s.execute("type.changeCase", &json!({"case": "lower"})).unwrap();
+    s.execute("text.changeCase", &json!({"case": "lower"})).unwrap();
     assert_eq!(plain(&s, t), "hello world. again here");
-    s.execute("type.changeCase", &json!({"case": "title"})).unwrap();
+    s.execute("text.changeCase", &json!({"case": "title"})).unwrap();
     assert_eq!(plain(&s, t), "Hello World. Again Here");
-    s.execute("type.changeCase", &json!({"case": "sentence"})).unwrap();
+    s.execute("text.changeCase", &json!({"case": "sentence"})).unwrap();
     assert_eq!(plain(&s, t), "Hello world. Again here");
-    assert!(s.execute("type.changeCase", &json!({"case": "weird"})).is_err());
+    assert!(s.execute("text.changeCase", &json!({"case": "weird"})).is_err());
 }
 
 #[test]
@@ -659,7 +656,7 @@ fn smart_punctuation_quotes_dashes_ellipsis() {
     let mut s = session();
     let t = text(&mut s, "\"Hi\" it's 1--2 and 3---4...");
     sel(&mut s, &[t]);
-    assert_eq!(s.execute("type.smartPunctuation", &json!({})).unwrap()["changed"], 1);
+    assert_eq!(s.execute("text.smartPunctuation", &json!({})).unwrap()["changed"], 1);
     assert_eq!(plain(&s, t), "“Hi” it’s 1–2 and 3—4…");
 }
 
@@ -668,11 +665,11 @@ fn convert_point_area_roundtrip() {
     let mut s = session();
     let t = text(&mut s, "Some words");
     sel(&mut s, &[t]);
-    s.execute("type.convertToAreaType", &json!({})).unwrap();
+    s.execute("text.convertToAreaType", &json!({})).unwrap();
     let NodeKind::Text(tt) = &node(&s, t).kind else { panic!() };
     assert!(matches!(tt.kind, TextKind::Area { .. }));
     assert_eq!(tt.plain_text(), "Some words");
-    s.execute("type.convertToPointType", &json!({})).unwrap();
+    s.execute("text.convertToPointType", &json!({})).unwrap();
     let NodeKind::Text(tt) = &node(&s, t).kind else { panic!() };
     assert!(matches!(tt.kind, TextKind::Point));
     assert_eq!(tt.plain_text(), "Some words");
@@ -681,11 +678,10 @@ fn convert_point_area_roundtrip() {
 #[test]
 fn area_to_point_turns_wraps_into_breaks() {
     let mut s = session();
-    let a = id_of(
-        &s.execute("text.create", &json!({"x": 0, "y": 0, "text": "one two three four five six", "area": {"width": 40, "height": 200}})).unwrap(),
-    );
+    let a =
+        id_of(&s.execute("text.add", &json!({"x": 0, "y": 0, "text": "one two three four five six", "area": {"width": 40, "height": 200}})).unwrap());
     sel(&mut s, &[a]);
-    s.execute("type.convertToPointType", &json!({})).unwrap();
+    s.execute("text.convertToPointType", &json!({})).unwrap();
     let txt = plain(&s, a);
     assert!(txt.contains('\n'), "{txt:?}");
     assert_eq!(txt.replace('\n', " "), "one two three four five six");
@@ -696,22 +692,22 @@ fn placeholder_and_insert_characters() {
     let mut s = session();
     let t = text(&mut s, "x");
     sel(&mut s, &[t]);
-    s.execute("type.fillPlaceholder", &json!({})).unwrap();
+    s.execute("text.fillPlaceholder", &json!({})).unwrap();
     assert!(plain(&s, t).len() > 10);
     s.execute("text.setText", &json!({"text": "A"})).unwrap();
-    s.execute("type.insert", &json!({"char": "emDash"})).unwrap();
-    s.execute("type.insert", &json!({"char": "copyright"})).unwrap();
-    s.execute("type.insert", &json!({"text": "z"})).unwrap();
+    s.execute("text.insert", &json!({"char": "emDash"})).unwrap();
+    s.execute("text.insert", &json!({"char": "copyright"})).unwrap();
+    s.execute("text.insert", &json!({"text": "z"})).unwrap();
     assert_eq!(plain(&s, t), "A—©z");
-    assert!(s.execute("type.insert", &json!({"char": "nope"})).is_err());
+    assert!(s.execute("text.insert", &json!({"char": "nope"})).is_err());
 }
 
 #[test]
 fn area_placeholder_fills_frame() {
     let mut s = session();
-    let a = id_of(&s.execute("text.create", &json!({"x": 0, "y": 0, "text": "", "area": {"width": 300, "height": 300}})).unwrap());
+    let a = id_of(&s.execute("text.add", &json!({"x": 0, "y": 0, "text": "", "area": {"width": 300, "height": 300}})).unwrap());
     sel(&mut s, &[a]);
-    s.execute("type.fillPlaceholder", &json!({})).unwrap();
+    s.execute("text.fillPlaceholder", &json!({})).unwrap();
     assert!(plain(&s, a).len() > 400);
 }
 
@@ -804,10 +800,10 @@ fn ruler_guides_select_move_and_delete() {
     // The arrow keys nudge them.
     s.execute("object.nudge", &json!({"dx": 1, "dy": 0, "big": true})).unwrap();
     assert_eq!(guides(&s)[3], (true, 140.0));
-    // Delete (edit.clear) deletes the selected guides; the others keep their places.
+    // Delete (edit.delete) deletes the selected guides; the others keep their places.
     s.execute("guide.select", &json!({"indexes": [1, 3]})).unwrap();
     assert_eq!(s.execute("guide.list", &json!({})).unwrap().as_array().unwrap().len(), 5);
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert_eq!(guides(&s), [(true, 110.0), (true, 300.0), (false, 45.0)]);
     assert!(selected_guides(&s).is_empty());
     assert!(s.doc().unwrap().doc.node(a).is_some(), "the art stays");
@@ -824,7 +820,7 @@ fn ruler_guides_select_move_and_delete() {
     s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
     assert!(selected_guides(&s).is_empty());
     assert!(matches!(s.execute("guide.select", &json!({"indexes": [0]})), Err(EngineError::Disabled(..))));
-    assert!(matches!(s.execute("edit.clear", &json!({})), Err(EngineError::Disabled(..))));
+    assert!(matches!(s.execute("edit.delete", &json!({})), Err(EngineError::Disabled(..))));
 }
 
 /// Shift selects ruler guides and art together, in either order; Delete takes both in one step.
@@ -849,7 +845,7 @@ fn guides_and_art_are_shift_selected_together() {
     // Delete takes the art and the guides, in one step; undo brings both back.
     s.execute("guide.select", &json!({"indexes": [1], "toggle": true})).unwrap();
     let n = undo_len(&s);
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert_eq!((guides(&s), undo_len(&s)), (vec![(true, 200.0)], n + 1));
     assert!(s.doc().unwrap().doc.node(a).is_none() && s.doc().unwrap().doc.node(b).is_some());
     s.execute("edit.undo", &json!({})).unwrap();
@@ -857,7 +853,7 @@ fn guides_and_art_are_shift_selected_together() {
     // Ids given: only those go, the guides stay.
     s.execute("guide.select", &json!({"indexes": [0]})).unwrap();
     s.execute("select.add", &json!({"ids": [b.0]})).unwrap();
-    s.execute("edit.clear", &json!({"ids": [b.0]})).unwrap();
+    s.execute("edit.delete", &json!({"ids": [b.0]})).unwrap();
     assert_eq!(guides(&s).len(), 2);
 }
 
@@ -1101,7 +1097,7 @@ fn selection_tool_drags_a_ruler_guide() {
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
     s.execute("guide.add", &json!({"vertical": true, "pos": 150})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let v = ViewInfo { smart_guides: false, ..Default::default() };
     s.select_tool("selection", v).unwrap();
     let drag = |s: &mut Session, v: ViewInfo, from: (f64, f64), to: (f64, f64)| {
@@ -1249,10 +1245,10 @@ fn opening_in_cmyk_can_put_rgb_greys_on_the_black_plate() {
         let id = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
         fill(&mut s, id, hex);
     }
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
     let data = kition_vector_format::base64_encode(svg.as_bytes());
     let mut o = Session::new();
-    o.execute("document.open", &json!({"name": "greys.svg", "dataBase64": data, "colorMode": "cmyk", "grays": "black"})).unwrap();
+    o.execute("file.open", &json!({"name": "greys.svg", "dataBase64": data, "colorMode": "cmyk", "grays": "black"})).unwrap();
     let d = &o.doc().unwrap().doc;
     assert_eq!(d.color_mode, ColorMode::Cmyk);
     let mut fills = vec![];
@@ -1265,17 +1261,17 @@ fn opening_in_cmyk_can_put_rgb_greys_on_the_black_plate() {
         assert!((k - want).abs() < 0.005, "K {k}, want {want}");
     }
     assert!(matches!(fills[4], Color::Cmyk { m, y, .. } if m > 0.8 && y > 0.8), "red separates as usual: {:?}", fills[4]);
-    let e = Session::new().execute("document.open", &json!({"name": "greys.svg", "dataBase64": data, "grays": "k"})).unwrap_err().to_string();
+    let e = Session::new().execute("file.open", &json!({"name": "greys.svg", "dataBase64": data, "grays": "k"})).unwrap_err().to_string();
     assert!(e.contains("grays"), "{e}");
 }
 
 #[test]
 fn file_info_sets_title() {
     let mut s = session();
-    let r = s.execute("file.info", &json!({"title": "Poster"})).unwrap();
+    let r = s.execute("file.setInfo", &json!({"title": "Poster"})).unwrap();
     assert_eq!(r["title"], "Poster");
     assert_eq!(s.doc().unwrap().doc.title, "Poster");
-    assert_eq!(s.execute("file.info", &json!({})).unwrap()["colorMode"], "rgb");
+    assert_eq!(s.execute("file.setInfo", &json!({})).unwrap()["colorMode"], "rgb");
 }
 
 #[test]
@@ -1288,7 +1284,7 @@ fn every_new_command_has_params_doc_and_menu() {
         "edit.colors.invert",
         "edit.findReplace",
         "select.same.fontSize",
-        "type.changeCase",
+        "text.changeCase",
         "view.guides.make",
         "file.closeAll",
     ] {
@@ -1322,8 +1318,8 @@ fn crop_image_trim_cuts_to_the_opaque_pixels_as_they_are() {
     let mut png = Vec::new();
     px.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "art.png", "dataBase64": kition_vector_format::base64_encode(&png)})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("file.open", &json!({"name": "art.png", "dataBase64": kition_vector_format::base64_encode(&png)})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     let img = selected(&s)[0];
     s.execute("object.scale", &json!({"sx": 200, "origin": [0, 0]})).unwrap();
     let r = s.execute("object.cropImage", &json!({"trim": true})).unwrap();

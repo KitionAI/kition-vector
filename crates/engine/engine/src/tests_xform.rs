@@ -236,7 +236,7 @@ fn artboard_tool_moves_with_art_creates_and_deletes() {
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 50.0, 50.0);
     let outside = rect(&mut s, 900.0, 100.0, 50.0, 50.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     gesture(&mut s, "artboard", &[(400.0, 300.0), (420.0, 310.0), (450.0, 330.0), (450.0, 330.0)], Mods::default());
     let d = &s.doc().unwrap().doc;
     assert_eq!(d.artboards[0].rect, Rect::new(50.0, 30.0, 850.0, 630.0));
@@ -274,7 +274,7 @@ fn artboard_resize_via_handle_and_move_command() {
 fn artboard_alt_drag_duplicates_it_with_its_art() {
     let mut s = session();
     let r = rect(&mut s, 100.0, 100.0, 50.0, 50.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let alt = Mods { alt: true, ..Mods::default() };
     gesture(&mut s, "artboard", &[(400.0, 300.0), (600.0, 300.0), (1300.0, 300.0), (1300.0, 300.0)], alt);
     let st = s.doc().unwrap();
@@ -469,7 +469,7 @@ fn magic_wand_selects_same_fill() {
     let b = rect(&mut s, 50.0, 10.0, 20.0, 20.0);
     let c = rect(&mut s, 90.0, 10.0, 20.0, 20.0);
     s.execute("paint.setFill", &json!({"color": "#ff0000", "ids": [c.0]})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     gesture(&mut s, "magicWand", &[(20.0, 20.0), (20.0, 20.0)], Mods::default());
     assert_eq!(s.doc().unwrap().selection.objects, vec![a, b]);
     gesture(&mut s, "magicWand", &[(100.0, 20.0), (100.0, 20.0)], Mods { shift: true, ..Default::default() });
@@ -480,7 +480,7 @@ fn magic_wand_selects_same_fill() {
 fn lasso_selects_anchor_subset() {
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     gesture(&mut s, "lasso", &[(90.0, 90.0), (210.0, 90.0), (210.0, 110.0), (90.0, 110.0), (90.0, 110.0)], Mods::default());
     let st = s.doc().unwrap();
     assert_eq!(st.selection.objects, vec![a]);
@@ -539,7 +539,7 @@ fn direct_selection_shift_marquee_toggles_anchors() {
 fn lasso_shift_adds_and_alt_subtracts() {
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
-    let t = s.execute("text.create", &json!({"x": 300, "y": 300, "text": "Hi"})).unwrap();
+    let t = s.execute("text.add", &json!({"x": 300, "y": 300, "text": "Hi"})).unwrap();
     let t = NodeId(t["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [a.0, t.0]})).unwrap();
     // A loop round a's top-left anchor.

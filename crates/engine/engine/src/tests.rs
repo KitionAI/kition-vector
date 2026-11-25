@@ -32,7 +32,7 @@ fn create_and_undo_redo() {
 fn unknown_and_disabled() {
     let mut s = Session::new();
     assert!(matches!(s.execute("nope", &json!({})), Err(EngineError::UnknownCommand(_))));
-    assert!(matches!(s.execute("object.group", &json!({})), Err(EngineError::Disabled(..))));
+    assert!(matches!(s.execute("arrange.group", &json!({})), Err(EngineError::Disabled(..))));
 }
 
 #[test]
@@ -41,11 +41,11 @@ fn group_ungroup() {
     let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+    let g = NodeId(s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap());
     let d = &s.doc().unwrap().doc;
     assert_eq!(d.parent_of(a), Some(g));
     assert_eq!(d.node(g).unwrap().children().unwrap().len(), 2);
-    s.execute("object.ungroup", &json!({})).unwrap();
+    s.execute("arrange.ungroup", &json!({})).unwrap();
     let d = &s.doc().unwrap().doc;
     assert!(d.node(g).is_none());
     assert_eq!(d.parent_of(a), d.layers.first().map(|l| l.id));
@@ -59,14 +59,14 @@ fn arrange_order() {
     let b = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let c = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
-    s.execute("object.arrange.bringToFront", &json!({})).unwrap();
+    s.execute("arrange.bringToFront", &json!({})).unwrap();
     let order = |s: &Session| s.doc().unwrap().doc.layers[0].children().unwrap().iter().map(|n| n.id).collect::<Vec<_>>();
     assert_eq!(order(&s), vec![b, c, a]);
-    s.execute("object.arrange.sendBackward", &json!({})).unwrap();
+    s.execute("arrange.sendBackward", &json!({})).unwrap();
     assert_eq!(order(&s), vec![b, a, c]);
-    s.execute("object.arrange.sendToBack", &json!({})).unwrap();
+    s.execute("arrange.sendToBack", &json!({})).unwrap();
     assert_eq!(order(&s), vec![a, b, c]);
-    s.execute("object.arrange.bringForward", &json!({})).unwrap();
+    s.execute("arrange.bringForward", &json!({})).unwrap();
     assert_eq!(order(&s), vec![b, a, c]);
 }
 
@@ -159,7 +159,7 @@ fn stroke_rejects_invalid_dash_components_and_preserves_defaults_on_error() {
     assert_eq!(s.doc().unwrap().doc.node(id).unwrap().appearance.stroke().unwrap().width, 7.0);
 
     // With nothing selected the panel sets up the next object drawn: a rejected edit doesn't.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let next = s.new_art();
     assert!(s.execute("stroke.set", &json!({"weight": 12, "dash": [2, 2], "arrowAlign": "unknown"})).is_err());
     assert_eq!(s.new_art(), next);
@@ -219,13 +219,13 @@ fn select_same_fill() {
     assert!(!s.doc().unwrap().selection.contains(a));
     // Reselect after Deselect repeats it from the same reference object.
     let blue = s.doc().unwrap().selection.objects.clone();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.execute("select.reselect", &json!({})).unwrap();
     assert_eq!(s.doc().unwrap().selection.objects, blue);
     // With its reference object gone, it fails as Select Same does, and selects nothing.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     for id in &blue {
-        s.execute("edit.clear", &json!({"ids": [id.0]})).unwrap();
+        s.execute("edit.delete", &json!({"ids": [id.0]})).unwrap();
     }
     assert!(s.execute("select.reselect", &json!({})).is_err());
     assert!(s.doc().unwrap().selection.objects.is_empty());
@@ -240,7 +240,7 @@ fn layers_and_lock_hide() {
     assert_eq!(s.doc().unwrap().doc.layer_of(b), Some(l2));
     s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
     s.execute("object.lock", &json!({})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     assert_eq!(s.doc().unwrap().selection.objects, vec![b]);
     s.execute("object.unlockAll", &json!({})).unwrap();
     s.execute("object.hide", &json!({})).unwrap();
@@ -370,9 +370,9 @@ fn pen_tool_draws_closed_path() {
 fn pen_click_on_a_selected_path_adds_an_anchor_unless_disabled() {
     let mut s = session();
     let v = ViewInfo::default();
-    let r = s.execute("path.create", &json!({"anchors": [{"x": 10, "y": 100}, {"x": 110, "y": 100}, {"x": 210, "y": 100}]})).unwrap();
+    let r = s.execute("path.add", &json!({"anchors": [{"x": 10, "y": 100}, {"x": 110, "y": 100}, {"x": 210, "y": 100}]})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     s.select_tool("pen", v).unwrap();
     let click = |s: &mut Session| {
         s.pointer(&PointerEvent::new(PointerKind::Down, 60.0, 101.0), v).unwrap();
@@ -384,7 +384,7 @@ fn pen_click_on_a_selected_path_adds_an_anchor_unless_disabled() {
     assert_eq!(d.node(id).unwrap().path_data().unwrap().anchor_count(), 4);
     s.execute("edit.undo", &json!({})).unwrap();
     s.execute("prefs.set", &json!({"key": "disableAutoAddDelete", "value": true})).unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     click(&mut s);
     let d = &s.doc().unwrap().doc;
     assert_eq!(d.layers[0].children().unwrap().len(), 2, "a new path starts");
@@ -395,7 +395,7 @@ fn pen_click_on_a_selected_path_adds_an_anchor_unless_disabled() {
 fn direct_selection_moves_one_anchor() {
     let mut s = session();
     let a = rect(&mut s, 100.0, 100.0, 100.0, 100.0);
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let v = ViewInfo::default();
     s.select_tool("directSelection", v).unwrap();
     s.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 100.0), v).unwrap();
@@ -418,10 +418,10 @@ fn direct_selection_drags_segments() {
         s.pointer(&PointerEvent::new(PointerKind::Up, to.0, to.1), v).unwrap();
     };
     let arch = &json!({"anchors": [{"x": 100, "y": 200, "out": [100, 100]}, {"x": 300, "y": 200, "in": [300, 100]}]});
-    let arch = NodeId(s.execute("path.create", arch).unwrap()["id"].as_u64().unwrap());
+    let arch = NodeId(s.execute("path.add", arch).unwrap()["id"].as_u64().unwrap());
     let square = &json!({"anchors": [{"x": 150, "y": 400}, {"x": 150, "y": 300}, {"x": 250, "y": 300}, {"x": 250, "y": 400}], "closed": true});
-    let square = NodeId(s.execute("path.create", square).unwrap()["id"].as_u64().unwrap());
-    s.execute("select.none", &json!({})).unwrap();
+    let square = NodeId(s.execute("path.add", square).unwrap()["id"].as_u64().unwrap());
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.select_tool("directSelection", v).unwrap();
     let steps = |s: &Session| s.doc().unwrap().history.undo.len();
     let before = steps(&s);
@@ -446,7 +446,7 @@ fn direct_selection_drags_segments() {
 #[test]
 fn text_create_has_bounds() {
     let mut s = session();
-    let r = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hello Kition Vector", "size": 24})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hello Kition Vector", "size": 24})).unwrap();
     let n = s.doc().unwrap().doc.node(NodeId(r["id"].as_u64().unwrap())).unwrap().clone();
     let b = n.geometric_bounds().unwrap();
     assert!(b.width() > 100.0, "{b:?}");
@@ -456,24 +456,24 @@ fn text_create_has_bounds() {
 fn inspect_lists_everything() {
     let mut s = session();
     rect(&mut s, 0.0, 0.0, 10.0, 10.0);
-    let v = s.execute("document.inspect", &json!({})).unwrap();
+    let v = s.execute("file.inspect", &json!({})).unwrap();
     assert_eq!(v["layers"][0]["children"][0]["kind"], "Rectangle");
     assert!(s.commands().len() > 100);
 }
 
-/// `document.node {summary: true}` answers the `document.inspect` shape for one node:
+/// `file.node {summary: true}` answers the `file.inspect` shape for one node:
 /// the same fields the full-tree summary carries, without serializing the whole tree.
 #[test]
 fn document_node_summary_matches_inspect() {
     let mut s = session();
     let id = rect(&mut s, 0.0, 0.0, 10.0, 10.0).0;
-    let full = s.execute("document.node", &json!({"id": id})).unwrap();
+    let full = s.execute("file.node", &json!({"id": id})).unwrap();
     assert!(full.get("bounds").is_none(), "full object JSON carries geometry, not bounds: {full}");
-    let summary = s.execute("document.node", &json!({"id": id, "summary": true})).unwrap();
-    let v = s.execute("document.inspect", &json!({})).unwrap();
+    let summary = s.execute("file.node", &json!({"id": id, "summary": true})).unwrap();
+    let v = s.execute("file.inspect", &json!({})).unwrap();
     let node = v["layers"][0]["children"].as_array().unwrap().iter().find(|n| n["id"] == id).cloned().unwrap();
     assert_eq!(summary, node, "{summary} vs {node}");
-    assert!(s.execute("document.node", &json!({"id": 999999, "summary": true})).is_err());
+    assert!(s.execute("file.node", &json!({"id": 999999, "summary": true})).is_err());
 }
 
 /// `depth` and `childLimit` slice a summary read; a level that shows fewer children
@@ -483,12 +483,12 @@ fn document_node_summary_slices_with_depth_and_limit() {
     let mut s = session();
     rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     rect(&mut s, 20.0, 0.0, 10.0, 10.0);
-    s.execute("select.all", &json!({})).unwrap();
-    let inner = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
+    let inner = s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap();
     rect(&mut s, 40.0, 0.0, 10.0, 10.0);
-    s.execute("select.all", &json!({})).unwrap();
-    let outer = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
-    let mut read = |p: Value| s.execute("document.node", &p).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
+    let outer = s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let mut read = |p: Value| s.execute("file.node", &p).unwrap();
 
     let g = read(json!({"id": outer, "summary": true}));
     assert_eq!(g["children"].as_array().map(Vec::len), Some(2));
@@ -522,34 +522,34 @@ fn document_node_summary_slices_with_depth_and_limit() {
         json!({"id": outer, "depth": 0}),
         json!({"id": outer, "summary": false, "childLimit": 1}),
     ] {
-        assert!(s.execute("document.node", &bad).is_err(), "{bad}");
+        assert!(s.execute("file.node", &bad).is_err(), "{bad}");
     }
 }
 
-/// `document.inspect` slices the layer tree with the same options; artboards and the
+/// `file.inspect` slices the layer tree with the same options; artboards and the
 /// rest always come whole, and the default output is unchanged.
 #[test]
 fn document_inspect_slices_the_layer_tree() {
     let mut s = session();
     rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     rect(&mut s, 20.0, 0.0, 10.0, 10.0);
-    s.execute("select.all", &json!({})).unwrap();
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
 
-    let full = s.execute("document.inspect", &json!({})).unwrap();
+    let full = s.execute("file.inspect", &json!({})).unwrap();
     assert!(full["layers"][0].get("childCount").is_none(), "{full}");
-    let flat = s.execute("document.inspect", &json!({"depth": 0})).unwrap();
+    let flat = s.execute("file.inspect", &json!({"depth": 0})).unwrap();
     assert!(flat["layers"][0].get("children").is_none(), "{flat}");
     assert_eq!(flat["layers"][0]["childCount"], 1);
     assert_eq!(flat["artboards"], full["artboards"]);
     assert_eq!(flat["objects"], full["objects"]);
-    let one = s.execute("document.inspect", &json!({"childLimit": 0})).unwrap();
+    let one = s.execute("file.inspect", &json!({"childLimit": 0})).unwrap();
     assert_eq!(one["layers"][0]["children"], json!([]));
     assert_eq!(one["layers"][0]["childCount"], 1);
-    assert!(s.execute("document.inspect", &json!({"depth": "deep"})).is_err());
+    assert!(s.execute("file.inspect", &json!({"depth": "deep"})).is_err());
 }
 
-/// `document.find` searches names, kinds and type content across the whole tree and
+/// `file.find` searches names, kinds and type content across the whole tree and
 /// answers ids with ancestor paths plus the total, so capped replies stay explicit.
 #[test]
 fn document_find_searches_names_kinds_and_text() {
@@ -557,9 +557,9 @@ fn document_find_searches_names_kinds_and_text() {
     let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0).0;
     s.execute("object.setProps", &json!({"ids": [a], "name": "Hero Banner"})).unwrap();
     rect(&mut s, 20.0, 0.0, 10.0, 10.0);
-    s.execute("select.all", &json!({})).unwrap();
-    let group = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
-    let mut find = |p: Value| s.execute("document.find", &p).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
+    let group = s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let mut find = |p: Value| s.execute("file.find", &p).unwrap();
 
     let v = find(json!({"name": "hero"}));
     assert_eq!(v["total"], 1);
@@ -574,22 +574,22 @@ fn document_find_searches_names_kinds_and_text() {
     let v = find(json!({"kind": "rectangle", "limit": 0}));
     assert_eq!(v["matches"].as_array().map(Vec::len), Some(0));
     assert_eq!(v["total"], 2);
-    assert!(s.execute("document.find", &json!({})).is_err());
-    assert!(s.execute("document.find", &json!({"name": ""})).is_err());
-    assert!(s.execute("document.find", &json!({"name": "hero", "limit": "many"})).is_err());
+    assert!(s.execute("file.find", &json!({})).is_err());
+    assert!(s.execute("file.find", &json!({"name": ""})).is_err());
+    assert!(s.execute("file.find", &json!({"name": "hero", "limit": "many"})).is_err());
     // A filter of the wrong type is rejected, not dropped (dropping it would widen the search).
-    assert!(s.execute("document.find", &json!({"kind": "group", "name": 5})).is_err());
-    assert_eq!(s.execute("document.find", &json!({"kind": "nope"})).unwrap()["total"], 0);
+    assert!(s.execute("file.find", &json!({"kind": "group", "name": 5})).is_err());
+    assert_eq!(s.execute("file.find", &json!({"kind": "nope"})).unwrap()["total"], 0);
 }
 
 /// Type reports the paint its characters show, and its own object-level paint apart from it.
 #[test]
 fn inspect_reports_the_paint_of_types_characters() {
     let mut s = session();
-    let id = s.execute("text.create", &json!({"x": 50, "y": 60, "text": "HI", "size": 24})).unwrap()["id"].as_u64().unwrap();
+    let id = s.execute("text.add", &json!({"x": 50, "y": 60, "text": "HI", "size": 24})).unwrap()["id"].as_u64().unwrap();
     s.execute("paint.setFill", &json!({"color": "#ff0000", "ids": [id]})).unwrap();
     let node = |s: &mut Session| {
-        let v = s.execute("document.inspect", &json!({})).unwrap();
+        let v = s.execute("file.inspect", &json!({})).unwrap();
         v["layers"][0]["children"].as_array().unwrap().iter().find(|n| n["id"] == id).cloned().unwrap()
     };
     let t = node(&mut s);
@@ -609,7 +609,7 @@ fn inspect_reports_the_paint_of_types_characters() {
     // A path keeps reporting its own appearance.
     let r = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap()["id"].as_u64().unwrap();
     s.execute("paint.setFill", &json!({"color": "#ff0000", "ids": [r]})).unwrap();
-    let v = s.execute("document.inspect", &json!({})).unwrap();
+    let v = s.execute("file.inspect", &json!({})).unwrap();
     let rect = v["layers"][0]["children"].as_array().unwrap().iter().find(|n| n["id"] == r).cloned().unwrap();
     assert_eq!(rect["fill"], "#ff0000");
     assert!(rect.get("objectFill").is_none());
@@ -637,7 +637,7 @@ fn every_command_survives_empty_params() {
             rect(&mut s, 20.0, 0.0, 10.0, 10.0);
             s.execute("edit.copy", &json!({})).ok();
             if sel {
-                s.execute("select.all", &json!({})).unwrap();
+                s.execute("edit.selectAll", &json!({})).unwrap();
             } else {
                 s.execute("select.set", &json!({"ids": [a.0]})).unwrap();
             }
@@ -723,7 +723,7 @@ fn stale_current_layer_id_never_targets_a_reused_id() {
     assert_eq!(c, layer, "precondition: id reused");
     let d = rect(&mut s, 50.0, 50.0, 10.0, 10.0);
     s.execute("select.set", &json!({"ids": [d.0]})).unwrap();
-    s.execute("object.arrange.sendToCurrentLayer", &json!({})).unwrap();
+    s.execute("arrange.sendToCurrentLayer", &json!({})).unwrap();
     let doc = &s.doc().unwrap().doc;
     assert!(doc.node(c).unwrap().children().unwrap().iter().all(|n| n.path_data().is_some()));
     assert!(doc.parent_of(d).is_some_and(|p| doc.node(p).unwrap().is_layer()));
@@ -743,7 +743,7 @@ fn object_mosaic_tiles_follow_the_image_colours() {
     s.execute("paint.setStroke", &json!({"none": true, "ids": [b.0]})).unwrap();
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
     s.execute("object.rasterize", &json!({"ppi": 72})).unwrap();
-    let r = s.execute("object.createObjectMosaic", &json!({"columns": 2, "rows": 1, "spacingX": 4, "deleteRaster": true})).unwrap();
+    let r = s.execute("object.addObjectMosaic", &json!({"columns": 2, "rows": 1, "spacingX": 4, "deleteRaster": true})).unwrap();
     assert_eq!(r["tiles"], json!(2));
     let st = s.doc().unwrap();
     let g = st.doc.node(NodeId(r["id"].as_u64().unwrap())).unwrap();
@@ -939,8 +939,8 @@ fn new_layers_and_sublayers_are_numbered_together() {
 #[test]
 fn given_targets_are_used_as_given_and_range_style_takes_the_selected_type() {
     let mut s = session();
-    let first = s.execute("text.create", &json!({"x": 10, "y": 60, "text": "first", "size": 30})).unwrap()["id"].clone();
-    s.execute("text.create", &json!({"x": 10, "y": 140, "text": "second", "size": 30})).unwrap();
+    let first = s.execute("text.add", &json!({"x": 10, "y": 60, "text": "first", "size": 30})).unwrap()["id"].clone();
+    s.execute("text.add", &json!({"x": 10, "y": 140, "text": "second", "size": 30})).unwrap();
     for bad in [
         json!({"id": "$1.id", "size": 60}),
         json!({"id": 2.5, "size": 60}),
@@ -956,7 +956,7 @@ fn given_targets_are_used_as_given_and_range_style_takes_the_selected_type() {
     // The selected type object (the second) is styled when no id is given.
     let r = s.execute("text.setRangeStyle", &json!({"start": 0, "end": 3, "style": "Bold"})).unwrap();
     assert_ne!(r["id"], first);
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     assert!(s.execute("text.setRangeStyle", &json!({"start": 0, "end": 3, "size": 40})).is_err(), "two type objects: which one?");
     assert!(s.execute("text.setRangeStyle", &json!({"id": "two", "size": 40})).is_err());
 }
@@ -1009,7 +1009,7 @@ fn path_commands_reject_bad_anchors_before_modifying_geometry() {
         json!({"x": 50, "y": 40, "smooth": "yes"}),
     ] {
         let anchors = json!([valid.clone(), invalid]);
-        assert!(s.execute("path.create", &json!({"anchors": anchors})).is_err(), "{anchors}");
+        assert!(s.execute("path.add", &json!({"anchors": anchors})).is_err(), "{anchors}");
         assert!(s.execute("path.setAnchors", &json!({"id": a.0, "subpaths": [{"anchors": anchors}]})).is_err(), "{anchors}");
         let points: Vec<_> = s.doc().unwrap().doc.node(a).unwrap().path_data().unwrap().anchors().map(|(_, _, an)| an.p).collect();
         assert_eq!(points, original_points);

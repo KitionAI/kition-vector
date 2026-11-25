@@ -1,13 +1,13 @@
 /**
  * Export's file handling, apart from the dialog: the engine answers the file as base64
- * (`document.exportBytes`), and the host writes it as a new file next to the drawing
+ * (`file.exportBytes`), and the host writes it as a new file next to the drawing
  * (`host/write`, mode `export`). Nothing here reaches the engine or the host, so it is tested on
  * its own.
  */
 
 export type ExportFormat = 'svg' | 'pdf' | 'png'
 
-/** What `document.exportBytes` answers: the first file, and every file when the format writes several. */
+/** What `file.exportBytes` answers: the first file, and every file when the format writes several. */
 export type ExportAnswer = { data: string; format?: string; files?: Array<{ name: string; data: string }> }
 
 /** One file to write: its workspace path and bytes. */

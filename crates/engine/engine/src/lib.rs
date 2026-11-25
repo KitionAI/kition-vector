@@ -1,6 +1,6 @@
 //! The Kition Vector engine façade.
 //!
-//! Every user-visible action is a command with a stable id (`object.group`, `select.same.fillColor`,
+//! Every user-visible action is a command with a stable id (`arrange.group`, `select.same.fillColor`,
 //! `shape.rectangle`…) and JSON parameters. The egui UI, the CLI, the control channel and the MCP
 //! server all go through [`Session::execute`]. Tools (pointer gestures) are hosted here too and
 //! reduce to commands, so every gesture is journaled and replayable.
@@ -391,7 +391,7 @@ pub const MAX_COORD: f64 = 4.0e6;
 /// `(command, param)` pairs the journal records only so a replay reproduces the original run
 /// (dates from the clock: `cmd::clock_date`); an action leaves them out
 /// ([`Session::journal_for_action`]).
-const REPLAY_ONLY: [(&str, &str); 3] = [("file.new", "created"), ("document.save", "modified"), ("file.saveAs", "modified")];
+const REPLAY_ONLY: [(&str, &str); 3] = [("file.new", "created"), ("file.save", "modified"), ("file.saveAs", "modified")];
 
 /// `p`, the params of command `id`, without its [`REPLAY_ONLY`] values (a batch: its steps').
 fn strip_replay_only(id: &str, p: &mut Value) {
@@ -632,7 +632,7 @@ pub struct Prefs {
     // File Handling (continued)
     /// Where Save as Template and New from Template start ("" = `Documents/Kition Vector Templates`).
     pub templates_folder: String,
-    /// File Handling → Use Compression: native saves are gzip-compressed (`document.save
+    /// File Handling → Use Compression: native saves are gzip-compressed (`file.save
     /// {compress}` overrides it).
     pub use_compression: bool,
     /// Save for Web: the user's presets (the built-in ones aren't stored). A local library, not a
@@ -871,7 +871,7 @@ pub struct Session {
     pub style_libraries: cmd::stylelib::Libraries,
     /// The Libraries panel's libraries of graphics, colours and text styles (`library.*`).
     pub libraries: cmd::library::Libraries,
-    /// URLs recently given in the Attributes panel (`attributes.set {url}`), newest first; not saved.
+    /// URLs recently given in the Attributes panel (`attribute.set {url}`), newest first; not saved.
     pub recent_urls: Vec<String>,
     /// The language the UI is drawn in (a language code, never `auto`), set by the UI each frame;
     /// `None` without one (headless), where an explicit `interfaceLanguage` preference counts.
@@ -1168,7 +1168,7 @@ impl Session {
         let spec = find_command(id).ok_or_else(|| EngineError::UnknownCommand(id.to_string()))?;
         // Clear's menu needs a selection; an agent supplying explicit targets only needs a
         // document. The command validates those targets before making any edit.
-        let enabled = if id == "edit.clear" && params.get("ids").is_some() { cmd::has_doc(self) } else { (spec.enabled)(self) };
+        let enabled = if id == "edit.delete" && params.get("ids").is_some() { cmd::has_doc(self) } else { (spec.enabled)(self) };
         // A call that names its objects (`ids`, or an object `id`) is enabled as its menu item
         // would be with those objects selected: the selection the predicate asks for is the one
         // the call gives. The menu (`disabled_commands`, `info`) still reads the real selection.

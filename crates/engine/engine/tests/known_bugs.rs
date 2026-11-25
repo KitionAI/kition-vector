@@ -16,7 +16,7 @@ fn bug_group_inside_compound() {
     select(&mut s, &[a, b]);
     exec(&mut s, "object.compoundPath.make", json!({}));
     select(&mut s, &[a]);
-    let _ = s.execute("object.group", &json!({}));
+    let _ = s.execute("arrange.group", &json!({}));
     check_session(&s).unwrap();
 }
 
@@ -50,7 +50,7 @@ fn bug_bring_to_front_across_layers_underflows() {
     let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     exec(&mut s, "layer.new", json!({}));
     let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
-    for cmd in ["object.arrange.bringToFront", "object.arrange.bringForward"] {
+    for cmd in ["arrange.bringToFront", "arrange.bringForward"] {
         select(&mut s, &[a, b]);
         let r = kition_vector_testkit::catch_quiet(|| s.execute(cmd, &json!({})));
         assert!(r.is_ok(), "{cmd} panicked: {:?}", r.err());

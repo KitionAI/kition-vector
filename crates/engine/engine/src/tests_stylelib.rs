@@ -109,7 +109,7 @@ fn add_with_apply_styles_the_selection_in_the_same_undo_step() {
     assert!(doc(&s).graphic_style("Spotlight").is_none());
     assert_eq!(doc(&s).node(id).unwrap().graphic_style, None);
     // Without a selection it only adds; `ids` targets objects; an existing style is applied as is.
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let r = run(&mut s, "graphicStyle.addFromLibrary", json!({"library": "blends-transparency", "name": "Ghosted", "apply": true}));
     assert!(r.get("applied").is_none() && doc(&s).graphic_style("Ghosted").is_some());
     let r = run(&mut s, "graphicStyle.addFromLibrary", json!({"library": "blends-transparency", "name": "Ghosted", "apply": true, "ids": [id.0]}));
@@ -206,7 +206,7 @@ fn user_libraries_and_other_documents_styles() {
     // Another document's graphic styles load as a library.
     let id = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     run(&mut s, "graphicStyle.new", json!({"name": "Poster Look", "id": id.0}));
-    let b64 = run(&mut s, "document.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
+    let b64 = run(&mut s, "file.serialize", json!({}))["dataBase64"].as_str().unwrap().to_string();
     let r = run(&mut s, "graphicStyle.loadLibrary", json!({"dataBase64": b64, "name": "Poster.kvector"}));
     assert_eq!(r["name"], "Poster");
     let (_, lib) = cmd::stylelib::library(&s, r["library"].as_str().unwrap()).unwrap();

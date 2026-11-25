@@ -23,13 +23,13 @@ pub fn specs() -> Vec<CommandSpec> {
             super::newdoc::file_new
         ),
         cmd!("file.close", "Close", ["File"], Some("Cmd+W"), "{index?}", has_doc, file_close),
-        cmd!("document.activate", "Activate Document", [], None, "{index}", always, doc_activate),
-        cmd!(query "document.inspect", "Inspect Document", [], None, "{depth?, childLimit?} → layer tree, artboards, selection, history (a sliced tree reports childCount)", has_doc, |s, p| Ok(inspect::document_opts(s, slice_opts(p, "document.inspect")?))),
-        cmd!(query "document.node", "Inspect Object", [], None, "{id, summary?: compact summary, depth?: child levels in the summary (default all), childLimit?: children shown per node (default all; a level that shows fewer reports childCount)} → one object", has_doc, doc_node),
-        cmd!(query "document.find", "Find Objects", [], None, "{name?: substring of the Layers panel name, kind?: string (the exact panel label, such as Group, Path, Type or Image), text?: substring of type content, limit?: max matches (default 100, 0 counts only)} → {matches: [{id, name, kind, path}], total}", has_doc, doc_find),
-        cmd!(query "document.json", "Document JSON", [], None, "{} → complete document model", has_doc, |s, _| Ok(serde_json::to_value(&*s.doc()?.doc).unwrap_or(Value::Null))),
+        cmd!("file.activate", "Activate Document", [], None, "{index}", always, doc_activate),
+        cmd!(query "file.inspect", "Inspect Document", [], None, "{depth?, childLimit?} → layer tree, artboards, selection, history (a sliced tree reports childCount)", has_doc, |s, p| Ok(inspect::document_opts(s, slice_opts(p, "file.inspect")?))),
+        cmd!(query "file.node", "Inspect Object", [], None, "{id, summary?: compact summary, depth?: child levels in the summary (default all), childLimit?: children shown per node (default all; a level that shows fewer reports childCount)} → one object", has_doc, doc_node),
+        cmd!(query "file.find", "Find Objects", [], None, "{name?: substring of the Layers panel name, kind?: string (the exact panel label, such as Group, Path, Type or Image), text?: substring of type content, limit?: max matches (default 100, 0 counts only)} → {matches: [{id, name, kind, path}], total}", has_doc, doc_find),
+        cmd!(query "file.json", "Document JSON", [], None, "{} → complete document model", has_doc, |s, _| Ok(serde_json::to_value(&*s.doc()?.doc).unwrap_or(Value::Null))),
         cmd!(
-            "document.setUnits",
+            "file.setUnits",
             "Units",
             ["File", "Document Setup"],
             None,
@@ -88,7 +88,7 @@ pub fn specs() -> Vec<CommandSpec> {
             |s, p| paste(s, p, PasteMode::AllArtboards)
         ),
         cmd!(
-            "edit.clear",
+            "edit.delete",
             "Clear",
             ["Edit"],
             Some("Delete"),
@@ -109,18 +109,18 @@ fn file_close(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn doc_activate(s: &mut Session, p: &Value) -> Result<Value> {
-    let i = p.get("index").and_then(Value::as_u64).ok_or_else(|| bad("document.activate", "missing index"))? as usize;
-    if s.set_active(i) { ok() } else { Err(bad("document.activate", "no such document")) }
+    let i = p.get("index").and_then(Value::as_u64).ok_or_else(|| bad("file.activate", "missing index"))? as usize;
+    if s.set_active(i) { ok() } else { Err(bad("file.activate", "no such document")) }
 }
 
 fn doc_node(s: &mut Session, p: &Value) -> Result<Value> {
-    let id = id_param(p, "id")?.ok_or_else(|| bad("document.node", "missing id"))?;
-    let opts = slice_opts(p, "document.node")?;
+    let id = id_param(p, "id")?.ok_or_else(|| bad("file.node", "missing id"))?;
+    let opts = slice_opts(p, "file.node")?;
     let summary = bool_or(p, "summary", false);
     if !summary && (opts.depth.is_some() || opts.child_limit.is_some()) {
         // The full object JSON is never truncated: a slice without `summary` would
         // otherwise silently return the whole subtree.
-        return Err(bad("document.node", "`depth` and `childLimit` slice the summary: pass `summary: true`"));
+        return Err(bad("file.node", "`depth` and `childLimit` slice the summary: pass `summary: true`"));
     }
     let n = s.doc()?.doc.node(id).ok_or(EngineError::NoNode(id))?;
     if summary { Ok(inspect::node_summary_opts(n, opts)) } else { Ok(serde_json::to_value(n).unwrap_or(Value::Null)) }
@@ -145,20 +145,20 @@ fn doc_find(s: &mut Session, p: &Value) -> Result<Value> {
     let needle = |key: &str| match p.get(key) {
         None | Some(Value::Null) => Ok(None),
         Some(Value::String(v)) => Ok(Some(v.to_lowercase()).filter(|v| !v.is_empty())),
-        Some(_) => Err(bad("document.find", format!("`{key}` must be a string"))),
+        Some(_) => Err(bad("file.find", format!("`{key}` must be a string"))),
     };
     let filter = inspect::FindFilter { name: needle("name")?, kind: needle("kind")?, text: needle("text")? };
     if filter.is_empty() {
-        return Err(bad("document.find", "give at least one of `name`, `kind`, `text`"));
+        return Err(bad("file.find", "give at least one of `name`, `kind`, `text`"));
     }
-    let limit = opt_u64(p, "document.find", "limit")?.unwrap_or(100);
+    let limit = opt_u64(p, "file.find", "limit")?.unwrap_or(100);
     let (matches, total) = inspect::find_nodes(&s.doc()?.doc, &filter, limit);
     Ok(json!({"matches": matches, "total": total}))
 }
 
-/// Document Setup's units (also `document.setup {units}`).
+/// Document Setup's units (also `file.setup {units}`).
 fn set_units(s: &mut Session, p: &Value) -> Result<Value> {
-    let u = str_param(p, "units").and_then(Unit::named).ok_or_else(|| bad("document.setUnits", "unknown units"))?;
+    let u = str_param(p, "units").and_then(Unit::named).ok_or_else(|| bad("file.setUnits", "unknown units"))?;
     s.set_document_units(u)?;
     ok()
 }
@@ -316,7 +316,7 @@ fn cut(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn clear(s: &mut Session, p: &Value) -> Result<Value> {
-    let explicit = if p.get("ids").is_some() { Some(checked_ids_param(s, p, "ids", "edit.clear")?) } else { None };
+    let explicit = if p.get("ids").is_some() { Some(checked_ids_param(s, p, "ids", "edit.delete")?) } else { None };
     // Direct-selected anchors: delete those anchors instead of whole objects.
     if explicit.is_none() && !s.doc()?.selection.anchors.is_empty() {
         return super::path::delete_anchors(s, p);

@@ -95,8 +95,8 @@ fn batch_is_one_undo_step_and_rolls_back_on_error() {
         json!({"commands": [
             {"command": "shape.rectangle", "params": {"x": 0, "y": 0, "width": 10, "height": 10}},
             {"command": "shape.ellipse", "params": {"x": 20, "y": 0, "width": 10, "height": 10}},
-            {"command": "select.all", "params": {}},
-            {"command": "object.group", "params": {}},
+            {"command": "edit.selectAll", "params": {}},
+            {"command": "arrange.group", "params": {}},
         ]}),
     );
     assert_eq!(s.doc().unwrap().history.undo.len(), before + 1);
@@ -136,9 +136,9 @@ fn save_open_via_commands_roundtrips() {
     let mut s = fixtures::rich_session();
     let dir = kition_vector_testkit::temp_dir("engine-save");
     let path = dir.join("rich.kvector");
-    exec(&mut s, "document.save", json!({"path": path.to_str().unwrap()}));
+    exec(&mut s, "file.save", json!({"path": path.to_str().unwrap()}));
     let want = doc_json(&s.doc().unwrap().doc);
-    exec(&mut s, "document.open", json!({"path": path.to_str().unwrap()}));
+    exec(&mut s, "file.open", json!({"path": path.to_str().unwrap()}));
     assert_eq!(s.documents().len(), 2);
     let got = doc_json(&s.doc().unwrap().doc);
     // Numbers to 1e-12 (bit-exactness is a known bug: known_bugs.rs::bug_native_roundtrip_not_bit_exact).
@@ -150,11 +150,11 @@ fn save_open_via_commands_roundtrips() {
 fn serialize_all_formats_on_rich_doc() {
     let mut s = fixtures::rich_session();
     for f in ["kvector", "svg", "pdf", "png"] {
-        let v = exec(&mut s, "document.serialize", json!({"format": f}));
+        let v = exec(&mut s, "file.serialize", json!({"format": f}));
         assert!(v.get("dataBase64").or(v.get("text")).is_some(), "{f}: {v}");
     }
     // The SVG re-imports with the same number of visible art objects or more (groups may nest).
-    let svg = exec(&mut s, "document.serialize", json!({"format": "svg"}));
+    let svg = exec(&mut s, "file.serialize", json!({"format": "svg"}));
     let text = svg["text"]
         .as_str()
         .map(str::to_string)

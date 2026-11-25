@@ -976,7 +976,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "assets.add",
+        id: "asset.add",
         leaf: Some(&["name"]),
         leaf_at: At::All,
         text: Some(&["name"]),
@@ -1009,7 +1009,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "assets.export",
+        id: "asset.export",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -1042,7 +1042,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "assets.remove",
+        id: "asset.remove",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -1075,7 +1075,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "assets.rename",
+        id: "asset.rename",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -1108,7 +1108,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "assets.settings.set",
+        id: "asset.settings.set",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -1141,7 +1141,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "attributes.set",
+        id: "attribute.set",
         leaf: Some(&["data.type", "props.attrs"]),
         leaf_at: At::No,
         text: Some(&["data.type", "props.attrs"]),
@@ -2206,7 +2206,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.exportDxf",
+        id: "file.exportDxf",
         leaf: None,
         leaf_at: At::No,
         text: None,
@@ -2239,7 +2239,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.exportEps",
+        id: "file.exportEps",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2272,7 +2272,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.exportForScreens",
+        id: "file.exportForScreens",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2305,7 +2305,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.exportForWeb",
+        id: "file.exportForWeb",
         leaf: None,
         leaf_at: At::No,
         text: None,
@@ -2338,7 +2338,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.exportPdf",
+        id: "file.exportPdf",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2371,7 +2371,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.open",
+        id: "file.open",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2404,7 +2404,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.rasterEffectsSettings",
+        id: "file.rasterEffectsSettings",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2437,7 +2437,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.save",
+        id: "file.save",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2470,7 +2470,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.setUnits",
+        id: "file.setUnits",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2503,7 +2503,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "document.setup",
+        id: "file.setup",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -2569,7 +2569,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "edit.clear",
+        id: "edit.delete",
         leaf: None,
         leaf_at: At::No,
         text: None,
@@ -3606,7 +3606,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "file.info",
+        id: "file.setInfo",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -4068,7 +4068,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "graph.create",
+        id: "graph.add",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -5666,7 +5666,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "library.create",
+        id: "library.new",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -5699,7 +5699,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "library.createGroup",
+        id: "library.addGroup",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -5996,7 +5996,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.embed",
+        id: "linkedFile.embed",
         leaf: Some(&["data"]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -6029,7 +6029,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.goTo",
+        id: "linkedFile.goTo",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6062,7 +6062,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.placementOptions",
+        id: "linkedFile.placementOptions",
         leaf: Some(&["data"]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -6095,7 +6095,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.relink",
+        id: "linkedFile.relink",
         leaf: Some(&["data"]),
         leaf_at: At::All,
         text: Some(&["data"]),
@@ -6128,7 +6128,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.unembed",
+        id: "linkedFile.unembed",
         leaf: Some(&["data"]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -6161,7 +6161,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.update",
+        id: "linkedFile.update",
         leaf: Some(&["data"]),
         leaf_at: At::All,
         text: Some(&["data"]),
@@ -6194,7 +6194,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "links.updateChanged",
+        id: "linkedFile.updateChanged",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6491,7 +6491,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.arrange.bringForward",
+        id: "arrange.bringForward",
         leaf: Some(&[]),
         leaf_at: At::All,
         text: Some(&[]),
@@ -6524,7 +6524,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.arrange.bringToFront",
+        id: "arrange.bringToFront",
         leaf: Some(&[]),
         leaf_at: At::All,
         text: Some(&[]),
@@ -6557,7 +6557,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.arrange.sendBackward",
+        id: "arrange.sendBackward",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6590,7 +6590,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.arrange.sendToBack",
+        id: "arrange.sendToBack",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6623,7 +6623,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.arrange.sendToCurrentLayer",
+        id: "arrange.sendToCurrentLayer",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6854,7 +6854,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.blend.spine.addAnchor",
+        id: "object.blend.addSpineAnchor",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6887,7 +6887,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.blend.spine.moveAnchor",
+        id: "object.blend.moveSpineAnchor",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -6920,7 +6920,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.blend.spine.removeAnchor",
+        id: "object.blend.removeSpineAnchor",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -7085,7 +7085,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.createObjectMosaic",
+        id: "object.addObjectMosaic",
         leaf: Some(&["data.type"]),
         leaf_at: At::No,
         text: Some(&["data.type"]),
@@ -7118,7 +7118,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.createTrimMarks",
+        id: "object.addTrimMarks",
         leaf: Some(&["appearance", "data"]),
         leaf_at: At::No,
         text: Some(&["appearance", "data"]),
@@ -7745,7 +7745,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.group",
+        id: "arrange.group",
         leaf: Some(&[]),
         leaf_at: At::All,
         text: Some(&[]),
@@ -8108,7 +8108,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.mesh.create",
+        id: "object.mesh.add",
         leaf: None,
         leaf_at: At::No,
         text: None,
@@ -9805,7 +9805,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.slice.create",
+        id: "object.slice.add",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -10439,7 +10439,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "object.ungroup",
+        id: "arrange.ungroup",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -11596,7 +11596,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "path.create",
+        id: "path.add",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -15233,7 +15233,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "text.create",
+        id: "text.add",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -15266,7 +15266,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "text.createInPath",
+        id: "text.addInPath",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&[]),
@@ -15742,7 +15742,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "text.thread.create",
+        id: "text.thread.add",
         leaf: None,
         leaf_at: At::All,
         text: Some(&["data"]),
@@ -16270,7 +16270,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.changeCase",
+        id: "text.changeCase",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16303,7 +16303,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.convertToAreaType",
+        id: "text.convertToAreaType",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16336,7 +16336,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.convertToPointType",
+        id: "text.convertToPointType",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16369,7 +16369,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.createOutlines",
+        id: "text.convertToOutlines",
         leaf: Some(&[]),
         leaf_at: At::All,
         text: None,
@@ -16402,7 +16402,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.fillPlaceholder",
+        id: "text.fillPlaceholder",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16435,7 +16435,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.fitHeadline",
+        id: "text.fitHeadlineSelection",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16468,7 +16468,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.insert",
+        id: "text.insert",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16501,7 +16501,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.orientation.horizontal",
+        id: "text.orientation.horizontal",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16534,7 +16534,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.orientation.vertical",
+        id: "text.orientation.vertical",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16567,7 +16567,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.pathOptions",
+        id: "text.pathOptions",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16600,7 +16600,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.size.decrease",
+        id: "format.decreaseFontSize",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16633,7 +16633,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.size.increase",
+        id: "format.increaseFontSize",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16666,7 +16666,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.smartPunctuation",
+        id: "text.smartPunctuation",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -16706,7 +16706,7 @@ pub(crate) const RESTS: &[Rest] = &[
         inside_at: false,
     },
     Rest {
-        id: "type.step",
+        id: "text.step",
         leaf: Some(&[]),
         leaf_at: At::No,
         text: Some(&["data"]),
@@ -18423,10 +18423,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "assets.add",
+        "asset.add",
         &["@kinds=leaf"],
         Rest {
-            id: "assets.add",
+            id: "asset.add",
             leaf: Some(&["name"]),
             leaf_at: At::No,
             text: Some(&["name"]),
@@ -18460,10 +18460,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "assets.add",
+        "asset.add",
         &["@kinds=member"],
         Rest {
-            id: "assets.add",
+            id: "asset.add",
             leaf: Some(&[]),
             leaf_at: At::All,
             text: Some(&[]),
@@ -18497,10 +18497,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "assets.add",
+        "asset.add",
         &["multiple=false"],
         Rest {
-            id: "assets.add",
+            id: "asset.add",
             leaf: Some(&[]),
             leaf_at: At::All,
             text: Some(&[]),
@@ -18534,10 +18534,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "attributes.set",
+        "attribute.set",
         &["note=n"],
         Rest {
-            id: "attributes.set",
+            id: "attribute.set",
             leaf: Some(&["props.attrs"]),
             leaf_at: At::No,
             text: Some(&["props.attrs"]),
@@ -18571,10 +18571,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "attributes.set",
+        "attribute.set",
         &["overprintFill=true"],
         Rest {
-            id: "attributes.set",
+            id: "attribute.set",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -18608,10 +18608,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "attributes.set",
+        "attribute.set",
         &["showCenter=true"],
         Rest {
-            id: "attributes.set",
+            id: "attribute.set",
             leaf: Some(&["data.type", "props.attrs"]),
             leaf_at: At::No,
             text: Some(&["data.type", "props.attrs"]),
@@ -18645,10 +18645,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "attributes.set",
+        "attribute.set",
         &["url=u"],
         Rest {
-            id: "attributes.set",
+            id: "attribute.set",
             leaf: Some(&["props.attrs"]),
             leaf_at: At::No,
             text: Some(&["props.attrs"]),
@@ -19200,10 +19200,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportDxf",
+        "file.exportDxf",
         &["path=/tmp/o.dxf"],
         Rest {
-            id: "document.exportDxf",
+            id: "file.exportDxf",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19237,10 +19237,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportDxf",
+        "file.exportDxf",
         &["path=/tmp/o.dxf", "selectedOnly=true"],
         Rest {
-            id: "document.exportDxf",
+            id: "file.exportDxf",
             leaf: None,
             leaf_at: At::No,
             text: None,
@@ -19274,10 +19274,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportForScreens",
+        "file.exportForScreens",
         &[],
         Rest {
-            id: "document.exportForScreens",
+            id: "file.exportForScreens",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19311,10 +19311,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportForScreens",
+        "file.exportForScreens",
         &["artboards"],
         Rest {
-            id: "document.exportForScreens",
+            id: "file.exportForScreens",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19348,10 +19348,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportForScreens",
+        "file.exportForScreens",
         &["assets"],
         Rest {
-            id: "document.exportForScreens",
+            id: "file.exportForScreens",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19385,10 +19385,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportForWeb",
+        "file.exportForWeb",
         &["path=/tmp/w.gif"],
         Rest {
-            id: "document.exportForWeb",
+            id: "file.exportForWeb",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19422,10 +19422,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.exportForWeb",
+        "file.exportForWeb",
         &["path=/tmp/w.gif", "slices=selected"],
         Rest {
-            id: "document.exportForWeb",
+            id: "file.exportForWeb",
             leaf: None,
             leaf_at: At::No,
             text: None,
@@ -19459,10 +19459,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.rasterEffectsSettings",
+        "file.rasterEffectsSettings",
         &["colorModel=grayscale"],
         Rest {
-            id: "document.rasterEffectsSettings",
+            id: "file.rasterEffectsSettings",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19496,10 +19496,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.rasterEffectsSettings",
+        "file.rasterEffectsSettings",
         &["resolution=high"],
         Rest {
-            id: "document.rasterEffectsSettings",
+            id: "file.rasterEffectsSettings",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19533,10 +19533,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.setup",
+        "file.setup",
         &["bleed"],
         Rest {
-            id: "document.setup",
+            id: "file.setup",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19570,10 +19570,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.setup",
+        "file.setup",
         &["flattenerPreset=Low Resolution"],
         Rest {
-            id: "document.setup",
+            id: "file.setup",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19607,10 +19607,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "document.setup",
+        "file.setup",
         &["superscript"],
         Rest {
-            id: "document.setup",
+            id: "file.setup",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19644,10 +19644,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "edit.clear",
+        "edit.delete",
         &["@kinds=group"],
         Rest {
-            id: "edit.clear",
+            id: "edit.delete",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -19681,10 +19681,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "edit.clear",
+        "edit.delete",
         &["@kinds=leaf"],
         Rest {
-            id: "edit.clear",
+            id: "edit.delete",
             leaf: None,
             leaf_at: At::No,
             text: None,
@@ -22988,10 +22988,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "links.relink",
+        "linkedFile.relink",
         &["folder=/tmp"],
         Rest {
-            id: "links.relink",
+            id: "linkedFile.relink",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -23032,10 +23032,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "links.relink",
+        "linkedFile.relink",
         &["path=/tmp/x.png"],
         Rest {
-            id: "links.relink",
+            id: "linkedFile.relink",
             leaf: Some(&["data"]),
             leaf_at: At::All,
             text: Some(&["data"]),
@@ -23069,10 +23069,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "links.update",
+        "linkedFile.update",
         &["@kinds="],
         Rest {
-            id: "links.update",
+            id: "linkedFile.update",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -23113,10 +23113,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "links.update",
+        "linkedFile.update",
         &["@kinds=leaf"],
         Rest {
-            id: "links.update",
+            id: "linkedFile.update",
             leaf: Some(&["data"]),
             leaf_at: At::All,
             text: Some(&["data"]),
@@ -23483,10 +23483,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "object.blend.spine.moveAnchor",
+        "object.blend.moveSpineAnchor",
         &["anchor", "handle=out", "x", "y"],
         Rest {
-            id: "object.blend.spine.moveAnchor",
+            id: "object.blend.moveSpineAnchor",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -23779,10 +23779,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "object.createTrimMarks",
+        "object.addTrimMarks",
         &[],
         Rest {
-            id: "object.createTrimMarks",
+            id: "object.addTrimMarks",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -23816,10 +23816,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "object.createTrimMarks",
+        "object.addTrimMarks",
         &["style=roman"],
         Rest {
-            id: "object.createTrimMarks",
+            id: "object.addTrimMarks",
             leaf: Some(&["appearance", "data"]),
             leaf_at: At::No,
             text: Some(&["appearance", "data"]),
@@ -24593,10 +24593,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "object.mesh.create",
+        "object.mesh.add",
         &[],
         Rest {
-            id: "object.mesh.create",
+            id: "object.mesh.add",
             leaf: None,
             leaf_at: At::No,
             text: None,
@@ -24630,10 +24630,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "object.mesh.create",
+        "object.mesh.add",
         &["cols", "rows"],
         Rest {
-            id: "object.mesh.create",
+            id: "object.mesh.add",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -31990,10 +31990,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.orientation.horizontal",
+        "text.orientation.horizontal",
         &["@kinds=layer"],
         Rest {
-            id: "type.orientation.horizontal",
+            id: "text.orientation.horizontal",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -32027,10 +32027,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.orientation.horizontal",
+        "text.orientation.horizontal",
         &["@kinds=text"],
         Rest {
-            id: "type.orientation.horizontal",
+            id: "text.orientation.horizontal",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&["data"]),
@@ -32064,10 +32064,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.orientation.vertical",
+        "text.orientation.vertical",
         &["@kinds=layer"],
         Rest {
-            id: "type.orientation.vertical",
+            id: "text.orientation.vertical",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -32101,10 +32101,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.orientation.vertical",
+        "text.orientation.vertical",
         &["@kinds=text"],
         Rest {
-            id: "type.orientation.vertical",
+            id: "text.orientation.vertical",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&["data"]),
@@ -32138,10 +32138,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.smartPunctuation",
+        "text.smartPunctuation",
         &[],
         Rest {
-            id: "type.smartPunctuation",
+            id: "text.smartPunctuation",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&[]),
@@ -32182,10 +32182,10 @@ const VARIANTS: &[(&str, &[&str], Rest)] = &[
         },
     ),
     (
-        "type.smartPunctuation",
+        "text.smartPunctuation",
         &["quotes=false"],
         Rest {
-            id: "type.smartPunctuation",
+            id: "text.smartPunctuation",
             leaf: Some(&[]),
             leaf_at: At::No,
             text: Some(&["data"]),

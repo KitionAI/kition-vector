@@ -24,7 +24,7 @@ fn close(a: (f64, f64), b: (f64, f64)) -> bool {
 fn pages_place_the_artboard_on_the_trim_box() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
-    s.execute("document.setup", &json!({"bleed": 9})).unwrap();
+    s.execute("file.setup", &json!({"bleed": 9})).unwrap();
     // Centred on Letter, turned landscape for the wide artboard.
     let p = first_sheet(&mut s, json!({}));
     assert_eq!((p["width"].clone(), p["height"].clone()), (json!(792.0), json!(612.0)));

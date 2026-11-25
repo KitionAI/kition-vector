@@ -60,7 +60,7 @@ fn invert_keeps_cmyk_and_acts_on_defaults_without_selection() {
     s.execute("paint.complement", &json!({})).unwrap();
     assert_eq!(node(&s, id).appearance.fill_paint().color(), Some(Color::cmyk(1.0, 0.0, 0.0, 0.25)));
     // Nothing selected: the default fill changes and the document doesn't.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let before = s.doc().unwrap().doc.clone();
     s.paint.fill = Paint::solid(Color::rgb(1.0, 1.0, 0.0));
     s.execute("paint.invert", &json!({})).unwrap();
@@ -98,7 +98,7 @@ fn last_color_and_gradient_are_reapplied() {
 #[test]
 fn swap_and_default_work_on_type() {
     let mut s = session();
-    let r = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
@@ -192,7 +192,7 @@ fn a_mixed_selection_shows_a_question_mark_proxy() {
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
     s.execute("paint.setFill", &json!({"gradient": {"stops": [{"offset": 0, "color": "#000000"}, {"offset": 1, "color": "#ffffff"}]}})).unwrap();
     assert_eq!(s.proxy_mixed(), (false, false));
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(q(&mut s)["fillMixed"], false);
 }
 
@@ -204,13 +204,13 @@ fn every_selection_change_bumps_the_revision() {
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     let b = rect(&mut s);
     s.execute("paint.setFill", &json!({"color": "#fa0000"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let rev = s.doc().unwrap().revision;
     s.execute("select.magicWand", &json!({"id": a.0})).unwrap();
     assert_eq!(s.doc().unwrap().selection.len(), 2, "{a:?} and {b:?} are within the tolerance");
     assert!(s.doc().unwrap().revision > rev);
     assert_eq!(s.proxy_mixed(), (true, false));
-    let r = s.execute("text.create", &json!({"x": 10, "y": 150, "text": "Hi"})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 150, "text": "Hi"})).unwrap();
     let family = match &node(&s, NodeId(r["id"].as_u64().unwrap())).kind {
         NodeKind::Text(t) => t.first_style().font_family,
         _ => panic!("not text"),
@@ -226,11 +226,11 @@ fn proxies_show_the_first_selected_object_or_the_defaults() {
     let id = rect(&mut s);
     s.execute("paint.setFill", &json!({"color": "#123456"})).unwrap();
     assert_eq!(s.proxy_paints().0.color().unwrap().to_hex(), "#123456");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.paint.fill = Paint::solid(Color::WHITE);
     assert_eq!(s.proxy_paints().0, Paint::solid(Color::WHITE));
     // Type shows its first run's paints.
-    let r = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 50, "text": "Hi"})).unwrap();
     s.execute("select.set", &json!({"ids": [r["id"]]})).unwrap();
     s.execute("paint.setFill", &json!({"color": "#654321"})).unwrap();
     assert_eq!(s.proxy_paints().0.color().unwrap().to_hex(), "#654321");
@@ -261,7 +261,7 @@ fn a_group_shows_its_contents_in_the_proxies() {
     let b = rect(&mut s);
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
     // The group shows what the paint commands change: its contents' red fill, not mixed.
     assert_eq!(s.doc().unwrap().selection.len(), 1);
     assert_eq!(s.proxy_paints().0.color().unwrap().to_hex(), "#ff0000");
@@ -270,6 +270,6 @@ fn a_group_shows_its_contents_in_the_proxies() {
     s.execute("paint.setFill", &json!({"color": "#00ff00", "ids": [b.0]})).unwrap();
     assert_eq!(s.execute("paint.proxies", &json!({})).unwrap()["fillMixed"], true);
     // An empty selection shows the defaults.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(s.proxy_paints().0, s.paint.fill);
 }

@@ -1,5 +1,5 @@
-//! Opening and placing DXF drawings: the `dxf` options `document.open` and `file.place` read
-//! (layout, scale or fit, lineweights, centring, merged layers) and `document.dxfInfo` (layouts,
+//! Opening and placing DXF drawings: the `dxf` options `file.open` and `file.place` read
+//! (layout, scale or fit, lineweights, centring, merged layers) and `file.dxfInfo` (layouts,
 //! layers, units) for the DXF Import Options dialog.
 
 use kition_vector_cad::ImportOptions;
@@ -12,7 +12,7 @@ use super::{err, source};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![cmd!(
-        query "document.dxfInfo",
+        query "file.dxfInfo",
         "DXF Info",
         [],
         None,
@@ -36,7 +36,7 @@ struct Params {
     merge_layers: Option<bool>,
 }
 
-/// The DXF import options in `p` (the `dxf` object of `document.open` and `file.place`).
+/// The DXF import options in `p` (the `dxf` object of `file.open` and `file.place`).
 pub(super) fn options(cmd: &str, p: Option<&Value>) -> Result<ImportOptions> {
     let d = ImportOptions::default();
     let Some(p) = p.filter(|v| !v.is_null()) else { return Ok(d) };
@@ -76,7 +76,7 @@ pub(super) fn import(bytes: &[u8], o: &ImportOptions) -> Result<(Document, Vec<S
     Ok((r.document, r.warnings))
 }
 
-const INFO: &str = "document.dxfInfo";
+const INFO: &str = "file.dxfInfo";
 
 fn dxf_info(_: &mut Session, p: &Value) -> Result<Value> {
     let bytes = source(p, INFO)?.bytes;

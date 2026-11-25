@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-engine-param-defaults
 feature: vector.agent.premises
-intent: A parameter given is used or refused, never replaced by a default that acts on something else; node.move without index (it went on top), an agent's brush.freehand with a brush the document lacks (a plain Pencil path), type.smartPunctuation scope selection with nothing selected (the whole document), perspective.release of an object that is not there (skipped, success).
+intent: A parameter given is used or refused, never replaced by a default that acts on something else; node.move without index (it went on top), an agent's brush.freehand with a brush the document lacks (a plain Pencil path), text.smartPunctuation scope selection with nothing selected (the whole document), perspective.release of an object that is not there (skipped, success).
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}

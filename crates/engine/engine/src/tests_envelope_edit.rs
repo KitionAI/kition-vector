@@ -50,7 +50,7 @@ fn edit_contents_clicks_reach_the_content_where_it_is() {
     let h = hit_test(&doc(&s), below, HitOptions::default()).unwrap();
     assert_eq!((h.leaf, h.top_object(None), h.contents_of), (a, a, Some(e)), "Edit Contents: the content is the object clicked");
     // The Selection tool picks it.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.select_tool("selection", ViewInfo::default()).unwrap();
     for kind in [PointerKind::Down, PointerKind::Up] {
         s.pointer(&PointerEvent::new(kind, 200.0, 195.0), ViewInfo::default()).unwrap();

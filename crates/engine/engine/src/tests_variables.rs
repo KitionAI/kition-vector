@@ -13,7 +13,7 @@ fn session() -> Session {
 }
 
 fn text(s: &mut Session, content: &str) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": 10, "y": 10, "text": content})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 10, "y": 10, "text": content})).unwrap();
     NodeId(r["id"].as_u64().unwrap())
 }
 
@@ -143,7 +143,7 @@ fn deleted_art_lets_its_bindings_go() {
     s.execute("dataset.new", &json!({"name": "D", "values": {"Name": "y", "Show": false}})).unwrap();
 
     s.execute("select.set", &json!({"ids": [t.0]})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     let vars = s.execute("variable.list", &json!({})).unwrap();
     let of = |name: &str| vars["variables"].as_array().map(|a| a.iter().find(|v| v["name"] == name).unwrap()["bindings"].as_u64().unwrap()).unwrap();
     assert_eq!(of("Name"), 0, "the deleted text object took its binding with it");
@@ -278,7 +278,7 @@ fn making_a_selection_dynamic_names_and_binds_it() {
     assert_eq!(vars["variables"].as_array().map(Vec::len), Some(3));
 
     // Nothing selected, art that can't take the kind, and locked art are errors.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(s.execute("variable.makeTextDynamic", &json!({})).is_err());
     s.execute("select.set", &json!({"ids": [r.0]})).unwrap();
     assert!(s.execute("variable.makeTextDynamic", &json!({})).is_err(), "a rectangle is not type");

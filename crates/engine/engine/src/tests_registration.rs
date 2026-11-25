@@ -80,7 +80,7 @@ fn trim_marks_print_on_every_plate() {
     run(&mut s, "swatch.setSpot", json!({"name": "Spot Ink"}));
     run(&mut s, "shape.rectangle", json!({"x": 30, "y": 30.125, "width": 40, "height": 40}));
     run(&mut s, "paint.setStroke", json!({"none": true}));
-    let g = id_of(&run(&mut s, "object.createTrimMarks", json!({"weight": 1})));
+    let g = id_of(&run(&mut s, "object.addTrimMarks", json!({"weight": 1})));
     let n = node(&s, g);
     assert_eq!(n.children().unwrap().len(), 8);
     assert!(n.children().unwrap().iter().all(|c| c.appearance.stroke().unwrap().paint.is_registration()));
@@ -102,7 +102,7 @@ fn pdf_writes_registration_as_separation_all() {
     let _g = GLOBAL.lock().unwrap_or_else(|e| e.into_inner());
     let mut s = session();
     run(&mut s, "shape.rectangle", json!({"x": 30, "y": 30, "width": 40, "height": 40}));
-    run(&mut s, "object.createTrimMarks", json!({}));
+    run(&mut s, "object.addTrimMarks", json!({}));
     let bytes = kition_vector_pdf::export(
         &s.doc().unwrap().doc,
         &kition_vector_pdf::PdfOptions { created: Some(0), ..kition_vector_pdf::PdfOptions::uncompressed() },
@@ -116,7 +116,7 @@ fn pdf_writes_registration_as_separation_all() {
 fn trim_marks_cover_every_artboard_and_take_the_japanese_style() {
     let mut s = session();
     run(&mut s, "artboard.new", json!({"x": 200, "y": 0, "width": 100, "height": 100}));
-    let r = run(&mut s, "object.createTrimMarks", json!({}));
+    let r = run(&mut s, "object.addTrimMarks", json!({}));
     let ids = r["ids"].as_array().unwrap().clone();
     assert_eq!(ids.len(), 2, "one group per artboard when nothing is selected");
     let b = s.doc().unwrap().doc.bounds_of(&[NodeId(ids[1].as_u64().unwrap())], false).unwrap();
@@ -127,8 +127,8 @@ fn trim_marks_cover_every_artboard_and_take_the_japanese_style() {
     // Japanese marks: double lines at the trim and bleed edges, and centre marks.
     run(&mut s, "prefs.set", json!({"key": "japaneseCropMarks", "value": true}));
     assert_eq!(s.crop_mark_style(), kition_vector_doc::marks::MarkStyle::Japanese);
-    assert!(s.execute("object.createTrimMarks", &json!({"allArtboards": false})).is_err(), "nothing selected to mark");
-    let r = run(&mut s, "object.createTrimMarks", json!({}));
+    assert!(s.execute("object.addTrimMarks", &json!({"allArtboards": false})).is_err(), "nothing selected to mark");
+    let r = run(&mut s, "object.addTrimMarks", json!({}));
     let first = node(&s, NodeId(r["ids"][0].as_u64().unwrap()));
     let lines = first.children().unwrap();
     assert_eq!(lines.len(), 24);
@@ -137,9 +137,9 @@ fn trim_marks_cover_every_artboard_and_take_the_japanese_style() {
     assert_eq!(ys.len(), 2);
     assert!(ys.iter().any(|y| y.abs() < 1e-9) && ys.iter().any(|y| (y + 3.0 * 72.0 / 25.4).abs() < 1e-6), "{ys:?}");
     // An explicit style wins over the preference.
-    let r = run(&mut s, "object.createTrimMarks", json!({"style": "roman"}));
+    let r = run(&mut s, "object.addTrimMarks", json!({"style": "roman"}));
     assert_eq!(node(&s, NodeId(r["ids"][0].as_u64().unwrap())).children().unwrap().len(), 8);
-    assert!(s.execute("object.createTrimMarks", &json!({"style": "western"})).is_err());
+    assert!(s.execute("object.addTrimMarks", &json!({"style": "western"})).is_err());
 }
 
 #[test]

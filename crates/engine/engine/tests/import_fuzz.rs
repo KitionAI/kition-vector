@@ -643,8 +643,8 @@ fn arb_box() -> impl Strategy<Value = Option<[f64; 4]>> {
 proptest! {
     #![proptest_config(config())]
 
-    /// Every page box, rotation, page pick, password and Crop To, through `document.open` and
-    /// `document.pdfInfo` (with a thumbnail).
+    /// Every page box, rotation, page pick, password and Crop To, through `file.open` and
+    /// `file.pdfInfo` (with a thumbnail).
     #[test]
     fn pdf_import_options_never_panic(
         boxes in prop::collection::vec(arb_box(), 5),
@@ -669,8 +669,8 @@ proptest! {
         let r = catch_quiet(|| {
             let mut s = kition_vector_engine::Session::new();
             let p = json!({"name": "x.pdf", "dataBase64": b64, "pages": pages, "cropTo": crop, "password": password, "thumbnail": 1, "thumbnailSize": 64});
-            let _ = s.execute("document.pdfInfo", &p);
-            if s.execute("document.open", &p).is_ok() {
+            let _ = s.execute("file.pdfInfo", &p);
+            if s.execute("file.open", &p).is_ok() {
                 let d = (*s.doc().unwrap().doc).clone();
                 survive("pdf options", || Some(d)).unwrap();
             }
@@ -799,7 +799,7 @@ fn swatches(what: &str, data: &str) -> Result<(), TestCaseError> {
 
 fn styles(what: &str, data: &str) -> Result<(), TestCaseError> {
     survive_library(what, "graphicStyle.loadLibrary", data, |s, r| {
-        let _ = no_panic(s.execute("select.all", &json!({})));
+        let _ = no_panic(s.execute("edit.selectAll", &json!({})));
         let _ = no_panic(s.execute("graphicStyle.addFromLibrary", &json!({"library": r["library"], "apply": true})));
     })
 }
@@ -810,7 +810,7 @@ fn libraries(what: &str, data: &str) -> Result<(), TestCaseError> {
     survive_library(what, "library.import", data, |s, r| {
         let lib = r["id"].clone();
         let Ok(got) = no_panic(s.execute("library.get", &json!({"library": lib}))) else { return };
-        let _ = no_panic(s.execute("select.all", &json!({})));
+        let _ = no_panic(s.execute("edit.selectAll", &json!({})));
         for (list, kind, key) in
             [("graphics", "graphic", "id"), ("colors", "fillColor", "name"), ("charStyles", "charStyle", "name"), ("paraStyles", "paraStyle", "name")]
         {
@@ -833,19 +833,16 @@ fn saved_library() -> String {
     static TEXT: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     TEXT.get_or_init(|| {
         let mut s = rich_session();
-        s.execute("library.create", &json!({"name": "Fuzz"})).unwrap();
+        s.execute("library.new", &json!({"name": "Fuzz"})).unwrap();
         let first = s.doc().unwrap().doc.layers[0].children().unwrap()[0].id.0;
         let g = s.execute("library.add", &json!({"kind": "graphic", "ids": [first]})).unwrap()["id"].clone();
         s.execute("library.add", &json!({"kind": "fillColor", "color": "#336699"})).unwrap();
-        s.execute("select.all", &json!({})).unwrap();
+        s.execute("edit.selectAll", &json!({})).unwrap();
         for kind in ["charStyle", "paraStyle"] {
             s.execute("library.add", &json!({"kind": kind})).unwrap();
         }
-        s.execute(
-            "library.createGroup",
-            &json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}, {"kind": "fillColor", "item": "#336699"}]}),
-        )
-        .unwrap();
+        s.execute("library.addGroup", &json!({"name": "Logos", "items": [{"kind": "graphic", "item": g}, {"kind": "fillColor", "item": "#336699"}]}))
+            .unwrap();
         s.execute("library.export", &json!({})).unwrap()["data"].as_str().unwrap().to_string()
     })
     .clone()
@@ -853,7 +850,7 @@ fn saved_library() -> String {
 
 fn flattener_presets(what: &str, data: &str) -> Result<(), TestCaseError> {
     survive_library(what, "flattener.presets.import", data, |s, r| {
-        let _ = no_panic(s.execute("select.all", &json!({})));
+        let _ = no_panic(s.execute("edit.selectAll", &json!({})));
         if let Some(name) = r["imported"].get(0) {
             let _ = no_panic(s.execute("flattener.preview", &json!({"preset": name, "highlight": "allAffected"})));
             let _ = no_panic(s.execute("object.flattenTransparency", &json!({"preset": name, "lineArtPpi": 36, "gradientPpi": 36})));
@@ -1003,7 +1000,7 @@ fn raster_samples() -> Vec<(&'static str, Vec<u8>)> {
     out[0].1 = kition_vector_engine::cmd::fileio::ppi::with_png_resolution(&out[0].1, (300.0, 150.0));
     // A layered PSD with transparency (as Kition Vector exports it), and a PackBits PSB by hand.
     let mut s = rich_session();
-    let r = s.execute("document.export", &json!({"format": "psd", "ppi": 2})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "psd", "ppi": 2})).unwrap();
     out.push(("a.psd", kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()));
     let mut psb = b"8BPS\0\x02\0\0\0\0\0\0\0\x04\0\0\0\x02\0\0\0\x03\0\x08\0\x03".to_vec();
     psb.extend([0; 8]);
@@ -1075,7 +1072,7 @@ proptest! {
 fn saved_ai() -> Vec<u8> {
     static AI: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
     AI.get_or_init(|| {
-        let r = rich_session().execute("document.save", &json!({"format": "ai", "compression": {"compressText": false}})).unwrap();
+        let r = rich_session().execute("file.save", &json!({"format": "ai", "compression": {"compressText": false}})).unwrap();
         kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
     })
     .clone()
@@ -1105,8 +1102,8 @@ proptest! {
 fn pdf_presets(what: &str, data: &str) -> Result<(), TestCaseError> {
     survive_library(what, "pdf.preset.import", data, |s, r| {
         for name in r["imported"].as_array().into_iter().flatten() {
-            let _ = no_panic(s.execute("document.exportPdf", &json!({"preset": name})));
-            let _ = no_panic(s.execute("document.save", &json!({"format": "ai", "preset": name})));
+            let _ = no_panic(s.execute("file.exportPdf", &json!({"preset": name})));
+            let _ = no_panic(s.execute("file.save", &json!({"format": "ai", "preset": name})));
         }
     })
 }
@@ -1241,7 +1238,7 @@ proptest! {
 /// document read back from it.
 fn eps_sample() -> Vec<u8> {
     let mut s = rich_session();
-    let r = s.execute("document.export", &json!({"format": "eps", "useArtboards": false})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "eps", "useArtboards": false})).unwrap();
     kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
 }
 
@@ -1390,8 +1387,8 @@ proptest! {
         let r = catch_quiet(|| {
             let mut s = kition_vector_engine::Session::new();
             let p = json!({"name": "x.pdf", "dataBase64": b64, "password": password});
-            let _ = s.execute("document.pdfInfo", &p);
-            if s.execute("document.open", &p).is_ok() {
+            let _ = s.execute("file.pdfInfo", &p);
+            if s.execute("file.open", &p).is_ok() {
                 let d = (*s.doc().unwrap().doc).clone();
                 survive("encrypted pdf", || Some(d)).unwrap();
             }
@@ -1464,7 +1461,7 @@ fn survive_dxf(what: &str, bytes: &[u8], fit: bool) -> Result<(), TestCaseError>
         let p = json!({"name": "x.dxf", "dataBase64": kition_vector_format::base64_encode(bytes), "dxf": {"fit": fit}, "thumbnail": 8});
         let _ = s.execute("file.place.info", &p);
         let _ = s.execute("file.place", &p);
-        let _ = s.execute("document.dxfInfo", &p);
+        let _ = s.execute("file.dxfInfo", &p);
         Some((*s.doc().ok()?.doc).clone())
     })
 }
@@ -1517,7 +1514,7 @@ fn metafile_samples() -> &'static [Vec<u8>] {
         ["emf", "wmf"]
             .iter()
             .map(|f| {
-                let r = s.execute("document.export", &json!({ "format": f })).unwrap();
+                let r = s.execute("file.export", &json!({ "format": f })).unwrap();
                 kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
             })
             .collect()

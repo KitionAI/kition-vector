@@ -14,7 +14,7 @@ fn session() -> Session {
 }
 
 fn area(s: &mut Session, text: &str) -> u64 {
-    s.execute("text.create", &json!({"x": 10, "y": 10, "text": text, "area": {"width": 300, "height": 300}})).unwrap()["id"].as_u64().unwrap()
+    s.execute("text.add", &json!({"x": 10, "y": 10, "text": text, "area": {"width": 300, "height": 300}})).unwrap()["id"].as_u64().unwrap()
 }
 
 fn text(s: &Session, id: u64) -> TextObject {
@@ -97,7 +97,7 @@ fn editing_splits_and_merges_paragraph_styles() {
 fn return_in_the_type_tool_continues_the_paragraph_it_splits() {
     let mut s = session();
     let v = ViewInfo::default();
-    let id = s.execute("text.create", &json!({"x": 100, "y": 100, "text": "one\ntwo", "size": 20})).unwrap()["id"].as_u64().unwrap();
+    let id = s.execute("text.add", &json!({"x": 100, "y": 100, "text": "one\ntwo", "size": 20})).unwrap()["id"].as_u64().unwrap();
     s.execute("text.setStyle", &json!({"id": id, "justify": "right", "start": 0, "end": 0})).unwrap();
     s.execute("text.setStyle", &json!({"id": id, "justify": "center", "start": 5, "end": 5})).unwrap();
     s.select_tool("type", v).unwrap();
@@ -148,11 +148,10 @@ fn paragraph_style_applies_to_one_paragraph() {
 fn threaded_frames_keep_each_paragraphs_style() {
     let mut s = session();
     let story = "The quick brown fox jumps over the lazy dog and keeps running. ".repeat(3) + "\nSecond paragraph.\nThird.";
-    let a =
-        s.execute("text.create", &json!({"x": 10, "y": 10, "text": story, "area": {"width": 150, "height": 60}})).unwrap()["id"].as_u64().unwrap();
+    let a = s.execute("text.add", &json!({"x": 10, "y": 10, "text": story, "area": {"width": 150, "height": 60}})).unwrap()["id"].as_u64().unwrap();
     let b = s.execute("shape.rectangle", &json!({"x": 200, "y": 10, "width": 150, "height": 200})).unwrap()["id"].as_u64().unwrap();
     s.execute("select.set", &json!({"ids": [a, b]})).unwrap();
-    s.execute("text.thread.create", &json!({})).unwrap();
+    s.execute("text.thread.add", &json!({})).unwrap();
     let joined = |s: &Session| format!("{}{}", text(s, a).plain_text(), text(s, b).plain_text());
     assert_eq!(joined(&s), story);
     // Centre the second paragraph (in frame b) and right-align the third.

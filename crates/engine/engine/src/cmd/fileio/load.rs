@@ -1,4 +1,4 @@
-//! `document.open`: every readable format into a new document.
+//! `file.open`: every readable format into a new document.
 
 use std::io::Cursor;
 
@@ -165,11 +165,11 @@ fn from_editing_data_alone(bytes: &[u8], opts: &LoadOptions) -> Option<Result<(D
     )
 }
 
-/// [`load`] with `document.open` options (the PDF pages, box and password; the DXF options).
+/// [`load`] with `file.open` options (the PDF pages, box and password; the DXF options).
 pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded> {
     let format = detect(name, bytes).ok_or_else(|| match super::unsupported(&super::extension(name)) {
         Some(u) => err(format!("can't open `{}`: {}", file_name(name), u.hint)),
-        None => err(format!("can't open `{name}`: not a format Kition Vector reads (see document.formats)")),
+        None => err(format!("can't open `{name}`: not a format Kition Vector reads (see file.formats)")),
     })?;
     let title = file_name(name);
     let mut preview_only = false;
@@ -263,7 +263,7 @@ pub(crate) fn import_svg(text: &str, folder: Option<&str>) -> Result<(Document, 
     kition_vector_svg::import_with(text, &kition_vector_svg::ImportOptions { folder, read: Some(&read) }).map_err(err)
 }
 
-/// Open a file's bytes as the new active document (what `document.open` does) →
+/// Open a file's bytes as the new active document (what `file.open` does) →
 /// `{index, title, format, warnings, restored, missingLinks, modifiedLinks, updatedLinks}`. The
 /// document keeps `path` (and its format, for Save) when Save can write that format back: not a
 /// template, a partly read PDF, or a `.ai` file whose native document didn't come back. The
@@ -272,9 +272,9 @@ pub fn open_bytes(s: &mut Session, name: &str, bytes: &[u8], path: Option<String
     open_bytes_with(s, name, bytes, path, &Value::Null)
 }
 
-/// [`open_bytes`] with the `document.open` options in `p` ([`LoadOptions::from_params`]).
+/// [`open_bytes`] with the `file.open` options in `p` ([`LoadOptions::from_params`]).
 pub fn open_bytes_with(s: &mut Session, name: &str, bytes: &[u8], path: Option<String>, p: &Value) -> Result<Value> {
-    let opts = LoadOptions::from_params("document.open", p)?;
+    let opts = LoadOptions::from_params("file.open", p)?;
     open_loaded(s, load_with(name, bytes, &opts)?, path, &opts, false)
 }
 
@@ -343,7 +343,7 @@ pub(crate) fn source<'a>(p: &'a Value, cmd: &str) -> Result<Source<'a>> {
 }
 
 pub(super) fn open(s: &mut Session, p: &Value) -> Result<Value> {
-    let src = source(p, "document.open")?;
+    let src = source(p, "file.open")?;
     open_bytes_with(s, src.name, &src.bytes, src.path.map(str::to_string), p)
 }
 
@@ -371,8 +371,8 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
     let mut limits = image::Limits::default();
     limits.max_alloc = Some(MAX_RASTER_ALLOC);
     reader.limits(limits);
-    let kind = reader.format().ok_or_else(|| err("not an image Kition Vector reads (see document.formats)"))?;
-    let f = image_format(kind).ok_or_else(|| err(format!("{kind:?} images can't be opened (see document.formats)")))?;
+    let kind = reader.format().ok_or_else(|| err("not an image Kition Vector reads (see file.formats)"))?;
+    let f = image_format(kind).ok_or_else(|| err(format!("{kind:?} images can't be opened (see file.formats)")))?;
     let cmyk = || ImageBlob::new(f.mime, bytes.to_vec()).cmyk().is_some();
     if matches!(f.id, "png" | "jpg" | "gif" | "webp") || (f.id == "tiff" && cmyk()) {
         let (width, height) = reader.into_dimensions().map_err(err)?;

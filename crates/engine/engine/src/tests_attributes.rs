@@ -1,4 +1,4 @@
-//! Window → Attributes (`attributes.set`, `attributes.info`, `path.setFillRule`, `path.reverse`)
+//! Window → Attributes (`attribute.set`, `attribute.info`, `path.setFillRule`, `path.reverse`)
 //! and the links SVG export writes for objects with a URL.
 
 use kition_vector_doc::{ImageMap, NodeKind};
@@ -23,7 +23,7 @@ fn rect(s: &mut Session, x: f64) -> NodeId {
 }
 
 fn info(s: &mut Session, p: Value) -> Value {
-    run(s, "attributes.info", p)
+    run(s, "attribute.info", p)
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn each_attribute_sets_reads_back_and_undoes_in_one_step() {
     assert_eq!((i["url"].clone(), i["note"].clone(), i["fillRule"].clone()), (json!(""), json!(""), json!("nonZero")));
     let changed = run(
         &mut s,
-        "attributes.set",
+        "attribute.set",
         json!({"overprintFill": true, "overprintStroke": true, "showCenter": false, "imageMap": "Rectangle", "url": " https://example.com ", "note": "hello"}),
     );
     assert_eq!(changed["changed"], 1);
@@ -61,13 +61,13 @@ fn each_attribute_sets_reads_back_and_undoes_in_one_step() {
     assert!(n.attrs.is_none() && !n.has_overprint());
     // Nothing to change: no undo step; bad values are refused.
     let before = s.doc().unwrap().revision;
-    assert_eq!(run(&mut s, "attributes.set", json!({"showCenter": true}))["changed"], 0);
+    assert_eq!(run(&mut s, "attribute.set", json!({"showCenter": true}))["changed"], 0);
     assert_eq!(s.doc().unwrap().revision, before);
-    assert!(s.execute("attributes.set", &json!({"imageMap": "circle"})).is_err());
-    assert!(s.execute("attributes.set", &json!({})).is_err());
+    assert!(s.execute("attribute.set", &json!({"imageMap": "circle"})).is_err());
+    assert!(s.execute("attribute.set", &json!({})).is_err());
     // Clearing the URL and note drops the attributes.
-    run(&mut s, "attributes.set", json!({"url": "u", "note": "n"}));
-    run(&mut s, "attributes.set", json!({"url": "", "note": ""}));
+    run(&mut s, "attribute.set", json!({"url": "u", "note": "n"}));
+    run(&mut s, "attribute.set", json!({"url": "", "note": ""}));
     assert!(s.doc().unwrap().doc.node(a).unwrap().attrs.is_none());
 }
 
@@ -76,14 +76,14 @@ fn values_that_differ_read_null_and_recent_urls_keep_the_newest_first() {
     let mut s = session();
     let a = rect(&mut s, 0.0);
     let b = rect(&mut s, 50.0);
-    run(&mut s, "attributes.set", json!({"ids": [a.0], "url": "https://a.example", "note": "a"}));
-    run(&mut s, "attributes.set", json!({"ids": [b.0], "url": "https://b.example"}));
-    run(&mut s, "attributes.set", json!({"ids": [a.0], "url": "https://a.example"}));
+    run(&mut s, "attribute.set", json!({"ids": [a.0], "url": "https://a.example", "note": "a"}));
+    run(&mut s, "attribute.set", json!({"ids": [b.0], "url": "https://b.example"}));
+    run(&mut s, "attribute.set", json!({"ids": [a.0], "url": "https://a.example"}));
     let i = info(&mut s, json!({"ids": [a.0, b.0]}));
     assert_eq!((i["url"].clone(), i["note"].clone(), i["imageMap"].clone()), (Value::Null, Value::Null, json!("none")));
     assert_eq!(i["recentUrls"], json!(["https://a.example", "https://b.example"]));
     // A pen path doesn't show its centre by default; a rectangle does.
-    let p = NodeId(run(&mut s, "path.create", json!({"anchors": [{"x": 0, "y": 0}, {"x": 10, "y": 10}]}))["id"].as_u64().unwrap());
+    let p = NodeId(run(&mut s, "path.add", json!({"anchors": [{"x": 0, "y": 0}, {"x": 10, "y": 10}]}))["id"].as_u64().unwrap());
     assert_eq!(info(&mut s, json!({"ids": [p.0]}))["showCenter"], false);
     assert_eq!(info(&mut s, json!({"ids": [p.0, a.0]}))["showCenter"], Value::Null);
 }
@@ -97,7 +97,7 @@ fn star(s: &mut Session) -> NodeId {
             json!({"x": c + r * a.cos(), "y": c + r * a.sin()})
         })
         .collect();
-    let id = NodeId(run(s, "path.create", json!({"anchors": anchors, "closed": true}))["id"].as_u64().unwrap());
+    let id = NodeId(run(s, "path.add", json!({"anchors": anchors, "closed": true}))["id"].as_u64().unwrap());
     run(s, "paint.setFill", json!({"ids": [id.0], "color": "#ff0000"}));
     run(s, "paint.setStroke", json!({"ids": [id.0], "none": true}));
     id
@@ -135,7 +135,7 @@ fn fill_rule_reaches_compound_paths_and_the_paths_in_groups() {
     let compound = s.doc().unwrap().selection.objects[0];
     let d = rect(&mut s, 0.0);
     run(&mut s, "select.set", json!({"ids": [compound.0, d.0]}));
-    run(&mut s, "object.group", json!({}));
+    run(&mut s, "arrange.group", json!({}));
     assert_eq!(run(&mut s, "path.setFillRule", json!({"rule": "evenOdd"}))["changed"], 2, "the compound path and the rectangle");
     let doc = &s.doc().unwrap().doc;
     assert!(matches!(doc.node(compound).unwrap().kind, NodeKind::Compound { rule: FillRule::EvenOdd, .. }));
@@ -157,7 +157,7 @@ fn reverse_path_direction_on_and_off_set_the_winding() {
     // Without `reversed` it flips.
     run(&mut s, "path.reverse", json!({}));
     assert_eq!(ccw(&s), start);
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert!(s.execute("path.reverse", &json!({})).is_err(), "nothing to reverse");
 }
 
@@ -165,7 +165,7 @@ fn reverse_path_direction_on_and_off_set_the_winding() {
 fn attributes_survive_a_native_round_trip() {
     let mut s = session();
     let a = rect(&mut s, 10.0);
-    run(&mut s, "attributes.set", json!({"showCenter": false, "imageMap": "polygon", "url": "https://example.com/x", "note": "keep"}));
+    run(&mut s, "attribute.set", json!({"showCenter": false, "imageMap": "polygon", "url": "https://example.com/x", "note": "keep"}));
     let doc = s.doc().unwrap().doc.clone();
     let back = kition_vector_format::load(&kition_vector_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(a).unwrap().attrs, doc.node(a).unwrap().attrs);
@@ -177,7 +177,7 @@ fn svg_export_links_objects_and_import_reads_the_links_back() {
     let mut s = session();
     let a = rect(&mut s, 10.0);
     rect(&mut s, 50.0);
-    run(&mut s, "attributes.set", json!({"ids": [a.0], "url": "https://example.com/?a=1&b=2"}));
+    run(&mut s, "attribute.set", json!({"ids": [a.0], "url": "https://example.com/?a=1&b=2"}));
     let svg = kition_vector_svg::export(&s.doc().unwrap().doc, &Default::default());
     assert_eq!(svg.matches("<a ").count(), 1, "{svg}");
     assert!(svg.contains("xlink:href=\"https://example.com/?a=1&amp;b=2\""), "{svg}");
@@ -208,7 +208,7 @@ fn object_data_is_set_saved_and_written_to_svg() {
     for bad in [json!({"data": {"vc-x": "1"}}), json!({"data": {"name": "x"}}), json!({"data": {"a b": "1"}}), json!({"data": "pivot"})] {
         assert!(s.execute("object.setProps", &bad).is_err(), "{bad}");
     }
-    let svg = run(&mut s, "document.serialize", json!({"format": "svg"}))["text"].as_str().unwrap().to_string();
+    let svg = run(&mut s, "file.serialize", json!({"format": "svg"}))["text"].as_str().unwrap().to_string();
     assert!(svg.contains("data-pivot=\"60,100\" data-z=\"3\""), "{svg}");
     let native = kition_vector_format::save(&s.doc().unwrap().doc, false);
     let back = kition_vector_format::load(&native).unwrap();

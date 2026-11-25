@@ -27,7 +27,7 @@ fn frame(file: &[u8]) -> (u8, u8) {
 fn jpeg_options_reach_the_file() {
     let mut s = session();
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
-    let jpg = |s: &mut Session, p: Value| b64(&s.execute("document.export", &merge(json!({"format": "jpg"}), p)).unwrap());
+    let jpg = |s: &mut Session, p: Value| b64(&s.execute("file.export", &merge(json!({"format": "jpg"}), p)).unwrap());
     assert_eq!(frame(&jpg(&mut s, json!({}))), (0xC0, 3), "baseline RGB by default");
     assert_eq!(frame(&jpg(&mut s, json!({"colorModel": "cmyk"}))), (0xC0, 4));
     assert_eq!(frame(&jpg(&mut s, json!({"colorModel": "grayscale"}))), (0xC0, 1));
@@ -36,9 +36,9 @@ fn jpeg_options_reach_the_file() {
     assert!(icc(&jpg(&mut s, json!({}))) && !icc(&jpg(&mut s, json!({"embedIcc": false}))));
     assert!(jpg(&mut s, json!({"quality": 0})).len() < jpg(&mut s, json!({"quality": 100})).len());
     for bad in [json!({"colorModel": "lab"}), json!({"method": "fast"}), json!({"imageMap": "both"})] {
-        assert!(s.execute("document.export", &merge(json!({"format": "jpg"}), bad.clone())).is_err(), "{bad}");
+        assert!(s.execute("file.export", &merge(json!({"format": "jpg"}), bad.clone())).is_err(), "{bad}");
     }
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     let jpg = r["formats"].as_array().unwrap().iter().find(|f| f["id"] == "jpg").unwrap();
     for k in ["colorModel", "method", "scans", "embedIcc", "imageMap"] {
         assert!(jpg["options"].get(k).is_some(), "{k}");
@@ -51,14 +51,14 @@ fn image_maps_list_the_objects_with_a_url() {
     // Areas cover the visual bounds: no stroke, so they are the shapes' own.
     s.execute("paint.setStroke", &json!({"none": true})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 10, "y": 5, "width": 20, "height": 10})).unwrap();
-    s.execute("attributes.set", &json!({"url": "https://example.com/a?b=1&c=2", "imageMap": "rectangle"})).unwrap();
+    s.execute("attribute.set", &json!({"url": "https://example.com/a?b=1&c=2", "imageMap": "rectangle"})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 35, "y": 20, "width": 20, "height": 10})).unwrap();
-    s.execute("attributes.set", &json!({"url": "https://example.com/round", "imageMap": "polygon"})).unwrap();
+    s.execute("attribute.set", &json!({"url": "https://example.com/round", "imageMap": "polygon"})).unwrap();
     // A URL without a map shape makes no area.
     s.execute("shape.rectangle", &json!({"x": 0, "y": 30, "width": 5, "height": 5})).unwrap();
-    s.execute("attributes.set", &json!({"url": "https://example.com/none"})).unwrap();
+    s.execute("attribute.set", &json!({"url": "https://example.com/none"})).unwrap();
 
-    let r = s.execute("document.export", &json!({"format": "jpg", "imageMap": "client", "ppi": 144})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "jpg", "imageMap": "client", "ppi": 144})).unwrap();
     let linked = r["linked"].as_array().unwrap();
     assert_eq!(linked.len(), 1);
     assert_eq!(linked[0]["name"], "Untitled-1.html");
@@ -70,7 +70,7 @@ fn image_maps_list_the_objects_with_a_url() {
     assert!(html.find("example.com/round") < html.find("example.com/a?"), "topmost first: {html}");
     assert!(!html.contains("example.com/none"));
 
-    let r = s.execute("document.export", &json!({"format": "jpg", "imageMap": "server"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "jpg", "imageMap": "server"})).unwrap();
     let map = String::from_utf8(b64(&r["linked"][0])).unwrap();
     assert_eq!(r["linked"][0]["name"], "Untitled-1.map");
     assert!(map.lines().any(|l| l == "rect https://example.com/a?b=1&c=2 10,5 30,15"), "{map}");
@@ -80,10 +80,10 @@ fn image_maps_list_the_objects_with_a_url() {
     let dir = std::env::temp_dir().join(format!("vc-imagemap-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("pic.jpeg");
-    let r = s.execute("document.export", &json!({"path": path.to_string_lossy(), "imageMap": "client"})).unwrap();
+    let r = s.execute("file.export", &json!({"path": path.to_string_lossy(), "imageMap": "client"})).unwrap();
     assert_eq!(r["linked"][0], dir.join("pic.html").to_string_lossy().as_ref());
     assert!(std::fs::read_to_string(dir.join("pic.html")).unwrap().contains("src=\"pic.jpeg\""));
     let _ = std::fs::remove_dir_all(dir);
     // One file only: Export for Screens can't add the map.
-    assert!(s.execute("document.exportForScreens", &json!({"formats": [{"format": "jpg", "imageMap": "client"}]})).is_err());
+    assert!(s.execute("file.exportForScreens", &json!({"formats": [{"format": "jpg", "imageMap": "client"}]})).is_err());
 }

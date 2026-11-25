@@ -54,7 +54,7 @@ fn object_filter_recolours_the_selection_as_one_undo_step() {
     assert_eq!((info["id"].as_str(), info["kind"].as_str()), (Some(DESATURATE_ID), Some("filter")));
     let a = rect(&mut s, 10.0, "#ff0000");
     let b = rect(&mut s, 40.0, "#0000ff");
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     let undo = s.doc().unwrap().history.undo.len();
     let r = run(&mut s, "plugin.run", json!({"id": DESATURATE_ID, "params": {"amount": 100}}));
     assert_eq!(r["ids"], json!([a.0, b.0]));
@@ -79,7 +79,7 @@ fn object_filters_add_replace_and_generate_objects() {
     let mut s = session();
     let a = rect(&mut s, 10.0, "#ff0000");
     let b = rect(&mut s, 40.0, "#00ff00");
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     // Keeps A, drops B and adds a triangle above A.
     let out =
         json!({"objects": [{"id": a.0}, {"path": triangle(), "fills": [{"type": "solid", "color": {"model": "gray", "k": 1}}], "name": "Tri"}]});
@@ -96,7 +96,7 @@ fn object_filters_add_replace_and_generate_objects() {
     // A generator with nothing selected adds to the current layer.
     let generated = json!({"objects": [{"path": triangle()}]});
     install_wat(&mut s, &tpl::returning(&tpl::manifest("test.engine.generate", "filter", "{}"), &generated.to_string()));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let r = run(&mut s, "plugin.run", json!({"id": "test.engine.generate"}));
     let made = NodeId(r["ids"][0].as_u64().unwrap());
     assert_eq!(s.doc().unwrap().doc.layers[0].children().unwrap().last().unwrap().id, made);
@@ -106,7 +106,7 @@ fn object_filters_add_replace_and_generate_objects() {
 fn failing_plugins_leave_the_document_and_history_alone() {
     let mut s = session();
     rect(&mut s, 10.0, "#ff0000");
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     let man = |id: &str| tpl::manifest(id, "filter", "{}");
     install_wat(&mut s, &tpl::module(&man("test.engine.trap"), "unreachable", "", 1));
     install_wat(&mut s, &tpl::returning(&man("test.engine.far"), r#"{"objects":[{"path":{"subpaths":[{"anchors":[{"p":[0,0]},{"p":[1e9,0]}]}]}}]}"#));
@@ -152,7 +152,7 @@ fn live_effect_plugins_reshape_editable_art_and_expand() {
     run(&mut s, "effect.apply", json!({"ids": [a.0], "effect": "plugin.test.engine.echo"}));
     assert_eq!(effected(&s), *node(&s, a).path_data().unwrap(), "identity");
     // Re-evaluated when the object changes (non-destructive).
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     run(&mut s, "object.move", json!({"dx": 50, "dy": 0}));
     assert_eq!(effected(&s), *node(&s, a).path_data().unwrap());
     run(&mut s, "effect.apply", json!({"ids": [a.0], "effect": "plugin.test.engine.tri", "params": {"size": 4}}));
@@ -163,7 +163,7 @@ fn live_effect_plugins_reshape_editable_art_and_expand() {
     assert_eq!(effected(&s), *node(&s, a).path_data().unwrap());
     install_wat(&mut s, &tpl::returning(&tpl::manifest("test.engine.tri", "effect", "{}"), &tri.to_string()));
     // Expand Appearance bakes it.
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     run(&mut s, "effect.expandAppearance", json!({}));
     let mut baked = None;
     s.doc().unwrap().doc.walk(|n| {

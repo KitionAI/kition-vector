@@ -17,14 +17,14 @@ fn setup(inline: bool) -> (kition_vector_engine::Session, NodeId) {
     exec(&mut s, "paint.setFill", json!({"color": "#ff0000"}));
     exec(&mut s, "paint.setStroke", json!({"none": true}));
     exec(&mut s, "symbol.new", json!({"name": "Dot"}));
-    exec(&mut s, "edit.clear", json!({}));
+    exec(&mut s, "edit.delete", json!({}));
     // Type is painted with the current fill: black, not the circle's red.
     exec(&mut s, "paint.setFill", json!({"color": "#000000"}));
-    let id = id_of(&exec(&mut s, "text.create", json!({"x": 20, "y": 100, "text": "Tap  now", "size": 20})));
+    let id = id_of(&exec(&mut s, "text.add", json!({"x": 20, "y": 100, "text": "Tap  now", "size": 20})));
     if inline {
         exec(&mut s, "text.insertInline", json!({"id": id.0, "at": 4, "symbol": "Dot"}));
     }
-    exec(&mut s, "select.none", json!({}));
+    exec(&mut s, "edit.deselectAll", json!({}));
     (s, id)
 }
 
@@ -88,7 +88,7 @@ fn canvas_applies_the_text_objects_opacity_to_its_inline_art() {
 }
 
 fn svg_of(s: &mut kition_vector_engine::Session, params: Value) -> String {
-    let v = exec(s, "document.serialize", params);
+    let v = exec(s, "file.serialize", params);
     v["text"]
         .as_str()
         .map(str::to_string)
@@ -123,7 +123,7 @@ fn svg_keeps_live_text_and_draws_the_symbol() {
 #[test]
 fn pdf_draws_the_symbol_art() {
     let (mut s, id) = setup(true);
-    let v = exec(&mut s, "document.serialize", json!({"format": "pdf"}));
+    let v = exec(&mut s, "file.serialize", json!({"format": "pdf"}));
     let bytes = kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     let back = kition_vector_pdf::import(&bytes).unwrap();
     let r = art_rect(&doc(&s), id);
@@ -132,7 +132,7 @@ fn pdf_draws_the_symbol_art() {
     assert!(red(p), "{p:?} at {:?}", r.center());
     // Without it, nothing red.
     let (mut plain, _) = setup(false);
-    let v = exec(&mut plain, "document.serialize", json!({"format": "pdf"}));
+    let v = exec(&mut plain, "file.serialize", json!({"format": "pdf"}));
     let back = kition_vector_pdf::import(&kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap()).unwrap();
     let img = raster::render_region(&back, Rect::new(0.0, 0.0, 200.0, 150.0), 2.0);
     assert_eq!(img.count(|p| p[0] > 200 && p[1] < 80 && p[2] < 80 && p[3] > 200), 0);

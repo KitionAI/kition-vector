@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-engine-named
 feature: vector.agent.premises
-intent: "A command acts on the objects and with the parameters it is given: type.size.increase/decrease step the text of id/ids/start/end, paint.sampleColor with stop recolours each named object's own gradient and refuses parameters it does not take, text.areaOptions changes only the given options on each target, width commands given a compound path member report the compound they edit, transparency.set refuses name/visible/locked/data."
+intent: "A command acts on the objects and with the parameters it is given: format.increaseFontSize/decrease step the text of id/ids/start/end, paint.sampleColor with stop recolours each named object's own gradient and refuses parameters it does not take, text.areaOptions changes only the given options on each target, width commands given a compound path member report the compound they edit, transparency.set refuses name/visible/locked/data."
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-engine, license: Apache-2.0}

@@ -57,10 +57,10 @@ fn artboards_are_parts_read_top_to_bottom_then_left_to_right() {
     let mut drawing = VectorDocument::create("untitled.kvector", 400, 400).unwrap();
     drawing.execute("artboard.new", json!({ "x": 1000, "y": 0, "width": 400, "height": 400, "name": "Back" })).unwrap();
     for (x, y, text) in [(1100, 100, "back"), (200, 300, "last"), (200, 100, "right"), (20, 100, "left"), (20, 50, "title")] {
-        drawing.execute("text.create", json!({ "x": x, "y": y, "text": text })).unwrap();
+        drawing.execute("text.add", json!({ "x": x, "y": y, "text": text })).unwrap();
     }
-    drawing.execute("text.create", json!({ "x": 3000, "y": 50, "text": "aside" })).unwrap();
-    drawing.execute("text.create", json!({ "x": 20, "y": 200, "text": "hidden" })).unwrap();
+    drawing.execute("text.add", json!({ "x": 3000, "y": 50, "text": "aside" })).unwrap();
+    drawing.execute("text.add", json!({ "x": 20, "y": 200, "text": "hidden" })).unwrap();
     drawing.execute("object.hide", json!({})).unwrap();
     let text = check_text(&drawing).unwrap();
     assert_eq!(text.text, "title\nleft\nright\nlast\nback\naside", "{text:?}");

@@ -221,7 +221,7 @@ fn expand_parts(s: &mut Session, object: bool, fill: bool, stroke: bool, to: Gra
         })?;
     }
     if object && still(s)?.text {
-        run_raw(s, "type.createOutlines", &json!({}))?;
+        run_raw(s, "text.convertToOutlines", &json!({}))?;
     }
     if stroke && still(s)?.outline {
         run_raw(s, "object.path.outlineStroke", &json!({}))?;

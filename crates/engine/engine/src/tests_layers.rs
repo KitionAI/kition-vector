@@ -55,8 +55,8 @@ fn tree(s: &mut Session) -> (NodeId, NodeId, NodeId, NodeId, NodeId, NodeId) {
     let a = rect(s, 0.0);
     let b = rect(s, 100.0);
     run(s, "select.set", json!({"ids": [b.0]}));
-    let g = id(&run(s, "object.group", json!({})));
-    run(s, "select.none", json!({}));
+    let g = id(&run(s, "arrange.group", json!({})));
+    run(s, "edit.deselectAll", json!({}));
     (layer, sub, a, g, b, c)
 }
 
@@ -65,7 +65,7 @@ fn art_in_a_sublayer_is_selected_as_objects_not_the_sublayer() {
     let mut s = session();
     let (_, sub, a, g, _, c) = tree(&mut s);
     assert_eq!(parent(&s, a), Some(sub), "new art went into the current sublayer");
-    let n = run(&mut s, "select.all", json!({}))["count"].as_u64().unwrap();
+    let n = run(&mut s, "edit.selectAll", json!({}))["count"].as_u64().unwrap();
     assert_eq!(n, 3);
     let sel = s.doc().unwrap().selection.objects.clone();
     assert!(sel.contains(&a) && sel.contains(&g) && sel.contains(&c) && !sel.contains(&sub), "{sel:?}");
@@ -74,7 +74,7 @@ fn art_in_a_sublayer_is_selected_as_objects_not_the_sublayer() {
     assert_eq!(h.top_object(None), a);
     // Deleting it works (layers were skipped by Clear before).
     run(&mut s, "select.set", json!({"ids": [a.0]}));
-    run(&mut s, "edit.clear", json!({}));
+    run(&mut s, "edit.delete", json!({}));
     assert!(s.doc().unwrap().doc.node(a).is_none());
 }
 
@@ -88,13 +88,13 @@ fn new_art_is_refused_when_no_layer_is_shown_and_unlocked() {
         let copied = rect(&mut s, 0.0);
         run(&mut s, "select.set", json!({"ids": [copied.0]}));
         run(&mut s, "edit.copy", json!({}));
-        run(&mut s, "select.none", json!({}));
+        run(&mut s, "edit.deselectAll", json!({}));
         run(&mut s, "layer.setProps", json!({"ids": [layer.0], prop: prop == "locked"}));
         let before = s.doc().unwrap().doc.clone();
         for (cmd, p) in [
             ("shape.ellipse", json!({"x": 10, "y": 10, "width": 20, "height": 20})),
             ("shape.polarGrid", json!({"x": 10, "y": 10, "width": 20, "height": 20})),
-            ("text.create", json!({"x": 10, "y": 40, "text": "A"})),
+            ("text.add", json!({"x": 10, "y": 40, "text": "A"})),
             ("edit.paste", json!({})),
         ] {
             let e = s.execute(cmd, &p).unwrap_err();
@@ -132,7 +132,7 @@ fn clicking_rows_at_any_depth_highlights_them_and_sets_the_current_layer() {
     let st = s.doc().unwrap();
     assert_eq!((st.highlighted_rows(), st.current_layer()), (vec![g, c], Some(layer)));
     assert!(s.execute("layer.highlight", &json!({"ids": [a.0], "mode": "nope"})).is_err());
-    assert_eq!(document_rows(&s), vec![g.0, c.0], "document.inspect lists the rows");
+    assert_eq!(document_rows(&s), vec![g.0, c.0], "file.inspect lists the rows");
 }
 
 fn document_rows(s: &Session) -> Vec<u64> {
@@ -150,7 +150,7 @@ fn selecting_art_makes_its_layer_current() {
     let n = rect(&mut s, 200.0);
     assert_eq!(parent(&s, n), Some(sub));
     // A locked sublayer takes no new art: it goes to the top layer.
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     run(&mut s, "layer.setProps", json!({"id": sub.0, "locked": true}));
     run(&mut s, "layer.setCurrent", json!({"id": sub.0}));
     let n = rect(&mut s, 200.0);
@@ -428,7 +428,7 @@ fn release_to_layers_sequence_and_build() {
     run(&mut s, "edit.undo", json!({}));
     // A group's objects go into sublayers where the group was.
     run(&mut s, "select.set", json!({"ids": [a.0, b.0]}));
-    let g = id(&run(&mut s, "object.group", json!({})));
+    let g = id(&run(&mut s, "arrange.group", json!({})));
     let new = ids(&run(&mut s, "layer.releaseToLayersBuild", json!({"id": g.0})));
     assert_eq!(new.len(), 2);
     assert!(s.doc().unwrap().doc.node(g).is_none());
@@ -469,7 +469,7 @@ fn locate_object_highlights_its_row() {
     assert_eq!(r["ancestry"], json!([layer.0, sub.0, g.0]));
     assert_eq!(s.doc().unwrap().highlighted_rows(), vec![g]);
     assert_eq!(run(&mut s, "layer.locate", json!({"id": b.0}))["id"], b.0);
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert!(s.execute("layer.locate", &json!({})).is_err());
 }
 

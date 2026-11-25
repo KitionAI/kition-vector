@@ -1,4 +1,4 @@
-//! `document.open` PDF options (pages, Crop To, password) and `document.pdfInfo`.
+//! `file.open` PDF options (pages, Crop To, password) and `file.pdfInfo`.
 
 use kition_vector_testkit::pdf::{PdfPage, pdf};
 use serde_json::{Value, json};
@@ -24,7 +24,7 @@ fn open(s: &mut Session, bytes: &[u8], extra: Value) -> crate::Result<Value> {
     if let (Some(o), Value::Object(e)) = (p.as_object_mut(), extra) {
         o.extend(e);
     }
-    s.execute("document.open", &p)
+    s.execute("file.open", &p)
 }
 
 fn sizes(s: &Session) -> Vec<(f64, f64)> {
@@ -89,7 +89,7 @@ fn an_encrypted_pdf_needs_its_password() {
 fn pdf_info_lists_pages_boxes_and_a_thumbnail() {
     let bytes = three_pages();
     let mut s = Session::new();
-    let v = s.execute("document.pdfInfo", &json!({"dataBase64": b64(&bytes), "thumbnail": 2, "thumbnailSize": 100, "cropTo": "art"})).unwrap();
+    let v = s.execute("file.pdfInfo", &json!({"dataBase64": b64(&bytes), "thumbnail": 2, "thumbnailSize": 100, "cropTo": "art"})).unwrap();
     assert_eq!(v["pages"], 3);
     assert_eq!(v["needsPassword"], false);
     let p2 = &v["pageInfo"][1];
@@ -99,17 +99,17 @@ fn pdf_info_lists_pages_boxes_and_a_thumbnail() {
     let png = kition_vector_format::base64_decode(v["thumbnail"].as_str().unwrap()).unwrap();
     let img = image::load_from_memory(&png).unwrap();
     assert_eq!((img.width(), img.height()), (50, 100), "the art box at 100 px on its longest side");
-    assert!(s.execute("document.pdfInfo", &json!({"dataBase64": b64(&bytes), "thumbnail": 4})).is_err());
+    assert!(s.execute("file.pdfInfo", &json!({"dataBase64": b64(&bytes), "thumbnail": 4})).is_err());
     // Locked: no pages until the password is given.
     let locked = pdf(&[PdfPage::new(10.0, 10.0, "")], Some("pw"));
-    let v = s.execute("document.pdfInfo", &json!({"dataBase64": b64(&locked)})).unwrap();
+    let v = s.execute("file.pdfInfo", &json!({"dataBase64": b64(&locked)})).unwrap();
     assert_eq!((v["pages"].as_u64(), v["needsPassword"].as_bool(), v["wrongPassword"].as_bool()), (Some(0), Some(true), Some(false)));
-    let v = s.execute("document.pdfInfo", &json!({"dataBase64": b64(&locked), "password": "x"})).unwrap();
+    let v = s.execute("file.pdfInfo", &json!({"dataBase64": b64(&locked), "password": "x"})).unwrap();
     assert_eq!(v["wrongPassword"], true);
-    let v = s.execute("document.pdfInfo", &json!({"dataBase64": b64(&locked), "password": "pw"})).unwrap();
+    let v = s.execute("file.pdfInfo", &json!({"dataBase64": b64(&locked), "password": "pw"})).unwrap();
     assert_eq!((v["pages"].as_u64(), v["needsPassword"].as_bool()), (Some(1), Some(false)));
-    assert!(s.execute("document.pdfInfo", &json!({"dataBase64": b64(b"not a pdf")})).is_err());
-    assert!(s.execute("document.pdfInfo", &json!({})).is_err());
+    assert!(s.execute("file.pdfInfo", &json!({"dataBase64": b64(b"not a pdf")})).is_err());
+    assert!(s.execute("file.pdfInfo", &json!({})).is_err());
 }
 
 #[test]
@@ -154,15 +154,15 @@ fn a_postscript_ai_file_says_it_cannot_be_opened_yet() {
     let ps = b"%!PS-3.0\n%%BoundingBox: 0 0 100 100\n%%EndComments\n0 0 moveto 100 100 frobnicate stroke\nshowpage\n%%EOF\n";
     let mut s = Session::new();
     for name in ["legacy.ai", "art.eps", "named.pdf", "template.ait"] {
-        let e = s.execute("document.open", &json!({"name": name, "dataBase64": b64(ps)})).unwrap_err().to_string();
+        let e = s.execute("file.open", &json!({"name": name, "dataBase64": b64(ps)})).unwrap_err().to_string();
         assert!(e.contains(name) && e.contains("PostScript") && e.contains("save it as PDF"), "{name}: {e}");
     }
     // An EPS with a binary header too, and the PDF info of either.
     let mut binary = vec![0xC5, 0xD0, 0xD3, 0xC6];
     binary.extend_from_slice(&[0; 28]);
     binary.extend_from_slice(ps);
-    assert!(s.execute("document.open", &json!({"name": "x.eps", "dataBase64": b64(&binary)})).unwrap_err().to_string().contains("PostScript"));
-    assert!(s.execute("document.pdfInfo", &json!({"dataBase64": b64(ps)})).unwrap_err().to_string().contains("PostScript"));
+    assert!(s.execute("file.open", &json!({"name": "x.eps", "dataBase64": b64(&binary)})).unwrap_err().to_string().contains("PostScript"));
+    assert!(s.execute("file.pdfInfo", &json!({"dataBase64": b64(ps)})).unwrap_err().to_string().contains("PostScript"));
     assert!(s.active().is_none());
 }
 

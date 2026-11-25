@@ -1,6 +1,6 @@
-//! DXF through the commands: `document.open` with the DXF options, `document.dxfInfo`,
+//! DXF through the commands: `file.open` with the DXF options, `file.dxfInfo`,
 //! File → Place of a drawing (fitted, centred or at its origin), the format table, binary files,
-//! and a drawing `document.export` wrote opened again.
+//! and a drawing `file.export` wrote opened again.
 
 use kition_vector_doc::{Node, NodeKind};
 use kition_vector_geom::Rect;
@@ -97,7 +97,7 @@ fn open(s: &mut Session, bytes: &[u8], extra: Value) -> crate::Result<Value> {
     if let (Some(p), Value::Object(e)) = (p.as_object_mut(), extra) {
         p.extend(e);
     }
-    s.execute("document.open", &p)
+    s.execute("file.open", &p)
 }
 
 fn layer_names(s: &Session) -> Vec<String> {
@@ -154,7 +154,7 @@ fn document_open_takes_the_dxf_options() {
 #[test]
 fn dxf_info_lists_layouts_layers_and_units() {
     let mut s = Session::new();
-    let r = s.execute("document.dxfInfo", &json!({"dataBase64": b64(&plan())})).unwrap();
+    let r = s.execute("file.dxfInfo", &json!({"dataBase64": b64(&plan())})).unwrap();
     assert_eq!(r["version"], "2000");
     assert_eq!(r["units"], "Millimeters");
     assert_eq!(r["layouts"], json!(["Model", "Layout1"]));
@@ -169,7 +169,7 @@ fn binary_dxf_says_to_save_it_as_ascii() {
     bytes.extend([0u8; 64]);
     let e = open(&mut s, &bytes, json!({})).unwrap_err().to_string();
     assert!(e.contains("binary DXF") && e.contains("ASCII"), "{e}");
-    let e = s.execute("document.dxfInfo", &json!({"dataBase64": b64(&bytes)})).unwrap_err().to_string();
+    let e = s.execute("file.dxfInfo", &json!({"dataBase64": b64(&bytes)})).unwrap_err().to_string();
     assert!(e.contains("binary DXF"), "{e}");
 }
 
@@ -180,7 +180,7 @@ fn dxf_is_readable_and_detected_by_content() {
     assert!(OPEN_EXTS.contains(&"dxf") && PLACE_EXTS.contains(&"dxf"));
     assert_eq!(detect("drawing.txt", &plan()).map(|f| f.id), Some("dxf"), "the content tells");
     let mut s = Session::new();
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     assert!(r["readable"].as_array().unwrap().contains(&json!("dxf")));
 }
 
@@ -230,7 +230,7 @@ fn a_drawing_export_writes_opens_again() {
     s.execute("paint.setFill", &json!({"none": true})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 100, "y": 100, "width": 200, "height": 100})).unwrap();
     s.execute("shape.ellipse", &json!({"x": 350, "y": 100, "width": 100, "height": 100})).unwrap();
-    let r = s.execute("document.export", &json!({"format": "dxf", "unit": "pt"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "dxf", "unit": "pt"})).unwrap();
     let bytes = kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
     let r = open(&mut s, &bytes, json!({"dxf": {"unit": "pt", "scale": 1, "center": false}})).unwrap();
     assert_eq!(r["format"], "dxf");

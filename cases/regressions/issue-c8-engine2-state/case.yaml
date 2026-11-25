@@ -1,7 +1,7 @@
 format: 1
 id: regressions/issue-c8-engine2-state
 feature: vector.agent.premises
-intent: "State a command restores or reads is the one it names: stopping opacity-mask editing makes current again the layer that was current, a dataset capture reads the first bound object in the document's order, variable.bind refuses a compound path member, assets.add collects each object it is given (and assets.rename renames by id)."
+intent: "State a command restores or reads is the one it names: stopping opacity-mask editing makes current again the layer that was current, a dataset capture reads the first bound object in the document's order, variable.bind refuses a compound path member, asset.add collects each object it is given (and asset.rename renames by id)."
 layer: gate
 dimension: data-safety
 source: {kind: synthetic, from: C8-vector-engine-2, license: Apache-2.0}

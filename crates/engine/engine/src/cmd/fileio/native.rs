@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 use super::super::*;
 use super::{Format, FormatOption};
 
-/// The options `document.save` and the native encoder read.
+/// The options `file.save` and the native encoder read.
 pub const OPTIONS: &[FormatOption] = &[
     FormatOption {
         name: "compress",
@@ -59,7 +59,7 @@ const EMBED_PROFILES: FormatOption = FormatOption {
 };
 
 /// The save options of a `.ai` file (a PDF carrying the native document; its PDF options come on
-/// top, see document.exportPdf).
+/// top, see file.exportPdf).
 pub const AI_OPTIONS: &[FormatOption] = &[
     SEPARATE_ARTBOARDS,
     SEPARATE_RANGE,

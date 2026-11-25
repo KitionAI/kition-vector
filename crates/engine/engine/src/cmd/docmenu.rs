@@ -187,7 +187,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Remove Guide",
             [],
             None,
-            "{index?} delete ruler guide `index`, else the selected ones (as Delete / edit.clear does) → {count}",
+            "{index?} delete ruler guide `index`, else the selected ones (as Delete / edit.delete does) → {count}",
             guides_unlocked,
             guide_remove
         ),
@@ -220,7 +220,7 @@ pub fn specs() -> Vec<CommandSpec> {
             super::colormgmt::convert_mode
         ),
         cmd!(
-            "file.info",
+            "file.setInfo",
             "File Info…",
             ["File"],
             Some("Cmd+Alt+Shift+I"),

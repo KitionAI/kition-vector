@@ -21,7 +21,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "graph.create",
+            "graph.add",
             "Create Graph",
             [],
             None,
@@ -819,7 +819,7 @@ fn regenerate(d: &mut Document, id: NodeId, mut spec: GraphSpec) -> Result<()> {
 }
 
 fn create(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "graph.create";
+    const C: &str = "graph.add";
     let kind =
         str_param(p, "type").map(|t| GraphKind::parse(t).ok_or_else(|| bad(C, format!("unknown graph type `{t}`")))).transpose()?.unwrap_or_default();
     let (x, y) = (f64_req(p, "x", C)?, f64_req(p, "y", C)?);
@@ -1173,7 +1173,7 @@ mod tests {
     fn graph(s: &mut Session, ty: &str) -> NodeId {
         let csv = ",2024,2025\nQ1,3,2\nQ2,5,4\nQ3,-1,6";
         NodeId(
-            s.execute("graph.create", &json!({"type": ty, "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
+            s.execute("graph.add", &json!({"type": ty, "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
         )
@@ -1289,7 +1289,7 @@ mod tests {
     fn an_overridden_value_axis_is_used_exactly() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
-        let r = s.execute("graph.create", &json!({"type": "column", "x": 20, "y": 20, "width": 170, "height": 74, "series": ["a"], "categories": ["x", "y"], "rows": [[4839], [10488]]})).unwrap();
+        let r = s.execute("graph.add", &json!({"type": "column", "x": 20, "y": 20, "width": 170, "height": 74, "series": ["a"], "categories": ["x", "y"], "rows": [[4839], [10488]]})).unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         let tallest = |s: &Session| -> f64 {
             let n = s.doc().unwrap().doc.node(id).unwrap().clone();
@@ -1440,8 +1440,8 @@ mod tests {
         s.execute("paint.setFill", &json!({"ids": [second.0], "color": "#008080"})).unwrap();
         let dir = kition_vector_testkit::temp_dir("graph-palette");
         let path = dir.join("palette.kvector");
-        s.execute("document.save", &json!({"path": path})).unwrap();
-        s.execute("document.open", &json!({"path": path})).unwrap();
+        s.execute("file.save", &json!({"path": path})).unwrap();
+        s.execute("file.open", &json!({"path": path})).unwrap();
         let paints = &s.doc().unwrap().doc.node(id).unwrap().graph.as_ref().unwrap().series_paints;
         assert_eq!(paints.iter().map(|p| p.fill.as_ref().and_then(Paint::color).unwrap().to_hex()).collect::<Vec<_>>(), vec!["#ff0000", "#008080"]);
         s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
@@ -1451,11 +1451,11 @@ mod tests {
         assert_eq!(swatch.appearance.fill_paint().color().unwrap().to_hex(), "#008080");
         let third = group(n, "Series 3").children().unwrap().first().unwrap();
         assert_eq!(third.appearance.fill_paint().color().unwrap().to_hex(), "#cccccc");
-        let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap();
+        let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap();
         let svg = svg["text"].as_str().unwrap();
         assert!(svg.contains("#ff0000") && svg.contains("#008080"));
         let png = dir.join("palette.png");
-        s.execute("document.export", &json!({"format": "png", "path": png})).unwrap();
+        s.execute("file.export", &json!({"format": "png", "path": png})).unwrap();
         let pixels = image::open(&png).unwrap().to_rgba8();
         assert!(pixels.pixels().any(|p| p.0 == [255, 0, 0, 255]));
         assert!(pixels.pixels().any(|p| p.0 == [0, 128, 128, 255]));
@@ -1513,7 +1513,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", &json!({})).unwrap();
         let csv = ",Legend,Axes\nQ1,3,2\nQ2,5,4";
-        let id = NodeId(s.execute("graph.create", &json!({"type": "column", "x": 0, "y": 0, "csv": csv})).unwrap()["id"].as_u64().unwrap());
+        let id = NodeId(s.execute("graph.add", &json!({"type": "column", "x": 0, "y": 0, "csv": csv})).unwrap()["id"].as_u64().unwrap());
         let legend_id = {
             let n = s.doc().unwrap().doc.node(id).unwrap();
             let legend = series(n, 0);
@@ -1601,8 +1601,7 @@ mod tests {
     fn blanks_read_back_as_null_and_year_header_rows_still_read_as_headers() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
-        let r =
-            s.execute("graph.create", &json!({"type": "line", "x": 0, "y": 0, "width": 300, "height": 200, "rows": [[1, null], [2, 3]]})).unwrap();
+        let r = s.execute("graph.add", &json!({"type": "line", "x": 0, "y": 0, "width": 300, "height": 200, "rows": [[1, null], [2, 3]]})).unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         assert_eq!(s.execute("graph.setData", &json!({"id": id.0})).unwrap()["rows"], json!([[1.0, null], [2.0, 3.0]]));
         // A label followed by empty cells is a header with no series names, as before blanks existed.
@@ -1622,8 +1621,7 @@ mod tests {
     fn a_label_only_row_stays_with_blank_values() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
-        let r =
-            s.execute("graph.create", &json!({"type": "column", "x": 0, "y": 0, "width": 300, "height": 200, "csv": ",a\nQ1,1\nQ2\nQ3,3"})).unwrap();
+        let r = s.execute("graph.add", &json!({"type": "column", "x": 0, "y": 0, "width": 300, "height": 200, "csv": ",a\nQ1,1\nQ2\nQ3,3"})).unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         let spec = s.doc().unwrap().doc.node(id).unwrap().graph.clone().unwrap();
         assert_eq!(spec.categories, vec!["Q1", "Q2", "Q3"]);
@@ -1636,7 +1634,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let rows = json!([[3, 1], [null, 2], [5, null], [4, 4]]);
         let r = s
-            .execute("graph.create", &json!({"type": "column", "x": 100, "y": 100, "width": 400, "height": 200, "series": ["a", "b"], "rows": rows}))
+            .execute("graph.add", &json!({"type": "column", "x": 100, "y": 100, "width": 400, "height": 200, "series": ["a", "b"], "rows": rows}))
             .unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         let count = |s: &Session, index: u32| series(&s.doc().unwrap().doc.node(id).unwrap().clone(), index).children().unwrap().len();
@@ -1767,7 +1765,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let csv = ",a,b,c\nQ1,10,20,30\nQ2,10,20,30";
         let id = NodeId(
-            s.execute("graph.create", &json!({"type": "stackedColumn", "x": 0, "y": 0, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
+            s.execute("graph.add", &json!({"type": "stackedColumn", "x": 0, "y": 0, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
         );
@@ -1805,9 +1803,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let csv = ",a,b,c\nQ1,10,20,-5\nQ2,10,20,-5";
         let id = NodeId(
-            s.execute("graph.create", &json!({"type": "bar", "x": 0, "y": 0, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
-                .as_u64()
-                .unwrap(),
+            s.execute("graph.add", &json!({"type": "bar", "x": 0, "y": 0, "width": 300, "height": 200, "csv": csv})).unwrap()["id"].as_u64().unwrap(),
         );
         assert!(s.execute("graph.setType", &json!({"seriesIndexes": [1], "type": "column"})).is_err());
         s.execute("graph.setType", &json!({"seriesIndexes": [1, 2], "type": "stackedBar"})).unwrap();
@@ -1824,8 +1820,8 @@ mod tests {
         let id = graph(&mut s, "column");
         s.execute("graph.setType", &json!({"seriesIndexes": [1], "type": "line"})).unwrap();
         let path = kition_vector_testkit::temp_dir("graph-kinds").join("kinds.kvector");
-        s.execute("document.save", &json!({"path": path})).unwrap();
-        s.execute("document.open", &json!({"path": path})).unwrap();
+        s.execute("file.save", &json!({"path": path})).unwrap();
+        s.execute("file.open", &json!({"path": path})).unwrap();
         assert_eq!(spec(&s, id).series_kinds, [None, Some(GraphKind::Line)]);
         let g: GraphSpec = serde_json::from_value(json!({"kind": "line", "rows": [[1.0, 2.0]]})).unwrap();
         assert!(g.series_kinds.is_empty());
@@ -1854,7 +1850,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let csv = ",a,b\nQ1,10,1000\nQ2,5,500";
         NodeId(
-            s.execute("graph.create", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
+            s.execute("graph.add", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
         )
@@ -1952,8 +1948,8 @@ mod tests {
         s.execute("graph.setType", &json!({"valueAxis": "both", "separateScales": true, "rightAxisMin": 0, "rightAxisMax": 2000})).unwrap();
         s.execute("graph.setType", &json!({"seriesIndexes": [1], "valueAxis": "right"})).unwrap();
         let path = kition_vector_testkit::temp_dir("graph-axes").join("axes.kvector");
-        s.execute("document.save", &json!({"path": path})).unwrap();
-        s.execute("document.open", &json!({"path": path})).unwrap();
+        s.execute("file.save", &json!({"path": path})).unwrap();
+        s.execute("file.open", &json!({"path": path})).unwrap();
         let g = spec(&s, id);
         assert_eq!(
             (g.value_axis, g.separate_scales, g.right_series, g.right_axis_max),
@@ -1971,7 +1967,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let csv = ",a,b,c\nQ1,10,1000,3\nQ2,5,500,4";
         let id = NodeId(
-            s.execute("graph.create", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
+            s.execute("graph.add", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
         );
@@ -2015,7 +2011,7 @@ mod tests {
         s.execute("file.new", &json!({"width": 800, "height": 800})).unwrap();
         let csv = ",a,b\nQ1,10,-500\nQ2,5,500";
         let id = NodeId(
-            s.execute("graph.create", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
+            s.execute("graph.add", &json!({"type": "column", "x": 100, "y": 100, "width": 300, "height": 200, "csv": csv})).unwrap()["id"]
                 .as_u64()
                 .unwrap(),
         );
@@ -2160,8 +2156,8 @@ mod tests {
         )
         .unwrap();
         let path = kition_vector_testkit::temp_dir("graph-ticks").join("ticks.kvector");
-        s.execute("document.save", &json!({"path": path})).unwrap();
-        s.execute("document.open", &json!({"path": path})).unwrap();
+        s.execute("file.save", &json!({"path": path})).unwrap();
+        s.execute("file.open", &json!({"path": path})).unwrap();
         let g = spec(&s, id);
         assert_eq!(
             (g.tick_length, g.tick_marks, g.category_tick_length, g.ticks_between_labels, g.suffix.as_str()),

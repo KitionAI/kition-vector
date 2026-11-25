@@ -77,16 +77,16 @@ impl Fixture {
                 let a = rect(&mut s, 40.0, 40.0, 120.0, 80.0);
                 let b = ellipse(&mut s, 100.0, 60.0, 90.0, 90.0);
                 let c = star(&mut s, 200.0, 150.0, 50.0, 25.0);
-                let t = id_of(&exec(&mut s, "text.create", json!({"x": 20, "y": 250, "text": "Hi", "size": 24})));
+                let t = id_of(&exec(&mut s, "text.add", json!({"x": 20, "y": 250, "text": "Hi", "size": 24})));
                 let p = id_of(&exec(
                     &mut s,
-                    "path.create",
+                    "path.add",
                     json!({"anchors": [{"x": 250, "y": 30}, {"x": 330, "y": 60, "in": [300, 20], "out": [360, 100]}, {"x": 300, "y": 140}], "closed": false}),
                 ));
                 let g1 = rect(&mut s, 300.0, 200.0, 40.0, 40.0);
                 let g2 = ellipse(&mut s, 320.0, 220.0, 40.0, 40.0);
                 select(&mut s, &[g1, g2]);
-                exec(&mut s, "object.group", json!({}));
+                exec(&mut s, "arrange.group", json!({}));
                 let _ = (t, p);
                 select(&mut s, &[a, b, c]);
             }
@@ -112,27 +112,24 @@ pub fn rich_session() -> Session {
     exec(&mut s, "effect.apply", json!({"effect": "distort.roughen", "params": {"size": 3, "detail": 5, "seed": 7}}));
     let l = id_of(&exec(&mut s, "shape.line", json!({"x1": 20, "y1": 300, "x2": 200, "y2": 350})));
     exec(&mut s, "stroke.set", json!({"weight": 3, "endArrow": "Arrow"}));
-    let tx = id_of(&exec(&mut s, "text.create", json!({"x": 250, "y": 300, "text": "Kition Vector", "size": 30})));
+    let tx = id_of(&exec(&mut s, "text.add", json!({"x": 250, "y": 300, "text": "Kition Vector", "size": 30})));
     // A non-default paragraph composer, so format round trips cover it.
     exec(&mut s, "text.setFormat", json!({"ids": [tx.0], "composer": "singleLine"}));
     // Area type with non-default Area Type Options (vertical alignment, inset).
-    let area = id_of(&exec(
-        &mut s,
-        "text.create",
-        json!({"x": 250, "y": 340, "text": "Centred area type", "size": 12, "area": {"width": 120, "height": 50}}),
-    ));
+    let area =
+        id_of(&exec(&mut s, "text.add", json!({"x": 250, "y": 340, "text": "Centred area type", "size": 12, "area": {"width": 120, "height": 50}})));
     select(&mut s, &[area]);
     exec(&mut s, "text.areaOptions", json!({"verticalAlign": "center", "inset": 2}));
     let _ = id_of(&exec(
         &mut s,
-        "text.create",
+        "text.add",
         json!({"x": 300, "y": 330, "size": 14, "text": "Area type shrinks its text to fit the frame.",
                "area": {"width": 150, "height": 40, "fit": "shrinkText", "fitMinPercent": 40}}),
     ));
     // Area type whose paragraphs differ (alignment, spacing, tabs).
     let para = id_of(&exec(
         &mut s,
-        "text.create",
+        "text.add",
         json!({"x": 20, "y": 360, "text": "Heading\nBody one\tx\nBody two", "size": 9, "area": {"width": 160, "height": 36}}),
     ));
     exec(&mut s, "text.setStyle", json!({"id": para, "justify": "center", "start": 0, "end": 0}));
@@ -152,7 +149,7 @@ pub fn rich_session() -> Session {
     let dot = ellipse(&mut s, 440.0, 40.0, 12.0, 12.0);
     select(&mut s, &[dot]);
     exec(&mut s, "symbol.new", json!({"name": "Dot"}));
-    let t = id_of(&exec(&mut s, "text.create", json!({"x": 250, "y": 370, "text": "Tap  to add", "size": 18})));
+    let t = id_of(&exec(&mut s, "text.add", json!({"x": 250, "y": 370, "text": "Tap  to add", "size": 18})));
     exec(&mut s, "text.insertInline", json!({"id": t.0, "at": 4, "symbol": "Dot"}));
     // Variables (data merge): both kinds, bound to art, with two dataset rows and one applied,
     // so format round trips cover the definitions, the bindings and the rows.
@@ -164,7 +161,7 @@ pub fn rich_session() -> Session {
     exec(&mut s, "dataset.new", json!({"name": "Row 2", "values": {"Title": "Other"}}));
     exec(&mut s, "dataset.select", json!({"name": "Row 1"}));
     let _ = (a, b, c, l);
-    exec(&mut s, "select.none", json!({}));
+    exec(&mut s, "edit.deselectAll", json!({}));
     s
 }
 

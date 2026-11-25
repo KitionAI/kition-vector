@@ -14,7 +14,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            query "document.info",
+            query "file.getInfo",
             "Document Info",
             ["Window", "Document Info"],
             None,
@@ -49,7 +49,7 @@ pub const CATEGORIES: [(&str, &str); 11] = [
     ("embeddedImages", "Embedded Images"),
 ];
 
-/// The object counts of `document.info` and their labels.
+/// The object counts of `file.getInfo` and their labels.
 const OBJECT_LABELS: [(&str, &str); 17] = [
     ("paths", "Paths"),
     ("compoundPaths", "Compound Paths"),
@@ -96,7 +96,7 @@ pub fn embedding_label(fs_type: u16) -> &'static str {
 type ImageRow = (String, u32, u32, Option<String>);
 
 /// The Document Info categories of `d` (only `category` when given) from `info` (what
-/// `document.info` reports), its fonts `(family, style)`, image objects and used patterns.
+/// `file.getInfo` reports), its fonts `(family, style)`, image objects and used patterns.
 fn sections(d: &Document, info: &Value, fonts: &BTreeSet<super::fonts::UsedFont>, images: &[ImageRow], category: Option<&str>) -> Vec<Section> {
     let names = |k: &str| -> Vec<(String, String)> {
         info[k].as_array().into_iter().flatten().filter_map(Value::as_str).map(|n| (n.to_string(), String::new())).collect()
@@ -197,7 +197,7 @@ pub fn report_text(name: &str, selection_only: bool, sections: &[Section]) -> St
     out
 }
 
-/// The text report of the active document (`document.info {format: "text"}` as a string).
+/// The text report of the active document (`file.getInfo {format: "text"}` as a string).
 pub fn report(s: &mut Session, selection_only: bool) -> Result<String> {
     let v = info(s, &json!({ "selectionOnly": selection_only, "format": "text" }))?;
     Ok(v["text"].as_str().unwrap_or_default().to_string())
@@ -212,7 +212,7 @@ fn paint_kind(p: &Paint) -> Option<&'static str> {
 }
 
 fn info(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "document.info";
+    const C: &str = "file.getInfo";
     let category = str_param(p, "category");
     if let Some(c) = category.filter(|c| !CATEGORIES.iter().any(|(id, _)| id == c)) {
         let ids: Vec<&str> = CATEGORIES.iter().map(|(id, _)| *id).collect();
@@ -392,8 +392,8 @@ mod tests {
             &json!({"gradient": {"kind": "linear", "stops": [{"offset": 0, "color": "#000"}, {"offset": 1, "color": "#fff"}]}}),
         )
         .unwrap();
-        s.execute("text.create", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
-        let i = s.execute("document.info", &json!({})).unwrap();
+        s.execute("text.add", &json!({"x": 10, "y": 40, "text": "Hi"})).unwrap();
+        let i = s.execute("file.getInfo", &json!({})).unwrap();
         assert_eq!(
             (i["objects"]["paths"].as_u64(), i["objects"]["textObjects"].as_u64(), i["objects"]["gradients"].as_u64()),
             (Some(1), Some(1), Some(1))
@@ -401,7 +401,7 @@ mod tests {
         assert_eq!(i["fonts"][0], "Source Sans 3 Regular");
         assert_eq!(i["document"]["artboards"][0]["width"], 200.0);
         s.execute("select.set", &json!({"ids": [r]})).unwrap();
-        let i = s.execute("document.info", &json!({"selectionOnly": true})).unwrap();
+        let i = s.execute("file.getInfo", &json!({"selectionOnly": true})).unwrap();
         assert!(i["objects"]["textObjects"].is_null() && i["objects"]["paths"] == 1);
     }
 

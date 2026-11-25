@@ -6,7 +6,7 @@
 //! - [`strategies`]: proptest strategies for geometry and for engine command sequences ([`strategies::Op`]), and
 //!   junk-parameter generators for fuzzing the command registry.
 //! - [`invariants`]: structural checks for documents and sessions, and round-trip checks
-//!   (`.kvector`, SVG, `document.inspect`).
+//!   (`.kvector`, SVG, `file.inspect`).
 //! - [`raster`]: rendering helpers and image comparison with a perceptual tolerance.
 //! - [`geom`]: geometry assertions (approximate equality, curve sampling, Hausdorff distance).
 //! - [`pdf`]: hand-written PDF files (page boxes, colour spaces, encryption) for import tests.

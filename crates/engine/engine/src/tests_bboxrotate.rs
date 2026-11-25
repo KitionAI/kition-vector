@@ -61,7 +61,7 @@ fn rotating_to_45_keeps_45() {
     // The panel's angle and the inspector's.
     let b = selection_box(&s);
     assert!(near(b.angle, 45.0) && near(angle(&s, a), 45.0), "{b:?}");
-    assert!(near(s.execute("document.inspect", &json!({})).unwrap()["selectionRotation"].as_f64().unwrap(), 45.0));
+    assert!(near(s.execute("file.inspect", &json!({})).unwrap()["selectionRotation"].as_f64().unwrap(), 45.0));
     // The box hugs the rectangle: its own sides, its own centre.
     assert!(near(b.rect.width(), 100.0) && near(b.rect.height(), 50.0), "{b:?}");
     assert!(b.center().distance(Point::new(200.0, 200.0)) < 1e-6);
@@ -168,16 +168,16 @@ fn groups_type_and_multiple_selections_keep_their_angle() {
     sel(&mut s, &[a, c]);
     assert_eq!(selection_box(&s).angle, 0.0);
     // A group turns as one; its members keep their own angles inside it.
-    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let g = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     assert_eq!(selection_box(&s).angle, 0.0);
     s.execute("object.rotate", &json!({"angle": 30, "absolute": true})).unwrap();
     assert!(near(angle(&s, g), 30.0) && near(angle(&s, a), 50.0) && near(angle(&s, c), 30.0));
-    s.execute("object.ungroup", &json!({})).unwrap();
+    s.execute("arrange.ungroup", &json!({})).unwrap();
     sel(&mut s, &[c]);
     let cb = selection_box(&s);
     assert!(near(cb.angle, 30.0) && near(cb.rect.width(), 50.0) && near(cb.rect.height(), 50.0), "{cb:?}");
     // Type keeps its angle too.
-    let t = id_of(&s.execute("text.create", &json!({"x": 50, "y": 500, "text": "Turn"})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 50, "y": 500, "text": "Turn"})).unwrap());
     sel(&mut s, &[t]);
     let before = selection_box(&s).rect;
     s.execute("object.rotate", &json!({"angle": 60, "absolute": true})).unwrap();
@@ -191,11 +191,11 @@ fn native_files_keep_the_angle() {
     let mut s = session();
     let plain = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let a = turned_rect(&mut s);
-    let data = s.execute("document.save", &json!({})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+    let data = s.execute("file.save", &json!({})).unwrap()["dataBase64"].as_str().unwrap().to_string();
     let text = String::from_utf8(kition_vector_format::base64_decode(&data).unwrap()).unwrap();
     // Only turned objects write it.
     assert_eq!(text.matches("bbox_angle").count(), 1);
-    s.execute("document.open", &json!({"name": "turned.kvector", "dataBase64": data})).unwrap();
+    s.execute("file.open", &json!({"name": "turned.kvector", "dataBase64": data})).unwrap();
     assert!(near(angle(&s, a), 45.0));
     assert_eq!(angle(&s, plain), 0.0);
     sel(&mut s, &[a]);

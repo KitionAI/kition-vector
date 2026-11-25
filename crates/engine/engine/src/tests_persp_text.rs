@@ -13,7 +13,7 @@ use super::*;
 
 /// Point type "HELLO" (48 pt) at (430, 400), attached to the right plane.
 fn persp_text(s: &mut Session) -> NodeId {
-    let r = s.execute("text.create", &json!({"x": 430, "y": 400, "text": "HELLO", "size": 48})).unwrap();
+    let r = s.execute("text.add", &json!({"x": 430, "y": 400, "text": "HELLO", "size": 48})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute("perspective.attach", &json!({"ids": [id.0], "plane": "right"})).unwrap();
     id
@@ -156,7 +156,7 @@ fn copies_pastes_and_duplicates_stay_attached() {
     let copy = *s.doc().unwrap().selection.objects.first().unwrap();
     assert_eq!(attached(&s, copy), Some((Plane::Right, 0.0)));
     // Deleting leaves nothing stale behind.
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
     assert!(grid(&s).attached_plane(copy).is_none());
 }
 
@@ -229,7 +229,7 @@ fn click_to_size_dialogs_draw_on_the_active_plane_in_plane_units() {
 #[test]
 fn the_canvas_draws_type_in_perspective_foreshortened() {
     let (mut s, rect) = persp_session();
-    s.execute("edit.clear", &json!({"ids": [rect.0]})).ok();
+    s.execute("edit.delete", &json!({"ids": [rect.0]})).ok();
     let id = persp_text(&mut s);
     let b = drawn_bounds(&s, id);
     let img = kition_vector_render::Renderer::new().render_region(&s.doc().unwrap().doc, b, 2.0, true);

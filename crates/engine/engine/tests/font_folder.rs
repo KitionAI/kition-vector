@@ -40,7 +40,7 @@ fn a_found_font_is_copied_without_replacing_a_file_and_its_type_redraws() {
     s.search_rules = Some(Rules { user_content: vec![root.clone()], ..Rules::default() });
     s.search_threads = Some(2);
     s.execute("file.new", &json!({"width": 300, "height": 200})).unwrap();
-    s.execute("text.create", &json!({"x": 10, "y": 40, "text": "Findme", "font": "Findme Sans 3"})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 40, "text": "Findme", "font": "Findme Sans 3"})).unwrap();
     let r = s.execute("text.missingFonts", &json!({})).unwrap();
     assert_eq!((r["fonts"][0]["family"].as_str(), r["fonts"][0]["status"].as_str()), (Some("Findme Sans 3"), Some("missing")), "{r}");
     s.doc_mut().unwrap().mark_saved();

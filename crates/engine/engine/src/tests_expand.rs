@@ -163,7 +163,7 @@ fn a_targeted_layer_with_a_fill_expands_into_art_among_its_members() {
 #[test]
 fn type_with_a_shadow_stays_type_and_type_with_its_own_stroke_is_outlined() {
     let mut s = session();
-    let t = NodeId(run(&mut s, "text.create", json!({"x": 20, "y": 80, "text": "Hi", "size": 48}))["id"].as_u64().unwrap());
+    let t = NodeId(run(&mut s, "text.add", json!({"x": 20, "y": 80, "text": "Hi", "size": 48}))["id"].as_u64().unwrap());
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     run(&mut s, "effect.apply", json!({"effect": "stylize.dropShadow"}));
     run(&mut s, "effect.expandAppearance", json!({}));
@@ -171,7 +171,7 @@ fn type_with_a_shadow_stays_type_and_type_with_its_own_stroke_is_outlined() {
     let ch = n.children().unwrap();
     assert!(matches!(ch[0].kind, NodeKind::Image(_)) && matches!(ch[1].kind, NodeKind::Text(_)));
     // A stroke of its own: outlined glyphs.
-    let u = NodeId(run(&mut s, "text.create", json!({"x": 20, "y": 160, "text": "Yo", "size": 48}))["id"].as_u64().unwrap());
+    let u = NodeId(run(&mut s, "text.add", json!({"x": 20, "y": 160, "text": "Yo", "size": 48}))["id"].as_u64().unwrap());
     run(&mut s, "select.set", json!({"ids": [u.0]}));
     run(&mut s, "appearance.addStroke", json!({}));
     run(&mut s, "effect.expandAppearance", json!({}));

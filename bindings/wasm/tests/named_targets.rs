@@ -10,12 +10,12 @@ use serde_json::{Value, json};
 fn drawing() -> (VectorDocument, Value, Value, Value) {
     let mut doc = VectorDocument::create("Named.kvector", 320, 200).unwrap();
     let rect = doc.execute("shape.rectangle", json!({"x":10,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
-    let text = doc.execute("text.create", json!({"x":10,"y":80,"text":"abc"})).unwrap()["id"].clone();
+    let text = doc.execute("text.add", json!({"x":10,"y":80,"text":"abc"})).unwrap()["id"].clone();
     let art = doc.execute("shape.ellipse", json!({"x":60,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
     doc.execute("select.set", json!({"ids":[art]})).unwrap();
     let made = doc.execute("symbol.new", json!({"name":"Dot"})).unwrap();
     let instance = made.get("instance").or_else(|| made.get("id")).cloned().unwrap_or(art);
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     (doc, rect, text, instance)
 }
 
@@ -26,7 +26,7 @@ fn named_objects_need_no_selection() {
     let (mut doc, rect, text, instance) = drawing();
     doc.execute("symbol.breakLink", json!({"ids":[instance]})).unwrap();
     doc.execute("object.slice.make", json!({"ids":[rect]})).unwrap();
-    doc.execute("type.changeCase", json!({"case":"upper","ids":[text]})).unwrap();
+    doc.execute("text.changeCase", json!({"case":"upper","ids":[text]})).unwrap();
     let inspected = doc.inspect().unwrap().to_string();
     assert!(inspected.contains("ABC"), "the named text changed case");
 }
@@ -35,7 +35,7 @@ fn named_objects_need_no_selection() {
 fn the_menu_still_needs_a_selection() {
     let (doc, _, _, _) = drawing();
     let disabled = doc.disabled_commands();
-    for id in ["symbol.breakLink", "object.slice.make", "type.changeCase", "object.textWrap.make"] {
+    for id in ["symbol.breakLink", "object.slice.make", "text.changeCase", "object.textWrap.make"] {
         assert!(disabled.iter().any(|d| d == id), "{id} is still off in the menu with nothing selected");
     }
 }

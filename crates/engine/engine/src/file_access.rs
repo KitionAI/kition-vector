@@ -226,7 +226,7 @@ pub fn host_only() -> bool {
 /// Why `path` is not read or written while the host owns every file (KHP A29, A48).
 pub fn host_only_refusal(path: &str) -> String {
     format!(
-        "`{path}` is not available here: this kit reaches no file by path, the host owns every file (KHP A29). Documents are opened, saved and exported through the host (document.exportBytes answers an export's bytes); a linked file is read through the host by its path relative to the document, inside the workspace"
+        "`{path}` is not available here: this kit reaches no file by path, the host owns every file (KHP A29). Documents are opened, saved and exported through the host (file.exportBytes answers an export's bytes); a linked file is read through the host by its path relative to the document, inside the workspace"
     )
 }
 

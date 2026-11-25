@@ -23,8 +23,7 @@ fn b64(v: &Value) -> Vec<u8> {
 }
 
 fn open(s: &mut Session, name: &str, bytes: &[u8]) -> Value {
-    s.execute("document.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)}))
-        .unwrap_or_else(|e| panic!("{name}: {e}"))
+    s.execute("file.open", &json!({"name": name, "dataBase64": kition_vector_format::base64_encode(bytes)})).unwrap_or_else(|e| panic!("{name}: {e}"))
 }
 
 /// A `w`×`h` image of one colour in `format`.
@@ -52,9 +51,9 @@ fn image_of(s: &Session) -> kition_vector_doc::ImageObject {
 fn opens_every_readable_format() {
     let mut s = session(200.0, 100.0, 1);
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
-    let native = b64(&s.execute("document.serialize", &json!({})).unwrap());
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
-    let pdf = b64(&s.execute("document.serialize", &json!({"format": "pdf"})).unwrap());
+    let native = b64(&s.execute("file.serialize", &json!({})).unwrap());
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    let pdf = b64(&s.execute("file.serialize", &json!({"format": "pdf"})).unwrap());
     let svgz = kition_vector_svg::compress(&svg);
 
     for (name, bytes, format) in [
@@ -88,7 +87,7 @@ fn opens_every_readable_format() {
         let mime = &doc.images[&im.key].mime;
         assert_eq!(mime, if name.ends_with("tif") || name.ends_with("bmp") { "image/png" } else { format_for_name(name).unwrap().mime });
     }
-    assert!(s.execute("document.open", &json!({"name": "x.txt", "dataBase64": "aGVsbG8="})).is_err());
+    assert!(s.execute("file.open", &json!({"name": "x.txt", "dataBase64": "aGVsbG8="})).is_err());
 }
 
 #[test]
@@ -130,15 +129,15 @@ fn templates_open_untitled() {
     let dir = tmp_dir("tpl");
     let path = dir.join("t.kvector").to_string_lossy().to_string();
     s.execute("file.saveAsTemplate", &json!({"path": path})).unwrap();
-    let r = s.execute("document.open", &json!({"path": path})).unwrap();
+    let r = s.execute("file.open", &json!({"path": path})).unwrap();
     assert!(r["title"].as_str().unwrap().starts_with("Untitled-"), "{r}");
     assert_eq!(s.doc().unwrap().path, None);
     assert!(!s.doc().unwrap().doc.template);
 
-    let pdf = b64(&s.execute("document.serialize", &json!({"format": "pdf"})).unwrap());
+    let pdf = b64(&s.execute("file.serialize", &json!({"format": "pdf"})).unwrap());
     let ait = dir.join("t.ait").to_string_lossy().to_string();
     std::fs::write(&ait, pdf).unwrap();
-    let r = s.execute("document.open", &json!({"path": ait})).unwrap();
+    let r = s.execute("file.open", &json!({"path": ait})).unwrap();
     assert_eq!(r["format"], "ait");
     assert!(r["title"].as_str().unwrap().starts_with("Untitled-"), "{r}");
     assert_eq!(s.doc().unwrap().path, None);
@@ -202,7 +201,7 @@ fn export_extensions_name_every_writable_format() {
 #[test]
 fn formats_query_lists_readers_writers_and_options() {
     let mut s = Session::new();
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     let ids = |k: &str| r[k].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect::<Vec<_>>();
     assert_eq!(
         ids("writable"),
@@ -236,19 +235,19 @@ fn pdf_pages(bytes: &[u8]) -> usize {
 #[test]
 fn pdf_export_honours_artboard_and_range() {
     let mut s = session(100.0, 80.0, 3);
-    let pages = |s: &mut Session, p: Value| pdf_pages(&b64(&s.execute("document.export", &p).unwrap()));
+    let pages = |s: &mut Session, p: Value| pdf_pages(&b64(&s.execute("file.export", &p).unwrap()));
     assert_eq!(pages(&mut s, json!({"format": "pdf"})), 3);
     assert_eq!(pages(&mut s, json!({"format": "pdf", "artboard": 1})), 1);
     assert_eq!(pages(&mut s, json!({"format": "pdf", "artboards": [0, 2]})), 2);
     assert_eq!(pages(&mut s, json!({"format": "pdf", "range": "2-3"})), 2);
-    assert_eq!(pdf_pages(&b64(&s.execute("document.serialize", &json!({"format": "pdf", "artboard": 2})).unwrap())), 1);
-    assert!(s.execute("document.export", &json!({"format": "pdf", "artboard": 3})).is_err());
-    assert!(s.execute("document.export", &json!({"format": "pdf", "range": "1-4"})).is_err());
+    assert_eq!(pdf_pages(&b64(&s.execute("file.serialize", &json!({"format": "pdf", "artboard": 2})).unwrap())), 1);
+    assert!(s.execute("file.export", &json!({"format": "pdf", "artboard": 3})).is_err());
+    assert!(s.execute("file.export", &json!({"format": "pdf", "range": "1-4"})).is_err());
     // Single-image formats take one artboard.
-    assert!(s.execute("document.export", &json!({"format": "png", "range": "1-2"})).is_err());
-    let png = b64(&s.execute("document.export", &json!({"format": "png", "range": "2", "scale": 0.5})).unwrap());
+    assert!(s.execute("file.export", &json!({"format": "png", "range": "1-2"})).is_err());
+    let png = b64(&s.execute("file.export", &json!({"format": "png", "range": "2", "scale": 0.5})).unwrap());
     assert_eq!(image::load_from_memory(&png).unwrap().width(), 50);
-    assert!(s.execute("document.export", &json!({"format": "png", "scale": "big"})).is_err(), "typed options reject a bad type");
+    assert!(s.execute("file.export", &json!({"format": "png", "scale": "big"})).is_err(), "typed options reject a bad type");
 }
 
 #[test]
@@ -256,19 +255,19 @@ fn export_without_path_returns_bytes_and_never_retargets() {
     let mut s = session(100.0, 100.0, 1);
     let dir = tmp_dir("retarget");
     let doc_path = dir.join("doc.kvector").to_string_lossy().to_string();
-    s.execute("document.save", &json!({"path": doc_path})).unwrap();
+    s.execute("file.save", &json!({"path": doc_path})).unwrap();
     let copy = dir.join("copy.kvector").to_string_lossy().to_string();
-    let r = s.execute("document.export", &json!({"path": copy})).unwrap();
+    let r = s.execute("file.export", &json!({"path": copy})).unwrap();
     assert_eq!(r["format"], "kvector");
     assert!(kition_vector_format::sniff(&std::fs::read(&copy).unwrap()));
     assert_eq!(s.doc().unwrap().path.as_deref(), Some(doc_path.as_str()), "exporting the native format keeps the document's path");
-    let r = s.execute("document.export", &json!({"format": "jpg"})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "jpg"})).unwrap();
     assert_eq!(&b64(&r)[..2], [0xFF, 0xD8]);
     assert!(r.get("path").is_none());
-    assert!(s.execute("document.export", &json!({"path": dir.join("x.dwg").to_string_lossy()})).is_err(), "DWG can't be written");
+    assert!(s.execute("file.export", &json!({"path": dir.join("x.dwg").to_string_lossy()})).is_err(), "DWG can't be written");
     // A never-saved document hands its native bytes back.
     let mut s = session(10.0, 10.0, 1);
-    let r = s.execute("document.save", &json!({})).unwrap();
+    let r = s.execute("file.save", &json!({})).unwrap();
     assert!(kition_vector_format::sniff(&b64(&r)));
     assert_eq!(s.doc().unwrap().path, None);
     let _ = std::fs::remove_dir_all(dir);
@@ -294,11 +293,11 @@ fn has_red(png: &[u8]) -> bool {
 #[test]
 fn raster_exports_leave_template_layers_out() {
     let (mut s, red, blue) = template_doc();
-    let png = b64(&s.execute("document.export", &json!({"format": "png"})).unwrap());
+    let png = b64(&s.execute("file.export", &json!({"format": "png"})).unwrap());
     assert!(!has_red(&png), "no red pixels from the template layer");
     assert!(image::load_from_memory(&png).unwrap().to_rgba8().get_pixel(75, 50)[2] > 200, "the normal layer is exported");
     s.execute("select.set", &json!({"ids": [red, blue]})).unwrap();
-    let r = s.execute("document.exportSelection", &json!({"format": "png"})).unwrap();
+    let r = s.execute("file.exportSelection", &json!({"format": "png"})).unwrap();
     assert!(!has_red(&b64(&r)));
     assert!(r["bounds"][0].as_f64().unwrap() > 40.0, "only the blue square (and its stroke) is exported: {}", r["bounds"]);
 }
@@ -312,7 +311,7 @@ fn export_for_screens_one_page_per_pdf_unique_names() {
     let folder = dir.to_string_lossy().to_string();
     let r = s
         .execute(
-            "document.exportForScreens",
+            "file.exportForScreens",
             &json!({"folder": folder, "formats": [{"format": "pdf"}, {"format": "svg", "scale": 2}, {"format": "svg", "scale": 3}, {"format": "png", "scale": 2}]}),
         )
         .unwrap();
@@ -326,10 +325,10 @@ fn export_for_screens_one_page_per_pdf_unique_names() {
         assert_eq!(pdf_pages(&std::fs::read(f).unwrap()), 1, "{f}");
     }
     // No folder: the files come back as bytes.
-    let r = s.execute("document.exportForScreens", &json!({"range": "3", "formats": [{"format": "jpg", "scale": 0.5}]})).unwrap();
+    let r = s.execute("file.exportForScreens", &json!({"range": "3", "formats": [{"format": "jpg", "scale": 0.5}]})).unwrap();
     assert_eq!(r["files"][0]["name"], "Artboard-3@0.5x.jpg");
     assert_eq!(image::load_from_memory(&b64(&r["files"][0])).unwrap().width(), 50);
-    assert!(s.execute("document.exportForScreens", &json!({"formats": [{"format": "kvector"}]})).is_err());
+    assert!(s.execute("file.exportForScreens", &json!({"formats": [{"format": "kvector"}]})).is_err());
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -341,11 +340,11 @@ fn template_sublayers_are_left_out_too() {
     s.execute("paint.setFill", &json!({"color": "#ff0000"})).unwrap();
     let red = s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 50, "height": 100})).unwrap()["id"].as_u64().unwrap();
     assert_eq!(s.doc().unwrap().doc.ancestry(kition_vector_doc::NodeId(red)).unwrap().len(), 3, "the square is on a sublayer");
-    assert!(has_red(&b64(&s.execute("document.export", &json!({"format": "png"})).unwrap())));
+    assert!(has_red(&b64(&s.execute("file.export", &json!({"format": "png"})).unwrap())));
     s.execute("layer.setProps", &json!({"id": sub, "template": true})).unwrap();
-    assert!(!has_red(&b64(&s.execute("document.export", &json!({"format": "png"})).unwrap())), "a template sublayer is left out");
+    assert!(!has_red(&b64(&s.execute("file.export", &json!({"format": "png"})).unwrap())), "a template sublayer is left out");
     s.execute("select.set", &json!({"ids": [red]})).unwrap();
-    assert!(s.execute("document.exportSelection", &json!({"format": "png"})).is_err(), "nothing but template art is selected");
+    assert!(s.execute("file.exportSelection", &json!({"format": "png"})).is_err(), "nothing but template art is selected");
 }
 
 #[test]
@@ -357,7 +356,7 @@ fn export_for_screens_vector_rows_drop_scale_suffixes_and_names_ignore_case() {
     // The dialog's second row starts as PNG @2x; switched to PDF it keeps that suffix text.
     let formats =
         json!([{"format": "png", "scale": 1, "suffix": ""}, {"format": "pdf", "scale": 2, "suffix": "@2x"}, {"format": "svg", "suffix": "-web"}]);
-    let r = s.execute("document.exportForScreens", &json!({"formats": formats})).unwrap();
+    let r = s.execute("file.exportForScreens", &json!({"formats": formats})).unwrap();
     let names: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["name"].as_str().unwrap()).collect();
     assert_eq!(
         names,
@@ -378,9 +377,9 @@ fn export_for_screens_vector_rows_drop_scale_suffixes_and_names_ignore_case() {
 #[test]
 fn oversized_raster_exports_are_refused() {
     let mut s = session(2000.0, 2000.0, 1);
-    let e = s.execute("document.export", &json!({"format": "webp", "scale": 10})).unwrap_err().to_string();
+    let e = s.execute("file.export", &json!({"format": "webp", "scale": 10})).unwrap_err().to_string();
     assert!(e.contains("too large"), "{e}");
-    assert!(s.execute("document.export", &json!({"format": "png", "scale": 40})).is_err(), "80000 px a side");
+    assert!(s.execute("file.export", &json!({"format": "png", "scale": 40})).is_err(), "80000 px a side");
 }
 
 #[test]

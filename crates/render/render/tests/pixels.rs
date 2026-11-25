@@ -386,7 +386,7 @@ fn hidden_effect_is_ignored() {
 #[test]
 fn text_renders_ink_inside_its_bounds() {
     let mut s = session_with(200.0, 100.0);
-    exec(&mut s, "text.create", json!({"x": 10, "y": 60, "text": "Hello", "size": 40}));
+    exec(&mut s, "text.add", json!({"x": 10, "y": 60, "text": "Hello", "size": 40}));
     exec(&mut s, "paint.setFill", json!({"color": "#000000"}));
     let doc = s.doc().unwrap().doc.clone();
     let img = render_view(&doc, 200, 100);
@@ -396,8 +396,8 @@ fn text_renders_ink_inside_its_bounds() {
     let far = (150..200).flat_map(|x| (0..100).map(move |y| (x, y))).filter(|&(x, y)| img.over_white(x, y) != [255, 255, 255]).count();
     assert_eq!(far, 0);
     // Outlined text renders the same pixels (within anti-aliasing).
-    exec(&mut s, "select.all", json!({}));
-    exec(&mut s, "type.createOutlines", json!({}));
+    exec(&mut s, "edit.selectAll", json!({}));
+    exec(&mut s, "text.convertToOutlines", json!({}));
     let outlined = render_view(&s.doc().unwrap().doc, 200, 100);
     assert_similar(&img, &outlined, 24.0, 0.01);
 }

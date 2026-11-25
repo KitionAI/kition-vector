@@ -25,7 +25,7 @@ fn drawing() -> Vec<u8> {
     doc.execute("select.set", json!({"ids":[p]})).unwrap();
     doc.execute("object.pattern.make", json!({"name":"Dots","edit":false})).unwrap();
     doc.execute("object.slice.make", json!({})).unwrap();
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     doc.save(None).unwrap()
 }
 
@@ -169,5 +169,5 @@ fn a_node_goes_only_into_an_object_that_holds_others() {
     let answer = Exchange::new().batch(&mut doc, &into(1), false).unwrap();
     let id: u64 = answer["refs"]["$new"].as_str().unwrap().parse().unwrap();
     let mut reopened = VectorDocument::open("Into.kvector", &doc.save(None).unwrap()).unwrap();
-    assert!(reopened.execute("document.node", json!({"id": id})).is_ok());
+    assert!(reopened.execute("file.node", json!({"id": id})).is_ok());
 }

@@ -75,7 +75,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           // drawn is the one selected); taken (default prevented) only then, so in Focus an Escape
           // with nothing to cancel still leaves Focus (KitPointer 4.4).
           if (event.key !== 'Escape' || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || !state?.selection.length) return false
-          void editor.run('select.none', {})
+          void editor.run('edit.deselectAll', {})
           return true
         }}
         status={

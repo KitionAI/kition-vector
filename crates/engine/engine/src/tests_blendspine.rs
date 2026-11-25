@@ -52,12 +52,12 @@ fn a_spine_point_added_and_moved_bends_the_blend() {
     let mut s = session();
     let (_, _, g) = blend(&mut s);
     assert!(spec(&s, g).spine.is_none(), "straight until edited");
-    let r = s.execute("object.blend.spine.addAnchor", &json!({"x": 55, "y": 8})).unwrap();
+    let r = s.execute("object.blend.addSpineAnchor", &json!({"x": 55, "y": 8})).unwrap();
     assert_eq!(r["anchor"], json!(1));
     let sp = spec(&s, g);
     assert_eq!(sp.key_anchors, vec![0, 2], "the keys keep their points");
     assert!(sp.spine.unwrap().subpaths[0].anchors[1].p.distance(Point::new(55.0, 5.0)) < 1e-9, "on the spine, nearest the click");
-    s.execute("object.blend.spine.moveAnchor", &json!({"anchor": 1, "x": 55, "y": 105})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"anchor": 1, "x": 55, "y": 105})).unwrap();
     let st = steps(&s, g);
     assert!(center(&st[1]).distance(Point::new(55.0, 105.0)) < 1e-6, "the step follows the spine: {:?}", center(&st[1]));
     assert_eq!(center(&st[0]), Point::new(5.0, 5.0), "the keys stay put");
@@ -71,10 +71,10 @@ fn moving_a_key_point_moves_the_key_and_the_other_way_round() {
     let mut s = session();
     let (a, b, g) = blend(&mut s);
     s.execute("select.set", &json!({"ids": [g.0]})).unwrap();
-    s.execute("object.blend.spine.moveAnchor", &json!({"anchor": 0, "x": 5, "y": 105})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"anchor": 0, "x": 5, "y": 105})).unwrap();
     assert_eq!(center(&node(&s, a)), Point::new(5.0, 105.0));
     // A handle drag curves the spine without moving the key.
-    s.execute("object.blend.spine.moveAnchor", &json!({"anchor": 0, "handle": "out", "x": 5, "y": 300})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"anchor": 0, "handle": "out", "x": 5, "y": 300})).unwrap();
     assert_eq!(center(&node(&s, a)), Point::new(5.0, 105.0));
     assert!(center(&steps(&s, g)[1]).y > 100.0, "the step bows out");
     // Editing a key on the canvas (it is selectable inside the blend) drags its point along.
@@ -84,17 +84,17 @@ fn moving_a_key_point_moves_the_key_and_the_other_way_round() {
     let NodeKind::Blend { children, spec } = &n.kind else { panic!() };
     let (path, _) = kition_vector_doc::live::blend_spine(children, spec).unwrap();
     assert_eq!(path.subpaths[0].anchors[1].p, Point::new(105.0, 55.0));
-    assert!(s.execute("object.blend.spine.moveAnchor", &json!({"id": g.0, "anchor": 9, "x": 0, "y": 0})).is_err());
-    assert!(s.execute("object.blend.spine.moveAnchor", &json!({"id": g.0, "anchor": 0, "x": f64::MAX, "y": 0})).is_err());
+    assert!(s.execute("object.blend.moveSpineAnchor", &json!({"id": g.0, "anchor": 9, "x": 0, "y": 0})).is_err());
+    assert!(s.execute("object.blend.moveSpineAnchor", &json!({"id": g.0, "anchor": 0, "x": f64::MAX, "y": 0})).is_err());
 }
 
 #[test]
 fn only_points_without_a_key_can_be_deleted() {
     let mut s = session();
     let (_, _, g) = blend(&mut s);
-    assert!(s.execute("object.blend.spine.removeAnchor", &json!({"id": g.0, "anchor": 0})).is_err());
-    s.execute("object.blend.spine.addAnchor", &json!({"id": g.0, "x": 30, "y": 5})).unwrap();
-    s.execute("object.blend.spine.removeAnchor", &json!({"id": g.0, "anchor": 1})).unwrap();
+    assert!(s.execute("object.blend.removeSpineAnchor", &json!({"id": g.0, "anchor": 0})).is_err());
+    s.execute("object.blend.addSpineAnchor", &json!({"id": g.0, "x": 30, "y": 5})).unwrap();
+    s.execute("object.blend.removeSpineAnchor", &json!({"id": g.0, "anchor": 1})).unwrap();
     let sp = spec(&s, g);
     assert_eq!((sp.spine.unwrap().subpaths[0].anchors.len(), sp.key_anchors), (2, vec![0, 1]));
 }
@@ -114,8 +114,8 @@ fn info_lists_the_spine() {
 fn release_keeps_the_spine_as_a_path() {
     let mut s = session();
     let (a, b, g) = blend(&mut s);
-    s.execute("object.blend.spine.addAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
-    s.execute("object.blend.spine.moveAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
+    s.execute("object.blend.addSpineAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
     let r = s.execute("object.blend.release", &json!({})).unwrap();
     assert_eq!(r["ids"], json!([a.0, b.0]));
     let spine = NodeId(r["spines"][0].as_u64().unwrap());
@@ -132,8 +132,8 @@ fn release_keeps_the_spine_as_a_path() {
 fn reverse_spine_and_front_to_back_keep_an_edited_spine() {
     let mut s = session();
     let (a, b, g) = blend(&mut s);
-    s.execute("object.blend.spine.addAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
-    s.execute("object.blend.spine.moveAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
+    s.execute("object.blend.addSpineAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
     s.execute("select.set", &json!({"ids": [g.0]})).unwrap();
     s.execute("object.blend.reverseSpine", &json!({})).unwrap();
     assert_eq!((center(&node(&s, a)), center(&node(&s, b))), (Point::new(105.0, 5.0), Point::new(5.0, 5.0)), "the keys swap ends");
@@ -147,8 +147,8 @@ fn reverse_spine_and_front_to_back_keep_an_edited_spine() {
 fn a_blend_with_an_edited_spine_takes_more_keys_along_it() {
     let mut s = session();
     let (a, b, g) = blend(&mut s);
-    s.execute("object.blend.spine.addAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
-    s.execute("object.blend.spine.moveAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
+    s.execute("object.blend.addSpineAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
+    s.execute("object.blend.moveSpineAnchor", &json!({"id": g.0, "anchor": 1, "x": 55, "y": 60})).unwrap();
     let c = id_of(&s.execute("shape.rectangle", &json!({"x": 200, "y": 0, "width": 10, "height": 10})).unwrap());
     let g2 = id_of(&s.execute("object.blend.make", &json!({"ids": [g.0, c.0]})).unwrap());
     let sp = spec(&s, g2);
@@ -180,7 +180,7 @@ fn direct_selection_picks_keys_and_edits_update_the_blend_live() {
 fn key_anchors_round_trip() {
     let mut s = session();
     let (_, _, g) = blend(&mut s);
-    s.execute("object.blend.spine.addAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
+    s.execute("object.blend.addSpineAnchor", &json!({"id": g.0, "x": 55, "y": 5})).unwrap();
     let d = &s.doc().unwrap().doc;
     let back = kition_vector_format::load(&kition_vector_format::save(d, false)).unwrap();
     assert_eq!(&back.layers, &d.layers);

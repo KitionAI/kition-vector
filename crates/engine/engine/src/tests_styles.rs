@@ -86,7 +86,7 @@ fn a_style_from_a_group_or_type_is_not_empty() {
     let b = rect(&mut s, 100.0);
     run(&mut s, "select.set", json!({"ids": [a.0, b.0]}));
     run(&mut s, "paint.setFill", json!({"color": "#ff0000"}));
-    let g = NodeId(run(&mut s, "object.group", json!({}))["id"].as_u64().unwrap());
+    let g = NodeId(run(&mut s, "arrange.group", json!({}))["id"].as_u64().unwrap());
     assert!(node(&s, g).appearance.items.is_empty());
     run(&mut s, "graphicStyle.new", json!({"name": "Group Look"}));
     let gs = style(&s, "Group Look");
@@ -94,7 +94,7 @@ fn a_style_from_a_group_or_type_is_not_empty() {
     // Both members share the look, so the group is linked.
     assert_eq!(linked(&mut s, "Group Look"), vec![g.0]);
 
-    let t = NodeId(run(&mut s, "text.create", json!({"x": 10, "y": 200, "text": "Hi"}))["id"].as_u64().unwrap());
+    let t = NodeId(run(&mut s, "text.add", json!({"x": 10, "y": 200, "text": "Hi"}))["id"].as_u64().unwrap());
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     run(&mut s, "graphicStyle.new", json!({"name": "Type Look"}));
     assert!(!style(&s, "Type Look").appearance.fill_paint().is_none());
@@ -252,8 +252,8 @@ fn select_same_appearance_attribute() {
 fn document_info_lists_style_names() {
     let mut s = session();
     let (a, ..) = linked_three(&mut s);
-    let i = run(&mut s, "document.info", json!({}));
+    let i = run(&mut s, "file.getInfo", json!({}));
     assert_eq!(i["graphicStyleNames"].as_array().unwrap().len(), 5);
     run(&mut s, "select.set", json!({"ids": [a.0]}));
-    assert_eq!(run(&mut s, "document.info", json!({"selectionOnly": true}))["graphicStyleNames"], json!(["S"]));
+    assert_eq!(run(&mut s, "file.getInfo", json!({"selectionOnly": true}))["graphicStyleNames"], json!(["S"]));
 }

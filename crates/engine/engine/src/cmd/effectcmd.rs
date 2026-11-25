@@ -517,7 +517,7 @@ mod tests {
     fn revolve_commands_keep_profile_live_edit_options_expand_and_undo() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width":300,"height":300})).unwrap();
-        let r = s.execute("path.create", &json!({"d":"M 150 40 L 180 60 L 180 140 L 150 160"})).unwrap();
+        let r = s.execute("path.add", &json!({"d":"M 150 40 L 180 60 L 180 140 L 150 160"})).unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         let source = node(&s, id).path_data().unwrap().clone();
         s.execute("effect.apply", &json!({"effect":"threeD.revolve","ids":[id.0],"item":null})).unwrap();
@@ -527,7 +527,7 @@ mod tests {
         let restored = kition_vector_format::load(&kition_vector_format::save(doc, false)).unwrap();
         assert_eq!(restored.node(id).unwrap().path_data(), Some(&source));
         assert_eq!(effects::revolve_art(restored.node(id).unwrap()).unwrap(), before);
-        let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
+        let pdf = s.execute("file.serialize", &json!({"format":"pdf"})).unwrap();
         let bytes = kition_vector_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
         assert!(bytes.starts_with(b"%PDF"));
         assert!(s.execute("effect.apply", &json!({"effect":"threeD.revolve","ids":[id.0],"item":null})).is_err());
@@ -552,7 +552,7 @@ mod tests {
     fn revolve_visibility_parameter_saves_expands_and_undoes_without_other_appearance_changes() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width":300,"height":300})).unwrap();
-        let r = s.execute("path.create", &json!({"d":"M 150 40 L 180 60 L 180 140 L 150 160"})).unwrap();
+        let r = s.execute("path.add", &json!({"d":"M 150 40 L 180 60 L 180 140 L 150 160"})).unwrap();
         let id = NodeId(r["id"].as_u64().unwrap());
         s.execute("effect.apply", &json!({"effect":"threeD.revolve","ids":[id.0],"item":null})).unwrap();
         let live = node(&s, id);
@@ -672,7 +672,7 @@ mod tests {
         let (mut s, a) = session_with_rect();
         let b = s.execute("shape.rectangle", &json!({"x": 150, "y": 100, "width": 100, "height": 100})).unwrap();
         s.execute("select.set", &json!({"ids": [a.0, b["id"]]})).unwrap();
-        let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
+        let g = NodeId(s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap());
         s.execute("effect.apply", &json!({"effect": "pathfinder.subtract"})).unwrap();
         // Live: the renderer shows only the back square minus the front one.
         let doc = s.doc().unwrap().doc.clone();

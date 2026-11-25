@@ -1,14 +1,14 @@
 //! Linked files that change while their document is open (another app saved them: Kition Photo,
 //! Photoshop, a placed Kition Vector document): Preferences › File Handling › Update
 //! Links decides, as it does when a document opens. Automatically reads them again
-//! (`links.update`, an undo step), Ask When Modified offers to, Manually leaves them modified in
+//! (`linkedFile.update`, an undo step), Ask When Modified offers to, Manually leaves them modified in
 //! the Links panel.
 //!
 //! The active document's linked files are compared by size and modification time with what they
 //! were when last seen. The desktop app takes the stamps every two seconds and when its window
 //! comes back to the front, on a worker thread so a file on a slow network share never holds up
 //! the interface ([`Session::start_link_scan`], [`Session::poll_link_scan`]);
-//! `links.updateChanged` takes them on the spot and reads the changed files again (CLI, agents).
+//! `linkedFile.updateChanged` takes them on the spot and reads the changed files again (CLI, agents).
 //!
 //! Stamps are kept per document: one in the background is looked at when it comes to the front.
 //! A file seen for the first time is only remembered (one modified while its document was closed
@@ -51,7 +51,7 @@ pub fn linked_files(d: &kition_vector_doc::Document) -> Vec<(String, Vec<u64>)> 
     crate::cmd::links::linked_groups(d)
 }
 
-/// `links.updateChanged`: stamp the active document's linked files now and read the changed
+/// `linkedFile.updateChanged`: stamp the active document's linked files now and read the changed
 /// ones again, whatever Update Links says.
 pub(crate) fn update_changed(s: &mut Session, _: &Value) -> Result<Value> {
     let st = s.doc()?;
@@ -137,7 +137,7 @@ impl Session {
         let mode = if update { "automatically" } else { self.prefs.update_links.as_str() };
         match mode {
             "automatically" => {
-                let r = self.execute("links.update", &json!({"ids": ids}))?;
+                let r = self.execute("linkedFile.update", &json!({"ids": ids}))?;
                 // Not readable yet (still being written): the next look tries again.
                 let unread: BTreeSet<u64> = r["missing"].as_array().map(|a| a.iter().filter_map(Value::as_u64).collect()).unwrap_or_default();
                 for (path, ids) in &changed {

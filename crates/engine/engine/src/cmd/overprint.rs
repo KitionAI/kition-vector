@@ -26,7 +26,7 @@ pub fn specs() -> Vec<CommandSpec> {
             set_overprint
         ),
         cmd!(
-            query "attributes.info",
+            query "attribute.info",
             "Attributes",
             [],
             None,
@@ -37,7 +37,7 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-/// The Attributes panel's values ([`Session::attributes_info`], `attributes.info`).
+/// The Attributes panel's values ([`Session::attributes_info`], `attribute.info`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AttributesInfo {
     /// The targets (the selection by default).
@@ -197,7 +197,7 @@ fn set_overprint(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn attributes(s: &Session, p: &Value) -> Result<AttributesInfo> {
-    const C: &str = "attributes.info";
+    const C: &str = "attribute.info";
     let d = &s.doc()?.doc;
     let mut info = AttributesInfo { ids: targets(s, p)?, recent_urls: s.recent_urls.clone(), ..Default::default() };
     super::attributes::fill_info(d, &mut info);

@@ -84,9 +84,9 @@ fn every_appearance_attribute_copies_the_whole_stack() {
 #[test]
 fn type_picks_up_font_and_size() {
     let mut s = session();
-    let src = id_of(s.execute("text.create", &json!({"x": 10, "y": 300, "text": "Source"})).unwrap());
+    let src = id_of(s.execute("text.add", &json!({"x": 10, "y": 300, "text": "Source"})).unwrap());
     s.execute("text.setStyle", &json!({"font": "Inter", "size": 30, "tracking": 50, "justify": "center", "fill": "#00ff00"})).unwrap();
-    let dst = id_of(s.execute("text.create", &json!({"x": 10, "y": 400, "text": "Target"})).unwrap());
+    let dst = id_of(s.execute("text.add", &json!({"x": 10, "y": 400, "text": "Target"})).unwrap());
     let style = |s: &Session, id| match &node(s, id).kind {
         NodeKind::Text(t) => (t.first_style(), t.para.justify),
         _ => panic!("not type"),
@@ -99,7 +99,7 @@ fn type_picks_up_font_and_size() {
     assert_eq!(st.fill.color().unwrap().to_hex(), "#00ff00");
     assert!(width(&s, dst) > before, "laid out again at the new size");
     // Without character or paragraph attributes only the paints go.
-    let dst2 = id_of(s.execute("text.create", &json!({"x": 10, "y": 500, "text": "Other"})).unwrap());
+    let dst2 = id_of(s.execute("text.add", &json!({"x": 10, "y": 500, "text": "Other"})).unwrap());
     let preserved_alignment = style(&s, dst2).1;
     s.execute("appearance.copyFrom", &json!({"source": src.0, "pickUp": {"character": false, "paragraph": false}})).unwrap();
     let (st, justify) = style(&s, dst2);
@@ -117,7 +117,7 @@ fn alt_click_applies_the_selection_to_the_clicked_object() {
     assert_eq!((n.appearance.fill_paint(), n.appearance.stroke_width()), (Paint::solid(Color::WHITE), 2.0));
     assert_eq!(node(&s, dst).appearance.fill_paint(), Paint::solid(Color::WHITE), "the selection is unchanged");
     assert_eq!(s.paint, defaults, "the defaults stay");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(s.execute("appearance.copyFrom", &json!({"source": src.0, "reverse": true})).is_err(), "nothing to copy from");
 }
 
@@ -197,7 +197,7 @@ fn type_takes_the_stroke_options_it_has() {
     let (src, _) = source_and_target(&mut s);
     s.execute("select.set", &json!({"ids": [src.0]})).unwrap();
     s.execute("stroke.set", &json!({"dash": [4, 2]})).unwrap();
-    let dst = id_of(s.execute("text.create", &json!({"x": 10, "y": 400, "text": "Target"})).unwrap());
+    let dst = id_of(s.execute("text.add", &json!({"x": 10, "y": 400, "text": "Target"})).unwrap());
     s.execute("eyedropper.setOptions", &json!({"apply": {"appearance": {"stroke": {"dash": false}}}})).unwrap();
     s.execute("appearance.copyFrom", &json!({"source": src.0})).unwrap();
     let NodeKind::Text(t) = &node(&s, dst).kind else { panic!("not type") };

@@ -16,8 +16,8 @@ fn session() -> Session {
 
 /// 12 pt type on a path along `d` (SVG path data), starting where the path is nearest `at`.
 fn path_type(s: &mut Session, d: &str, at: [f64; 2], text: &str) -> NodeId {
-    let pid = s.execute("path.create", &json!({ "d": d })).unwrap()["id"].as_u64().unwrap();
-    let r = s.execute("text.createInPath", &json!({"path": pid, "mode": "onPath", "text": text, "size": 12, "at": at})).unwrap();
+    let pid = s.execute("path.add", &json!({ "d": d })).unwrap()["id"].as_u64().unwrap();
+    let r = s.execute("text.addInPath", &json!({"path": pid, "mode": "onPath", "text": text, "size": 12, "at": at})).unwrap();
     let id = NodeId(r["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     id
@@ -89,27 +89,27 @@ fn options_keep_the_brackets() {
     let id = on_line(&mut s);
     assert!(near(brackets(&s, id).0, 0.5));
     // The query (what the dialog shows) has the current options.
-    let mut q = s.execute("type.pathOptions", &json!({})).unwrap();
+    let mut q = s.execute("text.pathOptions", &json!({})).unwrap();
     assert!(near(q["start"].as_f64().unwrap(), 0.5), "{q}");
     q.as_object_mut().unwrap().remove("start");
     assert_eq!(q, json!({"end": null, "flip": false, "effect": "rainbow", "alignToPath": "baseline", "spacing": 0.0}));
     let start = brackets(&s, id).0;
     // OK with the dialog's values (effect, flip, align, spacing) leaves the type where it is.
     let before = origins(&s, id);
-    s.execute("type.pathOptions", &json!({"effect": "rainbow", "flip": false, "alignToPath": "baseline", "spacing": 0})).unwrap();
+    s.execute("text.pathOptions", &json!({"effect": "rainbow", "flip": false, "alignToPath": "baseline", "spacing": 0})).unwrap();
     assert_eq!(brackets(&s, id), (start, None));
     assert_eq!(origins(&s, id), before);
     // So does a new effect.
-    s.execute("type.pathOptions", &json!({"effect": "skew"})).unwrap();
+    s.execute("text.pathOptions", &json!({"effect": "skew"})).unwrap();
     assert_eq!(brackets(&s, id), (start, None));
     assert_eq!(text(&s, id).path_effect, kition_vector_doc::PathEffect::Skew);
     // The end bracket is set, and put back at the end of the path.
-    s.execute("type.pathOptions", &json!({"end": 0.9})).unwrap();
+    s.execute("text.pathOptions", &json!({"end": 0.9})).unwrap();
     assert_eq!(brackets(&s, id), (start, Some(0.9)));
-    s.execute("type.pathOptions", &json!({"end": null})).unwrap();
+    s.execute("text.pathOptions", &json!({"end": null})).unwrap();
     assert_eq!(brackets(&s, id), (start, None));
     for bad in [json!({"start": "x"}), json!({"effect": "nope"}), json!({"alignToPath": "top"})] {
-        assert!(s.execute("type.pathOptions", &bad).is_err(), "{bad}");
+        assert!(s.execute("text.pathOptions", &bad).is_err(), "{bad}");
     }
 }
 
@@ -120,7 +120,7 @@ fn flip_turns_the_type_to_the_other_side_of_its_stretch() {
     let up = ink(&s, id);
     assert!(up.y1 < 301.0 && up.x0 > 299.0, "above the path from its middle: {up:?}");
     let n = undo_len(&s);
-    let r = s.execute("type.pathOptions", &json!({"flip": true})).unwrap();
+    let r = s.execute("text.pathOptions", &json!({"flip": true})).unwrap();
     assert_eq!(undo_len(&s), n + 1);
     // The path runs the other way and the brackets swap ends: the type keeps the right half.
     assert!(near(r["start"].as_f64().unwrap(), 0.0) && near(r["end"].as_f64().unwrap(), 0.5), "{r}");
@@ -129,7 +129,7 @@ fn flip_turns_the_type_to_the_other_side_of_its_stretch() {
     let o = origins(&s, id);
     assert!(o.first().unwrap().x > o.last().unwrap().x, "reading right to left: {o:?}");
     // Flipped back, it is as it was.
-    s.execute("type.pathOptions", &json!({"flip": true})).unwrap();
+    s.execute("text.pathOptions", &json!({"flip": true})).unwrap();
     let (start, end) = brackets(&s, id);
     assert!(near(start, 0.5) && end.is_none(), "{start} {end:?}");
     assert!(ink(&s, id).y1 < 301.0);
@@ -142,7 +142,7 @@ fn a_flip_round_a_closed_path_keeps_the_type_in_place() {
     let (start, _) = brackets(&s, id);
     assert!(near(start, 0.125), "{start}");
     let first = origins(&s, id)[0];
-    s.execute("type.pathOptions", &json!({"flip": true})).unwrap();
+    s.execute("text.pathOptions", &json!({"flip": true})).unwrap();
     // Once round from the same point, the other way.
     let (start, end) = brackets(&s, id);
     assert!(near(start, 0.875) && end.is_none(), "{start} {end:?}");
@@ -153,11 +153,11 @@ fn a_flip_round_a_closed_path_keeps_the_type_in_place() {
 fn align_to_path_and_spacing() {
     let mut s = session();
     let id = on_line(&mut s);
-    s.execute("type.pathOptions", &json!({"alignToPath": "ascender"})).unwrap();
+    s.execute("text.pathOptions", &json!({"alignToPath": "ascender"})).unwrap();
     assert_eq!(text(&s, id).path_align, PathAlign::Ascender);
     let hang = ink(&s, id);
     assert!(hang.y0 > 299.0, "hangs below the path: {hang:?}");
-    s.execute("type.pathOptions", &json!({"alignToPath": "center"})).unwrap();
+    s.execute("text.pathOptions", &json!({"alignToPath": "center"})).unwrap();
     let mid = ink(&s, id);
     assert!(mid.y0 < 300.0 && mid.y1 > 300.0, "the path runs through it: {mid:?}");
     // Spacing closes glyphs up round the outside of a curve.
@@ -167,9 +167,9 @@ fn align_to_path_and_spacing() {
         o.first().unwrap().distance(*o.last().unwrap())
     };
     let loose = spread(&s);
-    s.execute("type.pathOptions", &json!({"spacing": 6})).unwrap();
+    s.execute("text.pathOptions", &json!({"spacing": 6})).unwrap();
     assert!(spread(&s) < loose - 1.0, "{} < {loose}", spread(&s));
-    assert_eq!(s.execute("type.pathOptions", &json!({})).unwrap()["spacing"], json!(6.0));
+    assert_eq!(s.execute("text.pathOptions", &json!({})).unwrap()["spacing"], json!(6.0));
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn dragging_the_start_and_end_brackets_sets_where_the_type_runs() {
     drag(&mut s, "directSelection", Point::new(500.0, 290.0), Point::new(400.0, 290.0), Mods::default());
     let (start, end) = brackets(&s, id);
     assert!(near(start, 0.25) && end.is_some_and(|e| near(e, 0.75)), "{start} {end:?}");
-    let v: Value = s.execute("type.pathOptions", &json!({})).unwrap();
+    let v: Value = s.execute("text.pathOptions", &json!({})).unwrap();
     assert!(near(v["end"].as_f64().unwrap(), 0.75));
     let r = ink(&s, id);
     assert!(r.x0 > 199.0 && r.x1 < 401.0, "between the brackets: {r:?}");

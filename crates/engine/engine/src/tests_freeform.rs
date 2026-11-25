@@ -207,7 +207,7 @@ fn point_commands_need_a_freeform_gradient() {
         }
     }
     // Nothing selected: nothing to edit.
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert!(s.execute("paint.freeform.addPoint", &json!({"at": [1, 1]})).is_err());
 }
 
@@ -220,7 +220,7 @@ fn selection_follows_the_object_and_the_proxy() {
     assert_eq!(s.selected_freeform_point(), None, "the Stroke proxy has its own paint");
     run(&mut s, "paint.toggleActive", json!({}));
     assert_eq!(s.selected_freeform_point(), Some(2));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     run(&mut s, "select.set", json!({"ids": [id.0]}));
     assert_eq!(s.selected_freeform_point(), Some(2), "same object, same proxy");
     assert!(s.execute("paint.freeform.selectPoint", &json!({"index": 99})).is_err());
@@ -229,7 +229,7 @@ fn selection_follows_the_object_and_the_proxy() {
 #[test]
 fn type_objects_keep_points_in_text_space() {
     let mut s = session();
-    let r = run(&mut s, "text.create", json!({"x": 100, "y": 200, "text": "Freeform", "size": 40}));
+    let r = run(&mut s, "text.add", json!({"x": 100, "y": 200, "text": "Freeform", "size": 40}));
     let id = NodeId(r["id"].as_u64().unwrap());
     run(&mut s, "paint.editGradient", json!({"kind": "freeform"}));
     run(&mut s, "object.rotate", json!({"angle": 90, "origin": [100, 200]}));

@@ -25,7 +25,7 @@ fn id_of(v: &Value) -> NodeId {
 
 /// 12 pt area type in a `w` × `h` frame at (`x`, `y`).
 fn area(s: &mut Session, x: f64, y: f64, w: f64, h: f64, text: &str) -> NodeId {
-    id_of(&s.execute("text.create", &json!({"x": x, "y": y, "size": 12, "area": {"width": w, "height": h}, "text": text})).unwrap())
+    id_of(&s.execute("text.add", &json!({"x": x, "y": y, "size": 12, "area": {"width": w, "height": h}, "text": text})).unwrap())
 }
 
 fn sel(s: &mut Session, ids: &[NodeId]) {
@@ -111,7 +111,7 @@ fn a_handle_drag_resizes_the_type_area_and_the_text_reflows() {
 #[test]
 fn point_type_still_scales_with_its_handles() {
     let mut s = session();
-    let id = id_of(&s.execute("text.create", &json!({"x": 40, "y": 40, "size": 12, "text": "Hello"})).unwrap());
+    let id = id_of(&s.execute("text.add", &json!({"x": 40, "y": 40, "size": 12, "text": "Hello"})).unwrap());
     sel(&mut s, &[id]);
     let b = s.transform_box(&s.doc().unwrap().selection.objects).unwrap();
     let (tl, br) = (b.to_doc() * Handle::TopLeft.pos(b.rect), b.to_doc() * Handle::BottomRight.pos(b.rect));
@@ -182,7 +182,7 @@ fn a_resized_frame_reflows_its_thread() {
     let a = area(&mut s, 40.0, 40.0, 120.0, 40.0, STORY);
     let b = area(&mut s, 300.0, 40.0, 120.0, 200.0, "");
     sel(&mut s, &[a, b]);
-    s.execute("text.thread.create", &json!({})).unwrap();
+    s.execute("text.thread.add", &json!({})).unwrap();
     let rest = text(&s, b).plain_text().len();
     assert!(rest > 0, "the overflow flows on");
     // Bounding-box resize of the first frame to 160 × 100, as the Selection tool sends it.
@@ -224,7 +224,7 @@ fn area_type_options_size_the_type_area() {
 fn reshape_area_takes_untrusted_params() {
     let mut s = session();
     let id = area(&mut s, 40.0, 40.0, 120.0, 40.0, STORY);
-    let point = id_of(&s.execute("text.create", &json!({"x": 40, "y": 300, "text": "Point"})).unwrap());
+    let point = id_of(&s.execute("text.add", &json!({"x": 40, "y": 300, "text": "Point"})).unwrap());
     let rect = id_of(&s.execute("shape.rectangle", &json!({"x": 300, "y": 300, "width": 50, "height": 50})).unwrap());
     let n = undo_len(&s);
     for bad in [
@@ -311,7 +311,7 @@ fn double_click(s: &mut Session, p: Point) {
 #[test]
 fn the_type_widget_converts_point_and_area_type() {
     let mut s = session();
-    let id = id_of(&s.execute("text.create", &json!({"x": 40, "y": 100, "size": 18, "text": "Two words"})).unwrap());
+    let id = id_of(&s.execute("text.add", &json!({"x": 40, "y": 100, "size": 18, "text": "Two words"})).unwrap());
     s.execute("text.setRangeStyle", &json!({"id": id.0, "start": 4, "end": 9, "size": 24})).unwrap();
     sel(&mut s, &[id]);
     let before = text(&s, id);

@@ -20,7 +20,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 
 /// Selected point type "Stroke" with a 1 pt red character stroke.
 fn stroked_text(s: &mut Session) -> NodeId {
-    let id = NodeId(run(s, "text.create", json!({"x": 20, "y": 100, "text": "Stroke", "size": 48}))["id"].as_u64().unwrap());
+    let id = NodeId(run(s, "text.add", json!({"x": 20, "y": 100, "text": "Stroke", "size": 48}))["id"].as_u64().unwrap());
     run(s, "select.set", json!({ "ids": [id.0] }));
     run(s, "paint.setStroke", json!({"color": "#ff0000"}));
     id
@@ -108,7 +108,7 @@ fn eyedropper_and_outlines_carry_the_character_stroke() {
     assert_eq!((st.stroke_cap, st.stroke_join, st.stroke_dash), (LineCap::Square, LineJoin::Round, None));
     // Create Outlines keeps them on every glyph.
     run(&mut s, "select.set", json!({ "ids": [id.0] }));
-    let g = run(&mut s, "type.createOutlines", json!({}))["ids"][0].as_u64().unwrap();
+    let g = run(&mut s, "text.convertToOutlines", json!({}))["ids"][0].as_u64().unwrap();
     let d = &s.doc().unwrap().doc;
     let glyphs = d.node(NodeId(g)).unwrap().children().unwrap().to_vec();
     assert!(!glyphs.is_empty());

@@ -1,4 +1,4 @@
-//! `document.exportPdf` Marks and Bleeds: the document's bleed or custom values set the page
+//! `file.exportPdf` Marks and Bleeds: the document's bleed or custom values set the page
 //! boxes, printer's marks print in Registration, non-printing layers are left out unless asked.
 
 use kition_vector_pdf::CropTo;
@@ -13,9 +13,9 @@ fn session() -> Session {
     s
 }
 
-/// The PDF `document.exportPdf {p}` writes, and its warnings.
+/// The PDF `file.exportPdf {p}` writes, and its warnings.
 fn export(s: &mut Session, p: Value) -> (Vec<u8>, Vec<String>) {
-    let v = s.execute("document.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
+    let v = s.execute("file.exportPdf", &p).unwrap_or_else(|e| panic!("{p}: {e}"));
     let bytes = kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     (bytes, serde_json::from_value(v["warnings"].clone()).unwrap())
 }
@@ -50,7 +50,7 @@ fn printer_marks_print_in_registration_with_no_warning() {
     let (media, bleed, _) = boxes(&bytes);
     // Japanese marks start at the 9 pt bleed and reach 18 pt (+ their weight) beyond it.
     assert_eq!((bleed.width(), media.width()), (118.0, 100.0 + 2.0 * (9.0 + 18.0 + 0.25)), "the sheet holds the marks: {media:?}");
-    let v = s.execute("document.pdfSettings", &json!({"marks": marks, "bleed": {"top": 9}, "includeDocument": true})).unwrap();
+    let v = s.execute("file.pdfSettings", &json!({"marks": marks, "bleed": {"top": 9}, "includeDocument": true})).unwrap();
     assert_eq!(v["warnings"], json!([]));
 }
 

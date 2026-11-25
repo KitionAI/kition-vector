@@ -39,7 +39,7 @@ your draft of the drawing and leave the file as it is; only the person merges or
 - A command that takes `ids` (paint, stroke, appearance, transparency, `object.setProps`, the
   Layers panel's `layer.*`) acts on them; give the ids as numbers, or as the step's `on`, which
   fills `ids`. Commands without `ids` ([`object.move`](/kits/vector/commands/object.move/),
-  [`object.group`](/kits/vector/commands/object.group/),
+  [`arrange.group`](/kits/vector/commands/arrange.group/),
   [`object.align`](/kits/vector/commands/object.align/), Pathfinder, clipping and compound paths)
   act on **the selection**: give the step `on: [ids]`, which becomes the selection for that step
   only; the person's selection, current layer and new-art paint are put back after the call.
@@ -85,7 +85,7 @@ artboard 12, the other 31 families 153):
 - what its objects refer to: an instance's symbol (rasterize, expand, break link), the graphic
   style a redefinition re-applies to every object linked to it, a symbol's instances when it is
   deleted, the swatches a paste relinks;
-- a settings edit (`document.setup`, `file.info`, `document.rasterEffectsSettings`, `print.setup`,
+- a settings edit (`file.setup`, `file.setInfo`, `file.rasterEffectsSettings`, `print.setup`,
   `print.tiling.set`): the settings it is given (another program's change of another setting of
   the same group is kept);
 - the drawing's own settings and tables the handler reads: the guides (slices from guides,
@@ -148,11 +148,11 @@ cannot tell whether it lay under the point): give them `on`, or inspect again.
 ```json
 vector_run {"path": "Badge.kvector", "steps": [
   {"command": "shape.rectangle", "params": {"x": 10, "y": 10, "width": 180, "height": 80, "radius": 12}},
-  {"command": "text.create", "params": {"x": 100, "y": 58, "text": "Kition", "size": 28, "color": "#ffffff"}}
+  {"command": "text.add", "params": {"x": 100, "y": 58, "text": "Kition", "size": 28, "color": "#ffffff"}}
 ]}
 ```
 
-Answer: `completed: [{command: "shape.rectangle", result: {id: 4}}, {command: "text.create",
+Answer: `completed: [{command: "shape.rectangle", result: {id: 4}}, {command: "text.add",
 result: {id: 5}}]`. Use those ids:
 
 ```json
@@ -194,8 +194,8 @@ A diagnostic with a fix is applied as given:
 ```json
 vector_check {"path": "Icons.kvector"}
 → {"diagnostics": [{"code": "vector.empty-group", "severity": "info", "target": {"path": "object:1004"},
-    "fix": {"command": "edit.clear", "params": {"ids": [1004]}}}]}
-vector_run {"path": "Icons.kvector", "steps": [{"command": "edit.clear", "params": {"ids": [1004]}}]}
+    "fix": {"command": "edit.delete", "params": {"ids": [1004]}}}]}
+vector_run {"path": "Icons.kvector", "steps": [{"command": "edit.delete", "params": {"ids": [1004]}}]}
 vector_check {"path": "Icons.kvector"}
 → {"diagnostics": []}
 ```
@@ -209,7 +209,7 @@ vector_check {"path": "Icons.kvector"}
 - **Select first:** [`paint.setFill`](/kits/vector/commands/paint.setFill/) with nothing selected
   changes nothing.
 - **`y` grows down:** a rectangle at `y: 10` sits near the top.
-- **Type position:** the `x, y` of [`text.create`](/kits/vector/commands/text.create/) is the start
+- **Type position:** the `x, y` of [`text.add`](/kits/vector/commands/text.add/) is the start
   of the first baseline, not the top-left corner of the box.
 - **Files:** commands that name files take workspace-relative paths of the stated type; paths
   outside the workspace answer `not-allowed`.
@@ -232,5 +232,5 @@ Every code the kit reports is on the [checks page](/kits/vector/checks/).
 | `vector.missing-graphic-style` | warning | Apply an existing graphic style or clear the link |
 | `vector.off-artboard` | warning | Select the object and [`object.move`](/kits/vector/commands/object.move/) it onto an artboard, or delete it |
 | `vector.font-substituted` | info | The font is not installed here; choose an available family ([`text.fontList`](/kits/vector/commands/text.fontList/)) |
-| `vector.empty-group`, `vector.empty-text`, `vector.stray-point` | info | `fix`: [`edit.clear`](/kits/vector/commands/edit.clear/) `{ids}` |
+| `vector.empty-group`, `vector.empty-text`, `vector.stray-point` | info | `fix`: [`edit.delete`](/kits/vector/commands/edit.delete/) `{ids}` |
 | `vector.truncated` | info | More of one code than listed: fix the listed ones and check again |

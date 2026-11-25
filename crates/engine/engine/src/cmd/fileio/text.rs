@@ -11,7 +11,7 @@ use serde_json::Value;
 use super::super::*;
 use super::FormatOption;
 
-const C: &str = "document.export";
+const C: &str = "file.export";
 
 const ENCODING: FormatOption = FormatOption {
     name: "encoding",
@@ -22,9 +22,9 @@ const ENCODING: FormatOption = FormatOption {
 const LINE_ENDINGS: FormatOption =
     FormatOption { name: "lineEndings", ty: "string", default: "\"lf\"", description: "lf (macOS, Linux) or crlf (Windows)" };
 const SELECTION_ONLY: FormatOption =
-    FormatOption { name: "selectionOnly", ty: "boolean", default: "false", description: "only the selected type objects (document.export)" };
+    FormatOption { name: "selectionOnly", ty: "boolean", default: "false", description: "only the selected type objects (file.export)" };
 
-/// The options `document.formats` lists for text.
+/// The options `file.formats` lists for text.
 pub(super) const OPTIONS: &[FormatOption] = &[ENCODING, LINE_ENDINGS, SELECTION_ONLY];
 
 #[derive(Default, Deserialize)]

@@ -88,7 +88,7 @@ fn export_and_expand_write_the_adjusted_colours() {
     let mut s = session();
     let id = red_rect(&mut s);
     s.execute("effect.apply", &json!({"effect": "adjust.levels", "params": {"outputWhite": 128, "channel": "red"}})).unwrap();
-    let svg = s.execute("document.export", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.export", &json!({"format": "svg"})).unwrap();
     let svg = String::from_utf8(kition_vector_format::base64_decode(svg["dataBase64"].as_str().unwrap()).unwrap()).unwrap();
     assert!(svg.contains("#800000") && !svg.contains("#ff0000"), "{svg}");
     // Expand Appearance makes it permanent.
@@ -122,9 +122,9 @@ fn adjustments_survive_the_native_file() {
     let mut s = session();
     red_rect(&mut s);
     s.execute("effect.apply", &json!({"effect": "adjust.curves", "params": {"points": "0,0 64,32 255,255", "channel": "green"}})).unwrap();
-    let saved = s.execute("document.export", &json!({"format": "kvector"})).unwrap()["dataBase64"].clone();
+    let saved = s.execute("file.export", &json!({"format": "kvector"})).unwrap()["dataBase64"].clone();
     let mut o = Session::new();
-    o.execute("document.open", &json!({"name": "a.kvector", "dataBase64": saved})).unwrap();
+    o.execute("file.open", &json!({"name": "a.kvector", "dataBase64": saved})).unwrap();
     let mut found = None;
     o.doc().unwrap().doc.walk(|n| {
         if let Some(e) = n.appearance.effects.first() {

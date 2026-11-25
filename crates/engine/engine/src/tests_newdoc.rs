@@ -80,7 +80,7 @@ fn every_setting_reaches_the_document() {
 fn a_white_background_exports_opaque() {
     let alpha = |bg: &str| {
         let mut s = new_doc(json!({"width": 20, "height": 20, "backgroundContents": bg}));
-        let r = s.execute("document.export", &json!({"format": "png"})).unwrap();
+        let r = s.execute("file.export", &json!({"format": "png"})).unwrap();
         let png = kition_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap();
         image::load_from_memory(&png).unwrap().to_rgba8().get_pixel(10, 10).0
     };

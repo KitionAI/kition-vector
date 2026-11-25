@@ -42,7 +42,7 @@ fn a_point_moved_onto_another_makes_a_discontinuous_point_that_renders_a_step() 
     // Editing one side's widths keeps the pair.
     set(&mut s, json!({"id": id.0, "index": 1, "t": 0.75, "left": 2, "right": 2}));
     assert_eq!(points(&s, id)[1..3], [(0.75, 0.4, 0.4), (0.75, 3.0, 3.0)]);
-    let doc = s.execute("document.inspect", &json!({})).unwrap();
+    let doc = s.execute("file.inspect", &json!({})).unwrap();
     let want = json!([[0.0, 1.0, 1.0], [0.75, 0.4, 0.4], [0.75, 3.0, 3.0], [1.0, 1.0, 1.0]]);
     assert_eq!(doc["layers"][0]["children"][0]["strokeOptions"]["widthPoints"], want, "agents read the points");
     // The step renders: just before x = 140 (t = 0.75) the stroke is 2 pt thick, just after 15.

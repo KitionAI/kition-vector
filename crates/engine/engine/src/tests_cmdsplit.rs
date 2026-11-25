@@ -71,7 +71,7 @@ fn leaf_targets_expand_groups_and_stop_at_compound_paths() {
     let mut s = session();
     let (a, b) = (rect(&mut s, 0.0), rect(&mut s, 30.0));
     s.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
-    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let g = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     assert_eq!(leaf_targets(&s, &[g]).unwrap(), vec![a, b]);
     let (c, d) = (rect(&mut s, 60.0), rect(&mut s, 90.0));
     s.execute("select.set", &json!({"ids": [c.0, d.0]})).unwrap();

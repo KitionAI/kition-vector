@@ -46,7 +46,7 @@ fn a_rounded_rectangle_gives_background_border_and_radius() {
 #[test]
 fn type_gives_font_properties_and_gradients_css_gradients() {
     let mut s = session();
-    let t = run(&mut s, "text.create", json!({"x": 20, "y": 50, "text": "Title", "size": 24}))["id"].as_u64().unwrap();
+    let t = run(&mut s, "text.add", json!({"x": 20, "y": 50, "text": "Title", "size": 24}))["id"].as_u64().unwrap();
     let text = css(&run(&mut s, "css.selection", json!({"ids": [t]}))).to_string();
     for decl in ["font-family: 'Source Sans 3';", "font-size: 24px;", "color: #"] {
         assert!(text.contains(decl), "{decl} in {text}");
@@ -62,7 +62,7 @@ fn generate_covers_the_document_and_an_empty_selection_has_none() {
     let mut s = session();
     run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10}));
     run(&mut s, "shape.ellipse", json!({"x": 20, "y": 0, "width": 10, "height": 10}));
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     let none = run(&mut s, "css.selection", json!({}));
     assert_eq!(css(&none), "");
     let all = run(&mut s, "css.generate", json!({}));
@@ -94,7 +94,7 @@ fn export_writes_the_sheet_and_rasterized_art() {
     assert_eq!(r["rules"], json!(1));
     assert!(r["images"].as_array().unwrap().is_empty(), "no rasterize: no pictures");
     assert!(s.execute("css.export", &json!({"scope": "page"})).is_err());
-    run(&mut s, "select.none", json!({}));
+    run(&mut s, "edit.deselectAll", json!({}));
     assert!(s.execute("css.export", &json!({})).is_err(), "nothing selected: nothing to export");
 }
 

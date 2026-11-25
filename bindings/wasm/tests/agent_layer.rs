@@ -15,7 +15,7 @@ fn drawing(prop: &str) -> (VectorDocument, Value, Value) {
     let rect = doc.execute("shape.rectangle", json!({"x":10,"y":10,"width":20,"height":20})).unwrap()["id"].clone();
     doc.execute("select.set", json!({"ids":[rect]})).unwrap();
     doc.execute("edit.copy", json!({})).unwrap();
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     let second = doc.execute("layer.new", json!({"name":"Second"})).unwrap()["id"].clone();
     doc.execute("layer.setCurrent", json!({"id": first})).unwrap();
     doc.execute("layer.setProps", json!({"ids":[first], prop: prop == "locked"})).unwrap();
@@ -23,7 +23,7 @@ fn drawing(prop: &str) -> (VectorDocument, Value, Value) {
 }
 
 fn calls() -> [(&'static str, Value); 3] {
-    [("shape.ellipse", json!({"x":10,"y":10,"width":20,"height":20})), ("text.create", json!({"x":10,"y":40,"text":"A"})), ("edit.paste", json!({}))]
+    [("shape.ellipse", json!({"x":10,"y":10,"width":20,"height":20})), ("text.add", json!({"x":10,"y":40,"text":"A"})), ("edit.paste", json!({}))]
 }
 
 #[test]

@@ -7,8 +7,8 @@ intent: >-
   entries the parser could not read (`sides=6`, `jpg: quality?: 90`, `ids?|id + start?/end?`,
   prose split at a comma) or a notation that is no object (`same as effect.apply: {…}`), and
   kition-sdk's check_commands did not see them because this kit completes the schemas after
-  converting the notation; document.export refused `ppi`, `quality`, `colors` and `lossless`,
-  document.save `compress` and `separateArtboards`, shape.flare `diameter`.
+  converting the notation; file.export refused `ppi`, `quality`, `colors` and `lossless`,
+  file.save `compress` and `separateArtboards`, shape.flare `diameter`.
 layer: gate
 source: {kind: synthetic, from: kition-sdk e1c9598 (unreadable notation entries), license: Apache-2.0}
 input: []

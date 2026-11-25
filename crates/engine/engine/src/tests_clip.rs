@@ -36,9 +36,9 @@ pub(crate) fn opaque(r: &Rendered, x: u32, y: u32) -> bool {
 
 /// The document exported as `format` and opened again, rendered.
 fn reopened(s: &mut Session, format: &str) -> Rendered {
-    let data = s.execute("document.export", &json!({"format": format})).unwrap()["dataBase64"].clone();
+    let data = s.execute("file.export", &json!({"format": format})).unwrap()["dataBase64"].clone();
     let mut o = Session::new();
-    o.execute("document.open", &json!({"name": format!("clip.{format}"), "dataBase64": data})).unwrap();
+    o.execute("file.open", &json!({"name": format!("clip.{format}"), "dataBase64": data})).unwrap();
     render(&o)
 }
 
@@ -101,7 +101,7 @@ fn compound_clip_keeps_its_hole_and_release_gives_the_compound_back() {
 fn text_on_top_clips_by_its_glyphs() {
     let mut s = session();
     let art = id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 100})).unwrap());
-    let t = id_of(&s.execute("text.create", &json!({"x": 5, "y": 80, "text": "O", "size": 90})).unwrap());
+    let t = id_of(&s.execute("text.add", &json!({"x": 5, "y": 80, "text": "O", "size": 90})).unwrap());
     let b = s.doc().unwrap().doc.node(t).unwrap().geometric_bounds().unwrap();
     select(&mut s, &[art, t]);
     let g = id_of(&s.execute("object.clippingMask.make", &json!({})).unwrap());
@@ -131,7 +131,7 @@ fn make_refuses_a_top_object_that_cannot_clip() {
     let art = id_of(&s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 100, "height": 100})).unwrap());
     let (a, b) = (ellipse(&mut s, 10.0, 20.0), ellipse(&mut s, 50.0, 20.0));
     select(&mut s, &[a, b]);
-    s.execute("object.group", &json!({})).unwrap();
+    s.execute("arrange.group", &json!({})).unwrap();
     let group = s.doc().unwrap().selection.objects[0];
     select(&mut s, &[art, group]);
     let err = s.execute("object.clippingMask.make", &json!({})).unwrap_err();
@@ -152,7 +152,7 @@ const SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height
 #[test]
 fn imported_multi_shape_and_even_odd_clip_paths_clip() {
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "clips.svg", "dataBase64": kition_vector_format::base64_encode(SVG.as_bytes())})).unwrap();
+    s.execute("file.open", &json!({"name": "clips.svg", "dataBase64": kition_vector_format::base64_encode(SVG.as_bytes())})).unwrap();
     let d = &s.doc().unwrap().doc;
     let mut kinds = vec![];
     d.walk(|n| {

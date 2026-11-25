@@ -44,9 +44,9 @@ fn drawing(shapes: usize) -> Vec<u8> {
         members.push(id);
     }
     doc.execute("select.set", json!({"ids": members})).unwrap();
-    let group = doc.execute("object.group", json!({})).unwrap()["id"].clone();
+    let group = doc.execute("arrange.group", json!({})).unwrap()["id"].clone();
     doc.execute("object.setProps", json!({"ids":[group],"name":"G"})).unwrap();
-    doc.execute("select.none", json!({})).unwrap();
+    doc.execute("edit.deselectAll", json!({})).unwrap();
     doc.save(None).unwrap()
 }
 
@@ -68,10 +68,10 @@ fn colleague(file: &Path, steps: &[(&str, Value)]) -> Vec<Value> {
     answers
 }
 
-/// The file as a new engine reads it: object `id` as `document.node` gives it (`None` if gone).
+/// The file as a new engine reads it: object `id` as `file.node` gives it (`None` if gone).
 fn on_disk(file: &Path, id: u64) -> Option<Value> {
     let mut doc = VectorDocument::open(FILE, &std::fs::read(file).unwrap()).unwrap();
-    doc.execute("document.node", json!({"id": id})).ok()
+    doc.execute("file.node", json!({"id": id})).ok()
 }
 
 /// The ids of the objects an inspect lists (at any depth), by name.
@@ -241,7 +241,7 @@ async fn s3_a_deleted_target_is_refused() {
     let f = Fixture::new();
     let (details, basis) = f.inspect().await;
     let mine = ids_by_name(&details)["R2"];
-    f.colleague(&[("edit.clear", json!({"ids":[mine]}))]);
+    f.colleague(&[("edit.delete", json!({"ids":[mine]}))]);
     for step in [rename(mine, "Mine"), fill(mine, "#ff0000"), json!({"command":"object.move","on":[mine],"params":{"dx":5,"dy":0}})] {
         let refused = f.refused("run", json!({"basis": basis, "steps": [step]})).await;
         assert_conflict(&refused, mine, "deleted");
@@ -406,15 +406,19 @@ fn place_on_disk(file: &Path, id: u64) -> (Value, usize) {
 /// them (`relocated`). A delete does not depend on where its object is: it applies.
 #[tokio::test(flavor = "multi_thread")]
 async fn s12_a_move_into_another_group_refuses_a_group_and_not_a_delete() {
-    for (command, refuses) in
-        [("object.group", true), ("object.pathfinder.unite", true), ("object.clippingMask.make", true), ("edit.clear", false), ("object.lock", false)]
-    {
+    for (command, refuses) in [
+        ("arrange.group", true),
+        ("object.pathfinder.unite", true),
+        ("object.clippingMask.make", true),
+        ("edit.delete", false),
+        ("object.lock", false),
+    ] {
         let f = Fixture::new();
         let (details, basis) = f.inspect().await;
         let names = ids_by_name(&details);
         let (r5, r6, group) = (names["R5"], names["R6"], names["G"]);
         f.colleague(&[("node.move", json!({"id": r6, "parent": group, "index": 1}))]);
-        let on = if command == "edit.clear" || command == "object.lock" { json!([r6]) } else { json!([r5, r6]) };
+        let on = if command == "edit.delete" || command == "object.lock" { json!([r6]) } else { json!([r5, r6]) };
         let answer = f.call("run", json!({"basis": basis, "steps": [{"command": command, "on": on}]})).await;
         match (&answer, refuses) {
             (Err(refused), true) => assert_conflict(refused, r6, "relocated"),
@@ -456,10 +460,10 @@ async fn s12_an_object_added_or_deleted_elsewhere_leaves_a_group_alone() {
         let change = if step == "create" {
             ("shape.rectangle", json!({"x":600,"y":500,"width":10,"height":10}))
         } else {
-            ("edit.clear", json!({"ids":[names["R2"]]}))
+            ("edit.delete", json!({"ids":[names["R2"]]}))
         };
         f.colleague(&[change]);
-        let answer = f.call("run", json!({"basis": basis, "steps": [{"command":"object.group","on":[names["R5"], names["R6"]]}]})).await;
+        let answer = f.call("run", json!({"basis": basis, "steps": [{"command":"arrange.group","on":[names["R5"], names["R6"]]}]})).await;
         println!("s12: group after an unrelated {step}: {}", if answer.is_ok() { "applied" } else { "REFUSED (waiting for the SDK)" });
         if step == "create" {
             assert!(answer.is_ok(), "group refused after an unrelated {step}: {answer:?}");
@@ -584,9 +588,9 @@ async fn s17_a_knife_by_stroke_follows_what_is_under_it() {
             "another moved elsewhere" => ("object.move", json!({"dx":0,"dy":300})),
             "another recoloured" => ("paint.setFill", json!({"ids":[id],"color":"#00ff00"})),
             "a new one elsewhere" => ("shape.rectangle", json!({"x":600,"y":500,"width":10,"height":10})),
-            _ => ("edit.clear", json!({"ids":[id]})),
+            _ => ("edit.delete", json!({"ids":[id]})),
         };
-        f.colleague(&[("select.set", json!({"ids": if id == 0 { vec![] } else { vec![id] }})), change, ("select.none", json!({}))]);
+        f.colleague(&[("select.set", json!({"ids": if id == 0 { vec![] } else { vec![id] }})), change, ("edit.deselectAll", json!({}))]);
         let answer = f.call("run", json!({"basis": basis, "steps": [knife.clone()]})).await;
         match (expected, &answer) {
             (None, Ok(_)) => println!("s17: knife after {what}: applied"),
@@ -608,7 +612,7 @@ async fn s17_a_knife_by_stroke_follows_what_is_under_it() {
     let f = Fixture::new();
     let (details, basis) = f.inspect().await;
     let names = ids_by_name(&details);
-    f.colleague(&[("edit.clear", json!({"ids":[names["R7"]]}))]);
+    f.colleague(&[("edit.delete", json!({"ids":[names["R7"]]}))]);
     let on = json!({"command":"path.knife","on":[names["R2"]],"params":{"points":[[110,0],[110,60]]}});
     f.ok("run", json!({"basis": basis, "steps": [on]})).await;
     println!("s17: knife on R2 after another deleted: applied");
@@ -625,7 +629,7 @@ async fn s14_receipt_bytes() {
     let (details, _) = f.inspect().await;
     let names = ids_by_name(&details);
     let all: Vec<u64> = (0..200).map(|n| names[&format!("R{n}")]).collect();
-    let five = f.ok("run", json!({"steps": [{"command":"object.group","on":all[0..5]}]})).await;
+    let five = f.ok("run", json!({"steps": [{"command":"arrange.group","on":all[0..5]}]})).await;
     let five = five["completed"][0]["result"]["id"].as_u64().unwrap_or_else(|| panic!("a group: {five}"));
     let (_, basis) = f.inspect().await;
     let mut rows = Vec::new();
@@ -643,7 +647,7 @@ async fn s14_receipt_bytes() {
     measure("a group of 5 moved", &ran);
     let ran = f.ok("run", json!({"steps": [{"command":"object.move","on":all[5..200],"params":{"dx":5,"dy":0}}]})).await;
     measure("195 objects moved by one offset", &ran);
-    let big = f.ok("run", json!({"steps": [{"command":"object.group","on":all[5..200]}]})).await;
+    let big = f.ok("run", json!({"steps": [{"command":"arrange.group","on":all[5..200]}]})).await;
     let big = big["completed"][0]["result"]["id"].as_u64().unwrap();
     let ran = f.ok("run", json!({"steps": [{"command":"object.move","on":[big],"params":{"dx":5,"dy":0}}]})).await;
     measure("a group of 195 moved", &ran);
@@ -736,7 +740,7 @@ const CHANGES: [Change; 10] = [
 ///   changed R7's fill, or took the name `Brand` to another swatch (`SwatchSwapped`).
 /// - `index`: rename the artboard at index 0. Necessary when another artboard is at index 0 now
 ///   (`ArtboardReordered`) or the colleague renamed that artboard.
-/// - `structure`: group R7 and R8 (`object.group` on them). Necessary when the colleague deleted
+/// - `structure`: group R7 and R8 (`arrange.group` on them). Necessary when the colleague deleted
 ///   R7 or R8 (C8-vector-engine, the maintainers' rule of necessity: a group rests on where its objects
 ///   are, their parent and stacking, not on their fields; a rename, a fill or a move that keeps the
 ///   parent and the stacking applies, and the saved group holds both writers' edits, checked
@@ -781,7 +785,7 @@ fn necessary(form: &str, change: Change, on: &str) -> bool {
 fn not_merged(file: &Path, id: u64, (r7, r8): (u64, u64), change: Change) -> Option<String> {
     let (p7, p8) = (place_on_disk(file, r7).0, place_on_disk(file, r8).0);
     let mut doc = VectorDocument::open(FILE, &std::fs::read(file).unwrap()).unwrap();
-    let parent = doc.execute("document.node", json!({"id": p7})).ok();
+    let parent = doc.execute("file.node", json!({"id": p7})).ok();
     if p7 != p8 || parent.as_ref().is_none_or(|node| node["kind"]["type"] != "group") {
         return Some(format!("R7 and R8 are not grouped ({p7} / {p8})"));
     }
@@ -828,7 +832,7 @@ async fn s11_the_mixed_table() {
                 Change::Rename => ("object.setProps", json!({"ids":[id],"name":"Theirs"})),
                 Change::Fill => ("paint.setFill", json!({"ids":[id],"color":"#00aa00"})),
                 Change::Move => ("object.setBounds", json!({"ids":[id],"x":500,"y":500})),
-                Change::Delete => ("edit.clear", json!({"ids":[id]})),
+                Change::Delete => ("edit.delete", json!({"ids":[id]})),
                 Change::Create => ("shape.rectangle", json!({"x":600,"y":400,"width":10,"height":10})),
                 Change::SwatchAdded => ("swatch.new", json!({"name":"Other","color":"#abcdef"})),
                 Change::SwatchSwapped => ("swatch.edit", json!({"name":"Brand","newName":"Old Brand"})),
@@ -850,7 +854,7 @@ async fn s11_the_mixed_table() {
                 "id" => rename(r7, "Mine"),
                 "name" => json!({"command":"paint.setFill","params":{"ids":[r7],"swatch":"Brand"}}),
                 "index" => json!({"command":"artboard.setProps","params":{"index":0,"name":"Mine"}}),
-                "structure" => json!({"command":"object.group","on":[r7, r8]}),
+                "structure" => json!({"command":"arrange.group","on":[r7, r8]}),
                 _ => json!({"command":"object.pathfinder.unite","on":[r7, r8]}),
             };
             let answer = f.call("run", json!({"basis": basis, "steps": [write]})).await;

@@ -71,9 +71,9 @@ try {
   await until(async () => (await count()) === 4)
   step('draws an ellipse with the tool', (await count()) === 4)
 
-  await page.evaluate(() => window.devHost.connection().ai.run([{ command: 'select.all', params: {} }], false))
+  await page.evaluate(() => window.devHost.connection().ai.run([{ command: 'edit.selectAll', params: {} }], false))
   await kit.getByTestId('vector-menu-Object').click()
-  await kit.getByTestId('vector-cmd-object.group').click()
+  await kit.getByTestId('vector-cmd-arrange.group').click()
   await until(async () => (await details()).layers.some((layer) => layer.children.some((node) => node.kind === 'Group')))
   step('Object > Group from the menu bar', (await details()).layers.some((layer) => layer.children.some((node) => node.kind === 'Group')))
   await kit.getByTestId('vector-new-layer').click()

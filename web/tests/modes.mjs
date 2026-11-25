@@ -9,5 +9,5 @@ await runModeSmoke({
   browser: process.argv[2] === 'webkit' ? webkit : chromium,
   createServer,
   // The rail's tools are not in the row (D3): the rail always shows them.
-  line: { tab: 'home', primary: ['vector-home-shapes', 'vector-cmd-object.group', 'vector-home-align', 'vector-cmd-object.pathfinder.unite', 'vector-home-fill', 'vector-home-stroke', 'vector-cmd-select.all', 'vector-cmd-layer.new', 'vector-cmd-artboard.new'] },
+  line: { tab: 'home', primary: ['vector-home-shapes', 'vector-cmd-arrange.group', 'vector-home-align', 'vector-cmd-object.pathfinder.unite', 'vector-home-fill', 'vector-home-stroke', 'vector-cmd-edit.selectAll', 'vector-cmd-layer.new', 'vector-cmd-artboard.new'] },
 })

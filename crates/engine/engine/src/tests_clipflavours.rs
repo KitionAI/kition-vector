@@ -30,7 +30,7 @@ fn copy_red_square(s: &mut Session) {
 
 fn copy_text(s: &mut Session, texts: &[&str]) {
     let ids: Vec<Value> =
-        texts.iter().enumerate().map(|(i, t)| run(s, "text.create", json!({"x": 20, "y": 40 + 30 * i, "text": t}))["id"].clone()).collect();
+        texts.iter().enumerate().map(|(i, t)| run(s, "text.add", json!({"x": 20, "y": 40 + 30 * i, "text": t}))["id"].clone()).collect();
     run(s, "select.set", json!({ "ids": ids }));
     run(s, "edit.copy", json!({}));
 }
@@ -78,7 +78,7 @@ fn exported_pdf_pastes_back_as_vectors() {
     // Plain PDF: no native document inside (the default PDF preset embeds one).
     let has_native = |b: &[u8]| b.windows(13).any(|w| w == b"/EmbeddedFile");
     assert!(!has_native(&decode(&pdf)));
-    let saved = run(&mut s, "document.exportPdf", json!({}));
+    let saved = run(&mut s, "file.exportPdf", json!({}));
     assert!(has_native(&decode(&saved)), "the check finds the native document");
     let mut t = session();
     let r = run(&mut t, "clipboard.importPdf", json!({"dataBase64": pdf["dataBase64"], "center": [200, 150]}));
@@ -165,12 +165,12 @@ fn type_only_copies_offer_their_text() {
     copy_text(&mut s, &["One", "Two"]);
     assert_eq!(run(&mut s, "clipboard.exportText", json!({}))["text"], "One\nTwo");
     // A group of type is type.
-    run(&mut s, "object.group", json!({}));
+    run(&mut s, "arrange.group", json!({}));
     run(&mut s, "edit.copy", json!({}));
     assert_eq!(run(&mut s, "clipboard.exportText", json!({}))["text"], "One\nTwo");
     // Type with a path is not.
     copy_red_square(&mut s);
-    run(&mut s, "select.all", json!({}));
+    run(&mut s, "edit.selectAll", json!({}));
     run(&mut s, "edit.copy", json!({}));
     assert!(run(&mut s, "clipboard.exportText", json!({}))["text"].is_null());
 }
@@ -206,7 +206,7 @@ fn copy_offers_flavours_by_the_preferences() {
 fn paste_copied_range(plain: bool) -> f64 {
     let mut s = session();
     let v = ViewInfo::default();
-    let id = run(&mut s, "text.create", json!({"x": 100, "y": 100, "text": "Big small", "size": 10}))["id"].clone();
+    let id = run(&mut s, "text.add", json!({"x": 100, "y": 100, "text": "Big small", "size": 10}))["id"].clone();
     run(&mut s, "text.setRangeStyle", json!({"id": id, "start": 0, "end": 3, "size": 40}));
     if plain {
         run(&mut s, "prefs.set", json!({"key": "pasteTextFormatting", "value": "plain"}));

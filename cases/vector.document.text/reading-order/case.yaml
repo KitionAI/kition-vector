@@ -10,7 +10,7 @@ intent: >-
 layer: unit
 source:
   kind: synthetic
-  from: examples/dusk-poster.svg and drawings made with text.create and artboard.new
+  from: examples/dusk-poster.svg and drawings made with text.add and artboard.new
   license: Apache-2.0
 input: []
 steps:

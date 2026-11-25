@@ -103,10 +103,10 @@ async fn both_kept(what: &str, theirs: (&str, Value), mine: (&str, Value), query
 #[tokio::test(flavor = "multi_thread")]
 async fn document_setup_bleed_beside_their_language() {
     both_kept(
-        "document.setup bleed after their language",
-        ("document.setup", json!({"language": "German"})),
-        ("document.setup", json!({"bleed": 9})),
-        "document.setup",
+        "file.setup bleed after their language",
+        ("file.setup", json!({"language": "German"})),
+        ("file.setup", json!({"bleed": 9})),
+        "file.setup",
         |v| v["language"] == "German" && v["bleed"][0] == 9.0,
     )
     .await;
@@ -115,10 +115,10 @@ async fn document_setup_bleed_beside_their_language() {
 #[tokio::test(flavor = "multi_thread")]
 async fn document_setup_bleed_beside_their_units() {
     both_kept(
-        "document.setup bleed after their units",
-        ("document.setup", json!({"units": "Millimeters"})),
-        ("document.setup", json!({"bleed": 9})),
-        "document.setup",
+        "file.setup bleed after their units",
+        ("file.setup", json!({"units": "Millimeters"})),
+        ("file.setup", json!({"bleed": 9})),
+        "file.setup",
         |v| v["units"] == "Millimeters" && v["bleed"][0] == 9.0,
     )
     .await;
@@ -127,10 +127,10 @@ async fn document_setup_bleed_beside_their_units() {
 #[tokio::test(flavor = "multi_thread")]
 async fn file_info_author_beside_their_title() {
     both_kept(
-        "file.info author after their title",
-        ("file.info", json!({"title": "Theirs"})),
-        ("file.info", json!({"author": "Me"})),
-        "file.info",
+        "file.setInfo author after their title",
+        ("file.setInfo", json!({"title": "Theirs"})),
+        ("file.setInfo", json!({"author": "Me"})),
+        "file.setInfo",
         |v| v["title"] == "Theirs" && v["author"] == "Me",
     )
     .await;
@@ -139,10 +139,10 @@ async fn file_info_author_beside_their_title() {
 #[tokio::test(flavor = "multi_thread")]
 async fn raster_effects_anti_alias_beside_their_clipping_mask() {
     both_kept(
-        "document.rasterEffectsSettings antiAlias after their clippingMask",
-        ("document.rasterEffectsSettings", json!({"clippingMask": true})),
-        ("document.rasterEffectsSettings", json!({"antiAlias": false})),
-        "document.rasterEffectsSettings",
+        "file.rasterEffectsSettings antiAlias after their clippingMask",
+        ("file.rasterEffectsSettings", json!({"clippingMask": true})),
+        ("file.rasterEffectsSettings", json!({"antiAlias": false})),
+        "file.rasterEffectsSettings",
         |v| v["clippingMask"] == true && v["antiAlias"] == false,
     )
     .await;

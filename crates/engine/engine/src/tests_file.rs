@@ -51,13 +51,13 @@ fn batch_rolls_back_on_error() {
 fn serialize_and_reopen() {
     let mut s = session();
     s.execute("shape.ellipse", &json!({"x": 10, "y": 10, "width": 80, "height": 40})).unwrap();
-    let b64 = s.execute("document.serialize", &json!({"format": "kvector"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    let b64 = s.execute("file.serialize", &json!({"format": "kvector"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
     assert!(svg.contains("<svg"));
-    s.execute("document.open", &json!({"name": "copy.kvector", "dataBase64": b64})).unwrap();
+    s.execute("file.open", &json!({"name": "copy.kvector", "dataBase64": b64})).unwrap();
     assert_eq!(s.documents().len(), 2);
     assert_eq!(s.doc().unwrap().doc.node_count(), 2);
-    let png = s.execute("document.serialize", &json!({"format": "png", "scale": 0.5})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+    let png = s.execute("file.serialize", &json!({"format": "png", "scale": 0.5})).unwrap()["dataBase64"].as_str().unwrap().to_string();
     assert!(png.len() > 100);
 }
 
@@ -68,13 +68,13 @@ fn save_and_open_path() {
     let dir = std::env::temp_dir().join(format!("dc-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("t.kvector");
-    s.execute("document.save", &json!({"path": path.to_string_lossy()})).unwrap();
+    s.execute("file.save", &json!({"path": path.to_string_lossy()})).unwrap();
     assert!(!s.doc().unwrap().is_dirty());
-    s.execute("document.open", &json!({"path": path.to_string_lossy()})).unwrap();
+    s.execute("file.open", &json!({"path": path.to_string_lossy()})).unwrap();
     assert_eq!(s.doc().unwrap().path.as_deref(), Some(path.to_string_lossy().as_ref()));
     let svg = dir.join("t.svg");
-    s.execute("document.export", &json!({"path": svg.to_string_lossy()})).unwrap_or_default();
-    s.execute("document.export", &json!({"format": "svg", "path": svg.to_string_lossy()})).unwrap();
+    s.execute("file.export", &json!({"path": svg.to_string_lossy()})).unwrap_or_default();
+    s.execute("file.export", &json!({"format": "svg", "path": svg.to_string_lossy()})).unwrap();
     assert!(std::fs::read_to_string(&svg).unwrap().contains("<svg"));
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -83,8 +83,8 @@ fn save_and_open_path() {
 fn pdf_roundtrip_through_engine() {
     let mut s = session();
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 80, "height": 40})).unwrap();
-    let b64 = s.execute("document.serialize", &json!({"format": "pdf"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
-    s.execute("document.open", &json!({"name": "x.pdf", "dataBase64": b64})).unwrap();
+    let b64 = s.execute("file.serialize", &json!({"format": "pdf"})).unwrap()["dataBase64"].as_str().unwrap().to_string();
+    s.execute("file.open", &json!({"name": "x.pdf", "dataBase64": b64})).unwrap();
     assert!(s.doc().unwrap().doc.node_count() >= 2);
 }
 
@@ -117,7 +117,7 @@ fn export_for_screens_writes_every_combination() {
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
     let dir = std::env::temp_dir().join(format!("dc-efs-{}", std::process::id()));
     let r = s
-        .execute("document.exportForScreens", &json!({"folder": dir.to_string_lossy(), "formats": [{"format": "png", "scale": 1}, {"format": "png", "scale": 2}, {"format": "jpg"}, {"format": "svg"}, {"format": "webp"}]}))
+        .execute("file.exportForScreens", &json!({"folder": dir.to_string_lossy(), "formats": [{"format": "png", "scale": 1}, {"format": "png", "scale": 2}, {"format": "jpg"}, {"format": "svg"}, {"format": "webp"}]}))
         .unwrap();
     let files = r["files"].as_array().unwrap();
     assert_eq!(files.len(), 10);
@@ -138,7 +138,7 @@ fn recolor_maps_fills_strokes_gradients() {
         &json!({"gradient": {"kind": "linear", "stops": [{"offset": 0, "color": "#ff0000"}, {"offset": 1, "color": "#0000ff"}]}}),
     )
     .unwrap();
-    s.execute("select.all", &json!({})).unwrap();
+    s.execute("edit.selectAll", &json!({})).unwrap();
     let c = s.execute("recolor.colors", &json!({})).unwrap();
     let hexes: Vec<&str> = c["colors"].as_array().unwrap().iter().map(|v| v["hex"].as_str().unwrap()).collect();
     assert!(hexes.contains(&"#ff0000") && hexes.contains(&"#0000ff") && hexes.contains(&"#000000"));
@@ -155,7 +155,7 @@ fn export_selection_crops_to_the_selection() {
     let mut s = session();
     s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 50, "height": 50})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 200, "y": 100, "width": 80, "height": 40})).unwrap();
-    let v = s.execute("document.exportSelection", &json!({"format": "png", "scale": 2})).unwrap();
+    let v = s.execute("file.exportSelection", &json!({"format": "png", "scale": 2})).unwrap();
     let b = v["bounds"].as_array().unwrap();
     // Only the selected (last) rectangle, with its stroke.
     let w = b[2].as_f64().unwrap();
@@ -163,7 +163,7 @@ fn export_selection_crops_to_the_selection() {
     let png = kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     assert_eq!(&png[..4], b"\x89PNG");
     assert_eq!(u32::from_be_bytes([png[16], png[17], png[18], png[19]]), (w * 2.0).round() as u32);
-    let svg = s.execute("document.exportSelection", &json!({"format": "svg"})).unwrap();
+    let svg = s.execute("file.exportSelection", &json!({"format": "svg"})).unwrap();
     let text = String::from_utf8(kition_vector_format::base64_decode(svg["dataBase64"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(text.matches("<path").count() + text.matches("<rect").count(), 1, "{text}");
 }
@@ -177,7 +177,7 @@ fn export_selection_reports_the_encoders_warnings() {
     s.execute("transparency.set", &json!({"blend": "Multiply"})).unwrap();
     let warnings = |v: &serde_json::Value| v["warnings"].as_array().cloned().unwrap_or_else(|| panic!("no warnings key: {v}"));
     // Control: nothing approximated.
-    let plain = s.execute("document.exportSelection", &json!({"format": "svg"})).unwrap();
+    let plain = s.execute("file.exportSelection", &json!({"format": "svg"})).unwrap();
     assert_eq!(plain["format"], "svg");
     assert!(warnings(&plain).is_empty(), "{plain}");
     for (format, options, says) in [
@@ -187,8 +187,8 @@ fn export_selection_reports_the_encoders_warnings() {
     ] {
         let mut p = options.clone();
         p["format"] = json!(format);
-        let sel = s.execute("document.exportSelection", &p).unwrap();
-        let doc = s.execute("document.export", &p).unwrap();
+        let sel = s.execute("file.exportSelection", &p).unwrap();
+        let doc = s.execute("file.export", &p).unwrap();
         let w = warnings(&sel);
         assert!(w.iter().any(|w| w.as_str().unwrap_or("").to_lowercase().contains(says)), "{format}: {sel}");
         assert_eq!(w, warnings(&doc), "{format}: the same warnings as a whole-document export");
@@ -203,7 +203,7 @@ fn template_opens_as_untitled() {
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("letterhead.kvector");
     s.execute("file.saveAsTemplate", &json!({"path": path.to_str().unwrap()})).unwrap();
-    s.execute("document.open", &json!({"path": path.to_str().unwrap()})).unwrap();
+    s.execute("file.open", &json!({"path": path.to_str().unwrap()})).unwrap();
     let st = s.doc().unwrap();
     assert!(st.path.is_none() && !st.doc.template);
     assert!(st.doc.title.starts_with("Untitled-"), "{}", st.doc.title);
@@ -222,14 +222,14 @@ fn raster_export_too_large_is_an_error_not_a_crash() {
     std::fs::create_dir_all(&dir).unwrap();
     for format in ["png", "jpg", "webp"] {
         let path = dir.join(format!("big.{format}"));
-        let e = s.execute("document.export", &json!({"path": path.to_string_lossy(), "scale": 300.0 / 72.0})).unwrap_err().to_string();
+        let e = s.execute("file.export", &json!({"path": path.to_string_lossy(), "scale": 300.0 / 72.0})).unwrap_err().to_string();
         assert!(e.contains("pixels"), "{format}: {e}");
         assert!(!path.exists(), "{format}");
-        assert!(s.execute("document.serialize", &json!({"format": format, "scale": 300.0 / 72.0})).is_err(), "{format}");
+        assert!(s.execute("file.serialize", &json!({"format": format, "scale": 300.0 / 72.0})).is_err(), "{format}");
     }
     // A size within the limits still exports.
     let path = dir.join("ok.png");
-    s.execute("document.export", &json!({"path": path.to_string_lossy(), "scale": 0.25})).unwrap();
+    s.execute("file.export", &json!({"path": path.to_string_lossy(), "scale": 0.25})).unwrap();
     assert!(std::fs::read(&path).unwrap().starts_with(b"\x89PNG"));
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -240,14 +240,14 @@ fn raster_export_too_large_is_an_error_not_a_crash() {
 fn japanese_file_names_save_open_and_export() {
     let mut s = session();
     s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 80, "height": 40})).unwrap();
-    s.execute("text.create", &json!({"x": 10, "y": 80, "text": "日本語のテキスト"})).unwrap();
+    s.execute("text.add", &json!({"x": 10, "y": 80, "text": "日本語のテキスト"})).unwrap();
     let dir = std::env::temp_dir().join(format!("vc-日本語フォルダ-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("運動会カード（最終版）・2024.kvector");
-    s.execute("document.save", &json!({"path": path.to_string_lossy()})).unwrap();
+    s.execute("file.save", &json!({"path": path.to_string_lossy()})).unwrap();
     assert!(path.exists());
     assert_eq!(s.doc().unwrap().title(), "運動会カード（最終版）・2024.kvector", "the tab names the file as typed");
-    s.execute("document.open", &json!({"path": path.to_string_lossy()})).unwrap();
+    s.execute("file.open", &json!({"path": path.to_string_lossy()})).unwrap();
     let d = s.doc().unwrap();
     assert_eq!(d.path.as_deref(), Some(path.to_string_lossy().as_ref()));
     let mut found = false;
@@ -255,7 +255,7 @@ fn japanese_file_names_save_open_and_export() {
     assert!(found, "the Japanese text comes back");
     for (format, name) in [("svg", "書き出し.svg"), ("png", "書き出し.png"), ("pdf", "書き出し.pdf")] {
         let out = dir.join(name);
-        s.execute("document.export", &json!({"format": format, "path": out.to_string_lossy()})).unwrap();
+        s.execute("file.export", &json!({"format": format, "path": out.to_string_lossy()})).unwrap();
         assert!(std::fs::metadata(&out).is_ok_and(|m| m.len() > 0), "{name}");
     }
     let _ = std::fs::remove_dir_all(dir);

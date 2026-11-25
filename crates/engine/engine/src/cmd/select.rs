@@ -11,7 +11,7 @@ use super::*;
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(
-            "select.all",
+            "edit.selectAll",
             "All",
             ["Select"],
             Some("Cmd+A"),
@@ -20,7 +20,7 @@ pub fn specs() -> Vec<CommandSpec> {
             all
         ),
         cmd!("select.allOnArtboard", "All on Active Artboard", ["Select"], Some("Cmd+Alt+A"), "{artboard?: index}", has_doc, all_on_artboard),
-        cmd!("select.none", "Deselect", ["Select"], Some("Cmd+Shift+A"), "{}", has_doc, none),
+        cmd!("edit.deselectAll", "Deselect", ["Select"], Some("Cmd+Shift+A"), "{}", has_doc, none),
         cmd!("select.reselect", "Reselect", ["Select"], Some("Cmd+6"), "{}", has_doc, reselect),
         cmd!("select.inverse", "Inverse", ["Select"], None, "{}", has_doc, inverse),
         cmd!("select.nextAbove", "Next Object Above", ["Select"], Some("Cmd+Alt+]"), "{}", has_selection, |s, _| step(s, 1)),

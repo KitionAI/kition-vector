@@ -1,4 +1,4 @@
-//! Save PDF settings: the serde model a preset stores and `document.exportPdf` takes (camelCase
+//! Save PDF settings: the serde model a preset stores and `file.exportPdf` takes (camelCase
 //! JSON; every field is optional and falls back to its default), the checks that refuse settings
 //! the writer can't honour, and the warnings for options it accepts but doesn't apply yet.
 

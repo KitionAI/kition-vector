@@ -28,7 +28,7 @@ use super::*;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![cmd!(
-        "document.rasterEffectsSettings",
+        "file.rasterEffectsSettings",
         "Document Raster Effects Settings…",
         ["Effect"],
         None,
@@ -38,9 +38,9 @@ pub fn specs() -> Vec<CommandSpec> {
     )]
 }
 
-const C: &str = "document.rasterEffectsSettings";
+const C: &str = "file.rasterEffectsSettings";
 
-/// What `document.rasterEffectsSettings` reports (and takes back).
+/// What `file.rasterEffectsSettings` reports (and takes back).
 fn settings_json(d: &Document) -> Value {
     let r = &d.raster_effects;
     let model = match (r.color_model, d.color_mode) {
@@ -542,9 +542,9 @@ mod tests {
     fn settings_and_pdf_flattening() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
-        assert_eq!(s.execute("document.rasterEffectsSettings", &json!({})).unwrap()["resolution"], json!(72.0));
-        s.execute("document.rasterEffectsSettings", &json!({"resolution": "high"})).unwrap();
-        assert!(s.execute("document.rasterEffectsSettings", &json!({"resolution": 0})).is_err());
+        assert_eq!(s.execute("file.rasterEffectsSettings", &json!({})).unwrap()["resolution"], json!(72.0));
+        s.execute("file.rasterEffectsSettings", &json!({"resolution": "high"})).unwrap();
+        assert!(s.execute("file.rasterEffectsSettings", &json!({"resolution": 0})).is_err());
         let r = s.execute("shape.rectangle", &json!({"x": 50, "y": 50, "width": 100, "height": 100})).unwrap()["id"].as_u64().unwrap();
         let b = s.execute("shape.ellipse", &json!({"x": 180, "y": 50, "width": 80, "height": 80})).unwrap()["id"].as_u64().unwrap();
         s.execute("effect.apply", &json!({"effect": "stylize.dropShadow", "ids": [r]})).unwrap();

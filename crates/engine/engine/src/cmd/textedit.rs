@@ -41,16 +41,16 @@ pub fn specs() -> Vec<CommandSpec> {
             get_range
         ),
         cmd!(
-            "text.createInPath",
+            "text.addInPath",
             "Area / Path Type",
             [],
             None,
-            "{path: id, mode: \"area\"|\"onPath\", text?: \"\", vertical?: bool = false, at?: [x, y] (on-path start: nearest point), size?, font?, style?, color? (as text.create), fit?: none|autoHeight|shrinkText, fitMinPercent? (area: as text.areaOptions; default autoHeight when the autoSizeAreaType preference is on), placeholder?: bool (placeholder text instead, as text.create), leadingModel?, charAlign? (as text.create)} turn a path into an area-type frame or a type-on-a-path baseline (the path's paint is dropped) → {id}",
+            "{path: id, mode: \"area\"|\"onPath\", text?: \"\", vertical?: bool = false, at?: [x, y] (on-path start: nearest point), size?, font?, style?, color? (as text.add), fit?: none|autoHeight|shrinkText, fitMinPercent? (area: as text.areaOptions; default autoHeight when the autoSizeAreaType preference is on), placeholder?: bool (placeholder text instead, as text.add), leadingModel?, charAlign? (as text.add)} turn a path into an area-type frame or a type-on-a-path baseline (the path's paint is dropped) → {id}",
             has_doc,
             create_in_path
         ),
         cmd!(
-            "type.fitHeadline",
+            "text.fitHeadlineSelection",
             "Fit Headline",
             ["Type"],
             None,
@@ -59,7 +59,7 @@ pub fn specs() -> Vec<CommandSpec> {
             fit_headline
         ),
         cmd!(
-            "type.step",
+            "text.step",
             "Step Type",
             [],
             None,
@@ -68,20 +68,20 @@ pub fn specs() -> Vec<CommandSpec> {
             type_step
         ),
         cmd!(
-            "type.size.increase",
+            "format.increaseFontSize",
             "Increase Font Size",
             [],
             Some("Cmd+Shift+."),
-            "{by?: steps (1), id?, ids?, start?: byte, end?: byte} type.step {attribute: size} of the same text",
+            "{by?: steps (1), id?, ids?, start?: byte, end?: byte} text.step {attribute: size} of the same text",
             has_selection,
             |s, p| type_step(s, &size_step(p, f64_or(p, "by", 1.0)))
         ),
         cmd!(
-            "type.size.decrease",
+            "format.decreaseFontSize",
             "Decrease Font Size",
             [],
             Some("Cmd+Shift+,"),
-            "{by?: steps (1), id?, ids?, start?: byte, end?: byte} type.step {attribute: size, by: -by} of the same text",
+            "{by?: steps (1), id?, ids?, start?: byte, end?: byte} text.step {attribute: size, by: -by} of the same text",
             has_selection,
             |s, p| type_step(s, &size_step(p, -f64_or(p, "by", 1.0)))
         ),
@@ -470,7 +470,7 @@ fn set_range_style(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn create_in_path(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "text.createInPath";
+    const C: &str = "text.addInPath";
     let pid = id_param(p, "path")?.ok_or_else(|| bad(C, "missing `path` (a path object id)"))?;
     let on_path = match str_param(p, "mode").unwrap_or("area") {
         "area" => false,
@@ -540,7 +540,7 @@ fn create_in_path(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(json!({"id": id.0}))
 }
 
-/// What `type.step` changes.
+/// What `text.step` changes.
 #[derive(Clone, Copy, PartialEq)]
 enum Step {
     Size,
@@ -562,7 +562,7 @@ fn editing_range(s: &mut Session) -> Result<Option<(NodeId, usize, usize)>> {
     Ok(Some((id, at("start"), at("end"))))
 }
 
-/// `type.step` params for a size step `by` of the text `p` names (`id`, `ids`, `start`, `end`).
+/// `text.step` params for a size step `by` of the text `p` names (`id`, `ids`, `start`, `end`).
 fn size_step(p: &Value, by: f64) -> Value {
     let mut q = p.as_object().cloned().unwrap_or_default();
     q.insert("attribute".into(), json!("size"));
@@ -571,7 +571,7 @@ fn size_step(p: &Value, by: f64) -> Value {
 }
 
 fn type_step(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "type.step";
+    const C: &str = "text.step";
     let step = match str_param(p, "attribute") {
         Some("size") => Step::Size,
         Some("leading") => Step::Leading,
@@ -679,7 +679,7 @@ fn headline_tracking(t: &TextObject, target: f64) -> Option<f64> {
 }
 
 fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
-    const C: &str = "type.fitHeadline";
+    const C: &str = "text.fitHeadlineSelection";
     let ids: Vec<NodeId> = {
         let st = s.doc()?;
         super::typecmd::text_targets(s, p, C)?

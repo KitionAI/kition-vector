@@ -69,7 +69,7 @@ pub fn may_run(command: &str, params: &Value) -> Result<(), String> {
     let Some(known) = KNOWN.get().and_then(|known| known.get(command)) else { return Ok(()) };
     if !protocol_id(command) || known.names_files {
         return Err(format!(
-            "`{command}` is not available to the agent: it names files by path, and the host opens, saves, places and exports documents (KHP A28, A29). document.exportBytes answers an export's bytes"
+            "`{command}` is not available to the agent: it names files by path, and the host opens, saves, places and exports documents (KHP A28, A29). file.exportBytes answers an export's bytes"
         ));
     }
     if let Some(schema) = &known.schema {
@@ -98,8 +98,8 @@ mod tests {
     fn steps_that_name_files_are_refused_and_others_run() {
         let doc = crate::VectorDocument::create("Drawing.kvector", 64, 64).unwrap_or_else(|error| panic!("{error}"));
         learn(|| doc.commands());
-        let refused = may_run("document.export", &json!({ "path": "/elsewhere/a.svg" })).err().unwrap_or_default();
-        assert!(refused.contains("not available to the agent") && refused.contains("document.exportBytes"), "{refused}");
+        let refused = may_run("file.export", &json!({ "path": "/elsewhere/a.svg" })).err().unwrap_or_default();
+        assert!(refused.contains("not available to the agent") && refused.contains("file.exportBytes"), "{refused}");
         assert!(may_run("file.saveAs", &json!({})).is_err(), "a command that names files, whatever its parameters");
         assert_eq!(may_run("shape.rectangle", &json!({ "x": 1, "y": 1, "width": 4, "height": 4 })), Ok(()));
         assert!(may_run("shape.rectangle", &json!({ "widht": 4 })).is_err(), "unknown parameters, as directly");

@@ -1,4 +1,4 @@
-//! `document.exportPdf {standard}` with the PDF/X standards: choosing one sets its version and
+//! `file.exportPdf {standard}` with the PDF/X standards: choosing one sets its version and
 //! turns off what it forbids, PDF/X-1a and PDF/X-3 flatten transparency (images with see-through
 //! pixels too) before writing, PDF/X-4 keeps it, and passwords are refused.
 
@@ -24,10 +24,10 @@ fn session() -> Session {
     s
 }
 
-/// `document.exportPdf` with `p` (content streams readable) → (the file's text, warnings).
+/// `file.exportPdf` with `p` (content streams readable) → (the file's text, warnings).
 fn pdf(s: &mut Session, mut p: Value) -> (String, Vec<String>) {
     p["compression"] = json!({"compressText": false});
-    let v = s.execute("document.exportPdf", &p).unwrap();
+    let v = s.execute("file.exportPdf", &p).unwrap();
     let bytes = kition_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     let warnings = v["warnings"].as_array().unwrap().iter().map(|w| w.as_str().unwrap().to_string()).collect();
     (String::from_utf8_lossy(&bytes).into_owned(), warnings)
@@ -62,7 +62,7 @@ fn pdfx_1a_and_x3_flatten_transparency_and_x4_keeps_it() {
 #[test]
 fn choosing_a_pdfx_standard_sets_its_version_and_turns_off_what_it_forbids() {
     let mut s = session();
-    let settings = |s: &mut Session, p: Value| s.execute("document.pdfSettings", &p).unwrap()["settings"].clone();
+    let settings = |s: &mut Session, p: Value| s.execute("file.pdfSettings", &p).unwrap()["settings"].clone();
     // The default preset is PDF 1.7 and keeps editing data.
     let v = settings(&mut s, json!({"standard": "pdfX4"}));
     assert_eq!((&v["compatibility"], &v["preserveEditing"]), (&json!("1.6"), &json!(false)));
@@ -81,11 +81,11 @@ fn choosing_a_pdfx_standard_sets_its_version_and_turns_off_what_it_forbids() {
         json!({"standard": "pdfX1a", "output": {"outputIntent": kition_vector_color::cms::SRGB}}),
         json!({"standard": "pdfX4", "output": {"outputIntent": "No Such Press"}}),
     ] {
-        let e = s.execute("document.exportPdf", &p).unwrap_err();
+        let e = s.execute("file.exportPdf", &p).unwrap_err();
         assert!(matches!(e, crate::EngineError::BadParams { .. }), "{p}: {e}");
     }
     // The built-in PDF/X presets export as they are.
     for preset in ["PDF/X-1a:2001", "PDF/X-3:2002", "PDF/X-4:2010"] {
-        assert!(s.execute("document.exportPdf", &json!({"preset": preset})).is_ok(), "{preset}");
+        assert!(s.execute("file.exportPdf", &json!({"preset": preset})).is_ok(), "{preset}");
     }
 }

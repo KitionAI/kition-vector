@@ -36,7 +36,7 @@ pub fn specs() -> Vec<CommandSpec> {
         cmd!("shape.rectangularGrid", "Rectangular Grid", [], None, "{x, y, width, height, rows?: 5, columns?: 5} → {id}", has_doc, rect_grid),
         cmd!("shape.polarGrid", "Polar Grid", [], None, "{x, y, width, height, concentric?: 5, radial?: 5} → {id}", has_doc, polar_grid),
         cmd!(
-            "path.create",
+            "path.add",
             "Create Path",
             [],
             None,
@@ -54,7 +54,7 @@ pub fn specs() -> Vec<CommandSpec> {
             draw_mode
         ),
         cmd!(
-            "text.create",
+            "text.add",
             "Create Text",
             [],
             None,
@@ -407,18 +407,18 @@ pub(crate) fn anchor_from_json(v: &Value, cmd: &str) -> Result<Anchor> {
 
 fn path_create(s: &mut Session, p: &Value) -> Result<Value> {
     let path = if let Some(d) = str_param(p, "d") {
-        let bp = kition_vector_geom::BezPath::from_svg(d).map_err(|e| bad("path.create", format!("bad path data: {e}")))?;
+        let bp = kition_vector_geom::BezPath::from_svg(d).map_err(|e| bad("path.add", format!("bad path data: {e}")))?;
         PathData::from_bezpath(&bp)
     } else {
         let anchors: Vec<Anchor> = p
             .get("anchors")
             .and_then(Value::as_array)
-            .ok_or_else(|| bad("path.create", "missing anchors"))?
+            .ok_or_else(|| bad("path.add", "missing anchors"))?
             .iter()
-            .map(|a| anchor_from_json(a, "path.create"))
+            .map(|a| anchor_from_json(a, "path.add"))
             .collect::<Result<_>>()?;
         if anchors.is_empty() {
-            return Err(bad("path.create", "need at least one anchor"));
+            return Err(bad("path.add", "need at least one anchor"));
         }
         PathData::single(SubPath::new(anchors, bool_or(p, "closed", false)))
     };
@@ -432,18 +432,18 @@ fn path_create(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn text_create(s: &mut Session, p: &Value) -> Result<Value> {
-    let x = f64_req(p, "x", "text.create")?;
-    let y = f64_req(p, "y", "text.create")?;
+    let x = f64_req(p, "x", "text.add")?;
+    let y = f64_req(p, "y", "text.add")?;
     let text = str_param(p, "text").unwrap_or("");
     let mut t = TextObject::point(Point::new(x, y), text, new_type_style(s, p));
     t.vertical = p.get("vertical").and_then(Value::as_bool).unwrap_or(false);
     t.para = new_type_para();
-    new_type_alignment(s, p, "text.create", &mut t)?;
+    new_type_alignment(s, p, "text.add", &mut t)?;
     if let Some(a) = p.get("area") {
         let w = f64_or(a, "width", 200.0);
         let h = f64_or(a, "height", 100.0);
         t.kind = kition_vector_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, w, h)) };
-        t.area.fit = new_area_fit(s, a, "text.create")?;
+        t.area.fit = new_area_fit(s, a, "text.add")?;
     }
     if bool_or(p, "placeholder", false) {
         super::typemenu::fill_with_placeholder(&mut t);
@@ -454,7 +454,7 @@ fn text_create(s: &mut Session, p: &Value) -> Result<Value> {
     add_node(s, "Type", NodeKind::Text(Box::new(t)), Appearance::default(), None)
 }
 
-/// The paragraph attributes new type gets (the Type tools, `text.create`): aligned to the start of
+/// The paragraph attributes new type gets (the Type tools, `text.add`): aligned to the start of
 /// each paragraph's direction (left, right for Hebrew and Arabic), Japanese punctuation composed
 /// with Line-end Punctuation Half Width and Standard burasagari. Imported text keeps its own.
 pub(crate) fn new_type_para() -> kition_vector_doc::ParaStyle {

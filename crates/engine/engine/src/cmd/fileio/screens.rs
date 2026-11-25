@@ -1,8 +1,8 @@
-//! File → Export → Export for Screens (`document.exportForScreens`): the chosen artboards (or the
+//! File → Export → Export for Screens (`file.exportForScreens`): the chosen artboards (or the
 //! whole document, or the chosen assets of the Asset Export panel) in every format row at each
 //! row's size, into a folder and its sub-folders, or returned for download (each file, or one ZIP);
 //! the presets the dialog offers; and the settings the document remembers
-//! (`document.exportSettings`), which the Asset Export panel shares ([`SHARED_KEYS`]).
+//! (`file.exportSettings`), which the Asset Export panel shares ([`SHARED_KEYS`]).
 
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -17,7 +17,7 @@ use super::encode::single_artboard;
 use super::export::{isolated, without_artboards};
 use super::{ARTBOARD_PARAMS, ArtboardPick, Format, artboard_file_names, create_dir, encode, unique_file_names, writable, write_file};
 
-const C: &str = "document.exportForScreens";
+const C: &str = "file.exportForScreens";
 
 /// How big a raster row's files are.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -224,7 +224,7 @@ impl Row {
 /// or where to.
 pub(crate) const SHARED_KEYS: [&str; 6] = ["formats", "preset", "settings", "prefix", "subfolders", "antiAlias"];
 
-/// What `document.exportForScreens` reads besides the formats.
+/// What `file.exportForScreens` reads besides the formats.
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct ScreenParams {
@@ -317,7 +317,7 @@ impl Output {
 }
 
 /// File → Export for Screens: [`export`], with the params remembered in the document
-/// (`document.exportSettings`).
+/// (`file.exportSettings`).
 pub(super) fn export_for_screens(s: &mut Session, p: &Value) -> Result<Value> {
     let r = export(s, p)?;
     remember(s, p);
@@ -385,7 +385,7 @@ pub(crate) fn export(s: &mut Session, p: &Value) -> Result<Value> {
         }
     } else if let Some(ids) = &o.assets {
         let assets =
-            ids.iter().map(|id| doc.asset(*id).ok_or_else(|| bad(C, format!("no asset {id} (see assets.list)")))).collect::<Result<Vec<_>>>()?;
+            ids.iter().map(|id| doc.asset(*id).ok_or_else(|| bad(C, format!("no asset {id} (see asset.list)")))).collect::<Result<Vec<_>>>()?;
         if assets.is_empty() {
             return Err(bad(C, "no assets to export"));
         }
@@ -462,7 +462,7 @@ pub(crate) fn store_settings(s: &mut Session, settings: Map<String, Value>) -> R
     Ok(())
 }
 
-/// `document.exportSettings`: the Export for Screens settings the document last exported with.
+/// `file.exportSettings`: the Export for Screens settings the document last exported with.
 pub(super) fn export_settings(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({ "settings": s.doc()?.doc.export_settings }))
 }

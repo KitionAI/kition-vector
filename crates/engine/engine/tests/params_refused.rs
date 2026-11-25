@@ -51,7 +51,7 @@ fn nudge_copy_with_anchors_is_refused() {
 fn scribble_refuses_named_objects_it_cannot_take() {
     let mut s = session();
     let r = rect(&mut s, 100.0);
-    let t = id(&s.execute("text.create", &json!({"x": 100, "y": 20, "text": "Hi"})).unwrap());
+    let t = id(&s.execute("text.add", &json!({"x": 100, "y": 20, "text": "Hi"})).unwrap());
     let error = refused(&mut s, "shaper.scribble", json!({"points": [[90, 20], [130, 20]], "ids": [r.0, t.0]}));
     assert!(error.contains(&t.0.to_string()), "{error}");
 }
@@ -90,7 +90,7 @@ fn image_trace_refuses_both_id_and_ids() {
         r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><image x="0" y="0" width="40" height="40" href="data:image/png;base64,{PNG}"/><image x="100" y="0" width="40" height="40" href="data:image/png;base64,{PNG}"/></svg>"#
     );
     let mut s = Session::new();
-    s.execute("document.open", &json!({"name": "two.svg", "dataBase64": kition_vector_format::base64_encode(svg.as_bytes())})).unwrap();
+    s.execute("file.open", &json!({"name": "two.svg", "dataBase64": kition_vector_format::base64_encode(svg.as_bytes())})).unwrap();
     let mut images = vec![];
     doc(&s).walk(|n| {
         if matches!(n.kind, kition_vector_doc::NodeKind::Image(_)) {
@@ -114,7 +114,7 @@ fn node_move_refuses_a_locked_container() {
     let a = rect(&mut s, 10.0);
     let b = rect(&mut s, 60.0);
     s.execute("select.set", &json!({"ids": [b.0]})).unwrap();
-    let g = id(&s.execute("object.group", &json!({})).unwrap());
+    let g = id(&s.execute("arrange.group", &json!({})).unwrap());
     s.execute("object.setProps", &json!({"ids": [g.0], "locked": true})).unwrap();
     refused(&mut s, "node.move", json!({"id": a.0, "parent": g.0, "index": 0}));
     let layer = doc(&s).layers[0].id;
@@ -124,15 +124,15 @@ fn node_move_refuses_a_locked_container() {
 #[test]
 fn nothing_to_do_is_refused_without_an_undo_step() {
     let mut s = session();
-    let p = id(&s.execute("path.create", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 50, "y": 50}]})).unwrap());
+    let p = id(&s.execute("path.add", &json!({"anchors": [{"x": 0, "y": 0}, {"x": 50, "y": 50}]})).unwrap());
     s.execute("select.set", &json!({"ids": [p.0]})).unwrap();
     refused(&mut s, "object.expandShape", json!({}));
-    s.execute("select.none", &json!({})).unwrap();
-    let text = id(&s.execute("text.create", &json!({"x": 10, "y": 200, "text": "Hi"})).unwrap());
+    s.execute("edit.deselectAll", &json!({})).unwrap();
+    let text = id(&s.execute("text.add", &json!({"x": 10, "y": 200, "text": "Hi"})).unwrap());
     s.execute("select.set", &json!({"ids": [text.0]})).unwrap();
     refused(&mut s, "path.average", json!({}));
     s.execute("variable.define", &json!({"name": "V", "kind": "text"})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     refused(&mut s, "variable.unbind", json!({}));
     // Unbinding what is not bound succeeds with nothing unbound, and leaves no undo step.
     let undo = undo_len(&s);

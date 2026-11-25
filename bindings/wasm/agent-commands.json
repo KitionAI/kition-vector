@@ -269,10 +269,10 @@
  "artboard.setProps": {
   "description": "Changes an artboard's name, position or size, optionally moving or scaling the art inside it."
  },
- "assets.add": {
+ "asset.add": {
   "description": "Collects the selected art as assets for asset export, one per object or one for all; answers the assets."
  },
- "assets.export": {
+ "asset.export": {
   "description": "Exports each asset's art, cropped to it, in every format row of the export settings, to a folder or zip.",
   "params": {
    "antiAlias": {
@@ -305,7 +305,7 @@
    }
   }
  },
- "assets.list": {
+ "asset.list": {
   "description": "Answers the Asset Export panel's assets with their objects and bounds.",
   "output": {
    "additionalProperties": true,
@@ -317,13 +317,13 @@
    "type": "object"
   }
  },
- "assets.remove": {
+ "asset.remove": {
   "description": "Removes assets from the Asset Export panel (their art stays)."
  },
- "assets.rename": {
+ "asset.rename": {
   "description": "Renames an asset, which names its exported files."
  },
- "assets.settings.set": {
+ "asset.settings.set": {
   "description": "Changes the export settings the Asset Export panel and Export for Screens share.",
   "params": {
    "antiAlias": {
@@ -358,7 +358,7 @@
    }
   }
  },
- "attributes.info": {
+ "attribute.info": {
   "description": "Answers the Attributes panel values of the selection: overprint, centre point, image map, URL, note, fill rule and path direction.",
   "output": {
    "additionalProperties": true,
@@ -400,7 +400,7 @@
    "type": "object"
   }
  },
- "attributes.set": {
+ "attribute.set": {
   "description": "Sets Attributes panel values on the selection: overprint fill and stroke, centre point display, image map, URL and note."
  },
  "brush.apply": {
@@ -1018,7 +1018,7 @@
  "dataset.update": {
   "description": "Writes what the bound objects hold now into the active dataset."
  },
- "document.activate": {
+ "file.activate": {
   "description": "Makes the open document at index the active one, so later commands act on it.",
   "output": {
    "additionalProperties": true,
@@ -1033,7 +1033,7 @@
    "type": "object"
   }
  },
- "document.dxfInfo": {
+ "file.dxfInfo": {
   "description": "Answers what a DXF drawing holds (version, units, layouts, layers, default scale) without opening it.",
   "output": {
    "additionalProperties": true,
@@ -1060,7 +1060,7 @@
    "type": "object"
   }
  },
- "document.export": {
+ "file.export": {
   "description": "Writes the document, its selection or chosen artboards to a file in a format (SVG, PDF, PNG, JPEG, TIFF, PSD, DXF, EPS and more) with that format's options, or answers the data when no path is given. Never changes the document's own path.",
   "output": {
    "additionalProperties": true,
@@ -1104,8 +1104,8 @@
    }
   }
  },
- "document.exportBytes": {
-  "description": "Answers the document, its selection or chosen artboards as a file in a format (SVG, PDF, PNG, JPEG, TIFF, PSD, DXF, EPS and more) with document.export's options, as base64 `data` (with `files` when the format writes one file per artboard), without writing a file or changing the document: the host writes it.",
+ "file.exportBytes": {
+  "description": "Answers the document, its selection or chosen artboards as a file in a format (SVG, PDF, PNG, JPEG, TIFF, PSD, DXF, EPS and more) with file.export's options, as base64 `data` (with `files` when the format writes one file per artboard), without writing a file or changing the document: the host writes it.",
   "output": {
    "additionalProperties": true,
    "properties": {
@@ -1131,7 +1131,7 @@
    "type": "object"
   }
  },
- "document.exportDxf": {
+ "file.exportDxf": {
   "description": "Writes the document as a DXF drawing with a version, unit, scale and colour depth, or answers the data.",
   "params": {
    "colors": {
@@ -1163,10 +1163,10 @@
    }
   }
  },
- "document.exportEps": {
+ "file.exportEps": {
   "description": "Writes the document as EPS with a PostScript level, preview and transparency options, or answers the data."
  },
- "document.exportForOffice": {
+ "file.exportForOffice": {
   "description": "Writes one artboard as a PNG at a chosen resolution for office documents and slides, or answers its data when no path is given.",
   "output": {
    "additionalProperties": true,
@@ -1190,7 +1190,7 @@
    "type": "object"
   }
  },
- "document.exportForScreens": {
+ "file.exportForScreens": {
   "description": "Exports each chosen artboard or asset in one or more formats and sizes (as the Export for Screens dialog does), to a folder or a zip; answers the files written. Remembers the settings in the document.",
   "params": {
    "artboards": {
@@ -1211,7 +1211,7 @@
    }
   }
  },
- "document.exportForWeb": {
+ "file.exportForWeb": {
   "description": "Writes an optimised GIF, JPEG or PNG for the web with a preset and settings (colours, dither, quality, size), or answers the data.",
   "params": {
    "matte": {
@@ -1225,7 +1225,7 @@
    }
   }
  },
- "document.exportForWeb.preview": {
+ "file.exportForWeb.preview": {
   "description": "Answers what Save for Web would write: file size, colours and download time, optionally with the image data.",
   "output": {
    "additionalProperties": true,
@@ -1288,7 +1288,7 @@
    "type": "object"
   }
  },
- "document.exportPdf": {
+ "file.exportPdf": {
   "description": "Writes the document's artboards as a PDF with a preset or options (standard, compression, marks, bleed, layers, security), or answers the data.",
   "params": {
    "bleed": {
@@ -1325,7 +1325,7 @@
    }
   }
  },
- "document.exportSelection": {
+ "file.exportSelection": {
   "description": "Exports only the selected objects, cropped to their bounds, as PNG, JPEG, WebP, SVG or PDF; answers the file or its data with the bounds.",
   "output": {
    "additionalProperties": true,
@@ -1355,7 +1355,7 @@
    "type": "object"
   }
  },
- "document.exportSettings": {
+ "file.exportSettings": {
   "description": "Answers the Export for Screens settings the document last exported with, or {} when it never was.",
   "output": {
    "additionalProperties": true,
@@ -1369,7 +1369,7 @@
    "type": "object"
   }
  },
- "document.find": {
+ "file.find": {
   "description": "Searches the document's objects by Layers panel name, kind or text content and answers the matches with their ids and paths; limit 0 only counts.",
   "output": {
    "additionalProperties": true,
@@ -1398,7 +1398,7 @@
    }
   }
  },
- "document.formats": {
+ "file.formats": {
   "description": "Answers every file format the kit can open or write with its extensions and options, plus formats it cannot handle with what to use instead.",
   "output": {
    "additionalProperties": true,
@@ -1480,7 +1480,7 @@
    "type": "object"
   }
  },
- "document.info": {
+ "file.getInfo": {
   "description": "Answers the Document Info report: objects, styles, swatches, patterns, gradients, symbols, fonts and images, for the document or the selection.",
   "output": {
    "additionalProperties": true,
@@ -1590,8 +1590,8 @@
    }
   }
  },
- "document.inspect": {
-  "description": "Answers the active document's layer tree, artboards, selection and history; depth and childLimit slice large trees. Start here before editing, and use document.node for one object.",
+ "file.inspect": {
+  "description": "Answers the active document's layer tree, artboards, selection and history; depth and childLimit slice large trees. Start here before editing, and use file.node for one object.",
   "output": {
    "additionalProperties": true,
    "properties": {
@@ -1773,8 +1773,8 @@
    }
   }
  },
- "document.json": {
-  "description": "Answers the complete document model as JSON; large, so prefer document.inspect or document.node unless you need everything.",
+ "file.json": {
+  "description": "Answers the complete document model as JSON; large, so prefer file.inspect or file.node unless you need everything.",
   "output": {
    "additionalProperties": true,
    "properties": {
@@ -1962,7 +1962,7 @@
    "type": "object"
   }
  },
- "document.node": {
+ "file.node": {
   "description": "Answers one object by id: its kind, geometry, paint and children; summary gives a compact form, depth and childLimit bound the children shown.",
   "output": {
    "additionalProperties": true,
@@ -1994,10 +1994,10 @@
    }
   }
  },
- "document.open": {
+ "file.open": {
   "description": "Opens a file by path or from base64 bytes (native, SVG, PDF, AI, EPS, DXF, images and more) as a new active document; PDF options pick pages, the box and how text comes in."
  },
- "document.pdfInfo": {
+ "file.pdfInfo": {
   "description": "Answers a PDF's page count, page sizes and boxes, and optionally a thumbnail, without opening it; also says whether a password is needed.",
   "output": {
    "additionalProperties": true,
@@ -2021,7 +2021,7 @@
    "type": "object"
   }
  },
- "document.pdfSettings": {
+ "file.pdfSettings": {
   "description": "Answers the PDF settings a preset gives with options applied and how they differ from it, without writing a file.",
   "output": {
    "additionalProperties": true,
@@ -2210,7 +2210,7 @@
    "type": "object"
   }
  },
- "document.rasterEffectsSettings": {
+ "file.rasterEffectsSettings": {
   "description": "Sets the document's raster effects settings: resolution, colour model, background, anti-aliasing and clipping mask.",
   "params": {
    "resolution": {
@@ -2230,7 +2230,7 @@
    }
   }
  },
- "document.save": {
+ "file.save": {
   "description": "Saves the document to its own file or to path in a format (native, template, PDF, SVG, AI) with that format's options; without a known path it answers the data and stays modified.",
   "params": {
    "modified": {
@@ -2248,7 +2248,7 @@
    }
   }
  },
- "document.serialize": {
+ "file.serialize": {
   "description": "Answers the active document as file data in a format (native by default, SVG, PDF, raster and more) without writing a file or changing the document.",
   "output": {
    "additionalProperties": true,
@@ -2266,10 +2266,10 @@
    "type": "object"
   }
  },
- "document.setUnits": {
+ "file.setUnits": {
   "description": "Sets the document's units, which every length the editor shows and reads uses; drawing coordinates passed to commands stay in points."
  },
- "document.setup": {
+ "file.setup": {
   "description": "Sets Document Setup options: units, bleed, outline images, font substitution highlighting, transparency grid, type options and language.",
   "params": {
    "bleed": {
@@ -2331,7 +2331,7 @@
    }
   }
  },
- "edit.clear": {
+ "edit.delete": {
   "description": "Deletes the objects ids, else the selection (direct-selected anchors, else whole objects, else selected ruler guides)."
  },
  "edit.colorSettings": {
@@ -2877,7 +2877,7 @@
   }
  },
  "file.close": {
-  "description": "Closes the document at index (default the active one) without saving; use document.save first to keep changes."
+  "description": "Closes the document at index (default the active one) without saving; use file.save first to keep changes."
  },
  "file.closeAll": {
   "description": "Closes every open document without saving; answers how many closed."
@@ -3102,7 +3102,7 @@
    }
   }
  },
- "file.info": {
+ "file.setInfo": {
   "description": "Sets the document's File Info metadata (title, author, description, keywords, rating, copyright) in one undo step.",
   "params": {
    "author": {
@@ -3139,7 +3139,7 @@
   }
  },
  "file.new": {
-  "description": "Creates a new document and makes it active, optionally from a named preset with its own size, units, orientation, artboards, bleed and colour mode; answers the new document's index. Use document.open for an existing file.",
+  "description": "Creates a new document and makes it active, optionally from a named preset with its own size, units, orientation, artboards, bleed and colour mode; answers the new document's index. Use file.open for an existing file.",
   "params": {
    "bleed": {
     "oneOf": [
@@ -3647,7 +3647,7 @@
    }
   }
  },
- "graph.create": {
+ "graph.add": {
   "description": "Creates a graph (column, bar, line, area, scatter, pie, radar) in a box from series, categories and rows or CSV; answers its id.",
   "params": {
    "csv": {
@@ -4289,10 +4289,10 @@
    }
   }
  },
- "library.create": {
+ "library.new": {
   "description": "Creates a new empty library and makes it current; answers its id and name."
  },
- "library.createGroup": {
+ "library.addGroup": {
   "description": "Creates a group of library items, moving the given items into it.",
   "params": {
    "library": {
@@ -4505,7 +4505,7 @@
    }
   }
  },
- "links.check": {
+ "linkedFile.check": {
   "description": "Answers whether each linked file is where it was and whether it changed since it was read.",
   "output": {
    "additionalProperties": true,
@@ -4523,13 +4523,13 @@
    "type": "object"
   }
  },
- "links.embed": {
+ "linkedFile.embed": {
   "description": "Embeds linked images (keeping their pixels) or turns placed documents into editable art, breaking the links."
  },
- "links.goTo": {
+ "linkedFile.goTo": {
   "description": "Selects a linked image or placed document and answers its bounds."
  },
- "links.info": {
+ "linkedFile.info": {
   "description": "Answers an image's or placed document's Link Info: file, status, format, colour mode, size and effective resolution.",
   "output": {
    "additionalProperties": true,
@@ -4556,7 +4556,7 @@
    "type": "object"
   }
  },
- "links.list": {
+ "linkedFile.list": {
   "description": "Answers every image and placed document as the Links panel lists them, filtered and sorted.",
   "output": {
    "additionalProperties": true,
@@ -4587,13 +4587,13 @@
    }
   }
  },
- "links.placementOptions": {
+ "linkedFile.placementOptions": {
   "description": "Sets how linked art fits its bounds when the file is updated or relinked: preserve transforms, bounds, file size, fit or fill, with alignment."
  },
- "links.relink": {
+ "linkedFile.relink": {
   "description": "Links images or placed documents to another file, or each to a same-named file in a folder."
  },
- "links.unembed": {
+ "linkedFile.unembed": {
   "description": "Writes an embedded image's pixels to a file and links the image to it.",
   "params": {
    "id": {
@@ -4601,10 +4601,10 @@
    }
   }
  },
- "links.update": {
+ "linkedFile.update": {
   "description": "Reads modified linked files again, keeping each object's bounds; answers what was updated and what is missing."
  },
- "links.updateChanged": {
+ "linkedFile.updateChanged": {
   "description": "Reads again every linked file that changed on disk since it was last seen."
  },
  "livePaint.expand": {
@@ -4769,19 +4769,19 @@
  "object.align": {
   "description": "Aligns the selected objects horizontally and/or vertically to the selection, the artboard or the key object, using preview or geometric bounds."
  },
- "object.arrange.bringForward": {
+ "arrange.bringForward": {
   "description": "Moves the selected objects one step up in the stacking order."
  },
- "object.arrange.bringToFront": {
+ "arrange.bringToFront": {
   "description": "Moves the selected objects to the top of their layer's stacking order."
  },
- "object.arrange.sendBackward": {
+ "arrange.sendBackward": {
   "description": "Moves the selected objects one step down in the stacking order."
  },
- "object.arrange.sendToBack": {
+ "arrange.sendToBack": {
   "description": "Moves the selected objects to the bottom of their layer's stacking order."
  },
- "object.arrange.sendToCurrentLayer": {
+ "arrange.sendToCurrentLayer": {
   "description": "Moves the selected objects to the top of the current layer."
  },
  "object.blend.expand": {
@@ -4872,13 +4872,13 @@
  "object.blend.reverseSpine": {
   "description": "Reverses the order of the key objects along the selected blend's spine."
  },
- "object.blend.spine.addAnchor": {
+ "object.blend.addSpineAnchor": {
   "description": "Adds a point to a blend's spine where it passes nearest x, y; answers its index."
  },
- "object.blend.spine.moveAnchor": {
+ "object.blend.moveSpineAnchor": {
   "description": "Moves a point of a blend's spine, or one of its handles, to x, y."
  },
- "object.blend.spine.removeAnchor": {
+ "object.blend.removeSpineAnchor": {
   "description": "Deletes a spine point that no key object sits on."
  },
  "object.clippingMask.editContents": {
@@ -4917,10 +4917,10 @@
  "object.compoundPath.release": {
   "description": "Splits the selected compound paths back into separate paths."
  },
- "object.createObjectMosaic": {
+ "object.addObjectMosaic": {
   "description": "Builds a group of rectangles coloured by the selected image's tile colours (a mosaic), optionally deleting the image."
  },
- "object.createTrimMarks": {
+ "object.addTrimMarks": {
   "description": "Draws trim marks around the selection or every artboard, in Roman or Japanese style."
  },
  "object.cropImage": {
@@ -5137,7 +5137,7 @@
    }
   }
  },
- "object.group": {
+ "arrange.group": {
   "description": "Groups the selected objects into one group in place and answers the group's id."
  },
  "object.hide": {
@@ -5208,7 +5208,7 @@
  "object.mesh.addLine": {
   "description": "Adds a mesh row and column through x, y to a gradient mesh or mesh envelope; answers the new point's index."
  },
- "object.mesh.create": {
+ "object.mesh.add": {
   "description": "Converts the selected filled paths into gradient meshes of rows by columns, flat or highlighted at the centre or edge."
  },
  "object.mesh.deletePoint": {
@@ -5508,7 +5508,7 @@
  "object.slice.combine": {
   "description": "Combines two or more selected slices into one user slice over their bounds."
  },
- "object.slice.create": {
+ "object.slice.add": {
   "description": "Creates a user slice over a rectangle, as dragging with the Slice tool does."
  },
  "object.slice.delete": {
@@ -5598,7 +5598,7 @@
  "object.transformEach": {
   "description": "Scales, moves, rotates and reflects each selected object about its own reference point (optionally randomised or as copies), as Transform Each does."
  },
- "object.ungroup": {
+ "arrange.ungroup": {
   "description": "Ungroups the selected groups, leaving their children selected in the same stacking position."
  },
  "object.unlockAll": {
@@ -6095,7 +6095,7 @@
  "path.convertAnchors": {
   "description": "Converts the direct-selected anchors to corner points (handles retracted) or smooth points in one undo step."
  },
- "path.create": {
+ "path.add": {
   "description": "Creates a path from anchors with optional in/out handles, or from SVG path data, open or closed, with the current paint; answers its id.",
   "params": {
    "d": {
@@ -8807,7 +8807,7 @@
    "type": "object"
   }
  },
- "select.all": {
+ "edit.selectAll": {
   "description": "Selects every unlocked, visible object (or all text while the Type tool edits) and answers the count.",
   "output": {
    "additionalProperties": true,
@@ -8901,7 +8901,7 @@
    "type": "null"
   }
  },
- "select.none": {
+ "edit.deselectAll": {
   "description": "Clears the selection, deselecting every object, anchor and guide.",
   "output": {
    "type": "null"
@@ -9967,10 +9967,10 @@
  "text.areaOptions": {
   "description": "Sets area type options of the selected type: frame size, rows, columns, gutter, inset, first baseline, vertical alignment and auto-fit."
  },
- "text.create": {
+ "text.add": {
   "description": "Creates point or area type at x, y with text, size, font, colour and alignment options; answers its id. Use text.setText to change existing type."
  },
- "text.createInPath": {
+ "text.addInPath": {
   "description": "Puts new type inside a closed path (area type) or along a path (type on a path) with text, font and fit options; answers its id.",
   "params": {
    "charAlign": {
@@ -10260,7 +10260,7 @@
  "text.tabs.set": {
   "description": "Replaces the tab stops of the selected text's paragraphs with positions, alignments and leaders."
  },
- "text.thread.create": {
+ "text.thread.add": {
   "description": "Threads the selected area type and closed paths in stacking order so text flows from one frame to the next; answers the ids."
  },
  "text.thread.info": {
@@ -10455,25 +10455,25 @@
  "transparency.viewOpacityMask": {
   "description": "Shows only an object's opacity mask on the canvas as greyscale coverage (or turns that off)."
  },
- "type.changeCase": {
+ "text.changeCase": {
   "description": "Changes the case of the selected text or ids to upper, lower, title or sentence case."
  },
- "type.convertToAreaType": {
+ "text.convertToAreaType": {
   "description": "Converts point type to area type framed by its current bounds; answers the ids."
  },
- "type.convertToPointType": {
+ "text.convertToPointType": {
   "description": "Converts area type to point type, turning soft wraps into line breaks; answers the ids."
  },
- "type.createOutlines": {
+ "text.convertToOutlines": {
   "description": "Converts the selected text into groups of compound paths, one per glyph; the text is no longer editable."
  },
- "type.fillPlaceholder": {
+ "text.fillPlaceholder": {
   "description": "Replaces the selected text with placeholder text (area type fills its frame)."
  },
- "type.fitHeadline": {
+ "text.fitHeadlineSelection": {
   "description": "Tracks the first line of the selected area type so it fills the frame width; answers the tracking."
  },
- "type.insert": {
+ "text.insert": {
   "description": "Inserts a special character (bullet, dash, quote, space, hyphen or symbol) at the Type tool's caret.",
   "params": {
    "char": {
@@ -10481,13 +10481,13 @@
    }
   }
  },
- "type.orientation.horizontal": {
+ "text.orientation.horizontal": {
   "description": "Sets the selected or given type objects to horizontal writing."
  },
- "type.orientation.vertical": {
+ "text.orientation.vertical": {
   "description": "Sets the selected or given type objects to vertical writing."
  },
- "type.pathOptions": {
+ "text.pathOptions": {
   "description": "Sets type-on-a-path options: start and end brackets, flip, effect (rainbow, skew, ribbon, stair step, gravity), alignment and spacing.",
   "params": {
    "effect": {
@@ -10512,7 +10512,7 @@
    }
   }
  },
- "type.size.decrease": {
+ "format.decreaseFontSize": {
   "description": "Decreases the selected text's font size by a number of preference steps.",
   "params": {
    "by": {
@@ -10520,7 +10520,7 @@
    }
   }
  },
- "type.size.increase": {
+ "format.increaseFontSize": {
   "description": "Increases the selected text's font size by a number of preference steps.",
   "params": {
    "by": {
@@ -10528,10 +10528,10 @@
    }
   }
  },
- "type.smartPunctuation": {
+ "text.smartPunctuation": {
   "description": "Replaces straight quotes, double hyphens and triple dots with typographic quotes, dashes and ellipses in the selection or document."
  },
- "type.step": {
+ "text.step": {
   "description": "Steps a type attribute (size, leading, tracking, kerning, baseline shift) up or down by the preference increments.",
   "params": {
    "by": {

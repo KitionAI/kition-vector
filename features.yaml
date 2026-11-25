@@ -49,7 +49,7 @@ features:
     dimension: [function, conversion, data-safety]
     priority: P0
     status: has
-    commands: [file.new, file.close, document.activate, document.open, document.save, file.saveAs, file.saveCopy, file.revert, file.closeAll]
+    commands: [file.new, file.close, file.activate, file.open, file.save, file.saveAs, file.saveCopy, file.revert, file.closeAll]
     paths: [bindings/wasm/src/lib.rs, bindings/wasm/src/files.rs, crates/engine/engine/src/cmd/fileio/save.rs, crates/engine/engine/src/cmd/edit.rs, bindings/wasm/src/gate.rs, bindings/wasm/src/hosting.rs, crates/engine/engine/src/file_access.rs]
     target: "Illustrator 2026 (30.x)"
     cases: [vector.file.documents/save-open-roundtrip, regressions/issue-writes-outside-workspace]
@@ -59,7 +59,7 @@ features:
     dimension: [conversion, function]
     priority: P1
     status: partial
-    commands: [document.serialize, document.export, document.exportBytes, document.exportSelection, document.exportForScreens, document.formats, document.pdfInfo, document.exportForOffice, document.exportSettings, file.formatOptions, document.exportPdf, document.pdfSettings, document.exportDxf, document.exportEps, file.package, file.print, document.dxfInfo, document.exportForWeb, document.exportForWeb.preview]
+    commands: [file.serialize, file.export, file.exportBytes, file.exportSelection, file.exportForScreens, file.formats, file.pdfInfo, file.exportForOffice, file.exportSettings, file.formatOptions, file.exportPdf, file.pdfSettings, file.exportDxf, file.exportEps, file.package, file.print, file.dxfInfo, file.exportForWeb, file.exportForWeb.preview]
     paths: [bindings/wasm/src/files.rs, crates/engine/engine/src/cmd/fileio/mod.rs, crates/engine/engine/src/cmd/fileio/export.rs, bindings/wasm/src/lib.rs, bindings/wasm/src/params.rs, web/src/ExportDialog.tsx, web/src/exporting.ts]
     target: "Illustrator 2026 (30.x)"
     cases: [vector.file.export/export-bytes]
@@ -70,7 +70,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [file.saveAsTemplate, file.newFromTemplate, file.documentColorMode, file.info, file.newPresets, file.newPresets.save, file.newPresets.delete, file.place, file.place.info, file.place.queue, file.recovery.save, file.recovery.list, file.recovery.restore, file.recovery.discard]
+    commands: [file.saveAsTemplate, file.newFromTemplate, file.documentColorMode, file.setInfo, file.newPresets, file.newPresets.save, file.newPresets.delete, file.place, file.place.info, file.place.queue, file.recovery.save, file.recovery.list, file.recovery.restore, file.recovery.discard]
     paths: [bindings/wasm/src/files.rs, crates/engine/engine/src/cmd/recovery.rs, crates/engine/engine/src/cmd/newdoc.rs, crates/engine/engine/src/cmd/place/mod.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -129,7 +129,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [document.inspect, document.node, document.find, document.json, document.setUnits, document.rasterEffectsSettings, document.info, document.setup]
+    commands: [file.inspect, file.node, file.find, file.json, file.setUnits, file.rasterEffectsSettings, file.getInfo, file.setup]
     paths: [crates/engine/engine/src/cmd/edit.rs, bindings/wasm/src/files.rs, bindings/wasm/src/lib.rs, crates/engine/engine/src/cmd/docinfo.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -139,7 +139,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [edit.undo, edit.redo, edit.cut, edit.copy, edit.paste, edit.clear, edit.duplicate]
+    commands: [edit.undo, edit.redo, edit.cut, edit.copy, edit.paste, edit.delete, edit.duplicate]
     paths: [crates/engine/engine/src/cmd/edit.rs, crates/support/testkit/src/strategies.rs, bindings/wasm/src/lib.rs, crates/engine/engine/src/cmd/clipboard.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -199,7 +199,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [path.create, path.appendAnchor, path.close, path.moveAnchors, path.setHandle, path.setAnchors, path.reverse, path.join, path.average, path.convertAnchors, path.deleteAnchors, path.reshape, path.insertAnchor, path.cutAtAnchors, path.freehand, path.curvature, path.curvatureEdit, path.removeAnchor, path.removeAnchors, path.convertAnchor, path.reshapeSegment, path.split, path.knife, path.eraseRegion, path.eraseSegments, path.smoothRegion, path.joinScrub, path.blob, path.setFillRule, path.mirrorCut, path.lineCut, path.rectCut]
+    commands: [path.add, path.appendAnchor, path.close, path.moveAnchors, path.setHandle, path.setAnchors, path.reverse, path.join, path.average, path.convertAnchors, path.deleteAnchors, path.reshape, path.insertAnchor, path.cutAtAnchors, path.freehand, path.curvature, path.curvatureEdit, path.removeAnchor, path.removeAnchors, path.convertAnchor, path.reshapeSegment, path.split, path.knife, path.eraseRegion, path.eraseSegments, path.smoothRegion, path.joinScrub, path.blob, path.setFillRule, path.mirrorCut, path.lineCut, path.rectCut]
     paths: [crates/engine/engine/src/cmd/draw2.rs, crates/engine/engine/src/cmd/path.rs, crates/engine/tools/src/pen.rs, crates/engine/tools/src/draw2/gesture.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -219,7 +219,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [text.thread.create, text.thread.releaseSelection, text.thread.remove, text.thread.info]
+    commands: [text.thread.add, text.thread.releaseSelection, text.thread.remove, text.thread.info]
     paths: [crates/engine/engine/src/cmd/threads.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -239,7 +239,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [text.create, text.setText, text.areaOptions, text.reshapeArea, text.fitHeadline, text.setStyle, text.editRange, text.setRangeStyle, text.getRange, text.createInPath, text.discardEmpty, text.insertInline, text.fonts, text.replaceFont, text.fontList, text.rescanFonts, text.missingFonts, text.findFontFiles, text.addFontFiles, text.setFormat]
+    commands: [text.add, text.setText, text.areaOptions, text.reshapeArea, text.fitHeadline, text.setStyle, text.editRange, text.setRangeStyle, text.getRange, text.addInPath, text.discardEmpty, text.insertInline, text.fonts, text.replaceFont, text.fontList, text.rescanFonts, text.missingFonts, text.findFontFiles, text.addFontFiles, text.setFormat]
     paths: [crates/engine/engine/src/cmd/typecmd.rs, crates/engine/engine/src/cmd/fonts.rs, crates/engine/engine/src/cmd/textedit.rs, crates/support/testkit/src/fixtures.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -250,7 +250,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [type.orientation.vertical, type.orientation.horizontal, type.createOutlines, type.changeCase, type.smartPunctuation, type.convertToAreaType, type.convertToPointType, type.pathOptions, type.fillPlaceholder, type.insert, type.fitHeadline, type.step, type.size.increase, type.size.decrease]
+    commands: [text.orientation.vertical, text.orientation.horizontal, text.convertToOutlines, text.changeCase, text.smartPunctuation, text.convertToAreaType, text.convertToPointType, text.pathOptions, text.fillPlaceholder, text.insert, text.fitHeadlineSelection, text.step, format.increaseFontSize, format.decreaseFontSize]
     paths: [crates/engine/engine/src/cmd/typemenu.rs, crates/engine/engine/src/cmd/textedit.rs, crates/engine/engine/src/cmd/typecmd.rs, crates/engine/tools/src/typewidget.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -260,7 +260,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [object.arrange.bringToFront, object.arrange.bringForward, object.arrange.sendBackward, object.arrange.sendToBack, object.arrange.sendToCurrentLayer]
+    commands: [arrange.bringToFront, arrange.bringForward, arrange.sendBackward, arrange.sendToBack, arrange.sendToCurrentLayer]
     paths: [crates/engine/engine/src/cmd/object.rs, crates/support/testkit/src/strategies.rs, web/src/HomeTab.tsx, crates/engine/engine/src/cmd/textwrap.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -300,7 +300,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [object.blend.make, object.blend.release, object.blend.options, object.blend.expand, object.blend.replaceSpine, object.blend.reverseSpine, object.blend.info, object.blend.spine.moveAnchor, object.blend.spine.addAnchor, object.blend.spine.removeAnchor, object.blend.reverseFrontToBack]
+    commands: [object.blend.make, object.blend.release, object.blend.options, object.blend.expand, object.blend.replaceSpine, object.blend.reverseSpine, object.blend.info, object.blend.moveSpineAnchor, object.blend.addSpineAnchor, object.blend.removeSpineAnchor, object.blend.reverseFrontToBack]
     paths: [crates/engine/engine/src/cmd/live.rs, crates/engine/tools/src/pen.rs, bindings/wasm/src/lib.rs, crates/engine/tools/src/direct.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -321,7 +321,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [object.mesh.create, object.mesh.setPointColor, object.mesh.movePoint, object.mesh.addLine, object.mesh.deletePoint, object.mesh.expand]
+    commands: [object.mesh.add, object.mesh.setPointColor, object.mesh.movePoint, object.mesh.addLine, object.mesh.deletePoint, object.mesh.expand]
     paths: [crates/engine/engine/src/cmd/live.rs, crates/engine/tools/src/meshblend.rs, crates/engine/tools/src/meshedit.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -361,7 +361,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [object.slice.make, object.slice.release, object.slice.fromGuides, object.slice.fromSelection, object.slice.duplicate, object.slice.combine, object.slice.divide, object.slice.deleteAll, object.slice.options, object.slice.clipToArtboard, slice.list, object.slice.create, object.slice.setRect, object.slice.move, object.slice.delete, object.slice.select]
+    commands: [object.slice.make, object.slice.release, object.slice.fromGuides, object.slice.fromSelection, object.slice.duplicate, object.slice.combine, object.slice.divide, object.slice.deleteAll, object.slice.options, object.slice.clipToArtboard, slice.list, object.slice.add, object.slice.setRect, object.slice.move, object.slice.delete, object.slice.select]
     paths: [crates/engine/engine/src/cmd/slices.rs, crates/engine/tools/src/slice.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -371,7 +371,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [object.transform, object.move, object.rotate, object.scale, object.reflect, object.shear, object.transformAgain, object.nudge, object.group, object.ungroup, object.lock, object.unlockAll, object.hide, object.showAll, object.compoundPath.make, object.compoundPath.release, object.isolate, object.exitIsolation, object.setProps, object.align, object.distribute, object.distributeSpacing, object.setBounds, object.expandShape, object.setLiveShape, object.distort, object.lock.above, object.lock.otherLayers, object.hide.above, object.hide.otherLayers, object.transformEach, object.resetBoundingBox, object.rasterize, object.createObjectMosaic, object.cropImage, object.maskImage, object.createTrimMarks, object.shape.convertToShape, object.makePixelPerfect, object.expandBrush, object.liquify, object.pinWarp, object.pinWarp.pins, object.setOverprint, object.flattenTransparency, object.expand, object.expand.info, object.vectorHalftone]
+    commands: [object.transform, object.move, object.rotate, object.scale, object.reflect, object.shear, object.transformAgain, object.nudge, arrange.group, arrange.ungroup, object.lock, object.unlockAll, object.hide, object.showAll, object.compoundPath.make, object.compoundPath.release, object.isolate, object.exitIsolation, object.setProps, object.align, object.distribute, object.distributeSpacing, object.setBounds, object.expandShape, object.setLiveShape, object.distort, object.lock.above, object.lock.otherLayers, object.hide.above, object.hide.otherLayers, object.transformEach, object.resetBoundingBox, object.rasterize, object.addObjectMosaic, object.cropImage, object.maskImage, object.addTrimMarks, object.shape.convertToShape, object.makePixelPerfect, object.expandBrush, object.liquify, object.pinWarp, object.pinWarp.pins, object.setOverprint, object.flattenTransparency, object.expand, object.expand.info, object.vectorHalftone]
     paths: [crates/engine/engine/src/cmd/object.rs, crates/support/testkit/src/strategies.rs, crates/engine/engine/src/cmd/menucmds.rs, web/src/commandIcons.ts]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -401,7 +401,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [select.all, select.allOnArtboard, select.none, select.reselect, select.inverse, select.nextAbove, select.nextBelow, select.set, select.add, select.toggle, select.key, select.anchors, select.anchorsMany, select.magicWand, magicWand.set, magicWand.options, select.font, select.save, select.recall, select.editSaved, select.savedList]
+    commands: [edit.selectAll, select.allOnArtboard, edit.deselectAll, select.reselect, select.inverse, select.nextAbove, select.nextBelow, select.set, select.add, select.toggle, select.key, select.anchors, select.anchorsMany, select.magicWand, magicWand.set, magicWand.options, select.font, select.save, select.recall, select.editSaved, select.savedList]
     paths: [crates/engine/engine/src/cmd/select.rs, crates/engine/tools/src/direct.rs, bindings/wasm/src/lib.rs, crates/engine/engine/src/cmd/docmenu.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -521,7 +521,7 @@ features:
     dimension: [function]
     priority: P1
     status: partial
-    commands: [graph.create, graph.setData, graph.setType]
+    commands: [graph.add, graph.setData, graph.setType]
     paths: [crates/engine/engine/src/cmd/graph.rs, crates/engine/tools/src/extra.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -612,7 +612,7 @@ features:
     dimension: [function]
     priority: P2
     status: partial
-    commands: [attributes.info, attributes.set]
+    commands: [attribute.info, attribute.set]
     paths: [crates/engine/engine/src/cmd/attributes.rs, crates/engine/engine/src/cmd/overprint.rs, web/src/commandIcons.ts]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -632,7 +632,7 @@ features:
     dimension: [function]
     priority: P2
     status: partial
-    commands: [library.list, library.get, library.setCurrent, library.create, library.rename, library.delete, library.add, library.use, library.removeItem, library.createGroup, library.renameGroup, library.deleteGroup, library.moveItem, library.export, library.import]
+    commands: [library.list, library.get, library.setCurrent, library.new, library.rename, library.delete, library.add, library.use, library.removeItem, library.addGroup, library.renameGroup, library.deleteGroup, library.moveItem, library.export, library.import]
     paths: [crates/engine/engine/src/cmd/library.rs, crates/engine/engine/src/cmd/textstyles.rs, bindings/wasm/src/files.rs, web/src/commandIcons.ts]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."
@@ -642,7 +642,7 @@ features:
     dimension: [conversion, function]
     priority: P1
     status: partial
-    commands: [image.info, links.check, links.update, links.updateChanged, links.relink, links.list, links.goTo, links.embed, links.unembed, links.info, links.placementOptions]
+    commands: [image.info, linkedFile.check, linkedFile.update, linkedFile.updateChanged, linkedFile.relink, linkedFile.list, linkedFile.goTo, linkedFile.embed, linkedFile.unembed, linkedFile.info, linkedFile.placementOptions]
     paths: [crates/engine/engine/src/cmd/links.rs, bindings/wasm/src/files.rs, crates/engine/engine/src/cmd/place/mod.rs, crates/engine/engine/src/link_watch.rs, crates/engine/engine/src/file_access.rs]
     target: "Illustrator 2026 (30.x)"
     cases: [regressions/issue-reads-outside-workspace]
@@ -673,7 +673,7 @@ features:
     dimension: [conversion, function]
     priority: P1
     status: partial
-    commands: [webExport.settings, webExport.presets.list, webExport.presets.save, webExport.presets.delete, assets.add, assets.remove, assets.rename, assets.list, assets.export, assets.settings.set, css.selection, css.generate, css.export]
+    commands: [webExport.settings, webExport.presets.list, webExport.presets.save, webExport.presets.delete, asset.add, asset.remove, asset.rename, asset.list, asset.export, asset.settings.set, css.selection, css.generate, css.export]
     paths: [crates/engine/engine/src/cmd/assets.rs, crates/engine/engine/src/cmd/webexport.rs, crates/engine/engine/src/cmd/css.rs, bindings/wasm/src/files.rs]
     target: "Illustrator 2026 (30.x)"
     gap: "The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen."

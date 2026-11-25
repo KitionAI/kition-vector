@@ -1,4 +1,4 @@
-//! SVG Options: the SVG settings of `document.export`, `serialize` and `save`, read from the
+//! SVG Options: the SVG settings of `file.export`, `serialize` and `save`, read from the
 //! params' top level or from an `svg` object (which wins), and the files an SVG export writes
 //! (one per artboard, plus the images it links to).
 
@@ -10,7 +10,7 @@ use serde_json::{Map, Value};
 use super::encode::{ARTBOARD_PARAMS, ArtboardPick, Encoded};
 use super::{ARTBOARD, ARTBOARDS, FormatOption, RANGE};
 
-/// The options `document.formats` lists for SVG (the defaults are [`ExportOptions::default`]'s).
+/// The options `file.formats` lists for SVG (the defaults are [`ExportOptions::default`]'s).
 pub const OPTIONS: &[FormatOption] = &[
     ARTBOARD,
     ARTBOARDS,
@@ -70,7 +70,7 @@ pub const OPTIONS: &[FormatOption] = &[
         name: "hiddenLayers",
         ty: "boolean",
         default: "false",
-        description: "keep hidden layers and objects, not displayed (display=\"none\"); document.save sets it unless given",
+        description: "keep hidden layers and objects, not displayed (display=\"none\"); file.save sets it unless given",
     },
     FormatOption {
         name: "encoding",
@@ -120,7 +120,7 @@ pub fn options_map(p: &Value) -> Result<Map<String, Value>, String> {
     match o.get("svg") {
         None | Some(Value::Null) => {}
         Some(Value::Object(svg)) => m.extend(svg.clone()),
-        Some(_) => return Err("`svg` must be an object of SVG options (see document.formats)".into()),
+        Some(_) => return Err("`svg` must be an object of SVG options (see file.formats)".into()),
     }
     Ok(m)
 }

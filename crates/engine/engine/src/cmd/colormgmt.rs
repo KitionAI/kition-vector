@@ -278,7 +278,7 @@ pub(crate) fn convert_mode(s: &mut Session, p: &Value) -> Result<Value> {
 /// black plate in either mode); RGB greys are colours like any other and separate through the
 /// CMYK profile, unless `grays` puts them on the black plate. Lab colours (spot colour
 /// definitions) are device independent and fit either mode. Document Color Mode and
-/// `document.open {colorMode}` both convert this way.
+/// `file.open {colorMode}` both convert this way.
 pub(crate) fn set_color_mode(d: &mut kition_vector_doc::Document, mode: ColorMode, convert: bool, intent: Option<Intent>, grays: Grays) -> usize {
     d.color_mode = mode;
     if !convert {

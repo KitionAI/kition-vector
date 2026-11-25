@@ -1,4 +1,4 @@
-//! TIFF, BMP and Targa export through `document.export`: the options reach the files, impossible
+//! TIFF, BMP and Targa export through `file.export`: the options reach the files, impossible
 //! ones are refused, and the files open again.
 
 use serde_json::{Value, json};
@@ -16,7 +16,7 @@ fn session() -> Session {
 }
 
 fn export(s: &mut Session, p: Value) -> Vec<u8> {
-    let r = s.execute("document.export", &p).unwrap();
+    let r = s.execute("file.export", &p).unwrap();
     kition_vector_format::base64_decode(r["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
@@ -78,12 +78,12 @@ fn tiff_options_reach_the_file() {
 
     let gray = tiff(&mut s, json!({"colorModel": "gray"}));
     assert_eq!((tags(&gray)[&262].2, tags(&gray)[&277].2), (1, 1), "grey, no alpha");
-    assert!(s.execute("document.export", &json!({"format": "tiff", "byteOrder": "middle"})).is_err());
+    assert!(s.execute("file.export", &json!({"format": "tiff", "byteOrder": "middle"})).is_err());
     // The file opens again.
-    let r = s.execute("document.open", &json!({"name": "back.tif", "dataBase64": kition_vector_format::base64_encode(&mm)})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "back.tif", "dataBase64": kition_vector_format::base64_encode(&mm)})).unwrap();
     assert_eq!(r["format"], "tiff");
     for file in [&cmyk, &gray, &rgb] {
-        s.execute("document.open", &json!({"name": "back.tif", "dataBase64": kition_vector_format::base64_encode(file)})).unwrap();
+        s.execute("file.open", &json!({"name": "back.tif", "dataBase64": kition_vector_format::base64_encode(file)})).unwrap();
     }
 }
 
@@ -113,10 +113,10 @@ fn bmp_options_reach_the_file() {
         json!({"fileFormat": "amiga"}),
         json!({"colorModel": "cmyk"}),
     ] {
-        let e = s.execute("document.export", &merge(json!({"format": "bmp"}), bad.clone())).unwrap_err();
+        let e = s.execute("file.export", &merge(json!({"format": "bmp"}), bad.clone())).unwrap_err();
         assert!(matches!(e, EngineError::BadParams { .. }), "{bad}: {e}");
     }
-    let r = s.execute("document.open", &json!({"name": "back.bmp", "dataBase64": kition_vector_format::base64_encode(&rle)})).unwrap();
+    let r = s.execute("file.open", &json!({"name": "back.bmp", "dataBase64": kition_vector_format::base64_encode(&rle)})).unwrap();
     assert_eq!(r["format"], "bmp");
 }
 
@@ -131,7 +131,7 @@ fn targa_depth_reaches_the_file() {
     let tga = export(&mut s, json!({"format": "tga"}));
     assert_eq!(tga[16], 24, "24 bits by default");
     for bad in [json!({"depth": 8}), json!({"colorModel": "gray"})] {
-        assert!(s.execute("document.export", &merge(json!({"format": "tga"}), bad.clone())).is_err(), "{bad}");
+        assert!(s.execute("file.export", &merge(json!({"format": "tga"}), bad.clone())).is_err(), "{bad}");
     }
 }
 
@@ -139,7 +139,7 @@ fn targa_depth_reaches_the_file() {
 fn the_formats_are_listed_and_write_one_file_per_artboard() {
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 30, "height": 20, "artboards": 2})).unwrap();
-    let r = s.execute("document.formats", &json!({})).unwrap();
+    let r = s.execute("file.formats", &json!({})).unwrap();
     let find = |id: &str| r["formats"].as_array().unwrap().iter().find(|f| f["id"] == id).unwrap().clone();
     let (tiff, bmp, tga) = (find("tiff"), find("bmp"), find("tga"));
     assert_eq!((tiff["write"].as_bool(), tiff["read"].as_bool()), (Some(true), Some(true)));
@@ -154,7 +154,7 @@ fn the_formats_are_listed_and_write_one_file_per_artboard() {
         }
     }
     assert_eq!(format_for_name("a.tga").map(|f| f.id), Some("tga"));
-    let r = s.execute("document.export", &json!({"format": "tiff", "useArtboards": true})).unwrap();
+    let r = s.execute("file.export", &json!({"format": "tiff", "useArtboards": true})).unwrap();
     let files: Vec<&str> = r["files"].as_array().unwrap().iter().map(|f| f["name"].as_str().unwrap()).collect();
     assert_eq!(files, ["Untitled-1-Artboard-1.tif", "Untitled-1-Artboard-2.tif"]);
 }

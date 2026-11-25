@@ -102,7 +102,7 @@ fn transform_each_without_strokes_keeps_them() {
 #[test]
 fn off_compensates_the_type_stroke_on_scales_it_with_the_type() {
     let mut s = session();
-    let id = id_of(&run(&mut s, "text.create", json!({"x": 20, "y": 100, "text": "Scale", "size": 24})));
+    let id = id_of(&run(&mut s, "text.add", json!({"x": 20, "y": 100, "text": "Scale", "size": 24})));
     run(&mut s, "select.set", json!({ "ids": [id.0] }));
     run(&mut s, "paint.setStroke", json!({"color": "#ff0000"}));
     run(&mut s, "stroke.set", json!({"weight": 2, "dash": [4, 2], "dashOffset": 1}));
@@ -127,7 +127,7 @@ fn group_appearance_scales_with_its_members() {
     let a = id_of(&run(&mut s, "shape.rectangle", json!({"x": 0, "y": 0, "width": 50, "height": 50})));
     let b = id_of(&run(&mut s, "shape.rectangle", json!({"x": 60, "y": 0, "width": 50, "height": 50})));
     run(&mut s, "select.set", json!({ "ids": [a.0, b.0] }));
-    let g = id_of(&run(&mut s, "object.group", json!({})));
+    let g = id_of(&run(&mut s, "arrange.group", json!({})));
     run(&mut s, "effect.apply", json!({"ids": [g.0], "effect": "stylize.dropShadow", "params": {"x": 4, "y": 4}}));
     run(&mut s, "object.scale", json!({"sx": 50, "strokes": true}));
     let n = node(&s, g);

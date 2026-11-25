@@ -1,7 +1,7 @@
 artboard.new	name	a new name the command assigns, not a lookup
 artboard.setProps	name	a new name the command assigns, not a lookup
-assets.add	name	a new name the command assigns, not a lookup
-assets.rename	name	a new name the command assigns, not a lookup
+asset.add	name	a new name the command assigns, not a lookup
+asset.rename	name	a new name the command assigns, not a lookup
 brush.apply	name	a brush name: brushs are no object-model type of the drawing (session, preferences, libraries or fonts)
 brush.delete	name	a brush name: brushs are no object-model type of the drawing (session, preferences, libraries or fonts)
 brush.duplicate	name	a brush name: brushs are no object-model type of the drawing (session, preferences, libraries or fonts)
@@ -22,7 +22,7 @@ dataset.rename	name	a dataset name: datasets are no object-model type of the dra
 dataset.rename	newName	a new name the command assigns, not a lookup
 dataset.select	name	a dataset name: datasets are no object-model type of the drawing (session, preferences, libraries or fonts)
 dataset.set	name	a dataset name: datasets are no object-model type of the drawing (session, preferences, libraries or fonts)
-document.find	name	a object name: objects are no object-model type of the drawing (session, preferences, libraries or fonts)
+file.find	name	a object name: objects are no object-model type of the drawing (session, preferences, libraries or fonts)
 file.new	name	a new name the command assigns, not a lookup
 file.newPresets.delete	name	a preset name: presets are no object-model type of the drawing (session, preferences, libraries or fonts)
 file.newPresets.save	name	a new name the command assigns, not a lookup
@@ -40,14 +40,14 @@ layer.new	name	a new name the command assigns, not a lookup
 layer.newSublayer	name	a new name the command assigns, not a lookup
 layer.setProps	name	a new name the command assigns, not a lookup
 library.add	name	a new name the command assigns, not a lookup
-library.create	name	a new name the command assigns, not a lookup
-library.createGroup	name	a new name the command assigns, not a lookup
+library.new	name	a new name the command assigns, not a lookup
+library.addGroup	name	a new name the command assigns, not a lookup
 library.import	name	a new name the command assigns, not a lookup
 library.moveItem	item	a libraryItem name: libraryItems are no object-model type of the drawing (session, preferences, libraries or fonts)
 library.removeItem	item	a libraryItem name: libraryItems are no object-model type of the drawing (session, preferences, libraries or fonts)
 library.rename	name	a new name the command assigns, not a lookup
 library.renameGroup	name	a new name the command assigns, not a lookup
-object.createTrimMarks	style	a trim mark style ("roman", "japanese"), a value
+object.addTrimMarks	style	a trim mark style ("roman", "japanese"), a value
 object.envelope.options	style	a warp style, a value
 object.envelope.resetWithWarp	style	a warp style, a value
 object.pattern.make	name	a new name the command assigns, not a lookup
@@ -98,8 +98,8 @@ swatch.newGroup	colors	a value, no lookup:
 swatch.newGroup	name	a new name the command assigns, not a lookup
 symbol.duplicate	newName	a new name the command assigns, not a lookup
 symbol.new	name	a new name the command assigns, not a lookup
-text.create	style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)
-text.createInPath	style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)
+text.add	style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)
+text.addInPath	style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)
 text.editRange	runs[].style	the inserted run's character attributes, a value
 text.findFontFiles	fonts[].style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)
 text.replaceFont	from.style	a font name: fonts are no object-model type of the drawing (session, preferences, libraries or fonts)

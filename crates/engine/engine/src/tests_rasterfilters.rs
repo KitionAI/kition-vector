@@ -64,7 +64,7 @@ fn striped() -> (Session, u64) {
     s.execute("paint.setFill", &json!({"color": "#b04848", "ids": [stripe]})).unwrap();
     s.execute("paint.setStroke", &json!({"none": true, "ids": [stripe]})).unwrap();
     s.execute("select.set", &json!({"ids": [id, stripe]})).unwrap();
-    let g = s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
+    let g = s.execute("arrange.group", &json!({})).unwrap()["id"].as_u64().unwrap();
     (s, g)
 }
 
@@ -162,7 +162,7 @@ fn pdf_and_svg_write_the_effected_object_as_an_image() {
         let diff = mean_diff(&render(&s), &Renderer::new().render_region(&back, Rect::new(0.0, 0.0, 200.0, 200.0), 1.0, true));
         assert!(diff < 0.03, "{id}: PDF reads back {:.2}% off", diff * 100.0);
         // SVG: the object becomes an image; a Gaussian Blur alone stays a live filter.
-        let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+        let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
         assert!(svg.contains("<image") && !svg.contains("<filter"), "{id}: {svg}");
         let flat = crate::cmd::rasterfx::flatten_pixel_effects(&doc).unwrap();
         assert!(matches!(flat.layers[0].children().unwrap()[0].kind, NodeKind::Image(_)), "{id}");
@@ -170,7 +170,7 @@ fn pdf_and_svg_write_the_effected_object_as_an_image() {
     let (mut s, g) = striped();
     s.execute("effect.apply", &json!({"effect": "blur.gaussian", "ids": [g]})).unwrap();
     assert!(crate::cmd::rasterfx::flatten_pixel_effects(&s.doc().unwrap().doc).is_none());
-    let svg = s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    let svg = s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
     assert!(svg.contains("feGaussianBlur") && !svg.contains("<image"));
 }
 

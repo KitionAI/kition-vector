@@ -22,7 +22,7 @@ fn session() -> Session {
 fn circle_symbol(s: &mut Session, name: &str, d: f64) {
     s.execute("shape.ellipse", &json!({"x": 600, "y": 500, "width": d, "height": d})).unwrap();
     s.execute("symbol.new", &json!({"name": name})).unwrap();
-    s.execute("edit.clear", &json!({})).unwrap();
+    s.execute("edit.delete", &json!({})).unwrap();
 }
 
 /// Area type at (40, 40), `w` × `h`, size 12, with `extra` area options; selected.
@@ -31,7 +31,7 @@ fn area(s: &mut Session, w: f64, h: f64, text: &str, extra: Value) -> NodeId {
     if let (Some(a), Some(e)) = (a.as_object_mut(), extra.as_object()) {
         a.extend(e.clone());
     }
-    let id = NodeId(s.execute("text.create", &json!({"x": 40, "y": 40, "size": 12, "area": a, "text": text})).unwrap()["id"].as_u64().unwrap());
+    let id = NodeId(s.execute("text.add", &json!({"x": 40, "y": 40, "size": 12, "area": a, "text": text})).unwrap()["id"].as_u64().unwrap());
     s.execute("select.set", &json!({"ids": [id.0]})).unwrap();
     id
 }

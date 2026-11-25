@@ -78,7 +78,7 @@ fn painted_with_a_pattern() -> Session {
     let in_tile = rect(&mut s, 300.0);
     fill(&mut s, in_tile);
     s.execute("object.pattern.make", &json!({"ids": [in_tile.0], "name": "Outer", "edit": false})).unwrap();
-    let text = id(&s.execute("text.create", &json!({"x": 10, "y": 200, "text": "Hi"})).unwrap());
+    let text = id(&s.execute("text.add", &json!({"x": 10, "y": 200, "text": "Hi"})).unwrap());
     fill(&mut s, text);
     let named = patterns_named(&s);
     assert!(named.iter().filter(|n| *n == "Pat").count() >= 4, "{named:?}");

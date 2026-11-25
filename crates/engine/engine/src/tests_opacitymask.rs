@@ -127,10 +127,10 @@ fn one_object_gets_an_empty_mask_drawn_in_editing_mode() {
 fn mask_and_transparency_commands_take_ids_without_a_selection() {
     let mut s = session();
     let (a, b) = (rect(&mut s, 0.0, 200.0), rect(&mut s, 0.0, 100.0));
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     let r = s.execute("transparency.makeOpacityMask", &json!({"ids": [b.0, a.0], "invert": true})).unwrap();
     assert_eq!(r["id"], a.0, "the top object (b) masks the one below, whatever the order given");
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.execute("transparency.setOpacityMask", &json!({"id": a.0, "clip": false})).unwrap();
     s.execute("transparency.disableOpacityMask", &json!({"ids": [a.0]})).unwrap();
     let m = mask(&s, a).unwrap();
@@ -141,7 +141,7 @@ fn mask_and_transparency_commands_take_ids_without_a_selection() {
     let layer = s.execute("transparency.editOpacityMask", &json!({"id": a.0})).unwrap()["layer"].as_u64().unwrap();
     assert_eq!(doc(&s).mask_edit.unwrap().layer, NodeId(layer));
     s.execute("transparency.stopEditingOpacityMask", &json!({})).unwrap();
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     s.execute("transparency.releaseOpacityMask", &json!({"id": a.0})).unwrap();
     assert!(mask(&s, a).is_none());
     let err = s.execute("transparency.releaseOpacityMask", &json!({"id": a.0})).unwrap_err();
@@ -167,7 +167,7 @@ fn opacity_is_a_percentage_everywhere() {
     s.execute("transparency.set", &json!({"opacity": 0.5})).unwrap();
     assert!((doc(&s).node(a).unwrap().opacity - 0.005).abs() < 1e-6);
     // Appearance items take ids without a selection too.
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert!(s.execute("appearance.setItem", &json!({"index": 0, "opacity": 30})).is_err(), "no selection, no ids");
     s.execute("appearance.setItem", &json!({"index": 0, "ids": [a.0], "opacity": 30})).unwrap();
     assert!((fill_opacity(&s) - 0.3).abs() < 1e-6);
@@ -189,7 +189,7 @@ fn info_reports_mixed_values_as_null() {
     assert_eq!((one["opacity"].clone(), one["isolate"].clone()), (json!(50.0), json!(true)));
     let i = s.transparency_info();
     assert_eq!((i.opacity, i.blend, i.knockout), (None, Some(kition_vector_color::BlendMode::Screen), Some(kition_vector_doc::Knockout::Neutral)));
-    s.execute("select.none", &json!({})).unwrap();
+    s.execute("edit.deselectAll", &json!({})).unwrap();
     assert_eq!(s.execute("transparency.info", &json!({})).unwrap()["opacity"], Value::Null);
     // Many targets are gathered in one walk of the tree.
     let ids: Vec<u64> = (0..12).map(|i| rect(&mut s, i as f64 * 20.0, 10.0).0).collect();
@@ -203,7 +203,7 @@ fn saving_while_editing_writes_no_editing_layer() {
     let mut s = session();
     let obj = editing_mask(&mut s);
     s.execute("object.move", &json!({"dx": 50, "dy": 0})).unwrap();
-    let bytes = data(&s.execute("document.save", &json!({})).unwrap());
+    let bytes = data(&s.execute("file.save", &json!({})).unwrap());
     let back = kition_vector_format::load(&bytes).unwrap();
     assert!(back.mask_edit.is_none() && !has_edit_layer(&back));
     assert_eq!(back.layers.len(), 1);
@@ -224,9 +224,9 @@ fn saving_while_editing_writes_no_editing_layer() {
 fn exports_while_editing_leave_the_editing_layer_out() {
     let mut s = session();
     editing_mask(&mut s);
-    let svg = |s: &mut Session| s.execute("document.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
-    let pdf = |s: &mut Session| data(&s.execute("document.export", &json!({"format": "pdf"})).unwrap());
-    let png = |s: &mut Session| data(&s.execute("document.export", &json!({"format": "png"})).unwrap());
+    let svg = |s: &mut Session| s.execute("file.serialize", &json!({"format": "svg"})).unwrap()["text"].as_str().unwrap().to_string();
+    let pdf = |s: &mut Session| data(&s.execute("file.export", &json!({"format": "pdf"})).unwrap());
+    let png = |s: &mut Session| data(&s.execute("file.export", &json!({"format": "png"})).unwrap());
     let (svg_editing, pdf_editing, png_editing) = (svg(&mut s), pdf(&mut s), png(&mut s));
     assert!(!svg_editing.contains("Opacity Mask Editing") && !svg_editing.contains("Opacity_Mask_Editing"));
     // Before the fix the editing layer's art was written too: the PDF would differ from the one

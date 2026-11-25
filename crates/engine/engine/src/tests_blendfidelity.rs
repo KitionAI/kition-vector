@@ -40,7 +40,7 @@ fn closed_shapes_start_where_they_dont_twist() {
     let mut s = session();
     let a = rect(&mut s, 0.0, 0.0, 40.0, 40.0);
     // The same square drawn from its bottom right corner.
-    let b = id_of(&s.execute("path.create", &json!({"d": "M240 40 L200 40 L200 0 L240 0 Z"})).unwrap());
+    let b = id_of(&s.execute("path.add", &json!({"d": "M240 40 L200 40 L200 0 L240 0 Z"})).unwrap());
     let g = make(&mut s, &[a, b], 1);
     let mid = steps(&s, g)[1].geometric_bounds().unwrap();
     assert!((mid.width() - 40.0).abs() < 1e-6 && (mid.height() - 40.0).abs() < 1e-6, "no twist: {mid:?}");
@@ -69,10 +69,10 @@ fn groups_with_different_member_counts_interpolate_member_by_member() {
     let a1 = rect(&mut s, 0.0, 0.0, 20.0, 20.0);
     let a2 = rect(&mut s, 0.0, 40.0, 20.0, 20.0);
     s.execute("select.set", &json!({"ids": [a1.0, a2.0]})).unwrap();
-    let ga = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let ga = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     let b1 = rect(&mut s, 200.0, 0.0, 20.0, 20.0);
     s.execute("select.set", &json!({"ids": [b1.0]})).unwrap();
-    let gb = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let gb = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     let g = make(&mut s, &[ga, gb], 1);
     let mid = &steps(&s, g)[1];
     let NodeKind::Group { children, .. } = &mid.kind else { panic!("a group step") };
@@ -100,8 +100,8 @@ fn compound_steps_stay_compound_paths() {
 #[test]
 fn text_moves_and_recolours_while_its_words_switch_halfway() {
     let mut s = session();
-    let a = id_of(&s.execute("text.create", &json!({"x": 0, "y": 100, "text": "Hi", "size": 20, "color": "#000000"})).unwrap());
-    let b = id_of(&s.execute("text.create", &json!({"x": 200, "y": 100, "text": "Yo", "size": 40, "color": "#ffffff"})).unwrap());
+    let a = id_of(&s.execute("text.add", &json!({"x": 0, "y": 100, "text": "Hi", "size": 20, "color": "#000000"})).unwrap());
+    let b = id_of(&s.execute("text.add", &json!({"x": 200, "y": 100, "text": "Yo", "size": 40, "color": "#ffffff"})).unwrap());
     let g = make(&mut s, &[a, b], 3);
     let st = steps(&s, g);
     let NodeKind::Text(t) = &st[2].kind else { panic!("a text step") };
@@ -194,7 +194,7 @@ fn object_expand_expands_blends_inside_the_selection() {
     let g = make(&mut s, &[a, b], 2);
     let c = rect(&mut s, 0.0, 100.0, 10.0, 10.0);
     s.execute("select.set", &json!({"ids": [g.0, c.0]})).unwrap();
-    let outer = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let outer = id_of(&s.execute("arrange.group", &json!({})).unwrap());
     assert_eq!(s.execute("object.expand.info", &json!({})).unwrap()["object"], json!(true));
     s.execute("object.expand", &json!({"object": true, "fill": false, "stroke": false})).unwrap();
     let inner = node(&s, g);
