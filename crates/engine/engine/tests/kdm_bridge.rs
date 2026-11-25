@@ -426,7 +426,13 @@ fn a_file_newer_than_its_stored_replica_wins_on_open() {
 #[test]
 fn a_threaded_story_shows_as_a_fresh_read_lays_it_out() {
     let mut s = new_session();
-    let frames: Vec<u64> = (0..3).map(|k| rect(&mut s, &format!("F{k}"), 100.0 + 120.0 * f64::from(k), 300.0)).collect();
+    let frames: Vec<u64> = (0..3)
+        .map(|k| {
+            let area =
+                json!({"x": 100.0 + 130.0 * f64::from(k), "y": 300, "text": if k == 0 { "Once" } else { "" }, "area": {"width": 120, "height": 40}});
+            s.execute("text.create", &area).unwrap()["id"].as_u64().unwrap()
+        })
+        .collect();
     s.execute("select.set", &json!({"ids": frames})).unwrap();
     s.execute("text.thread.create", &json!({})).unwrap();
     assert_eq!(doc(&s).text_threads.len(), 1, "one thread of three frames");

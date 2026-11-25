@@ -428,7 +428,11 @@ mod tests {
     fn a_draft_merges_in_as_one_undo_step_and_the_drawing_follows() {
         let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
         let changes = draft_changes(&mut doc);
-        doc.execute("shape.rectangle", json!({ "x": 10, "y": 10, "width": 10, "height": 10 })).unwrap();
+        // Meanwhile, here: the fixture's rectangle is recoloured (another field than the draft's).
+        doc.execute("select.all", json!({})).unwrap();
+        doc.execute("paint.setFill", json!({ "color": "#00ff00" })).unwrap();
+        doc.execute("select.none", json!({})).unwrap();
+        let recoloured = doc.replicated_state().unwrap();
         let before = object_count(&doc);
         let origin = Origin::person("person:local");
         let answer = doc.merge_changes(&changes, &origin).unwrap();
@@ -437,7 +441,8 @@ mod tests {
         assert_eq!(object_count(&doc), before + 1, "the engine's drawing follows the merge");
         assert!(doc.dirty());
         assert!(doc.undo().unwrap().0);
-        assert_eq!(object_count(&doc), before, "one undo takes the whole draft back, the edit made here stays");
+        assert_eq!(object_count(&doc), before, "one undo takes the whole draft back");
+        assert_eq!(doc.replicated_state().unwrap()["objects"], recoloured["objects"], "the edit made here stays");
         assert!(doc.redo().unwrap().0);
         assert_eq!(object_count(&doc), before + 1, "redo brings the draft back");
         let at = doc.version().unwrap();
