@@ -173,7 +173,7 @@ const VIEWING: &[&str] = &[
 /// Whether running `spec` changes the drawing (the catalog's `mutates`, which read-only documents
 /// refuse): the engine journals selection and session commands too.
 fn mutates(spec: &kition_vector_engine::CommandSpec) -> bool {
-    let selects = spec.id.starts_with("select.") && spec.id != "select.save";
+    let selects = spec.id.starts_with("select.") && spec.id != "select.save" || matches!(spec.id, "edit.selectAll" | "edit.deselectAll");
     spec.journal && !selects && !VIEWING.contains(&spec.id)
 }
 

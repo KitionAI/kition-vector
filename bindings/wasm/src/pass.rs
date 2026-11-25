@@ -20,19 +20,8 @@ pub(crate) struct Pass(RefCell<Option<Session>>, RefCell<Option<Vec<NodeId>>>);
 
 /// Commands that touch files, the host's libraries or run other commands: not run on the copy.
 fn outside(command: &str) -> bool {
-    const PREFIXES: &[&str] = &[
-        "file.",
-        "document.",
-        "links.",
-        "print.",
-        "library.",
-        "plugin.",
-        "css.",
-        "webExport.",
-        "swatch.library",
-        "graphicStyle.library",
-        "brush.library",
-    ];
+    const PREFIXES: &[&str] =
+        &["file.", "linkedFile.", "print.", "library.", "plugin.", "css.", "webExport.", "swatch.library", "graphicStyle.library", "brush.library"];
     PREFIXES.iter().any(|prefix| command.starts_with(prefix))
         || matches!(command, "command.batch" | "asset.export" | "graphicStyle.saveLibrary" | "swatch.saveLibrary" | "edit.undo" | "edit.redo")
 }

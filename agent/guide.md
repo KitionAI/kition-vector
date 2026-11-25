@@ -112,7 +112,7 @@ since is applied (waiting for the SDK); a structural write that depends on where
 is also refused when an object below them in the same list was deleted or added (their index
 shifted, their order did not; waiting for the SDK); a step that acts on the selection an earlier
 step of the same run made rests on what the steps before it leave, except after a step that reads
-or writes files, libraries or runs other commands (`file.*`, `document.*`, `links.*`,
+or writes files, libraries or runs other commands (`file.*`, `linkedFile.*`,
 `command.batch`, …: give the later step `on`); 60
 commands hold more on some of their paths than those paths read (each path is listed in
 `bindings/wasm/tests/declarations_independent.rs`, `HELD_MORE`): a colleague's change of what such a

@@ -3319,7 +3319,7 @@ axis	Both	Оба
 # Status and error messages (`@msg`), translated where the status bar shows them; the message itself
 # stays English for agents and tests. `{_1}`, `{_2}` … stand for the `{}` of the format string, in order
 # (`complete_languages_translate_every_message` lists any that are missing). Command ids, parameter
-# names and values in backticks or code (`colorModel rgb`, `document.export`) stay as they are.
+# names and values in backticks or code (`colorModel rgb`, `file.export`) stay as they are.
 @msg	no library `{id}`	нет библиотеки `{id}`
 @msg	select some type first	сначала выделите текст
 @msg	{_1} has no {_2} style	у {_1} нет начертания {_2}
@@ -3393,7 +3393,7 @@ axis	Both	Оба
 @msg	select paths or anchor points	выделите контуры или опорные точки
 @msg	SVG parse error: {0}	ошибка разбора SVG: {0}
 @msg	Save for Web: the image is empty	Сохранить для web: изображение пусто
-@msg	Save writes {_1}, not {_2}: use document.export for other formats	Сохранение записывает {_1}, а не {_2}: используйте document.export для других форматов
+@msg	Save writes {_1}, not {_2}: use file.export for other formats	Сохранение записывает {_1}, а не {_2}: используйте file.export для других форматов
 @msg	Saved recovery data for {title}	Сохранены данные восстановления для {title}
 @msg	Saved to User Defined: {_1}	Сохранено в «Пользовательский»: {_1}
 @msg	Saved {path}	Сохранено: {path}
@@ -3414,7 +3414,7 @@ axis	Both	Оба
 @msg	`mode` applies to freeform gradients	`mode` применяется к произвольным градиентам
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` должно быть 1, 3 или 5
 @msg	`stops` must be an array	`stops` должно быть массивом
-@msg	`svg` must be an object of SVG options (see document.formats)	`svg` должно быть объектом параметров SVG (см. document.formats)
+@msg	`svg` must be an object of SVG options (see file.formats)	`svg` должно быть объектом параметров SVG (см. file.formats)
 @msg	`{_1}` is no save command	`{_1}` не является командой сохранения
 @msg	`{area}` is no recovery area name	`{area}` не является именем области восстановления
 @msg	`{color}` is not a colour (#rrggbb or a preset name)	`{color}` не является цветом (#rrggbb или именем набора)
@@ -3776,7 +3776,7 @@ axis	Both	Оба
 @msg	there are no printer settings to open here	здесь нет настроек принтера для открытия
 @msg	this PostScript file can't be read ({why}): save it as PDF or SVG in the app that made it	этот файл PostScript невозможно прочитать ({why}): сохраните его как PDF или SVG в приложении, которое его создало
 @msg	this file's PostScript couldn't be read ({why}): {what}	PostScript этого файла невозможно прочитать ({why}): {what}
-@msg	this format holds one artboard: export several as PDF or with document.exportForScreens	этот формат содержит одну монтажную область: экспортируйте несколько как PDF или с помощью document.exportForScreens
+@msg	this format holds one artboard: export several as PDF or with file.exportForScreens	этот формат содержит одну монтажную область: экспортируйте несколько как PDF или с помощью file.exportForScreens
 @msg	this is a DWG drawing, which can't be read: save it from the CAD app as an ASCII DXF and open that	это чертёж DWG, который невозможно прочитать: сохраните его из приложения CAD как ASCII DXF и откройте его
 @msg	this is a PostScript file (an .ai saved in an older format or without PDF compatibility, or an EPS file), which can't be opened yet: save it as PDF, PDF-compatible .ai or SVG	это файл PostScript (.ai, сохранённый в старом формате или без совместимости с PDF, либо файл EPS), который пока невозможно открыть: сохраните его как PDF, .ai с совместимостью с PDF или SVG
 @msg	this is not a PostScript file	это не файл PostScript
@@ -3808,7 +3808,7 @@ axis	Both	Оба
 @msg	workspace name can't be empty	имя рабочей среды не может быть пустым
 @msg	{C}: no effect at index {from}	{C}: нет эффекта с индексом {from}
 @msg	{_1} failed: {e}	{_1} завершился с ошибкой: {e}
-@msg	{_1} files can be opened but not written (see document.formats)	файлы {_1} можно открыть, но не записать (см. document.formats)
+@msg	{_1} files can be opened but not written (see file.formats)	файлы {_1} можно открыть, но не записать (см. file.formats)
 @msg	{_1} font families available	доступно семейств шрифтов: {_1}
 @msg	{_1} is a live effect (Effect › Plug-ins)	{_1} — динамический эффект (Эффект › Модули)
 @msg	{_1} is already used by {_2}	{_1} уже используется {_2}

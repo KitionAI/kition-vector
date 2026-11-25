@@ -3323,7 +3323,7 @@ axis	Both	Ambos
 # Status and error messages (`@msg`), translated where the status bar shows them; the message itself
 # stays English for agents and tests. `{_1}`, `{_2}` … stand for the `{}` of the format string, in order
 # (`complete_languages_translate_every_message` lists any that are missing). Command ids, parameter
-# names and values in backticks or code (`colorModel rgb`, `document.export`) stay as they are.
+# names and values in backticks or code (`colorModel rgb`, `file.export`) stay as they are.
 @msg	no library `{id}`	no hay ninguna biblioteca `{id}`
 @msg	select some type first	selecciona primero algún texto
 @msg	{_1} has no {_2} style	{_1} no tiene el estilo {_2}
@@ -3397,7 +3397,7 @@ axis	Both	Ambos
 @msg	select paths or anchor points	selecciona trazados o puntos de ancla
 @msg	SVG parse error: {0}	error al analizar el SVG: {0}
 @msg	Save for Web: the image is empty	Guardar para web: la imagen está vacía
-@msg	Save writes {_1}, not {_2}: use document.export for other formats	Guardar escribe {_1}, no {_2}: usa document.export para otros formatos
+@msg	Save writes {_1}, not {_2}: use file.export for other formats	Guardar escribe {_1}, no {_2}: usa file.export para otros formatos
 @msg	Saved recovery data for {title}	Se guardaron los datos de recuperación de {title}
 @msg	Saved to User Defined: {_1}	Se guardó en Definido por el usuario: {_1}
 @msg	Saved {path}	Se guardó {path}
@@ -3418,7 +3418,7 @@ axis	Both	Ambos
 @msg	`mode` applies to freeform gradients	`mode` se aplica a los degradados de forma libre
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` debe ser 1, 3 o 5
 @msg	`stops` must be an array	`stops` debe ser una lista
-@msg	`svg` must be an object of SVG options (see document.formats)	`svg` debe ser un objeto con opciones de SVG (consulta document.formats)
+@msg	`svg` must be an object of SVG options (see file.formats)	`svg` debe ser un objeto con opciones de SVG (consulta file.formats)
 @msg	`{_1}` is no save command	`{_1}` no es un comando de guardado
 @msg	`{area}` is no recovery area name	`{area}` no es el nombre de un área de recuperación
 @msg	`{color}` is not a colour (#rrggbb or a preset name)	`{color}` no es un color (#rrggbb o el nombre de un preajuste)
@@ -3780,7 +3780,7 @@ axis	Both	Ambos
 @msg	there are no printer settings to open here	aquí no hay ajustes de impresora que abrir
 @msg	this PostScript file can't be read ({why}): save it as PDF or SVG in the app that made it	no se puede leer este archivo PostScript ({why}): guárdalo como PDF o SVG en la aplicación que lo creó
 @msg	this file's PostScript couldn't be read ({why}): {what}	no se pudo leer el PostScript de este archivo ({why}): {what}
-@msg	this format holds one artboard: export several as PDF or with document.exportForScreens	este formato admite una sola mesa de trabajo: exporta varias como PDF o con document.exportForScreens
+@msg	this format holds one artboard: export several as PDF or with file.exportForScreens	este formato admite una sola mesa de trabajo: exporta varias como PDF o con file.exportForScreens
 @msg	this is a DWG drawing, which can't be read: save it from the CAD app as an ASCII DXF and open that	este es un dibujo DWG, que no se puede leer: guárdalo desde la aplicación de CAD como DXF ASCII y abre ese archivo
 @msg	this is a PostScript file (an .ai saved in an older format or without PDF compatibility, or an EPS file), which can't be opened yet: save it as PDF, PDF-compatible .ai or SVG	este es un archivo PostScript (un .ai guardado en un formato antiguo o sin compatibilidad con PDF, o un archivo EPS), que todavía no se puede abrir: guárdalo como PDF, .ai compatible con PDF o SVG
 @msg	this is not a PostScript file	este no es un archivo PostScript
@@ -3812,7 +3812,7 @@ axis	Both	Ambos
 @msg	workspace name can't be empty	el nombre del espacio de trabajo no puede estar vacío
 @msg	{C}: no effect at index {from}	{C}: no hay ningún efecto en el índice {from}
 @msg	{_1} failed: {e}	{_1} falló: {e}
-@msg	{_1} files can be opened but not written (see document.formats)	los archivos {_1} se pueden abrir pero no escribir (consulta document.formats)
+@msg	{_1} files can be opened but not written (see file.formats)	los archivos {_1} se pueden abrir pero no escribir (consulta file.formats)
 @msg	{_1} font families available	{_1} familias de fuentes disponibles
 @msg	{_1} is a live effect (Effect › Plug-ins)	{_1} es un efecto interactivo (Efecto › Plugins)
 @msg	{_1} is already used by {_2}	{_1} ya lo usa {_2}

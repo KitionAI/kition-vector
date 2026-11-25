@@ -141,6 +141,25 @@ fn bug_artboard_huge_props_break_svg() {
     }
 }
 
+/// The `file.*` commands that read or set the open drawing alone (no file, no other document):
+/// fuzzed like any other command.
+const IN_MEMORY: &[&str] = &[
+    "file.activate",
+    "file.dxfInfo",
+    "file.find",
+    "file.formats",
+    "file.getInfo",
+    "file.inspect",
+    "file.json",
+    "file.node",
+    "file.pdfInfo",
+    "file.pdfSettings",
+    "file.rasterEffectsSettings",
+    "file.save",
+    "file.setUnits",
+    "file.setup",
+];
+
 /// Commands too slow to fuzz exhaustively get a reduced junk set (they still run).
 fn heavy(id: &str) -> bool {
     id.starts_with("file.serialize") || id.starts_with("file.export") || id == "file.open"
@@ -487,7 +506,7 @@ fn fuzzed_calls_keep_documents_serializable() {
     let path = safe_path();
     let mut failures = vec![];
     for c in command_specs() {
-        if heavy(c.id) || c.id.starts_with("file.") {
+        if heavy(c.id) || c.id.starts_with("file.") && !IN_MEMORY.contains(&c.id) {
             continue;
         }
         for v in junk_values().iter().take(8) {
@@ -516,7 +535,7 @@ fn fuzzed_calls_keep_documents_serializable() {
 fn every_command_undoes_exactly() {
     let mut failures = vec![];
     for c in command_specs() {
-        if matches!(c.id, "edit.undo" | "edit.redo") || c.id.starts_with("file.") || c.id.starts_with("document.") {
+        if matches!(c.id, "edit.undo" | "edit.redo") || c.id.starts_with("file.") {
             continue;
         }
         let mut s = Fixture::Multi.session();

@@ -3380,7 +3380,7 @@ axis	Both	Обидві
 @msg	select paths or anchor points	виділіть контури або опорні точки
 @msg	SVG parse error: {0}	Помилка розбору SVG: {0}
 @msg	Save for Web: the image is empty	Зберегти для Інтернету: зображення пусте
-@msg	Save writes {_1}, not {_2}: use document.export for other formats	Збереження записує {_1}, а не {_2}: використовуйте document.export для інших форматів
+@msg	Save writes {_1}, not {_2}: use file.export for other formats	Збереження записує {_1}, а не {_2}: використовуйте file.export для інших форматів
 @msg	Saved recovery data for {title}	Збережено дані відновлення для {title}
 @msg	Saved to User Defined: {_1}	Збережено в «Користувацькі»: {_1}
 @msg	Saved {path}	Збережено: {path}
@@ -3401,7 +3401,7 @@ axis	Both	Обидві
 @msg	`mode` applies to freeform gradients	`mode` застосовується до довільних градієнтів
 @msg	`sampleSize` must be 1, 3 or 5	`sampleSize` має бути 1, 3 або 5
 @msg	`stops` must be an array	`stops` має бути масивом
-@msg	`svg` must be an object of SVG options (see document.formats)	`svg` має бути об’єктом параметрів SVG (див. document.formats)
+@msg	`svg` must be an object of SVG options (see file.formats)	`svg` має бути об’єктом параметрів SVG (див. file.formats)
 @msg	`{_1}` is no save command	`{_1}` не є командою збереження
 @msg	`{area}` is no recovery area name	`{area}` не є ім’ям області відновлення
 @msg	`{color}` is not a colour (#rrggbb or a preset name)	`{color}` не є кольором (#rrggbb або ім’ям набору)
@@ -3763,7 +3763,7 @@ axis	Both	Обидві
 @msg	there are no printer settings to open here	тут немає налаштувань принтера для відкриття
 @msg	this PostScript file can't be read ({why}): save it as PDF or SVG in the app that made it	цей файл PostScript неможливо прочитати ({why}): збережіть його як PDF або SVG у додатку, який його створив
 @msg	this file's PostScript couldn't be read ({why}): {what}	PostScript цього файлу неможливо прочитати ({why}): {what}
-@msg	this format holds one artboard: export several as PDF or with document.exportForScreens	цей формат містить одну монтажну область: експортуйте кілька як PDF або за допомогою document.exportForScreens
+@msg	this format holds one artboard: export several as PDF or with file.exportForScreens	цей формат містить одну монтажну область: експортуйте кілька як PDF або за допомогою file.exportForScreens
 @msg	this is a DWG drawing, which can't be read: save it from the CAD app as an ASCII DXF and open that	це креслення DWG, яке неможливо прочитати: збережіть його з CAD як ASCII DXF і відкрийте його
 @msg	this is a PostScript file (an .ai saved in an older format or without PDF compatibility, or an EPS file), which can't be opened yet: save it as PDF, PDF-compatible .ai or SVG	це файл PostScript (.ai, збережений у старому форматі або без сумісності з PDF, або файл EPS), який поки неможливо відкрити: збережіть його як PDF, .ai із сумісністю з PDF або SVG
 @msg	this is not a PostScript file	це не файл PostScript
@@ -3795,7 +3795,7 @@ axis	Both	Обидві
 @msg	workspace name can't be empty	ім’я робочого середовища не може бути порожнім
 @msg	{C}: no effect at index {from}	{C}: немає ефекту з індексом {from}
 @msg	{_1} failed: {e}	{_1} завершився з помилкою: {e}
-@msg	{_1} files can be opened but not written (see document.formats)	файли {_1} можна відкрити, але не записати (див. document.formats)
+@msg	{_1} files can be opened but not written (see file.formats)	файли {_1} можна відкрити, але не записати (див. file.formats)
 @msg	{_1} font families available	доступно сімейства шрифтів: {_1}
 @msg	{_1} is a live effect (Effect › Plug-ins)	{_1} - динамічний ефект (Ефект › Модулі)
 @msg	{_1} is already used by {_2}	{_1} вже використовується {_2}

@@ -2,7 +2,7 @@
 //!
 //! The rows were written from sub-agent readings of the handlers. Here a seeded sample of 80
 //! commands (seed `0x9e3779b97f4a7c15`, xorshift as `bindings/headless/tests/outside.rs`, over
-//! every command id in byte order) and every command of the families most likely to be wrong
+//! every command id in byte order, as the ids were before 2026-11-25) and every command of the families most likely to be wrong
 //! were read again, handler by handler, and what each handler resolves is written out below,
 //! without the table's comments. The test compares each with what the kit declares.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::indexing_slicing)]
@@ -130,8 +130,13 @@ fn commands() -> Vec<KitCommand> {
 
 #[test]
 fn the_sample_is_the_seeds() {
+    // The sample was drawn over the ids in byte order before the command ids changed on
+    // 2026-11-25 (`command_renames_2026_11_25.json`: the id then, the id now), so the draw runs
+    // over the commands in the order they had then; the sample is the same commands.
+    let renames: serde_json::Map<String, serde_json::Value> = serde_json::from_str(include_str!("command_renames_2026_11_25.json")).unwrap();
+    let then = |id: &str| renames.iter().find(|(_, now)| now.as_str() == Some(id)).map_or(id.to_owned(), |(then, _)| then.clone());
     let mut ids: Vec<String> = commands().into_iter().map(|command| command.id).collect();
-    ids.sort();
+    ids.sort_by_key(|id| then(id));
     assert_eq!(ids.len(), 721);
     let mut seed = 0x9e37_79b9_7f4a_7c15_u64;
     let mut drawn: Vec<&str> = Vec::new();

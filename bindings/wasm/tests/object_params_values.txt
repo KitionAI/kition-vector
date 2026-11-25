@@ -19,7 +19,25 @@ clipboard.importPdf	page	a position inside the file being read (PDF pages (1-bas
 clipboard.importText	artboard	an artboard a command that changes no drawing content reads (clipboard import or conflict report)
 color.harmony	amount	a value, no object: an amount
 color.harmony	steps	a value, no object: a count of steps
+edit.colors.adjustBalance	gray	a value, no object: a grey level
+edit.colors.adjustBalance	k	a value, no object: a black percentage
+edit.colors.adjustBalance	tint	a value, no object: a tint percentage
+edit.colors.overprintBlack	percentage	a value, no object: a percentage
+edit.colors.saturate	intensity	a value, no object: an effect strength
+effect.apply	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.duplicate	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
+effect.duplicate	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.move	from	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, source list))
+effect.move	fromItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.move	to	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based position in destination list after th)
+effect.move	toItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.remove	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, in the list chosen by item: object-l)
+effect.remove	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+effect.setParams	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
+effect.setParams	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
+eyedropper.setOptions	sampleSize	a value, no object: a sample size in pixels
 file.activate	index	an open document tab, not drawing content
+file.close	index	an open document tab, not drawing content
 file.export	artboard	an artboard a command that changes no drawing content reads
 file.export	colors	a value, no object: a colour count
 file.export	depth	a value, no object: a bit depth or nesting depth
@@ -54,30 +72,11 @@ file.exportSelection	scale	a value, no object: a scale factor
 file.find	limit	a value, no object: a count of matches
 file.inspect	childLimit	a value, no object: a count of children shown
 file.inspect	depth	a value, no object: a bit depth or nesting depth
-file.node	childLimit	a value, no object: a count of children shown
-file.node	depth	a value, no object: a bit depth or nesting depth
-edit.colors.adjustBalance	gray	a value, no object: a grey level
-edit.colors.adjustBalance	k	a value, no object: a black percentage
-edit.colors.adjustBalance	tint	a value, no object: a tint percentage
-edit.colors.overprintBlack	percentage	a value, no object: a percentage
-edit.colors.saturate	intensity	a value, no object: an effect strength
-effect.apply	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-effect.duplicate	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
-effect.duplicate	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-effect.move	from	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, source list))
-effect.move	fromItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-effect.move	to	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based position in destination list after th)
-effect.move	toItem	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-effect.remove	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, in the list chosen by item: object-l)
-effect.remove	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-effect.setParams	index	a position inside the target object's own geometry or paint, held by the target's premise (effects (0-based, list chosen by item))
-effect.setParams	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
-eyedropper.setOptions	sampleSize	a value, no object: a sample size in pixels
-file.close	index	an open document tab, not drawing content
-file.setInfo	rating	a value, no object: a rating
 file.new	artboardLayout.columns	a value, no object: a count of columns
 file.new	artboards	a value, no object: read as a number
 file.new	rasterEffectsPpi	a value, no object: a resolution
+file.node	childLimit	a value, no object: a count of children shown
+file.node	depth	a value, no object: a bit depth or nesting depth
 file.place	page	a position inside the file being read (pages/artboards of the placed file (1-based))
 file.place	text.replaceSpaces	a value, no object: a count of spaces
 file.place.info	page	a position inside the file being read (pages of the file (1-based))
@@ -85,6 +84,13 @@ file.place.queue	page	a position inside the file being read (pages of the file (
 file.print	level	a value, no object: a PostScript or compression level
 file.saveAsTemplate	modified	a value, no object: a date (Unix seconds) or text
 file.saveCopy	modified	a value, no object: a date (Unix seconds) or text
+file.setInfo	rating	a value, no object: a rating
+format.decreaseFontSize	by	a value, no object: an amount to step by
+format.decreaseFontSize	end	a value, no object: a character offset in the text
+format.decreaseFontSize	start	a value, no object: a character offset in the text
+format.increaseFontSize	by	a value, no object: an amount to step by
+format.increaseFontSize	end	a value, no object: a character offset in the text
+format.increaseFontSize	start	a value, no object: a character offset in the text
 gradient.selectStop	index	a position inside the target object's own geometry or paint, held by the target's premise (gradient stops (0-based, 0 = start) of the gradient be)
 graph.setData	rows	a value, no object: a count of rows
 graph.setType	categoryTickMarks	a value, no object: a count of tick marks
@@ -104,14 +110,14 @@ livePaint.fill	tint	a value, no object: a tint percentage
 livePaint.strokeEdge	tint	a value, no object: a tint percentage
 magicWand.set	fillTolerance	a value, no object: a colour tolerance
 magicWand.set	strokeTolerance	a value, no object: a colour tolerance
-object.blend.make	steps	a value, no object: a count of steps
-object.blend.options	steps	a value, no object: a count of steps
-object.blend.options	value	a value, no object: a blend option value
-object.blend.moveSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
-object.blend.moveSpineAnchor	subpath	a position inside the target blend's spine, held by the target's premise
-object.blend.removeSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
 object.addObjectMosaic	columns	a value, no object: a count of columns
 object.addObjectMosaic	rows	a value, no object: a count of rows
+object.blend.make	steps	a value, no object: a count of steps
+object.blend.moveSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
+object.blend.moveSpineAnchor	subpath	a position inside the target blend's spine, held by the target's premise
+object.blend.options	steps	a value, no object: a count of steps
+object.blend.options	value	a value, no object: a blend option value
+object.blend.removeSpineAnchor	anchor	a position inside the target object's own geometry or paint, held by the target's premise (anchors of the blend's spine (first subpath, 0-based))
 object.envelope.makeWithMesh	cols	a value, no object: a count of columns
 object.envelope.makeWithMesh	rows	a value, no object: a count of rows
 object.envelope.options	fidelity	a value, no object: an envelope fidelity
@@ -243,6 +249,9 @@ text.setRangeStyle	end	a value, no object: a number to end at
 text.setRangeStyle	start	a value, no object: a page or number to start from
 text.setStyle	end	a value, no object: a number to end at
 text.setStyle	start	a value, no object: a page or number to start from
+text.step	by	a value, no object: an amount to step by
+text.step	end	a value, no object: a number to end at
+text.step	start	a value, no object: a page or number to start from
 text.tabs.clear	end	a value, no object: a number to end at
 text.tabs.clear	start	a value, no object: a page or number to start from
 text.tabs.get	start	a value, no object: a page or number to start from
@@ -250,12 +259,3 @@ text.tabs.set	end	a value, no object: a number to end at
 text.tabs.set	start	a value, no object: a page or number to start from
 transparency.set	item	an appearance item (fill, stroke) inside the target; the target's own premise holds its appearance
 transparency.set	opacity	a value, no object: an opacity percentage
-format.decreaseFontSize	by	a value, no object: an amount to step by
-format.decreaseFontSize	end	a value, no object: a character offset in the text
-format.decreaseFontSize	start	a value, no object: a character offset in the text
-format.increaseFontSize	by	a value, no object: an amount to step by
-format.increaseFontSize	end	a value, no object: a character offset in the text
-format.increaseFontSize	start	a value, no object: a character offset in the text
-text.step	by	a value, no object: an amount to step by
-text.step	end	a value, no object: a number to end at
-text.step	start	a value, no object: a page or number to start from
