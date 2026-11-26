@@ -159,6 +159,8 @@ enum BoxHit {
 /// How far (screen points) outside a corner of the bounding box a press still rotates: a ring
 /// wide enough to find by hand (at 18 it was about 8 points past the handle, plan 2026-11-25).
 const ROTATE_REACH: f64 = 28.0;
+/// The ring's reach beside an edge (screen points): what it was all round before.
+const EDGE_REACH: f64 = 18.0;
 
 /// The bounding-box handle or rotate zone under `p`.
 fn box_hit(cx: &ToolContext, b: &OrientedBox, p: Point) -> Option<BoxHit> {
@@ -166,7 +168,12 @@ fn box_hit(cx: &ToolContext, b: &OrientedBox, p: Point) -> Option<BoxHit> {
     if let Some(h) = hit_handle(b.rect, lp, tol) {
         return Some(BoxHit::Handle(h));
     }
-    in_rotate_zone(b.rect, lp, tol, cx.tol(ROTATE_REACH)).map(|_| BoxHit::Rotate)
+    let r = b.rect;
+    // Diagonally past a corner the ring reaches ROTATE_REACH; beside an edge (the pointer within
+    // the box's span along one axis) it stays EDGE_REACH, so a press just off an edge is no rotation.
+    let corner = in_rotate_zone(r, lp, tol, cx.tol(ROTATE_REACH))?;
+    let beside = (r.x0..=r.x1).contains(&lp.x) || (r.y0..=r.y1).contains(&lp.y);
+    (!beside || lp.distance(corner.pos(r)) <= cx.tol(EDGE_REACH)).then_some(BoxHit::Rotate)
 }
 
 /// How near (screen points) the pointer must come to an object's centre or anchor for Smart Guides
@@ -608,6 +615,23 @@ mod tests {
         }
         assert_eq!(Cursor::rotate_about(Point::new(1.0, 1.0), Point::new(1.0, 1.0)), Cursor::Rotate, "on the centre");
         assert_eq!(Cursor::rotate_about(Point::ORIGIN, Point::new(0.0, -5.0)), Cursor::RotateToward(0), "straight up");
+    }
+
+    /// Diagonally past a corner the rotate ring reaches 28 screen points (plan 2026-11-25, stage 2:
+    /// at 18 it was hard to find by hand); beside an edge it stays 18, so a press just off an edge
+    /// is no rotation.
+    #[test]
+    fn the_rotate_ring_reaches_further_diagonally_than_beside_an_edge() {
+        let (d, id) = doc_with_rect();
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        let cx = cx(&d, &s, &p);
+        let t = SelectionTool::default();
+        // The box runs from (100, 100) to (200, 200): 24 pt out diagonally from the top left.
+        assert_eq!(t.cursor(&cx, Point::new(83.0, 83.0), Mods::default()), Cursor::RotateToward(7));
+        // Beside the right edge, 25 pt below the top right corner: no rotation.
+        assert!(!matches!(t.cursor(&cx, Point::new(206.0, 125.0), Mods::default()), Cursor::RotateToward(_)));
     }
 
     #[test]

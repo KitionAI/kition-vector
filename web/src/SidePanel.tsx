@@ -167,6 +167,7 @@ const PATHFINDER = [
   { icon: Squircle, command: 'object.pathfinder.trim' },
 ]
 
+/** Align: several objects to their selection (or key object); one object alone to its artboard, as the reference does. */
 function AlignSection({ info }: { info: VectorInfo }) {
   const { run, enabled, phrase: p, byId } = useKitEditor()
   const some = info.selection.length > 0
@@ -175,7 +176,7 @@ function AlignSection({ info }: { info: VectorInfo }) {
       <PanelSection title={p('Align')} testId="vector-align">
         <div className="vector-buttons">
           {ALIGN.map((item) => (
-            <IconButton key={item.label} icon={item.icon} label={p(item.label)} disabled={!some || !enabled('object.align')} onClick={() => void run('object.align', item.params)} data-testid={`vector-align-${Object.values(item.params)[0]}`} />
+            <IconButton key={item.label} icon={item.icon} label={p(item.label)} disabled={!some || !enabled('object.align')} onClick={() => void run('object.align', info.selection.length === 1 ? { ...item.params, to: 'artboard' } : item.params)} data-testid={`vector-align-${Object.values(item.params)[0]}`} />
           ))}
         </div>
       </PanelSection>
