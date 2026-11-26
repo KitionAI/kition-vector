@@ -137,3 +137,17 @@ export function rowWindow(count: number, top: number, height: number, rowHeight:
   const end = Math.min(count, Math.ceil((top + Math.max(height, rowHeight)) / rowHeight) + spare)
   return { start, end: Math.max(start, end) }
 }
+
+/**
+ * A row's name in the person's language (plan 2026-11-25, stage 7): a name the engine made up from
+ * the object's kind (`<Path>`, `Layer 2`) is shown with the kind translated (`<路径>`, `图层 2`);
+ * a name someone gave is shown as it is. Only the panel shows it: the drawing, agents and Rename
+ * keep the engine's name.
+ */
+export function shownName(name: string, kind: string, phrase: (english: string) => string): string {
+  const made = /^<(.+)>$/.exec(name)
+  if (made && made[1] === kind) return `<${phrase(kind)}>`
+  const layer = /^Layer (\d+)$/.exec(name)
+  if (layer && kind === 'Layer') return `${phrase('Layer')} ${layer[1]}`
+  return name
+}

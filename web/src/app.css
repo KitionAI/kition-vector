@@ -349,19 +349,63 @@
   font-size: 12px;
 }
 
+.vector-export {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
 .vector-export-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 320px;
+  min-width: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
-.vector-export-form label {
+/* The export's preview (plan 2026-11-25, stage 7): the file itself on a checkerboard, its size below. */
+.vector-export-preview {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 240px;
+  min-height: 200px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-control);
+  background-color: var(--kit-surface);
+  background-image: conic-gradient(var(--kit-surface-muted) 25%, transparent 0 50%, var(--kit-surface-muted) 0 75%, transparent 0);
+  background-size: 16px 16px;
 }
+
+.vector-export-preview img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.vector-export-preview[data-updating] img {
+  opacity: 0.6;
+}
+
+.vector-export-preview figcaption {
+  font-size: 12px;
+  color: var(--kit-text-muted);
+  background: var(--kit-surface);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.vector-export-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--kit-text-muted);
+}
+
 
 /* The command dialogs (plan 2026-11-25, stage 1): label column, fields, option boxes. */
 .vector-dialog {
@@ -1296,4 +1340,121 @@ button.vector-proxy:focus-visible {
   padding: 0 4px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* Files in and out (plan 2026-11-25, stage 7): the drop mark over the canvas, the paste catcher,
+   a slow job's progress bar. */
+.vector-canvas-area {
+  position: relative;
+}
+
+.vector-canvas-area[data-drop]::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px dashed var(--kit-primary);
+  border-radius: var(--kit-radius-control);
+  background: color-mix(in srgb, var(--kit-primary) 10%, transparent);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.vector-canvas-area[data-drop]::after {
+  content: attr(data-drop-label);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 8px 14px;
+  border-radius: var(--kit-radius-control);
+  background: var(--kit-surface);
+  color: var(--kit-text);
+  box-shadow: var(--kit-shadow-card);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 21;
+}
+
+.vector-paste-catcher {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vector-busy {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+  padding: 8px 12px;
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-card);
+  background: var(--kit-surface);
+  color: var(--kit-text);
+  box-shadow: var(--kit-shadow-card);
+  font-size: 12px;
+  /* Only Cancel takes the pointer: the canvas under the bar keeps working. */
+  pointer-events: none;
+}
+
+.vector-busy button {
+  pointer-events: auto;
+}
+
+.vector-busy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vector-busy-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.vector-busy-time {
+  color: var(--kit-text-muted);
+}
+
+.vector-busy-bar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  min-width: 80px;
+  border-radius: 2px;
+  background: var(--kit-surface-muted);
+  overflow: hidden;
+}
+
+.vector-busy-bar > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  border-radius: 2px;
+  background: var(--kit-primary);
+  animation: vector-busy-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes vector-busy-slide {
+  from {
+    left: -35%;
+  }
+  to {
+    left: 100%;
+  }
 }

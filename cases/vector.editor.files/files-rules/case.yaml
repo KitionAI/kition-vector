@@ -1,0 +1,28 @@
+format: 1
+id: vector.editor.files/files-rules
+feature: vector.editor.files
+intent: >-
+  The file rules hold without a browser (plan 2026-11-25, stage 7): Open and Place offer the
+  drawings and pictures the engine reads; a drawing read from another format saves as a .kvector
+  beside it, and the engine's refusal to save over the SVG reads as a sentence of the editor's own; a
+  paste takes SVG before PDF before a picture before text; a copy offers SVG markup, a type-only
+  copy's words and a PNG; Export's parameters per format and scope; a slow job shows after half a
+  second and Cancel drops its result; made-up Layers names show in Chinese. In the built engine:
+  every Export setting is one the engine takes, SVG text as outlines leaves no <text>, PNG at 2x has
+  twice the pixels, pasted SVG, pictures and text come in as one step each, and a drawing read from
+  SVG is written as a .kvector that opens again.
+layer: gate
+source:
+  kind: probe
+  from: gap-panels-dialogs 2026-11-25 section 6 (files in and out)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/io/io.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 180
+since: "2026-11-26"

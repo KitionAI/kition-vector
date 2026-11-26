@@ -5,7 +5,7 @@
  * its own.
  */
 
-export type ExportFormat = 'svg' | 'pdf' | 'png'
+export type ExportFormat = 'svg' | 'pdf' | 'png' | 'jpg' | 'webp'
 
 /** What `file.exportBytes` answers: the first file, and every file when the format writes several. */
 export type ExportAnswer = { data: string; format?: string; files?: Array<{ name: string; data: string }> }

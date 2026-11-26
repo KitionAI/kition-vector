@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { KitEngine, PreviewDialog, toast, useKitEditor } from '@kition/sdk/editor'
 import { engineManifest } from '../engine'
+import { announceWritten } from '../io/VectorFileIo'
 import { ChoiceRow, NumberRow, TextRow } from './controls'
 import { DIALOG_BUTTONS, DIALOG_TEST_ID, useDialogPlace } from './DialogFrame'
 import { fromPoints, toPoints, unitAbbreviation, unitDecimals, UNITS } from './units'
@@ -23,7 +24,7 @@ const CUSTOM = 'custom'
  * (by category), the size in a unit, the orientation and the number of artboards. The editor shows
  * the one drawing its host opened, so OK makes the new drawing in an engine of its own
  * (`file.new` from the preset with the sizes chosen) and writes it beside this one through the
- * host (`host/write`, as an export), and says where; the person opens it from the workspace.
+ * host (`host/write`, as an export), and says where, with Open where the host opens files (stage 7).
  */
 export function NewDocumentDialog({ presets, onClose }: { presets: NewPresets | null; onClose: () => void }) {
   const { t, phrase, host } = useKitEditor()
@@ -59,7 +60,7 @@ export function NewDocumentDialog({ presets, onClose }: { presets: NewPresets | 
     try {
       await engine.execute('file.new', { ...(chosen ? { preset: chosen.name } : {}), name: file.replace(/\.kvector$/i, ''), width, height, units, orientation, artboards })
       const path = await host.exportFile(file, await engine.save())
-      toast('success', t('dialog.created', { path }))
+      announceWritten(host, t, t('dialog.created', { path }), path)
     } catch (error) {
       toast('error', t('dialog.createFailed'), error instanceof Error ? error.message : String(error))
       throw error

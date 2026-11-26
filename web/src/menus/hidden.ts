@@ -18,7 +18,7 @@ const NEVER: Readonly<Record<string, string>> = {
   'file.close': HOST_FILE,
   'file.closeAll': HOST_FILE,
   'file.saveAs': HOST_FILE,
-  'file.saveCopy': HOST_FILE,
+  'file.saveCopy': "Kition's own File › Save a Copy… row writes the copy beside the drawing through the host (stage 7); the engine's would write to a local path.",
   'file.revert': 'The host reverts a document to its saved copy.',
   'file.exportForScreens': HOST_WRITES,
   'file.exportSelection': HOST_WRITES,
@@ -32,9 +32,9 @@ const NEVER: Readonly<Record<string, string>> = {
  * back where one does.
  */
 const NOT_BUILT: Readonly<Record<string, string>> = {
-  'file.place': 'Needs a file picked through the host (stage 7); the engine refuses it without one.',
+  'file.place': "Kition's own File › Place… row (Cmd+Shift+P) picks the file through the host and places its bytes (stage 7); the engine's row asks for a local path.",
   'view.printTiling': 'Shows the pages of the print settings on the canvas, which the canvas does not draw (the Print Tiling tool is off the rail); printing goes through the host.',
-  'file.newFromTemplate': 'Needs a template file picked through the host; the engine refuses it without one.',
+  'file.newFromTemplate': "Kition's own File › New from Template… row picks the template through the host and writes the new drawing beside this one (stage 7); the engine's row asks for a local path.",
   'file.setUnits': "Kition's own File › Document Setup… row sets the units with the rest of the document's settings.",
   'recolor.apply': 'Recolor Artwork needs a colour-mapping dialog of its own, cut for the launch (plan section 1).',
   'edit.colorSettings': 'Needs a list of colour profiles to choose from; the engine has none to offer in the browser.',

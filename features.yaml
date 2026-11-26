@@ -63,7 +63,7 @@ features:
     paths: [bindings/wasm/src/files.rs, crates/engine/engine/src/cmd/fileio/mod.rs, crates/engine/engine/src/cmd/fileio/export.rs, bindings/wasm/src/lib.rs, bindings/wasm/src/params.rs, web/src/ExportDialog.tsx, web/src/exporting.ts]
     target: "Illustrator 2026 (30.x)"
     cases: [vector.file.export/export-bytes]
-    gap: "File › Export writes SVG, PDF and PNG through the host (web/tests/flow.mjs). Export for Screens, Export Selection, Save for Office and Save as Template have no editor dialog that writes through the host, so the editor's menus leave them out; agents still run them."
+    gap: "File › Export… writes SVG, PDF, PNG, JPEG and WebP through the host with a preview and the file's size (web/tests/flow.mjs, web/tests/files.mjs; feature vector.editor.files). Export for Screens, Export Selection, Save for Office and Save as Template have no editor dialog that writes through the host, so the editor's menus leave them out; agents still run them."
     since: "2026-11-17"
   - id: vector.file.templates
     title: "Templates, new-document presets, placed files, file info and recovery data"
@@ -755,4 +755,14 @@ features:
     target: "Illustrator 2026 (30.x)"
     gap: "The toggles are the editor session's, set with `View:` requests on the tool-key channel, not `view.*` commands: a new command id would change the frozen command count and sample of bindings/wasm/tests/table_check.rs, so an agent reads them in inspect (`view`) but cannot set them; the grid and the pixel grid are drawn over the art (the canvas draws the document's pixels first; Guides & Grid › Grids In Back is not followed); rulers have no right-click unit menu and no draggable zero point (they count from the drawing's point 0, as the panels' X and Y do); a guide dropped back on its ruler is deleted only when the page has told the engine where the canvas is; no saved views (New View…, Edit Views…), Hide Artboards, Hide Template or Trim View; Cmd+H is the system's Hide on macOS in a browser."
     cases: [vector.editor.view/view-gestures, vector.editor.view/view-rules, vector.editor.view/view-state, regressions/issue-view-toggles]
+    since: "2026-11-26"
+  - id: vector.editor.files
+    title: "Files in and out by hand: File › New… (its notice opens the drawing), New from Template…, Open… (the host's picker, then host/open), Save (a drawing read from SVG, PDF or EPS saved as a .kvector beside it, never over it), Save a Copy…, Place… (Cmd+Shift+P, a picture or drawing picked through the host, placed in the middle of the view); the system clipboard: Copy and Cut put SVG markup, the words of a type-only copy and a PNG there as well as in the engine's clipboard, Paste takes in SVG markup, pictures, PDF and text other applications copied (the editor's own copy pastes as the engine's); files dragged from the computer onto the canvas placed where they drop; File › Export… with SVG, PDF, PNG, JPEG and WebP, SVG text as outlines, embedded fonts and precision, raster size, background, anti-aliasing and JPEG quality, every artboard, one or the selection, a preview of the file and its exact size; a progress bar with Cancel for slow file jobs; made-up Layers names and Object › Shaper in Chinese"
+    dimension: [function, conversion]
+    priority: P1
+    status: partial
+    paths: [web/src/io, web/src/ExportDialog.tsx, web/src/exporting.ts, web/src/App.tsx, web/src/devHost.ts, web/src/dialogs/NewDocumentDialog.tsx, web/src/menus/hidden.ts, web/src/layers/tree.ts, web/src/layers/LayersPanel.tsx, web/src/strings.ts, web/src/app.css, web/tests/files.mjs]
+    target: "Illustrator 2026 (30.x)"
+    gap: "Open and a new document's Open go through host/open, so the host chooses the kit (in Kition a PDF opens in the PDF kit, not here); no PDF/AI page chooser; Place puts the file in the middle of the view at 100% (no place cursor, no link to the file, no Show Import Options); a drop places, it never opens a document; Paste in Front, in Back and in Place use the engine's clipboard, only Cmd+V and Edit › Paste read the system's; when the browser refuses to write the system clipboard the next Cmd+V pastes the engine's copy whatever the system clipboard holds; PDF export takes the engine's default preset (file.exportBytes takes no PDF options: compatibility, editing kept, layers); WebP is lossless only; a slow job's Cancel drops its result when the engine is done (the engine cannot be stopped midway, and reports no fraction done); new type's placeholder copy stays English (the engine's text.add takes only a bool)."
+    cases: [vector.editor.files/files-gestures, vector.editor.files/files-rules, regressions/issue-place-file, regressions/issue-clipboard-out]
     since: "2026-11-26"

@@ -1,0 +1,30 @@
+format: 1
+id: vector.editor.files/files-gestures
+feature: vector.editor.files
+intent: >-
+  Files go in and out by hand (plan 2026-11-25, stage 7). File › New… writes a drawing beside this
+  one and its notice's Open opens it; a rectangle, a word and a guide drawn with the mouse and keys
+  are saved with Cmd+S and come back equal, the guide included, when the drawing is opened again;
+  File › Place… places a picture picked through the host as one step; SVG markup on the system
+  clipboard pastes as editable art in one step; Copy puts SVG text and a PNG on the system clipboard
+  and the editor's own copy pastes back as the engine's paste; a picture dropped on the canvas is
+  placed where it drops; the placed, pasted and dropped art is still there after a save and opening
+  again; File › Export… writes an SVG whose text is outlines (no <text>) and a PNG at 2x twice the
+  size of one at 1x.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (findings section 13: Place fails, the system clipboard neither pastes nor gets vectors, drops do nothing, SVG text without its font)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/files.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"

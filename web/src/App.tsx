@@ -63,6 +63,10 @@ import { both, viewMarks } from './view/decorations'
 import { Ruler, type RulerDrag } from './view/Rulers'
 import { CanvasScrollbars, ZoomField } from './view/ZoomField'
 import { isToggle, viewChecked, viewKey, viewRowOf, viewRows, type ViewZoom } from './view/model'
+import { VectorFileIo, fileAbilities, type FileIo } from './io/VectorFileIo'
+import { Busy } from './io/busy'
+import { BusyIndicator } from './io/BusyIndicator'
+import { isNative } from './io/files'
 
 /** The view tools are the host's (the Zoom tool Kition Vector's own, with its marquee); the engine's other tools run in the engine. */
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: VECTOR_ZOOM_TOOL }
@@ -74,6 +78,10 @@ const DRAW_OVERLAY = blinkingCaret(drawReadout)
 const VIEW_MENUS = ['View', 'Window', 'Help']
 /** File › Document Setup…'s shortcut, as the reference's. */
 const DOCUMENT_SETUP_KEY = 'Cmd+Alt+P'
+/** File › Place…, Save a Copy… and New from Template…'s shortcuts, as the reference's (stage 7). */
+const PLACE_KEY = 'Cmd+Shift+P'
+const SAVE_COPY_KEY = 'Cmd+Alt+S'
+const TEMPLATE_KEY = 'Cmd+Shift+N'
 const HELP_SHORTCUTS = 'kit:help.shortcuts'
 const HELP_ABOUT = 'kit:help.about'
 
@@ -153,6 +161,11 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   const bounds = state?.selectionBounds
   const { commands } = editor
   const [exporting, setExporting] = useState(false)
+  // Files in and out (stage 7): open, save, place, the system clipboard, drops; slow jobs' progress.
+  const fileIo = useRef<FileIo | null>(null)
+  const busy = useMemo(() => new Busy(), [])
+  const abilities = fileAbilities(host)
+  const native = isNative(session.path)
   const [help, setHelp] = useState<HelpTopic | null>(null)
 
   // The effect catalogue, read once the drawing is open: Effect's menu is made from it.
@@ -178,7 +191,11 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   runNow.current = editor.run
   const dialogs = useMemo<Dialogs>(
     () => ({
-      invoke: (command) => (dialogApi.current ? dialogApi.current.invoke(command) : void runNow.current(command)),
+      invoke: (command) => {
+        // Copy, Cut and Paste reach the system clipboard too (`io/VectorFileIo.tsx`).
+        if (fileIo.current?.handles(command)) return fileIo.current.run(command)
+        return dialogApi.current ? dialogApi.current.invoke(command) : void runNow.current(command)
+      },
       open: (command, values) => dialogApi.current?.open(command, values) ?? false,
       asks: (command) => dialogApi.current?.asks(command) ?? false,
       ask: (dialog) => dialogApi.current?.ask(dialog) ?? false,
@@ -240,6 +257,8 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   // Text typed on the canvas ended (Escape, Cmd+Enter, a click elsewhere): the keyboard leaves the
   // text field for the workspace, so V and the other tool keys pick tools again.
   const typing = tools.wantsText
+  const typingNow = useRef(typing)
+  typingNow.current = typing
   useEffect(() => {
     if (typing) return
     const active = document.activeElement
@@ -415,6 +434,9 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   const ownShortcuts = useMemo(
     () => [
       { label: `${phrase('File')} › ${withoutEllipsis(t('dialog.documentSetupMenu'))}`, shortcut: DOCUMENT_SETUP_KEY },
+      { label: `${phrase('File')} › ${withoutEllipsis(t('file.placeMenu'))}`, shortcut: PLACE_KEY },
+      { label: `${phrase('File')} › ${withoutEllipsis(t('file.saveCopyMenu'))}`, shortcut: SAVE_COPY_KEY },
+      { label: `${phrase('File')} › ${withoutEllipsis(t('file.templateMenu'))}`, shortcut: TEMPLATE_KEY },
       { label: `${phrase('Effect')} › ${t('effect.applyLastPlain')}`, shortcut: 'Cmd+Shift+E' },
       { label: `${phrase('Effect')} › ${t('effect.lastDialogPlain')}`, shortcut: 'Cmd+Alt+Shift+E' },
     ],
@@ -433,10 +455,16 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       onCommand: dialogs.invoke,
       onKitCommand: kitCommand,
       before: {
+        // The File menu a person expects when the editor runs alone (stage 7): every file goes through the host.
         File: [
           { label: t('dialog.newDocumentMenu'), onSelect: dialogs.newDocument, testId: 'vector-menu-new', primary: true },
-          { label: t('dialog.documentSetupMenu'), onSelect: dialogs.documentSetup, testId: 'vector-menu-document-setup' },
+          ...(abilities.pick ? [{ label: t('file.templateMenu'), onSelect: () => fileIo.current?.newFromTemplate(), testId: 'vector-menu-new-from-template' }] : []),
+          ...(abilities.open ? [{ label: t('file.openMenu'), onSelect: () => fileIo.current?.open(), testId: 'vector-menu-open', primary: true }] : []),
+          ...(abilities.edit ? [{ label: native ? t('file.saveMenu') : t('file.saveNativeMenu'), onSelect: () => fileIo.current?.save(), testId: 'vector-menu-save' }] : []),
+          { label: t('file.saveCopyMenu'), onSelect: () => fileIo.current?.saveCopy(), testId: 'vector-menu-save-copy' },
+          ...(abilities.pick && abilities.edit ? [{ label: t('file.placeMenu'), onSelect: () => fileIo.current?.place(), testId: 'vector-menu-place', primary: true }] : []),
           { label: t('exportMenu'), onSelect: () => setExporting(true), testId: 'vector-menu-export', primary: true },
+          { label: t('dialog.documentSetupMenu'), onSelect: dialogs.documentSetup, testId: 'vector-menu-document-setup' },
         ],
       },
     })
@@ -463,7 +491,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       ...withEffects,
       { id: 'Help', label: phrase('Help'), view: true, menu: { rows: helpRows, onKitCommand: kitCommand, primary: [HELP_SHORTCUTS] } },
     ]
-  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName, shown, view.toggles, view.engine])
+  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName, shown, view.toggles, view.engine, abilities.open, abilities.pick, abilities.edit, native])
 
   return (
     <KitEditorProvider editor={editor} tools={tools}>
@@ -537,6 +565,23 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
               return true
             }
             if (plain) return false
+            // Cmd+S on a drawing read from SVG, PDF or EPS saves a .kvector beside it, never over the file.
+            if (!native && shortcutMatches('Cmd+S', event)) {
+              fileIo.current?.save()
+              return true
+            }
+            if (shortcutMatches(PLACE_KEY, event) && abilities.pick && abilities.edit) {
+              fileIo.current?.place()
+              return true
+            }
+            if (shortcutMatches(SAVE_COPY_KEY, event)) {
+              fileIo.current?.saveCopy()
+              return true
+            }
+            if (shortcutMatches(TEMPLATE_KEY, event) && abilities.pick) {
+              fileIo.current?.newFromTemplate()
+              return true
+            }
             // Kition's own rows' shortcuts: Document Setup…, Apply Last Effect, Last Effect….
             if (shortcutMatches(DOCUMENT_SETUP_KEY, event)) {
               dialogs.documentSetup()
@@ -614,6 +659,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
               }}
             >
               {isolationPath ? <IsolationBar path={isolationPath} onExit={exitIsolation} /> : null}
+              <BusyIndicator busy={busy} t={t} />
               {session.info ? (
                 <CanvasScrollbars
                   view={viewTick >= 0 ? (canvas.current?.view() ?? null) : null}
@@ -636,7 +682,8 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
             onClose={() => setMenuAt(null)}
           />
           <VectorDialogs api={dialogApi} info={state} effects={effects} onEffectApplied={setLastEffect} />
-          {exporting && state ? <ExportDialog info={state} onClose={() => setExporting(false)} /> : null}
+          {exporting && state ? <ExportDialog info={state} busy={busy} onClose={() => setExporting(false)} /> : null}
+          {state ? <VectorFileIo api={fileIo} area={region} canvas={canvas} origin={state.origin} busy={busy} editing={() => typingNow.current} /> : null}
           {help ? <HelpDialog topic={help} version={manifest.version} own={ownShortcuts} onClose={() => setHelp(null)} /> : null}
           <ColorPickerOutlet />
           <StopPicker api={stopPicker} />

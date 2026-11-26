@@ -95,6 +95,10 @@ tools, never checked side by side) isn't captured row by row.
 | Editor (`web/`): View menu toggles with checks and keys (Outline, Pixel Preview, edges, bounding box, corner widget, Smart Guides, rulers, guides, grid, the three snaps), the transparency grid, Proof Colors and Overprint Preview drawn | partial | the toggles are the editor session's (`View:` requests), not engine commands; Grids In Back not followed (the grid draws over the art) |
 | Editor: rulers in the document's unit with the pointer marked; guides dragged out of them shown as they go; a moved selection snapping onto guides with Smart Guides and Snap to Point on | partial | no ruler unit menu or movable zero point |
 | Editor: typed zoom percentage, Alt+wheel zoom, scrollbars, View's zoom rows | done | |
+| Editor (`web/`, plan 2026-11-25 stage 7): File › New…, New from Template…, Open…, Save, Save a Copy…, Place… through the host; a drawing read from SVG, PDF or EPS saved as a `.kvector` beside it | partial | Open goes through `host/open` (the host picks the kit); Place lands in the middle of the view at 100% (no place cursor, no linked file) |
+| Editor: the system clipboard: Copy and Cut write SVG markup, a type-only copy's words and a PNG; Cmd+V takes in SVG markup, pictures, PDF and text from other applications | partial | Paste in Front, Back and Place use the engine's clipboard only |
+| Editor: files dragged from the computer onto the canvas placed where they drop | partial | a drop never opens a document |
+| Editor: File › Export… with SVG, PDF, PNG, JPEG and WebP, SVG text as outlines and embedded fonts, raster size, background, anti-aliasing and JPEG quality, every artboard, one or the selection, a preview and the exact file size, progress with Cancel | partial | no PDF options (the binding's `file.exportBytes` takes none); WebP lossless only |
 
 ## Transform handles, bounding box, Free Transform
 

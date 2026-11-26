@@ -14,7 +14,7 @@ import {
 import { ContextMenu, EyeButton, IconButton, MenuButton, MenuItem, MenuSeparator, PanelFooter, RenameField, useKitEditor, useReadOnly } from '@kition/sdk/editor'
 import { useDialogs } from '../dialogs/DialogHost'
 import type { VectorInfo, VectorNode } from '../vector'
-import { ancestorsOf, canDrop, dropPlace, findNode, objectsAmong, openByDefault, rowRange, rowWindow, selectionMarks, visibleRows, type Row } from './tree'
+import { ancestorsOf, canDrop, dropPlace, findNode, objectsAmong, openByDefault, rowRange, rowWindow, selectionMarks, shownName, visibleRows, type Row } from './tree'
 import { layerOptionsDialog } from './options'
 
 /** A row's height in CSS pixels (the list draws only the rows in view). */
@@ -417,10 +417,10 @@ export function LayersPanel({ info }: { info: VectorInfo }) {
                       event.stopPropagation()
                       rename(node as VectorNode)
                     }}
-                    title={node.name}
+                    title={shownName(node.name, node.kind, phrase)}
                     data-testid={`vector-layer-name-${node.id}`}
                   >
-                    {node.name}
+                    {shownName(node.name, node.kind, phrase)}
                   </span>
                 )}
                 <button

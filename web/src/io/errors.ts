@@ -9,6 +9,7 @@
 /** The kinds of error the editor words itself, each with what in the engine's text gives it away (first match wins). */
 const KINDS: ReadonlyArray<readonly [string, RegExp]> = [
   ['cancelled', /^cancel+ed\b|\bwas cancel+ed\b/i],
+  ['saveAsExport', /saving as \.\w+ is an export/i],
   ['clipboardEmpty', /clipboard is empty|nothing (?:was )?copied|nothing to paste/i],
   ['noDocument', /no (?:active )?document|no document (?:is )?open/i],
   ['noFileSystem', /no folder|local folder|file system|native only|not available (?:on the web|in the browser)|needs the desktop/i],

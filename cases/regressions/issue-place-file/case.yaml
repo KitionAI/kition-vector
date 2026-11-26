@@ -1,0 +1,26 @@
+format: 1
+id: regressions/issue-place-file
+feature: vector.editor.files
+intent: >-
+  File › Place… places a picture. Before, the row showed no file chooser and failed at once with the
+  engine's "invalid parameters for `file.place`: give path, or name and dataBase64" (walkthrough
+  2026-11-25, findings sections 12 and 13, shot 13-place), and stage 1 then took the row out of the
+  menu. Now Kition's own Place… row picks the file through the host and places it, one step, the
+  placed picture selected and kept when the drawing is saved and opened again.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 13, shot 13-place)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/files.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"

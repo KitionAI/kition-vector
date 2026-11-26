@@ -1,0 +1,26 @@
+format: 1
+id: regressions/issue-clipboard-out
+feature: vector.editor.files
+intent: >-
+  Copy reaches other applications as vectors, and their copies paste in. Before, Copy left the system
+  clipboard as it was (no SVG, no vector flavour for another drawing application) and Cmd+V ignored
+  SVG markup, pictures and text copied elsewhere (walkthrough 2026-11-25, findings section 13). Now
+  Copy writes SVG markup (as text, and as image/svg+xml where the browser writes it) and a PNG, and
+  SVG markup from the system clipboard pastes as editable art in one step.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 13)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/files.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"
