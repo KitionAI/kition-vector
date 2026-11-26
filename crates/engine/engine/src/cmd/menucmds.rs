@@ -139,7 +139,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Shape"],
             None,
             "{} turn paths that are rectangles (any rotation) or axis-aligned ellipses into live shapes → {converted}",
-            has_selection,
+            has_convertible_shape,
             convert_to_shape
         ),
         cmd!(
@@ -769,6 +769,15 @@ pub(crate) fn detect_shape(path: &PathData) -> Option<LiveShape> {
         }
     }
     Some(LiveShape::Ellipse { w: b.width(), h: b.height(), pie: (0.0, 360.0), xf: Affine::translate(b.origin().to_vec2()) })
+}
+
+/// Enabled when a selected plain path is a rectangle or an ellipse (as `convert_to_shape` finds them).
+fn has_convertible_shape(s: &Session) -> std::result::Result<(), String> {
+    let roots = selected_roots(s).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    let any =
+        roots.iter().any(|id| matches!(d.node(*id).map(|n| &n.kind), Some(NodeKind::Path { path, live: None, .. }) if detect_shape(path).is_some()));
+    if any { Ok(()) } else { Err("Convert to Shape: no rectangles or ellipses selected".into()) }
 }
 
 fn convert_to_shape(s: &mut Session, _: &Value) -> Result<Value> {

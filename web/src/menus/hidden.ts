@@ -50,8 +50,8 @@ const NOT_BUILT: Readonly<Record<string, string>> = {
 
 /**
  * The Window menu's panel commands (the engine lists each panel's own menu under Window): they act
- * on a panel's current row or option, and come back in that panel's menu when the panel is built
- * (stages 3 and 4); Window then lists the panels. Pathfinder's rows stay: they act on the
+ * on a panel's current row or option, and run from that panel's own buttons and menu once the panel
+ * is built (stages 3 and 4); Window lists the panels instead (`panels/dockModel.ts`). Pathfinder's rows stay: they act on the
  * selection, and stage 1's menu test keeps them under Window (the side panel has all ten since
  * stage 3).
  */
@@ -64,8 +64,8 @@ const PANELS: Readonly<Record<string, string>> = {
   'Graphic Styles': 'Graphic Styles panel commands: they act on the panel’s current style; graphic styles come after the launch.',
   Swatches: 'Swatches panel commands: they act on the panel’s picked swatches; the Swatches panel’s own buttons (new, options, colour group, delete) run them.',
   Gradient: 'Gradient panel options: Properties › Gradient edits the gradient’s type, angle and stops.',
-  Layers: 'Layers panel commands: they act on the panel’s current rows, which come with the Layers panel (stage 4).',
-  Artboards: 'Artboards panel commands: they act on the panel’s current artboard, which comes with the Artboards panel (stage 4).',
+  Layers: 'Layers panel commands: the Layers panel’s buttons, its menu and a row’s right-click menu run them on the rows it highlights.',
+  Artboards: 'Artboards panel commands: the Artboards panel’s buttons and menu run them on its active artboard; Artboard Options opens from its gear.',
   Type: 'Character and paragraph style commands: styles come after the launch.',
   Tabs: 'Tabs panel commands: the Tabs panel is not built.',
   Variables: 'Variables and data sets are cut for the launch (plan section 1).',

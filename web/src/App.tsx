@@ -15,7 +15,9 @@ import {
   useKitEditor,
   useKitEditorState,
   useKitSession,
+  useKitStore,
   type FrameTab,
+  type DockAreaHandle,
   type HostConnection,
   type KitCanvasHandle,
   type MenuRow,
@@ -29,7 +31,6 @@ import { CATALOGS } from './strings'
 import { MENU_ORDER, HIDDEN_TOOLS, VECTOR_PRIMARY, describe, nodePath, type VectorInfo } from './vector'
 import { ExportDialog } from './ExportDialog'
 import { HomeTab } from './HomeTab'
-import { SidePanel } from './SidePanel'
 import { DialogsProvider, VectorDialogs, type Dialogs } from './dialogs/DialogHost'
 import { APPLY_LAST, EFFECT_ROW, LAST_DIALOG, effectRows } from './dialogs/effects'
 import { withoutEllipsis } from './dialogs/routes'
@@ -50,6 +51,9 @@ import { paintView } from './color/paint'
 import { StopPicker, type PickStop } from './gradient/StopPicker'
 import { ControlBar } from './panels/ControlBar'
 import { usePaintPicker, useProxies } from './panels/usePaint'
+import { VectorDock } from './panels/dock'
+import { DEFAULT_SHOWN, shownOf, windowCommand, windowRows, windowShown, windowTab, type DockTabs } from './panels/dockModel'
+import { ArtboardNavProvider, ArtboardNavigator, type ArtboardNav } from './artboards/nav'
 
 /** The view tools are the host's (the Zoom tool Kition Vector's own, with its marquee); the engine's other tools run in the engine. */
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: VECTOR_ZOOM_TOOL }
@@ -76,13 +80,21 @@ function artboardsArea(info: VectorInfo | null): RasterRect | null {
   return { x0, y0, x1, y1 }
 }
 
-/** The artboard the selection's centre is on (the current one), else the first. */
-function currentArtboard(info: VectorInfo | null) {
+/** The artboard the selection's centre is on, or null (nothing selected, or off every artboard). */
+function selectionArtboard(info: VectorInfo | null) {
   const bounds = info?.selectionBounds
-  if (!info || !bounds) return 0
+  if (!info || !bounds) return null
   const [cx, cy] = [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2]
   const index = info.artboards.findIndex((board) => cx >= board.x && cx <= board.x + board.width && cy >= board.y && cy <= board.y + board.height)
-  return Math.max(0, index)
+  return index < 0 ? null : index
+}
+
+/** Artboard `index` in document pixels (the drawing's points less the extent's origin), or null. */
+function boardArea(info: VectorInfo | null, index: number): RasterRect | null {
+  const board = info?.artboards[index]
+  if (!info || !board) return null
+  const [ox, oy] = info.origin
+  return { x0: board.x - ox, y0: board.y - oy, x1: board.x + board.width - ox, y1: board.y + board.height - oy }
 }
 
 /** A colour of the engine's (`{model: 'rgb', r, g, b}`, 0 to 1) as `#rrggbb`, or null. */
@@ -147,11 +159,19 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       effectRow: (row) => dialogApi.current?.effectRow(row),
       newDocument: () => dialogApi.current?.newDocument(),
       documentSetup: () => dialogApi.current?.documentSetup(),
+      artboardOptions: (index, values) => dialogApi.current?.artboardOptions(index, values),
     }),
     [],
   )
   onToolDialog.current = (name, params) => {
     const info = state
+    // The Artboard tool's options: Artboard Options, with its presets and orientation (stage 4).
+    if (name === 'artboardOptions') {
+      const record = (params && typeof params === 'object' ? params : {}) as Record<string, unknown>
+      const index = typeof record.index === 'number' ? record.index : 0
+      const start = Object.fromEntries(['name', 'x', 'y', 'width', 'height'].filter((key) => key in record).map((key) => [key, record[key]]))
+      return dialogs.artboardOptions(index, start)
+    }
     const open = (stopColor: string | null) => {
       const dialog = toolDialog(name, params, {
         stopColor: () => stopColor,
@@ -215,10 +235,52 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
 
   const boards = artboardsArea(state)
   const initialArea = useMemo(() => boards, [boards?.x0, boards?.y0, boards?.x1, boards?.y1])
-  const marks = useMemo(
-    () => (state ? artboardMarks({ boards: state.artboards, current: currentArtboard(state), origin: state.origin }) : null),
-    [state?.artboards, state?.origin, state?.selectionBounds],
+
+  // The active artboard (plan 2026-11-25, stage 4): chosen in the Artboards panel or the status
+  // bar, or the one the selection moves onto; Cmd+0 and the navigation fit it in the window.
+  const [activeBoard, setActiveBoard] = useState(0)
+  const boardCount = state?.artboards.length ?? 0
+  const active = Math.min(activeBoard, Math.max(0, boardCount - 1))
+  const onBoard = selectionArtboard(state)
+  useEffect(() => {
+    if (onBoard !== null) setActiveBoard(onBoard)
+  }, [onBoard])
+  const stateForNav = useRef(state)
+  stateForNav.current = state
+  const nav = useMemo<ArtboardNav>(
+    () => ({
+      active,
+      setActive: setActiveBoard,
+      show: (index) => {
+        setActiveBoard(index)
+        const area = boardArea(stateForNav.current, index)
+        if (area) canvas.current?.show(area)
+      },
+      fitAll: () => {
+        const area = artboardsArea(stateForNav.current)
+        if (area) canvas.current?.show(area)
+        else canvas.current?.fit()
+      },
+    }),
+    [active],
   )
+  const marks = useMemo(() => (state ? artboardMarks({ boards: state.artboards, current: active, origin: state.origin }) : null), [state?.artboards, state?.origin, active])
+
+  // The panel dock and the Window menu's panel rows (plan 2026-11-25, stage 4): which groups show
+  // is kept in the kit's store, the dock keeps each group's tab, height and collapse.
+  const dock = useRef<DockAreaHandle>(null)
+  const [shown, setShown] = useKitStore('kit.vector', 'dockShown', { initial: DEFAULT_SHOWN, validate: shownOf })
+  const dockTabs: DockTabs = (group) => dock.current?.activeTab(group) ?? null
+  // A Window row shows its group with its tab in front (the dock opens a group it does not show yet on that tab), or hides it.
+  const windowRow = (command: string) => {
+    const next = windowCommand(shown, command, dockTabs)
+    setShown(next.shown)
+    if (next.reveal) dock.current?.showTab(next.reveal)
+  }
+  const windowNow = useRef(windowRow)
+  windowNow.current = windowRow
+  const shownNow = useRef(shown)
+  shownNow.current = shown
 
   // Cmd (Ctrl) with the mouse wheel zooms at the pointer by at most 1.2 times a notch (the canvas's
   // own would take 2.7 times); a trackpad's pinch, in small steps, zooms as smoothly as before.
@@ -276,6 +338,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   const kitCommand = useCallback(
     (command: string) => {
       if (command.startsWith(EFFECT_ROW)) return dialogs.effectRow(command)
+      if (windowTab(command)) return windowNow.current(command)
       if (command === HELP_SHORTCUTS) return setHelp('shortcuts')
       if (command === HELP_ABOUT) return setHelp('about')
     },
@@ -315,7 +378,13 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       applyLast: (name) => (name ? t('effect.applyLast', { name }) : t('effect.applyLastPlain')),
       lastDialog: (name) => (name ? t('effect.lastDialog', { name }) : t('effect.lastDialogPlain')),
     })
-    const withEffects = engineTabs.map((tab) => (tab.id === 'Effect' && tab.menu ? { ...tab, menu: { ...tab.menu, rows: [...effectMenu.slice(0, 2), ...tab.menu.rows, ...effectMenu.slice(2)] as MenuRow[] } } : tab))
+    // Window lists the panels first (their check marks: shown with their tab in front), then Pathfinder's rows.
+    const panelRows = windowRows().map((row) => ({ ...row, label: phrase(row.label) }))
+    const withEffects = engineTabs.map((tab) => {
+      if (tab.id === 'Effect' && tab.menu) return { ...tab, menu: { ...tab.menu, rows: [...effectMenu.slice(0, 2), ...tab.menu.rows, ...effectMenu.slice(2)] as MenuRow[] } }
+      if (tab.id === 'Window' && tab.menu) return { ...tab, menu: { ...tab.menu, rows: [...panelRows, ...tab.menu.rows] as MenuRow[], checked: (command: string) => windowShown(shownNow.current, command, (group) => dock.current?.activeTab(group) ?? null) } }
+      return tab
+    })
     const helpRows: MenuRow[] = [
       { path: ['Help'], label: t('help.shortcutsMenu'), command: HELP_SHORTCUTS },
       { path: ['Help'], label: t('help.aboutMenu'), command: HELP_ABOUT },
@@ -325,10 +394,11 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       ...withEffects,
       { id: 'Help', label: phrase('Help'), view: true, menu: { rows: helpRows, onKitCommand: kitCommand, primary: [HELP_SHORTCUTS] } },
     ]
-  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName])
+  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName, shown])
 
   return (
     <KitEditorProvider editor={editor} tools={tools}>
+      <ArtboardNavProvider value={nav}>
       <DialogsProvider value={dialogs}>
         <ColorPickerProvider>
         <EditorFrame
@@ -378,9 +448,10 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
                   tools.select(own.id)
                   break
                 case 'zoom': {
+                  // Cmd+0 fits the active artboard, Cmd+Alt+0 everything.
                   if (own.to === 'actual') canvas.current?.zoomTo(1)
                   else if (own.to === 'all' || !boards) canvas.current?.fit()
-                  else canvas.current?.show(boards)
+                  else nav.show(active)
                   break
                 }
               }
@@ -417,11 +488,14 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
             </span>
           }
           statusEnd={
-            bounds ? (
-              <span className="tabular-nums" data-testid="vector-selection-size">
-                {t('size', { width: round(bounds.width), height: round(bounds.height) })}
-              </span>
-            ) : null
+            <span className="vector-status-end">
+              {bounds ? (
+                <span className="tabular-nums" data-testid="vector-selection-size">
+                  {t('size', { width: round(bounds.width), height: round(bounds.height) })}
+                </span>
+              ) : null}
+              {state ? <ArtboardNavigator info={state} /> : null}
+            </span>
           }
           rail={
             <div className="vector-rail">
@@ -430,7 +504,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
             </div>
           }
           options={state ? <ControlBar info={state} /> : null}
-          panels={state ? <SidePanel info={state} /> : null}
+          panels={state ? <VectorDock info={state} shown={shown} dock={dock} /> : null}
         >
           <div className="kui-row" ref={region}>
             <KitDocumentCanvas canvas={canvas} viewMemory={viewMemory} framed={false} initialArea={initialArea} decorateUnder={marks} onView={(view) => setZoom(view.zoom)}>
@@ -455,6 +529,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
         </EditorFrame>
         </ColorPickerProvider>
       </DialogsProvider>
+      </ArtboardNavProvider>
     </KitEditorProvider>
   )
 }

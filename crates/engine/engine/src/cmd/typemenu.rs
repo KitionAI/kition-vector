@@ -35,7 +35,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type"],
             None,
             "{ids?} point type → area type framed by its current layout bounds → {ids}",
-            has_selection,
+            |s| ready(texts(s, &json!({}), "text.convertToAreaType")),
             to_area
         ),
         cmd!(
@@ -44,7 +44,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type"],
             None,
             "{ids?} area type → point type; soft line wraps become line breaks → {ids}",
-            has_selection,
+            |s| ready(texts(s, &json!({}), "text.convertToPointType")),
             to_point
         ),
         cmd!(
@@ -62,7 +62,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type"],
             None,
             "{ids?} replace selected text with placeholder text (area type is filled to its frame) → {ids}",
-            has_selection,
+            |s| ready(texts(s, &json!({}), "text.fillPlaceholder")),
             fill_placeholder
         ),
         cmd!(

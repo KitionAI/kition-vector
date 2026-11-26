@@ -29,7 +29,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Blend"],
             Some("Cmd+Alt+B"),
             "{ids?, steps?: n | distance?: pt | smooth?: bool, orientation?: page|path (default: the Blend Options set with nothing selected, else smooth colour and page), starts?: [anchor index | null, …] (per object of `ids`, else of the selection in paint order: the anchor of its first subpath the blend starts from; an open path's last anchor runs it the other way)} blend the selected objects (paint order) into a live blend; a blend among them takes the others in as more key objects (keeping its options, name and transparency) instead of nesting → {id}",
-            has_doc,
+            has_two_to_blend,
             blend_make
         ),
         cmd!(
@@ -147,7 +147,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Envelope Distort"],
             Some("Cmd+Alt+C"),
             "{ids?} the topmost selected path becomes the envelope of the others → {id}",
-            has_multi,
+            top_path_over_content,
             env_make_top
         ),
         cmd!(
@@ -286,6 +286,12 @@ fn ids_json(ids: &[NodeId]) -> Value {
 
 /// Explicit `ids` reduced as the selection is (in paint order; a layer or an id naming no object
 /// is refused, see [`super::edit::given_roots`]), else the selected roots.
+/// Enabled with two objects or more to blend (as `blend_make` takes them).
+fn has_two_to_blend(s: &Session) -> std::result::Result<(), String> {
+    let roots = roots_param(s, &json!({}), "object.blend.make").map_err(refusal)?;
+    if roots.len() < 2 { Err("select at least two objects".into()) } else { Ok(()) }
+}
+
 fn roots_param(s: &Session, p: &Value, cmd: &str) -> Result<Vec<NodeId>> {
     if p.get("ids").is_some_and(|v| !v.is_null()) {
         return super::edit::given_roots(s, &json!({ "ids": p["ids"] }), cmd)?.ok_or_else(|| bad(cmd, "`ids` must be a list of object ids"));
@@ -983,6 +989,17 @@ fn outline_of(n: &Node) -> Option<PathData> {
         }
         _ => None,
     }
+}
+
+/// Enabled with content and a path on top of it (as `env_make_top` takes them).
+fn top_path_over_content(s: &Session) -> std::result::Result<(), String> {
+    let roots = roots_param(s, &json!({}), "object.envelope.makeWithTopObject").map_err(refusal)?;
+    let Some((&top, content)) = roots.split_last() else { return Err("select the content and a path on top".into()) };
+    if content.is_empty() {
+        return Err("select the content and a path on top".into());
+    }
+    let d = &s.doc().map_err(refusal)?.doc;
+    if d.node(top).and_then(outline_of).is_some_and(|p| p.bounds().is_some()) { Ok(()) } else { Err("the top object must be a path".into()) }
 }
 
 fn env_make_top(s: &mut Session, p: &Value) -> Result<Value> {

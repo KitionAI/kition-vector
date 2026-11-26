@@ -58,7 +58,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Region Paint"],
             Some("Cmd+Alt+X"),
             "{ids?} build a Region Paint group from the selected paths → {id, faces, edges}",
-            has_selection_or_ids,
+            |s| ready(root_ids(s, &json!({}))),
             lp_make
         ),
         cmd!(
@@ -67,7 +67,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Region Paint"],
             None,
             "{ids?} add the other selected paths (and Region Paint groups) to the first Region Paint group, keeping its paint → {id, faces, edges}",
-            has_multi_or_ids,
+            has_region_paint_to_merge,
             lp_merge
         ),
         cmd!(
@@ -76,7 +76,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Region Paint"],
             None,
             "{id?} replace Region Paint groups with their original paths → {ids}",
-            has_selection_or_ids,
+            |s| ready(live_targets(s, &json!({}))),
             lp_release
         ),
         cmd!(
@@ -85,7 +85,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Region Paint"],
             None,
             "{id?} turn Region Paint groups into plain groups of their painted faces and edges → {ids}",
-            has_selection_or_ids,
+            |s| ready(live_targets(s, &json!({}))),
             lp_expand
         ),
         cmd!(
@@ -121,7 +121,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Image Trace"],
             None,
             "{id?: image or Image Trace group (default: selection), preset?: name (imageTrace.presets), params?: {mode: \"blackAndWhite\"|\"grayscale\"|\"color\"|\"logo\", threshold: 0-255, palette: \"limited\"|\"fullTone\"|\"automatic\"|\"documentLibrary\" (color mode; limited: the `colors` best colours, fullTone: as many as the tones need, more with colorDetail, automatic: flat art with its own colours, else fullTone, documentLibrary: at most `colors` of the library's colours, as they are), colors: 2-256, colorDetail: 0-100 (fullTone, automatic), library: \"document\" (the document's swatches) or a swatch library id or name (swatch.library.list; documentLibrary), paths: 0-100, corners: 0-100, noise: px, method: \"abutting\"|\"overlapping\", ignoreWhite, snapCurvesToLines, fills: true, strokes: false (Create: lines up to strokeWidth wide become stroked centre lines; without fills, wider areas become stroked outlines), strokeWidth: px (10), logoColors?: [\"#rrggbb\"…] (mode logo: flat-colour logos only; colours found automatically or named here, white is always its own colour, at most ten; noise = areas under noise/10 px ignored; edges to a fraction of a pixel, sharp corners restored, lines and circles snapped; enclosed transparent areas are painted white unless ignoreWhite makes them holes; fills/strokes are ignored; gradients and photos are refused)}, view?: as imageTrace.setView (default: the traced object's own, else tracingResult)} → {id, paths, anchors, colors}",
-            has_selection_or_ids,
+            has_traceable,
             |s, p| trace_make(s, p, false)
         ),
         cmd!(
@@ -130,7 +130,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Image Trace"],
             None,
             "{id?: image or Image Trace group (default: selection), ids?, preset?: name (imageTrace.presets), params?: {…} (as imageTrace.make), view?: as imageTrace.setView (default: the traced object's own, else tracingResult)} the same as imageTrace.make, then expand → {id, paths, anchors, colors}",
-            has_selection_or_ids,
+            has_traceable,
             |s, p| trace_make(s, p, true)
         ),
         cmd!(
@@ -139,7 +139,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Image Trace"],
             None,
             "{id?} put the source image back in place of Image Trace groups → {ids}",
-            has_selection_or_ids,
+            |s| ready(trace_targets(s, &json!({}))),
             trace_release
         ),
         cmd!(
@@ -148,7 +148,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Image Trace"],
             None,
             "{id?} keep only the traced paths (drop the source image) → {ids}",
-            has_selection_or_ids,
+            |s| ready(trace_targets(s, &json!({}))),
             trace_expand
         ),
         cmd!(
@@ -171,8 +171,26 @@ fn has_selection_or_ids(s: &Session) -> std::result::Result<(), String> {
     has_doc(s)
 }
 
-fn has_multi_or_ids(s: &Session) -> std::result::Result<(), String> {
-    has_doc(s)
+/// Enabled when the selection holds a Region Paint group to merge the rest into (as `lp_merge` needs).
+fn has_region_paint_to_merge(s: &Session) -> std::result::Result<(), String> {
+    let roots = root_ids(s, &json!({})).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    if roots.iter().any(|r| d.node(*r).is_some_and(is_region_paint)) {
+        Ok(())
+    } else {
+        Err("Region Paint Merge: select a Region Paint group and the paths to add".into())
+    }
+}
+
+/// Enabled when the selection holds an image or an Image Trace object (what `trace_make` traces).
+fn has_traceable(s: &Session) -> std::result::Result<(), String> {
+    let roots = root_ids(s, &json!({})).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    if roots.iter().any(|r| d.node(*r).is_some_and(|n| matches!(n.kind, NodeKind::Image(_)) || is_trace_group(n))) {
+        Ok(())
+    } else {
+        Err("select an image (or an Image Trace group)".into())
+    }
 }
 
 fn root_ids(s: &Session, p: &Value) -> Result<Vec<NodeId>> {

@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useKitEditor } from '@kition/sdk/editor'
+import { holdHistory } from './historyHold'
 import { createLiveEdit, type LiveEdit } from './live'
 
 /**
@@ -10,11 +11,12 @@ export function useLive(): Pick<LiveEdit, 'set' | 'commit' | 'cancel'> {
   const editor = useKitEditor()
   const latest = useRef(editor)
   latest.current = editor
-  const gesture = useRef<{ edit: LiveEdit; reported: boolean } | null>(null)
+  const gesture = useRef<{ edit: LiveEdit; reported: boolean; release: () => void } | null>(null)
   return useMemo(() => {
     const current = () => {
       if (gesture.current) return gesture.current.edit
-      const own = { edit: null as unknown as LiveEdit, reported: false }
+      // The History panel waits while the gesture's live steps come and go.
+      const own = { edit: null as unknown as LiveEdit, reported: false, release: holdHistory() }
       own.edit = createLiveEdit(
         {
           run: async (command, params) => {
@@ -34,19 +36,28 @@ export function useLive(): Pick<LiveEdit, 'set' | 'commit' | 'cancel'> {
       return own.edit
     }
     const end = () => {
-      const edit = gesture.current?.edit
+      const own = gesture.current
       gesture.current = null
-      return edit
+      return own
     }
     return {
       set: (command, params) => current().set(command, params),
       commit: async (command, params) => {
-        const edit = command ? current() : end()
-        if (command) gesture.current = null
-        await edit?.commit(command, params)
+        if (command) current()
+        const own = end()
+        try {
+          await own?.edit.commit(command, params)
+        } finally {
+          own?.release()
+        }
       },
       cancel: async () => {
-        await end()?.cancel()
+        const own = end()
+        try {
+          await own?.edit.cancel()
+        } finally {
+          own?.release()
+        }
       },
     }
   }, [])

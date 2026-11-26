@@ -22,32 +22,32 @@ pub fn specs() -> Vec<CommandSpec> {
                 _ => false,
             }
         )),
-        cmd!("select.same.fontFamily", "Font Family", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
+        cmd!("select.same.fontFamily", "Font Family", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| same_text(
             s,
             "select.same.fontFamily",
             |a, b| a.font_family == b.font_family
         )),
-        cmd!("select.same.fontFamilyStyle", "Font Family & Style", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
+        cmd!("select.same.fontFamilyStyle", "Font Family & Style", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| same_text(
             s,
             "select.same.fontFamilyStyle",
             |a, b| a.font_family == b.font_family && a.font_style == b.font_style
         )),
-        cmd!("select.same.fontFamilyStyleSize", "Font Family, Style & Size", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| {
+        cmd!("select.same.fontFamilyStyleSize", "Font Family, Style & Size", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| {
             same_text(s, "select.same.fontFamilyStyleSize", |a, b| {
                 a.font_family == b.font_family && a.font_style == b.font_style && (a.size - b.size).abs() < 1e-6
             })
         }),
-        cmd!("select.same.fontSize", "Font Size", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
+        cmd!("select.same.fontSize", "Font Size", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| same_text(
             s,
             "select.same.fontSize",
             |a, b| (a.size - b.size).abs() < 1e-6
         )),
-        cmd!("select.same.textFillColor", "Text Fill Color", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
+        cmd!("select.same.textFillColor", "Text Fill Color", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| same_text(
             s,
             "select.same.textFillColor",
             |a, b| a.fill == b.fill
         )),
-        cmd!("select.same.textStrokeColor", "Text Stroke Color", ["Select", "Same"], None, "{} → {count}", has_selection, |s, _| same_text(
+        cmd!("select.same.textStrokeColor", "Text Stroke Color", ["Select", "Same"], None, "{} → {count}", has_text_style, |s, _| same_text(
             s,
             "select.same.textStrokeColor",
             |a, b| a.stroke == b.stroke
@@ -125,7 +125,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["View", "Guides"],
             Some("Cmd+5"),
             "{} turn the selected paths into guides → {count}",
-            has_selection,
+            has_paths_to_guide,
             make_guides
         ),
         cmd!(
@@ -134,7 +134,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["View", "Guides"],
             Some("Cmd+Alt+5"),
             "{} turn the selected guides (or, with none selected, all guide paths) back into paths → {count}",
-            has_doc,
+            has_guides,
             release_guides
         ),
         cmd!(
@@ -266,6 +266,11 @@ fn same(s: &mut Session, cmd: &str, eq: fn(&Node, &Node) -> bool) -> Result<Valu
     let r = st.selection.objects.first().and_then(|id| st.doc.node(*id)).cloned().ok_or_else(|| bad(cmd, "nothing selected"))?;
     let ids = candidates(s, |n| eq(n, &r))?;
     finish_same(s, cmd, ids)
+}
+
+/// Enabled when a selected object is (or holds) text, whose style `same_text` matches.
+fn has_text_style(s: &Session) -> std::result::Result<(), String> {
+    if first_text_style(s).is_some() { Ok(()) } else { Err("select a text object".into()) }
 }
 
 fn first_text_style(s: &Session) -> Option<CharStyle> {
@@ -427,6 +432,25 @@ fn set_guide_flag(n: &mut Node, on: bool, count: &mut usize) {
             }
         }
     }
+}
+
+/// Enabled when the selection holds a path that is not a guide yet (what `set_guide_flag` turns).
+fn has_paths_to_guide(s: &Session) -> std::result::Result<(), String> {
+    let roots = selected_roots(s).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    let mut any = false;
+    for n in roots.iter().filter_map(|id| d.node(*id)) {
+        n.walk(&mut |c| any |= matches!(c.kind, NodeKind::Path { guide: false, clipping: false, .. }));
+    }
+    if any { Ok(()) } else { Err("Make Guides: select paths".into()) }
+}
+
+/// Enabled when there are guides to release: the selected ones, else any that can be edited.
+fn has_guides(s: &Session) -> std::result::Result<(), String> {
+    let st = s.doc().map_err(refusal)?;
+    let all = guide_paths(&st.doc);
+    let any = all.iter().any(|id| st.selection.contains(*id)) || all.iter().any(|id| st.doc.is_editable(*id));
+    if any { Ok(()) } else { Err("Release Guides: no guides".into()) }
 }
 
 fn make_guides(s: &mut Session, _: &Value) -> Result<Value> {

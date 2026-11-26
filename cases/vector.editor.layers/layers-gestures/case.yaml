@@ -1,0 +1,35 @@
+format: 1
+id: vector.editor.layers/layers-gestures
+feature: vector.editor.layers
+intent: >-
+  Layers, artboards and the panel dock work by hand (plan 2026-11-25, stage 4). The dock shows
+  Properties, Layers and Swatches as groups of tabs, every earlier stage's section once; a tab brings
+  its panel forward, a group collapses to its strip, Window › History shows History (checked) and
+  Window › Layers hides and shows Layers, Window › Pathfinder keeps its submenu; nothing overlaps or
+  is cut off at 1440 × 900, 1280 × 720 and 900 wide in Menus, Single line, Classic and Focus. In the
+  Layers panel every row has an eye and a lock; a row dragged above another restacks it as one step
+  and one Undo puts it back; a row dropped on another layer goes into it; a double-click renames a
+  row and the letters typed pick no tool; a click selects an object row, Shift a range, Cmd takes one
+  out, and the selection square shows in the layer's colour; the eye hides an object, the lock locks
+  it and a click on it on the canvas does not pick it; New Sublayer, the right-click menu's
+  Duplicate and Delete; a layer of 400 objects draws only the rows in view. In the Artboards panel
+  New Artboard, rename by double-click, Artboard Options' width, the up arrow and Delete; the status
+  bar steps through the artboards and fits each, Fit All zooms out; a History row goes back and a
+  dimmed one forward; Object › Blend › Make is grey with nothing selected.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (findings section 11: no lock, no rename, no drag, no multi-select, no right-click; no Artboards panel; one fixed column of panels)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/layers.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"

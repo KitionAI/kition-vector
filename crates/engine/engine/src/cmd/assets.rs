@@ -21,7 +21,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Collect for Export"],
             None,
             "{ids?: [id…] (default: the selected objects), multiple?: true (an asset per object; false: one asset of them all), name?: (the asset's name, when it makes one)} collect art as assets for Window › Asset Export and Export for Screens' Assets tab, named after the object (else Asset 1, Asset 2…); art already collected as such an asset keeps it → {assets: [asset id…] (in order), added: n}. Assets follow their art: moving it moves the crop, deleting it removes it from the asset",
-            has_doc,
+            |s| if has_selection(s).is_ok() { Ok(()) } else { Err("select the art to collect (or give its ids)".into()) },
             add
         ),
         cmd!(

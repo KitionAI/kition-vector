@@ -1,0 +1,21 @@
+format: 1
+id: regressions/issue-layer-rows
+feature: vector.editor.layers
+intent: >-
+  inspect reports the Layers panel's current layer and highlighted rows. Before, the binding read
+  them from a scratch session that never copied them: currentLayer stayed the drawing's first layer
+  and layerRows was always empty whatever the panel clicked, so the panel could not show which rows
+  its Delete, Duplicate and Options act on.
+layer: gate
+source:
+  kind: issue
+  from: plan 2026-11-25, stage 4 (found building the Layers panel)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: layer_rows_inspect }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

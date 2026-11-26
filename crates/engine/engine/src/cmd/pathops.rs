@@ -141,7 +141,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Path"],
             None,
             "{} cut the objects below with the selected path (which is removed) → {ids}",
-            has_selection,
+            one_path_selected,
             divide_objects_below
         ),
         cmd!(
@@ -806,6 +806,18 @@ fn clean_up(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 // ---------- Divide Objects Below ----------
+
+/// Enabled when exactly one path (or compound path) is selected, the cutter `divide_objects_below` takes.
+fn one_path_selected(s: &Session) -> std::result::Result<(), String> {
+    let roots = selected_roots(s).map_err(refusal)?;
+    let [only] = roots[..] else { return Err("Divide Objects Below: select exactly one path".into()) };
+    let d = &s.doc().map_err(refusal)?.doc;
+    if d.node(only).is_some_and(|n| matches!(n.kind, NodeKind::Path { .. } | NodeKind::Compound { .. })) {
+        Ok(())
+    } else {
+        Err("Divide Objects Below: select a path".into())
+    }
+}
 
 fn divide_objects_below(s: &mut Session, _: &Value) -> Result<Value> {
     let roots = selected_roots(s)?;

@@ -13,25 +13,19 @@ use super::*;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        cmd!("text.orientation.vertical", "Vertical", ["Type", "Orientation"], None, "{ids?|id?} set vertical writing", has_selection, |s, p| {
+        cmd!("text.orientation.vertical", "Vertical", ["Type", "Orientation"], None, "{ids?|id?} set vertical writing", has_text, |s, p| {
             orientation(s, p, true)
         }),
-        cmd!(
-            "text.orientation.horizontal",
-            "Horizontal",
-            ["Type", "Orientation"],
-            None,
-            "{ids?|id?} set horizontal writing",
-            has_selection,
-            |s, p| orientation(s, p, false)
-        ),
+        cmd!("text.orientation.horizontal", "Horizontal", ["Type", "Orientation"], None, "{ids?|id?} set horizontal writing", has_text, |s, p| {
+            orientation(s, p, false)
+        }),
         cmd!(
             "text.convertToOutlines",
             "Create Outlines",
             ["Type"],
             Some("Cmd+Shift+O"),
             "{} convert the selected text to groups of compound paths (one per glyph) → {ids}",
-            has_selection,
+            has_text_to_outline,
             create_outlines
         ),
         cmd!(
@@ -67,7 +61,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type"],
             None,
             "{ids?} track the first line of area type so it fills the frame width → {tracking}",
-            has_selection,
+            has_area_type,
             fit_headline
         ),
         cmd!(
@@ -80,6 +74,27 @@ pub fn specs() -> Vec<CommandSpec> {
             set_style
         ),
     ]
+}
+
+/// Enabled when text is selected (as `text_targets` takes it, in groups too).
+fn has_text(s: &Session) -> std::result::Result<(), String> {
+    ready(text_targets(s, &json!({}), "Text Orientation"))
+}
+
+/// Enabled when the selection holds text to outline (as `create_outlines` takes it).
+fn has_text_to_outline(s: &Session) -> std::result::Result<(), String> {
+    let roots = selected_roots(s).map_err(refusal)?;
+    if text_ids(&s.doc().map_err(refusal)?.doc, &roots).is_empty() { Err("Create Outlines: select text objects".into()) } else { Ok(()) }
+}
+
+/// Enabled when the selected text holds area type (what Fit Headline fits).
+pub(crate) fn has_area_type(s: &Session) -> std::result::Result<(), String> {
+    let ids = text_targets(s, &json!({}), "text.fitHeadline").map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    let area = ids
+        .iter()
+        .any(|id| matches!(d.node(*id).map(|n| &n.kind), Some(NodeKind::Text(t)) if matches!(t.kind, kition_vector_doc::TextKind::Area { .. })));
+    if area { Ok(()) } else { Err("select area type".into()) }
 }
 
 fn orientation(s: &mut Session, p: &Value, vertical: bool) -> Result<Value> {

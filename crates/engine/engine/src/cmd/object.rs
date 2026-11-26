@@ -72,7 +72,7 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             shear
         ),
-        cmd!("object.transformAgain", "Transform Again", ["Object", "Transform"], Some("Cmd+D"), "{}", has_selection, transform_again),
+        cmd!("object.transformAgain", "Transform Again", ["Object", "Transform"], Some("Cmd+D"), "{}", can_transform_again, transform_again),
         cmd!(
             "object.nudge",
             "Nudge",
@@ -125,7 +125,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Clipping Mask"],
             None,
             "{} select the clipped art of the selected clip groups → {count}",
-            has_selection,
+            in_clip_group,
             |s, _| clip_edit(s, false)
         ),
         cmd!(
@@ -134,7 +134,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Clipping Mask"],
             None,
             "{} select the clipping paths of the selected clip groups → {count}",
-            has_selection,
+            in_clip_group,
             |s, _| clip_edit(s, true)
         ),
         cmd!("object.isolate", "Enter Isolation Mode", [], None, "{id}", has_doc, isolate),
@@ -184,7 +184,7 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             set_bounds
         ),
-        cmd!("object.expandShape", "Expand Shape", ["Object", "Shape"], None, "{} convert live shapes to plain paths", has_selection, expand_shape),
+        cmd!("object.expandShape", "Expand Shape", ["Object", "Shape"], None, "{} convert live shapes to plain paths", has_live_shapes, expand_shape),
         cmd!(
             "object.setLiveShape",
             "Live Shape Properties",
@@ -358,6 +358,13 @@ fn shear(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let m = if vertical { Affine::new([1.0, t, 0.0, 1.0, 0.0, 0.0]) } else { Affine::new([1.0, 0.0, -t, 1.0, 0.0, 0.0]) };
     apply_transform(s, "Shear", ids, about(o, m), p)
+}
+
+/// Enabled with a selection and a transform to repeat (as `transform_again` needs).
+fn can_transform_again(s: &Session) -> std::result::Result<(), String> {
+    has_selection(s)?;
+    let st = s.doc().map_err(refusal)?;
+    if st.last_perspective.is_none() && st.last_transform.is_none() { Err("no previous transform".into()) } else { Ok(()) }
 }
 
 fn transform_again(s: &mut Session, _: &Value) -> Result<Value> {
@@ -700,6 +707,22 @@ fn clip_release(s: &mut Session, _: &Value) -> Result<Value> {
         Ok(())
     })?;
     ok()
+}
+
+/// Enabled when a selected object is a clip group or inside one (as `clip_edit` takes them).
+fn in_clip_group(s: &Session) -> std::result::Result<(), String> {
+    let st = s.doc().map_err(refusal)?;
+    let clipped = st.selection.objects.iter().any(|id| {
+        let mut cur = Some(*id);
+        while let Some(c) = cur {
+            if matches!(st.doc.node(c).map(|n| &n.kind), Some(NodeKind::Group { clip: true, .. })) {
+                return true;
+            }
+            cur = st.doc.position(c).and_then(|(par, _, _)| par);
+        }
+        false
+    });
+    if clipped { Ok(()) } else { Err("select a clip group".into()) }
 }
 
 /// Selects the clipping path (`mask`) or the clipped contents of every selected clip group (or of the
@@ -1078,6 +1101,17 @@ fn set_bounds(s: &mut Session, p: &Value) -> Result<Value> {
     let page = frame.to_doc() * rp;
     let to = frame.to_local(Point::new(f64_or(p, "x", page.x), f64_or(p, "y", page.y)));
     apply_transform(s, "Transform", ids, frame.conjugate(Affine::translate(to - new_rp) * scale), p)
+}
+
+/// Enabled when a selected object is a live shape (as `expand_shape` takes them).
+fn has_live_shapes(s: &Session) -> std::result::Result<(), String> {
+    let ids = selected_roots(s).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    if ids.iter().any(|id| d.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Path { live: Some(_), .. }))) {
+        Ok(())
+    } else {
+        Err("nothing to expand: select live shapes (rectangles, ellipses, polygons, lines)".into())
+    }
 }
 
 fn expand_shape(s: &mut Session, _: &Value) -> Result<Value> {

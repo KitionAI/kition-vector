@@ -63,10 +63,6 @@
   transform-origin: left bottom;
 }
 
-.vector-side {
-  width: 248px;
-}
-
 .vector-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -119,41 +115,237 @@
   padding: 0 12px;
 }
 
-.vector-row {
+/* The panel dock (plan 2026-11-25, stage 4): kit-editor's DockArea fills the column. */
+.vector-dock {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 28px;
-  padding-right: 8px;
+  flex-direction: column;
+  min-height: 0;
+  flex: none;
+}
+
+/* The divider under a panel group: inside the group's bottom edge, where it can be grabbed. */
+.vector-dock .kui-dock-handle {
+  bottom: 0;
+  z-index: 2;
+}
+
+/* A tab whose sections are taller than its group scrolls inside it. */
+.vector-panel-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+/* Layers, Artboards and History: a list that scrolls over a footer of buttons. */
+.vector-layers,
+.vector-artboards,
+.vector-history {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.vector-layers-list,
+.vector-artboards-list,
+.vector-history-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   font-size: 12px;
 }
 
-.vector-row[data-selected='true'] {
+.vector-layers-list[data-dragging='true'] {
+  cursor: grabbing;
+}
+
+.vector-layer-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+  border-bottom: 1px solid var(--kit-border);
+  user-select: none;
+}
+
+.vector-layer-row[data-selected='true'],
+.vector-artboard-row[data-selected='true'] {
   background: var(--kit-primary-soft);
 }
 
-.vector-row-indent {
-  width: 28px;
+.vector-layer-row[data-hidden='true'] .vector-layer-name {
+  color: var(--kit-text-muted);
+}
+
+.vector-layer-row[data-drop='above'],
+.vector-artboard-row[data-drop='above'] {
+  box-shadow: inset 0 2px 0 var(--kit-primary);
+}
+
+.vector-layer-row[data-drop='below'],
+.vector-artboard-row[data-drop='below'] {
+  box-shadow: inset 0 -2px 0 var(--kit-primary);
+}
+
+.vector-layer-row[data-drop='inside'] {
+  box-shadow: inset 0 0 0 2px var(--kit-primary);
+}
+
+.vector-layer-eye,
+.vector-layer-lock {
+  display: inline-flex;
   flex: none;
+}
+
+/* Hidden or locked by a row above it: its own eye and lock dimmed. */
+.vector-layer-eye[data-above='true'],
+.vector-layer-lock[data-above='true'] {
+  opacity: 0.45;
 }
 
 .vector-layer-color {
-  width: 8px;
-  height: 8px;
+  width: 3px;
+  height: 18px;
   flex: none;
-  border-radius: 2px;
+  border-radius: 1px;
 }
 
-.vector-row-name {
+.vector-layer-indent,
+.vector-layer-twisty {
+  flex: none;
+}
+
+.vector-layer-twisty {
+  width: 28px;
+}
+
+.vector-layer-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  border: 0;
-  background: transparent;
-  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: default;
+}
+
+.vector-layer-name[data-layer='true'] {
+  font-weight: 600;
+}
+
+.vector-layer-row[data-current='true'] .vector-layer-name::after {
+  content: ' ◂';
+  color: var(--kit-text-muted);
+}
+
+/* The target circle: a ring, doubled when the row is targeted or selected. */
+.vector-layer-target {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--kit-text-muted);
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
+}
+
+.vector-layer-target[data-targeted='true'] {
+  box-shadow: 0 0 0 2px var(--kit-surface), 0 0 0 3px var(--kit-text);
+}
+
+/* The selection column: a square in the layer's colour, small when the row holds selected art. */
+.vector-layer-select {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  margin: 0 3px;
+  padding: 0;
+  border: 1px dashed var(--kit-border);
+  border-radius: 1px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.vector-layer-select[data-mark='self'] {
+  border: 0;
+}
+
+.vector-layer-select[data-mark='inside'] {
+  border: 0;
+  transform: scale(0.6);
+}
+
+.vector-layers-count {
+  font-size: 11px;
+  color: var(--kit-text-muted);
+  white-space: nowrap;
+}
+
+.vector-artboard-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 8px;
+  border-bottom: 1px solid var(--kit-border);
+  user-select: none;
+}
+
+.vector-artboard-number {
+  width: 20px;
+  flex: none;
+  color: var(--kit-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vector-history-row {
+  display: block;
+  width: 100%;
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--kit-border);
+  background: transparent;
+  color: var(--kit-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vector-history-row[data-current='true'] {
+  background: var(--kit-primary-soft);
+}
+
+.vector-history-row[data-undone='true'] {
+  color: var(--kit-text-muted);
+  font-style: italic;
+}
+
+/* The status bar's end: the selection's size, then the artboard navigation. */
+.vector-status-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.vector-artboard-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.vector-artboard-pick {
+  max-width: 140px;
+  height: 22px;
+  border: 1px solid var(--kit-border);
+  border-radius: 4px;
+  background: var(--kit-surface);
+  color: var(--kit-text);
+  font-size: 12px;
 }
 
 .vector-empty {

@@ -87,7 +87,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Edit", "Edit Colors"],
             None,
             "{} ≥3 filled objects (solid fills or gradient meshes, which keep their shading): intermediate fills graded between the frontmost and backmost fill → {changed}",
-            has_selection,
+            has_three_filled,
             |s, _| blend(s, BlendOrder::Stack)
         ),
         cmd!(
@@ -96,7 +96,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Edit", "Edit Colors"],
             None,
             "{} ≥3 filled objects or meshes: fills graded between the leftmost and rightmost → {changed}",
-            has_selection,
+            has_three_filled,
             |s, _| blend(s, BlendOrder::Horizontal)
         ),
         cmd!(
@@ -105,7 +105,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Edit", "Edit Colors"],
             None,
             "{} ≥3 filled objects or meshes: fills graded between the topmost and bottommost → {changed}",
-            has_selection,
+            has_three_filled,
             |s, _| blend(s, BlendOrder::Vertical)
         ),
         cmd!(
@@ -415,6 +415,16 @@ enum BlendOrder {
 }
 
 /// Leaf objects with a solid fill, and gradient meshes, among the selection (paint order).
+/// Enabled with three filled objects or more (as `blend` counts them).
+fn has_three_filled(s: &Session) -> std::result::Result<(), String> {
+    let roots = selected_roots(s).map_err(refusal)?;
+    if filled_leaves(&s.doc().map_err(refusal)?.doc, &roots).len() < 3 {
+        Err("Blend colors: select at least three objects with filled colours".into())
+    } else {
+        Ok(())
+    }
+}
+
 fn filled_leaves(d: &Document, roots: &[NodeId]) -> Vec<NodeId> {
     fn visit(n: &Node, out: &mut Vec<NodeId>) {
         match &n.kind {

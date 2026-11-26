@@ -1,0 +1,29 @@
+format: 1
+id: vector.editor.layers/layers-rules
+feature: vector.editor.layers
+intent: >-
+  The layers, dock and history rules hold without a browser (plan 2026-11-25, stage 4): layers open
+  and groups closed by default, a layer of hundreds of objects closed, the person's choice kept; the
+  list's window of rows; where a dragged row lands and that it never goes into itself or a locked
+  layer; selection marks, Shift ranges; every dock tab in one group with an upstream label, Window
+  rows that show, bring forward, expand and hide; History's rows and moves and the hold of gestures
+  and previews; artboard reordering and stepping; the panels' words in both languages. In the built
+  engine: a row moved is one undo step; every visible menu row that runs at once is either greyed or
+  runs in four selection states (the rows whose outcome decides, as Pathfinder's empty result, are
+  listed with why); the rows that used to fail are greyed with nothing selected and offered with
+  their objects, and a call naming its objects still runs.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (gap-panels-dialogs section 7: 59 commands that error instead of being disabled)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/layers/layers.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 180
+since: "2026-11-26"

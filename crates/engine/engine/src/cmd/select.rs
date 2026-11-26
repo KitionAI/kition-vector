@@ -154,7 +154,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Select", "Same"],
             None,
             "{} the objects linked to the graphic style the first selected object is linked to",
-            has_selection,
+            has_graphic_style,
             same_graphic_style
         ),
         cmd!(
@@ -440,6 +440,13 @@ fn select_where(s: &mut Session, cmd: &str, p: &Value, f: impl Fn(&Document, &No
     s.select(|_, sel| sel.set(ids.iter().copied()))?;
     s.doc_mut()?.last_selection_cmd = Some((cmd.to_string(), p.clone(), from));
     Ok(json!({ "count": ids.len() }))
+}
+
+/// Enabled when the first selected object is linked to a graphic style (as `same_graphic_style` reads it).
+fn has_graphic_style(s: &Session) -> std::result::Result<(), String> {
+    let st = s.doc().map_err(refusal)?;
+    let linked = st.selection.objects.first().and_then(|id| super::style::linked_style(&st.doc, st.doc.node(*id)?)).is_some();
+    if linked { Ok(()) } else { Err("the selection has no graphic style".into()) }
 }
 
 fn same_graphic_style(s: &mut Session, _: &Value) -> Result<Value> {

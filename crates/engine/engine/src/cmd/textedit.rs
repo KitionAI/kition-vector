@@ -55,7 +55,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type"],
             None,
             "{ids?} track the first line of area type so it fills the frame width → {ids, tracking}",
-            has_selection,
+            super::typecmd::has_area_type,
             fit_headline
         ),
         cmd!(

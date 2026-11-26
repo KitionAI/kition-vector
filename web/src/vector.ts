@@ -17,6 +17,11 @@ export type VectorNode = {
   strokeOptions: StrokeOptions | null
   /** The object's bounds in the drawing's points, or null. */
   bounds: Bounds | null
+  /** A layer's options (Layer Options): template, printable, preview (off: outline), images dimmed to a percentage or null. */
+  template: boolean
+  printable: boolean
+  preview: boolean
+  dimImages: number | null
   children: VectorNode[]
 }
 
@@ -55,9 +60,20 @@ export type VectorInfo = {
   toolKeys: readonly string[]
   /** The selection's rotation in degrees (its bounding box's angle; 0 for none). */
   rotation: number
+  /** The layer new art goes into (the Layers panel's current layer), or null. */
+  currentLayer: number | null
+  /** The Layers panel's highlighted rows, in the order they were clicked (what its buttons act on). */
+  layerRows: number[]
+  /** The layer, group or object targeted through its target circle, or null. */
+  target: number | null
+  /** The undo steps' names, oldest first, and the redo steps', next first. */
+  history: string[]
+  redo: string[]
+  /** Paste Remembers Layers (the Layers panel menu's option). */
+  pasteRemembersLayers: boolean
 }
 
-type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: Partial<StrokeOptions> & { widthPoints?: number[][] | null }; bounds?: Bounds; children?: InspectedNode[] }
+type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; template?: boolean; printable?: boolean; preview?: boolean; dimImages?: number | null; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: Partial<StrokeOptions> & { widthPoints?: number[][] | null }; bounds?: Bounds; children?: InspectedNode[] }
 
 /** The stroke options of `node`, with the engine's defaults where it leaves one out. */
 function strokeOptionsOf(options: InspectedNode['strokeOptions']): StrokeOptions | null {
@@ -91,6 +107,10 @@ function nodeOf(node: InspectedNode): VectorNode {
     widthPoints: Array.isArray(node.strokeOptions?.widthPoints) ? node.strokeOptions.widthPoints : null,
     strokeOptions: strokeOptionsOf(node.strokeOptions),
     bounds: node.bounds && typeof node.bounds.x === 'number' ? node.bounds : null,
+    template: node.template === true,
+    printable: node.printable !== false,
+    preview: node.preview !== false,
+    dimImages: typeof node.dimImages === 'number' ? node.dimImages : null,
     children: (node.children ?? []).map(nodeOf),
   }
 }
@@ -109,6 +129,12 @@ export function describe(info: KitEngineInfo): VectorInfo {
     isolation?: number | null
     toolKeys?: string[]
     selectionRotation?: number
+    currentLayer?: number | null
+    layerRows?: number[]
+    target?: number | null
+    history?: unknown[]
+    redo?: unknown[]
+    pasteRemembersLayers?: boolean
   }
   const layers = (inspected.layers ?? []).map(nodeOf)
   const selection = inspected.selection ?? []
@@ -135,6 +161,12 @@ export function describe(info: KitEngineInfo): VectorInfo {
     isolation: typeof inspected.isolation === 'number' ? inspected.isolation : null,
     toolKeys: Array.isArray(inspected.toolKeys) ? inspected.toolKeys.filter((key): key is string => typeof key === 'string') : [],
     rotation: typeof inspected.selectionRotation === 'number' && Number.isFinite(inspected.selectionRotation) ? inspected.selectionRotation : 0,
+    currentLayer: typeof inspected.currentLayer === 'number' ? inspected.currentLayer : null,
+    layerRows: Array.isArray(inspected.layerRows) ? inspected.layerRows.filter((id): id is number => typeof id === 'number') : [],
+    target: typeof inspected.target === 'number' ? inspected.target : null,
+    history: Array.isArray(inspected.history) ? inspected.history.map(String) : [],
+    redo: Array.isArray(inspected.redo) ? inspected.redo.map(String) : [],
+    pasteRemembersLayers: inspected.pasteRemembersLayers === true,
   }
 }
 

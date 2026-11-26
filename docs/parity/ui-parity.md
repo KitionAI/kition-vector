@@ -1,6 +1,6 @@
 # UI and interaction parity
 
-> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-25 · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-26 · **Target:** Adobe Illustrator 2026 (30.x)
 
 How Kition Vector's tools, handles, snapping and panels behave next to Illustrator's. A vector illustrator's
 trust is in the details: where a handle lands, what Shift and Alt do mid-drag, what a smart guide snaps to,
@@ -138,10 +138,11 @@ Layers panel.
 
 ## Panels, Control bar, Properties, context menus
 
-The editor in `web/` shows a side panel with Transform, Appearance, Stroke, Gradient, quick actions, Align,
-Pathfinder, Layers and Swatches sections (`web/src/SidePanel.tsx`, `web/src/panels/`, `web/src/gradient/`), a control
-bar in the frame's options row (`web/src/panels/ControlBar.tsx`) and its own Color Picker (`web/src/color/`), in the
-host's frame (2026-11-25, plan stage 3).
+The editor in `web/` shows a dock of tabbed panel groups on the right (`web/src/panels/dock.tsx`): Properties
+(Transform, Appearance, Stroke, Gradient, quick actions, Align, Pathfinder) with Align and Pathfinder tabs, Layers with
+Artboards, Swatches, and History, which the Window menu shows and hides (2026-11-26, plan stage 4); a control bar in the
+frame's options row (`web/src/panels/ControlBar.tsx`) and its own Color Picker (`web/src/color/`), in the host's frame
+(2026-11-25, plan stage 3).
 
 | Behaviour | Status | Notes |
 |---|---|---|
@@ -152,6 +153,10 @@ host's frame (2026-11-25, plan stage 3).
 | Swatches panel: previews, apply to fill or stroke, new, options, colour groups, delete, global mark | partial | pattern swatches show a mark, not their tile; no list view or libraries |
 | Align panel: align, distribute, distribute spacing, Align To (selection, key object, artboard) | done | |
 | Control bar: fill, stroke, weight, opacity, align | partial | the active tool's options are not shown |
+| Panel dock: tabbed groups, collapse, resize, Window menu toggles with check marks | partial | docked on the right only; no floating panels or saved workspaces |
+| Layers panel: tree, eye, lock, target, selection square, rename, drag (restack, into a layer or group, Alt copies), Shift/Cmd selection, panel and row menus | partial | no thumbnails; only the rows in view are drawn |
+| Artboards panel: list, rename, new, duplicate, delete, reorder, Artboard Options (preset, size, orientation, position); status bar artboard navigation | partial | no Rename Artboards for several, Switch Orientation or Delete Empty Artboards commands |
+| History panel: steps done and undone, go back or forward | partial | steps back by undoing one at a time (no jump in the engine) |
 | Blend panel (30.7) | missing | `blend.options` exists |
 | SVG Interactivity, Retype, Comments, Version History panels | missing | the last two are cloud features (out of scope) |
 | Preferences: every option acts | partial | ~17 stored but unused |

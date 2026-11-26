@@ -173,6 +173,18 @@ pub fn can_undo(s: &Session) -> std::result::Result<(), String> {
 pub fn can_redo(s: &Session) -> std::result::Result<(), String> {
     s.active().filter(|d| !d.history.redo.is_empty() || !d.other_history.redo.is_empty()).map(|_| ()).ok_or_else(|| "nothing to redo".into())
 }
+/// Why a handler's own check refuses, as a predicate's reason: a command whose run would refuse the
+/// selection is off in the menu (plan 2026-11-25, stage 4), and says what the run would have said.
+pub fn refusal(e: EngineError) -> String {
+    match e {
+        EngineError::BadParams { msg, .. } => msg,
+        other => other.to_string(),
+    }
+}
+/// `check`'s refusal as a predicate's: enabled when it accepts what is selected.
+pub fn ready<T>(check: Result<T>) -> std::result::Result<(), String> {
+    check.map(|_| ()).map_err(refusal)
+}
 pub fn has_clipboard(s: &Session) -> std::result::Result<(), String> {
     has_doc(s)?;
     if s.clipboard.is_empty() { Err("clipboard is empty".into()) } else { Ok(()) }

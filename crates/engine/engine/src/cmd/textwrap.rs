@@ -23,7 +23,7 @@ pub fn specs() -> Vec<CommandSpec> {
             has_selection,
             make
         ),
-        cmd!("object.textWrap.release", "Release", ["Object", "Text Wrap"], None, "{ids?} → {ids}", has_selection, release),
+        cmd!("object.textWrap.release", "Release", ["Object", "Text Wrap"], None, "{ids?} → {ids}", has_wrap, release),
         cmd!(
             "object.textWrap.options",
             "Text Wrap Options…",
@@ -61,6 +61,13 @@ fn make(s: &mut Session, p: &Value) -> Result<Value> {
         Ok(())
     })?;
     Ok(json!({ "ids": ids.iter().map(|i| i.0).collect::<Vec<_>>() }))
+}
+
+/// Enabled when a selected object wraps text (as `release` takes them).
+fn has_wrap(s: &Session) -> std::result::Result<(), String> {
+    let ids = targets(s, &json!({})).map_err(refusal)?;
+    let d = &s.doc().map_err(refusal)?.doc;
+    if ids.iter().any(|i| d.node(*i).is_some_and(|n| n.wrap.is_some())) { Ok(()) } else { Err("Text Wrap: select a wrap object".into()) }
 }
 
 fn release(s: &mut Session, p: &Value) -> Result<Value> {

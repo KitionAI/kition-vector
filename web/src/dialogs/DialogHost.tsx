@@ -9,6 +9,7 @@ import { effectFields, paramFields, type EffectEntry, type ParamField } from './
 import { ParamsDialog, rememberedValues } from './ParamsDialog'
 import { dialogFor, previews, type DialogKind } from './routes'
 import { ColorBalanceDialog } from './ColorBalanceDialog'
+import { ArtboardOptionsDialog, type ArtboardStart } from '../artboards/ArtboardOptionsDialog'
 import { MoveDialog, ReflectDialog, RotateDialog, ScaleDialog, ShearDialog, TransformEachDialog } from './TransformDialogs'
 
 /**
@@ -53,6 +54,8 @@ export type Dialogs = {
   newDocument: () => void
   /** File › Document Setup…'s dialog. */
   documentSetup: () => void
+  /** Artboard Options for artboard `index` (the Artboards panel, the Artboard tool's double-click); `values` start some fields (a tool's name, x, y, width, height). */
+  artboardOptions: (index: number, values?: Partial<ArtboardStart>) => void
 }
 
 const DialogsContext = createContext<Dialogs | null>(null)
@@ -62,7 +65,7 @@ export const DialogsProvider = DialogsContext.Provider
 export function useDialogs(): Dialogs {
   const own = useContext(DialogsContext)
   const { run } = useKitEditor()
-  return own ?? { invoke: (command) => void run(command), open: () => false, asks: () => false, ask: () => false, effectRow: () => undefined, newDocument: () => undefined, documentSetup: () => undefined }
+  return own ?? { invoke: (command) => void run(command), open: () => false, asks: () => false, ask: () => false, effectRow: () => undefined, newDocument: () => undefined, documentSetup: () => undefined, artboardOptions: () => undefined }
 }
 
 /** The dialog of `command`, or null: its purpose-built one, or the generic one when it has parameters to ask. */
@@ -93,6 +96,7 @@ type Open =
   | { serial: number; kind: 'newDocument'; presets: NewPresets | null }
   | { serial: number; kind: 'documentSetup'; setup: DocumentSetup }
   | { serial: number; kind: 'asked'; dialog: AskedDialog }
+  | { serial: number; kind: 'artboard'; start: ArtboardStart; presets: NewPresets | null }
 
 /** A dialog to show, before the host numbers it. */
 type Unserialed<T> = T extends unknown ? Omit<T, 'serial'> : never
@@ -116,8 +120,8 @@ export function VectorDialogs({ api, info, effects, onEffectApplied }: { api: Re
   const serial = useRef(0)
   const busy = useRef(false)
   const lastEffect = useRef<EffectEntry | null>(null)
-  const latest = useRef({ editor, ui, open, effects, onEffectApplied })
-  latest.current = { editor, ui, open, effects, onEffectApplied }
+  const latest = useRef({ editor, ui, open, effects, onEffectApplied, info })
+  latest.current = { editor, ui, open, effects, onEffectApplied, info }
 
   useLayoutEffect(() => {
     const show = (next: Unserialed<Open>) => {
@@ -219,6 +223,15 @@ export function VectorDialogs({ api, info, effects, onEffectApplied }: { api: Re
           (presets) => show({ kind: 'newDocument', presets }),
         )
       },
+      artboardOptions: (index, values) => {
+        const board = latest.current.info?.artboards[index]
+        if (blocked() || !board || !latest.current.editor.enabled('artboard.setProps')) return
+        const start: ArtboardStart = { index, name: board.name, x: board.x, y: board.y, width: board.width, height: board.height, ...values }
+        after(
+          () => latest.current.editor.query<NewPresets>('file.newPresets', {}),
+          (presets) => show({ kind: 'artboard', start, presets }),
+        )
+      },
       documentSetup: () => {
         if (blocked() || !latest.current.editor.enabled('file.setup')) return
         after(
@@ -241,6 +254,8 @@ export function VectorDialogs({ api, info, effects, onEffectApplied }: { api: Re
         return <NewDocumentDialog presets={open.presets} onClose={close} />
       case 'documentSetup':
         return <DocumentSetupDialog setup={open.setup} title={words.t('dialog.documentSetup')} onClose={close} />
+      case 'artboard':
+        return <ArtboardOptionsDialog start={open.start} presets={open.presets} units={units} onClose={close} />
       case 'asked': {
         const { dialog: asked } = open
         return <ParamsDialog command={asked.command} memory={asked.memory} scope={asked.command} title={asked.title} fields={asked.fields} start={asked.start} build={asked.build} previewing={asked.previewing} onClose={close} />

@@ -1,0 +1,23 @@
+format: 1
+id: vector.editor.layers/menu-ready
+feature: vector.editor.layers
+intent: >-
+  A menu row whose run would refuse what is selected is off instead (plan 2026-11-25, stage 4): each
+  command's enabled predicate is its handler's own check, so Reverse Path Direction, Blend › Make,
+  Create Outlines, Orientation, Select › Same font rows, Edit Contents, Expand Shape, Make Guides,
+  the Region Paint, Image Trace, Shaper and Text Wrap releases, Transform Again, Collect for Export and
+  Blend colours are off with nothing selected and come on with the objects they take; an off row
+  run anyway says the handler's words, and a call naming its objects runs with nothing selected.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (gap-panels-dialogs section 7)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-engine, filter: tests_menuready }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

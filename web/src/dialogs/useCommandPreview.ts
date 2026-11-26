@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useKitEditor, type PreviewDialogPreview } from '@kition/sdk/editor'
+import { holdHistory } from '../panels/historyHold'
 import { createPreview, PREVIEW_DEBOUNCE_MS } from './preview'
 
 /** `value`, once it has stayed the same (as JSON) for `ms`. */
@@ -29,6 +30,8 @@ export function useDebounced<T>(value: T, ms: number): T {
  */
 export function useCommandPreview(command: string, params: Record<string, unknown>, previewing: boolean) {
   const { session, t } = useKitEditor()
+  // The History panel waits while a previewing dialog is open (its preview steps come and go).
+  useEffect(() => (previewing ? holdHistory() : undefined), [previewing])
   const sessionNow = useRef(session)
   sessionNow.current = session
   const preview = useMemo(

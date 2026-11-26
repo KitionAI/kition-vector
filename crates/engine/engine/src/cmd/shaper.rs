@@ -40,7 +40,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Shaper"],
             None,
             "{id? (default: selection)} restore the original paths → {ids}",
-            has_doc,
+            |s| ready(target(s, &json!({}))),
             release
         ),
         cmd!(
@@ -49,7 +49,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Shaper"],
             None,
             "{id? (default: selection)} keep the visible result as ordinary paths → {id}",
-            has_doc,
+            |s| ready(target(s, &json!({}))),
             expand
         ),
     ]

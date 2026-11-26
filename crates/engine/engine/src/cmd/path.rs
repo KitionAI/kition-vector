@@ -55,7 +55,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Object", "Path"],
             None,
             "{ids?, reversed?: bool (true: every subpath runs counter-clockwise on screen, false: clockwise, the Attributes panel's Reverse Path Direction On / Off; omitted: flip each path)} the paths in ids or the selection (groups and compound paths: the paths inside), as one undo step → {changed: paths}",
-            has_doc,
+            has_paths,
             reverse
         ),
         cmd!(
@@ -270,6 +270,12 @@ pub(super) fn paths_in(d: &kition_vector_doc::Document, ids: &[NodeId]) -> Vec<N
         });
     }
     out.into_iter().collect()
+}
+
+/// Enabled when the selection holds a path to reverse (as `reverse` takes it).
+fn has_paths(s: &Session) -> std::result::Result<(), String> {
+    let ids = targets(s, &json!({})).map_err(refusal)?;
+    if paths_in(&s.doc().map_err(refusal)?.doc, &ids).is_empty() { Err("select paths".into()) } else { Ok(()) }
 }
 
 fn reverse(s: &mut Session, p: &Value) -> Result<Value> {

@@ -18,7 +18,7 @@ pub fn specs() -> Vec<CommandSpec> {
             ["Type", "Threaded Text"],
             None,
             "{} thread the selected area type (and closed paths, which become frames) in stacking order → {ids}",
-            has_multi,
+            |s| ready(threadable(s)),
             create
         ),
         cmd!(
@@ -154,7 +154,9 @@ fn frame_from_path(n: &Node, style: kition_vector_doc::CharStyle) -> Option<Node
     Some(Node { kind: fresh.kind, appearance: fresh.appearance, graphic_style: None, ..n.clone() })
 }
 
-fn create(s: &mut Session, _: &Value) -> Result<Value> {
+/// The selected objects to thread, when they are area type and closed paths (at least one area
+/// type object, two objects or more), else why not.
+fn threadable(s: &Session) -> Result<Vec<NodeId>> {
     const C: &str = "text.thread.add";
     let ids = selected_roots(s)?;
     let d = &s.doc()?.doc;
@@ -163,6 +165,16 @@ fn create(s: &mut Session, _: &Value) -> Result<Value> {
     if ids.len() < 2 || !ok || !ids.iter().any(|i| text_of(d, *i).is_some()) {
         return Err(bad(C, "select area type and closed paths (at least one area type object)"));
     }
+    Ok(ids)
+}
+
+fn create(s: &mut Session, _: &Value) -> Result<Value> {
+    const C: &str = "text.thread.add";
+    let ids = threadable(s)?;
+    let style = {
+        let d = &s.doc()?.doc;
+        ids.iter().find_map(|i| text_of(d, *i)).map(|t| t.first_style()).unwrap_or_default()
+    };
     let out = ids.clone();
     s.edit("Thread Text", |d, _| {
         for id in &ids {
