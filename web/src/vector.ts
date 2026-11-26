@@ -82,26 +82,17 @@ export function describe(info: KitEngineInfo): VectorInfo {
 
 export const MENU_ORDER = ['File', 'Edit', 'Object', 'Type', 'Select', 'Effect', 'View', 'Window', 'Help']
 
-/** File commands the host's own Save, Open, and Close already cover. */
-export const HOST_FILE_COMMANDS = ['file.new', 'file.close', 'file.closeAll', 'file.saveAs', 'file.saveCopy', 'file.revert']
-
-/**
- * File commands that write files the page cannot keep: in the browser they would answer the bytes
- * and drop them. File › Export (the editor's own dialog, through the host) stands for them; agents
- * still run them.
- */
-export const FILE_WRITERS = ['file.exportForScreens', 'file.exportSelection', 'file.exportForOffice', 'file.saveAsTemplate']
-
 /** The engine commands each menu tab shows in Single line's row, by menu. */
 export const VECTOR_PRIMARY: Record<string, readonly string[]> = {
-  File: ['file.place'],
+  // File's own rows (New…, Export…) are Kition's, marked primary where App adds them.
+  File: [],
   Edit: ['edit.undo', 'edit.redo', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.pasteInFront', 'edit.delete', 'edit.findReplace'],
   Object: ['arrange.group', 'arrange.ungroup', 'arrange.bringForward', 'arrange.sendBackward', 'object.move', 'object.rotate', 'object.scale', 'object.reflect', 'object.path.outlineStroke', 'object.compoundPath.make', 'object.clippingMask.make', 'object.lock'],
   Type: ['text.convertToOutlines', 'text.changeCase', 'text.areaOptions'],
   Select: ['edit.selectAll', 'edit.deselectAll', 'select.inverse', 'select.reselect', 'select.nextAbove', 'select.nextBelow'],
-  Effect: ['file.rasterEffectsSettings'],
+  Effect: ['kit:effect.stylize.dropShadow', 'kit:effect.stylize.roundCorners', 'kit:effect.blur.gaussian'],
   View: ['view.guides.make', 'view.guides.lock', 'view.transparencyGrid', 'view.proofColors'],
-  Window: ['object.pathfinder.unite', 'object.pathfinder.minusFront', 'object.pathfinder.intersect', 'object.pathfinder.exclude', 'layer.new', 'artboard.new'],
+  Window: ['object.pathfinder.unite', 'object.pathfinder.minusFront', 'object.pathfinder.intersect', 'object.pathfinder.exclude'],
 }
 
 /**

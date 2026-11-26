@@ -1,6 +1,6 @@
 # Gaps
 
-> **Last updated:** 2026-11-17 · **Source:** `features.yaml` (updated 2026-11-17) and the engine's command list
+> **Last updated:** 2026-11-25 · **Source:** `features.yaml` (updated 2026-11-25) and the engine's command list
 
 Every known shortfall of Kition Vector, from the feature catalogue: features that are not yet `has`,
 then the differences recorded on features that work. Update the feature in `features.yaml` when you
@@ -17,6 +17,7 @@ land work, then this list. The comparison with the target application is in
 - `vector.edit.colors` (P1, partial): Edit Colors: blend, invert, adjust and convert artwork colours. The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen.
 - `vector.edit.history` (P1, partial): Undo, redo, cut, copy, paste and clear. The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen.
 - `vector.edit.misc` (P1, partial): Find and replace, spelling, keyboard shortcuts and other Edit menu commands. The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen.
+- `vector.editor.dialogs` (P1, partial): Menus that ask first: dialogs for the "…" rows, the Effect menu, Help, left-out rows and the engine's errors in the editor's words. The tools' own dialog requests do not reach the dialogs yet (stage 2 of plan 2026-11-25); the panels' rows under Window are off the menus until their panels are built; Place, New from Template, Recolor Artwork, Color Settings, Assign Profile, saved views, Free Distort and Curves have no dialog; a cancelled preview can come back with Redo.
 - `vector.effect.live` (P1, partial): Live effects. The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen.
 - `vector.file.export` (P1, partial): Export to PDF, DXF, EPS, screens, web and Office; format, PDF and print settings; package. File › Export writes SVG, PDF and PNG through the host (web/tests/flow.mjs). Export for Screens, Export Selection, Save for Office and Save as Template have no editor dialog that writes through the host, so the editor's menus leave them out; agents still run them.
 - `vector.file.templates` (P1, partial): Templates, new-document presets, placed files, file info and recovery data. The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen.

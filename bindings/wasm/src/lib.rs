@@ -433,7 +433,9 @@ impl KitDocument for VectorDocument {
                     let info = spec.info(&self.session);
                     KitCommand {
                         id: info.id.to_owned(),
-                        title: info.label.trim_end_matches('…').to_owned(),
+                        // The label as the menus show it: a trailing "…" marks a command that asks
+                        // for values first, which the editor opens a dialog for.
+                        title: info.label.to_owned(),
                         menu: (!info.menu.is_empty()).then(|| info.menu.iter().map(|part| (*part).to_owned()).collect()),
                         shortcut: info.shortcut.map(str::to_owned),
                         params: Some(info.params.to_owned()),

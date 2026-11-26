@@ -1,0 +1,25 @@
+format: 1
+id: vector.editor.dialogs/menu-rows
+feature: vector.editor.dialogs
+intent: >-
+  Against the built engine, every menu row the editor shows is accounted for (plan 2026-11-25, stage 1): every visible
+  "…" row opens a dialog or has nothing to ask; every row left out of the menus says why; no visible row that runs at
+  once fails for want of a value on a plain click, with nothing or everything selected; every generic dialog's control
+  and choice has a Chinese label; every generic dialog's starting values run in the engine; and every effect the Effect
+  menu shows (drop shadow, glows, feather, Gaussian blur and round corners among them) applies with its dialog's
+  starting values as one step. The routing, field, unit and error rules hold without a browser.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (menus ran with defaults or failed in English)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/dialogs/dialogs.test.mjs, web/src/dialogs/menuRows.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 60
+since: "2026-11-25"

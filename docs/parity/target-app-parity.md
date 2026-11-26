@@ -1,6 +1,6 @@
 # Target-app parity
 
-> **Last updated:** 2026-11-17 · **Source:** `features.yaml` (updated 2026-11-17) and the engine's command list
+> **Last updated:** 2026-11-25 · **Source:** `features.yaml` (updated 2026-11-25) and the engine's command list
 
 Each feature in `features.yaml` records its status against what the feature promises and, where it
 has one, the target application it is compared with (Illustrator 2026 (30.x)).
@@ -22,6 +22,7 @@ The difference column is the feature's recorded gap.
 | `vector.edit.colors` Edit Colors: blend, invert, adjust and convert artwork colours | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
 | `vector.edit.history` Undo, redo, cut, copy, paste and clear | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
 | `vector.edit.misc` Find and replace, spelling, keyboard shortcuts and other Edit menu commands | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
+| `vector.editor.dialogs` Menus that ask first: dialogs for the "…" rows, the Effect menu from the effect catalogue, Help, left-out rows and the engine's errors in the editor's words | P1 | partial | Illustrator 2026 (30.x) | The tools' own dialog requests do not reach the dialogs yet; the panels' rows under Window are off the menus until their panels are built; Place, New from Template, Recolor Artwork, Color Settings, Assign Profile, saved views, Free Distort and Curves have no dialog. |
 | `vector.editor.display-modes` The editor in each display mode: Classic gives way before stepping down, Single line does not repeat the rail's tools, and Escape cancels first in Focus | P1 | has | — | — |
 | `vector.effect.live` Live effects | P1 | partial | Illustrator 2026 (30.x) | The engine has these commands; no case yet shows the area working end to end in the editor and surviving save and reopen. |
 | `vector.file.export` Export to PDF, DXF, EPS, screens, web and Office; format, PDF and print settings; package | P1 | partial | Illustrator 2026 (30.x) | File › Export writes SVG, PDF and PNG through the host (web/tests/flow.mjs). Export for Screens, Export Selection, Save for Office and Save as Template have no editor dialog that writes through the host, so the editor's menus leave them out; agents still run them. |

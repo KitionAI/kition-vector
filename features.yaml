@@ -1,6 +1,6 @@
 format: 1
 kit: vector
-updated: "2026-11-23"
+updated: "2026-11-25"
 gate_budget_s: 600
 protected: []
 features:
@@ -696,3 +696,13 @@ features:
     paths: [web/src/App.tsx, web/src/HomeTab.tsx, web/tests/modes.mjs, web/tests/focus.mjs]
     cases: [vector.editor.display-modes/mode-smoke, regressions/issue-focus-escape]
     since: "2026-11-17"
+  - id: vector.editor.dialogs
+    title: "Menus that ask first: a dialog for every \"…\" row (the generic one with a live preview, and Move, Rotate, Scale, Reflect, Shear, Transform Each, Adjust Color Balance, New Document and Document Setup of their own), the Effect menu from the effect catalogue, Help, rows the editor cannot run yet left out with a reason, and the engine's errors in the editor's words"
+    dimension: [function]
+    priority: P1
+    status: partial
+    paths: [web/src/dialogs, web/src/menus, web/src/io/errors.ts, web/src/App.tsx, web/src/HomeTab.tsx, web/src/strings.ts, web/tests/dialogs.mjs, bindings/wasm/src/lib.rs]
+    target: "Illustrator 2026 (30.x)"
+    gap: "The tools' own dialog requests (shape sizes, the transform tools' Alt-click, artboard and blend options) do not reach the dialogs yet (plan 2026-11-25, stage 2); the panels' menu rows (Layers, Swatches, Artboards, Appearance, Transparency and the rest under Window) are off the menus until their panels are built (stages 3 and 4); Place, New from Template, Recolor Artwork, Color Settings, Assign Profile, saved views, Free Distort and Curves have no dialog; a cancelled preview can come back with Redo, as the binding does not expose the engine's interaction preview."
+    cases: [vector.editor.dialogs/menu-dialogs, vector.editor.dialogs/menu-rows]
+    since: "2026-11-25"

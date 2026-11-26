@@ -1,0 +1,28 @@
+format: 1
+id: vector.editor.dialogs/menu-dialogs
+feature: vector.editor.dialogs
+intent: >-
+  A "…" menu row asks before it runs (plan 2026-11-25, stage 1). Object › Path › Offset Path… opens a dialog with its
+  distance labelled in Chinese and changes nothing by the click itself; its preview shows the offset and follows a new
+  distance; Cancel restores the drawing with no history step; OK adds exactly one step, and the next dialog opens with
+  the values OK'd last. Move… (from the menu and by Cmd+Shift+M) moves by the distance typed as one step, and Copy moves
+  a copy. Effect › Stylize › Drop Shadow…, made from the effect catalogue, applies as one step. File has New… and no
+  Place yet, Window keeps Pathfinder but not the panels' own rows, an engine error reads as a Chinese sentence, Help ›
+  Keyboard Shortcuts lists the shortcuts, and File › New… writes a new drawing beside this one through the host.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (menus ran with defaults or failed in English)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/dialogs.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 120
+since: "2026-11-25"

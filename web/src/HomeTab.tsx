@@ -1,6 +1,7 @@
 import { ArrowLeftRightIcon as ArrowLeftRight, BringToFrontIcon as BringToFront, CombineIcon as Combine, ContrastIcon as Contrast, GroupIcon as Group, LayersIcon as Layers, LayersPlusIcon as LayersPlus, MousePointer2Icon as MousePointer2, PaintBucketIcon as PaintBucket, PenLineIcon as PenLine, RotateCcwIcon as RotateCcw, SendToBackIcon as SendToBack, ShapesIcon as Shapes, SquareDashedMousePointerIcon as SquareDashedMousePointer, SquarePlusIcon as SquarePlus, SquareXIcon as SquareX, SquaresExcludeIcon as SquaresExclude, SquaresIntersectIcon as SquaresIntersect, SquaresSubtractIcon as SquaresSubtract, UngroupIcon as Ungroup } from '@kition/tessera/icons/react'
 import { ColorGrid, CommandButton, MenuItem, RibbonGroup, RibbonMenu, RibbonStack, ToolButton, toolIcon, useKitEditor, useKitTools } from '@kition/sdk/editor'
 import { ALIGN } from './SidePanel'
+import { useDialogs } from './dialogs/DialogHost'
 
 /** The shape tools the Shapes menu chooses, in Illustrator's order. */
 const SHAPE_TOOLS = ['rectangle', 'roundedRectangle', 'ellipse', 'polygon', 'star', 'lineSegment', 'arc', 'spiral']
@@ -26,6 +27,8 @@ function HomeTool({ id, primary, size = 'large' }: { id: string; primary?: boole
 export function HomeTab() {
   const { run, enabled, phrase: p, t } = useKitEditor()
   const tools = useKitTools()
+  // Home's buttons run their commands as the menus do: through the dialog host.
+  const { invoke } = useDialogs()
   return (
     <>
       <RibbonGroup label={t('home.draw')} icon={Shapes}>
@@ -45,14 +48,14 @@ export function HomeTab() {
 
       <RibbonGroup label={t('home.arrange')} icon={Group}>
         <RibbonStack>
-          <CommandButton command="arrange.bringForward" icon={BringToFront} primary />
-          <CommandButton command="arrange.sendBackward" icon={SendToBack} primary />
-          <CommandButton command="arrange.bringToFront" icon={BringToFront} />
+          <CommandButton onRun={invoke} command="arrange.bringForward" icon={BringToFront} primary />
+          <CommandButton onRun={invoke} command="arrange.sendBackward" icon={SendToBack} primary />
+          <CommandButton onRun={invoke} command="arrange.bringToFront" icon={BringToFront} />
         </RibbonStack>
         <RibbonStack>
-          <CommandButton command="arrange.group" icon={Group} primary />
-          <CommandButton command="arrange.ungroup" icon={Ungroup} primary />
-          <CommandButton command="arrange.sendToBack" icon={SendToBack} />
+          <CommandButton onRun={invoke} command="arrange.group" icon={Group} primary />
+          <CommandButton onRun={invoke} command="arrange.ungroup" icon={Ungroup} primary />
+          <CommandButton onRun={invoke} command="arrange.sendToBack" icon={SendToBack} />
         </RibbonStack>
         <RibbonMenu icon={ALIGN[1].icon} label={p('Align')} size="large" disabled={!enabled('object.align')} testId="vector-home-align" primary>
           {ALIGN.map((item) => (
@@ -62,10 +65,10 @@ export function HomeTab() {
       </RibbonGroup>
 
       <RibbonGroup label={p('Pathfinder')} icon={Combine}>
-        <CommandButton command="object.pathfinder.unite" icon={Combine} primary />
-        <CommandButton command="object.pathfinder.minusFront" icon={SquaresSubtract} primary />
-        <CommandButton command="object.pathfinder.intersect" icon={SquaresIntersect} primary />
-        <CommandButton command="object.pathfinder.exclude" icon={SquaresExclude} primary />
+        <CommandButton onRun={invoke} command="object.pathfinder.unite" icon={Combine} primary />
+        <CommandButton onRun={invoke} command="object.pathfinder.minusFront" icon={SquaresSubtract} primary />
+        <CommandButton onRun={invoke} command="object.pathfinder.intersect" icon={SquaresIntersect} primary />
+        <CommandButton onRun={invoke} command="object.pathfinder.exclude" icon={SquaresExclude} primary />
       </RibbonGroup>
 
       <RibbonGroup label={t('home.paint')} icon={PaintBucket}>
@@ -76,22 +79,22 @@ export function HomeTab() {
           <ColorGrid onPick={(color) => void run('paint.setStroke', { color })} testId="vector-home-stroke-colors" />
         </RibbonMenu>
         <RibbonStack>
-          <CommandButton command="paint.swap" icon={ArrowLeftRight} />
-          <CommandButton command="paint.default" icon={RotateCcw} />
+          <CommandButton onRun={invoke} command="paint.swap" icon={ArrowLeftRight} />
+          <CommandButton onRun={invoke} command="paint.default" icon={RotateCcw} />
         </RibbonStack>
       </RibbonGroup>
 
       <RibbonGroup label={p('Select')} icon={MousePointer2}>
-        <CommandButton command="edit.selectAll" icon={SquareDashedMousePointer} size="large" primary />
+        <CommandButton onRun={invoke} command="edit.selectAll" icon={SquareDashedMousePointer} size="large" primary />
         <RibbonStack>
-          <CommandButton command="select.inverse" icon={Contrast} />
-          <CommandButton command="edit.deselectAll" icon={SquareX} />
+          <CommandButton onRun={invoke} command="select.inverse" icon={Contrast} />
+          <CommandButton onRun={invoke} command="edit.deselectAll" icon={SquareX} />
         </RibbonStack>
       </RibbonGroup>
 
       <RibbonGroup label={p('Document')} icon={Layers}>
-        <CommandButton command="layer.new" icon={LayersPlus} size="large" primary />
-        <CommandButton command="artboard.new" icon={SquarePlus} size="large" primary />
+        <CommandButton onRun={invoke} command="layer.new" icon={LayersPlus} size="large" primary />
+        <CommandButton onRun={invoke} command="artboard.new" icon={SquarePlus} size="large" primary />
       </RibbonGroup>
     </>
   )

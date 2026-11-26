@@ -20,7 +20,15 @@ const UPSTREAM = import.meta.glob('./i18n/upstream/*.tsv', { query: '?raw', impo
 
 void connectHost({ id: 'kit.vector', version: '0.1.2', capabilities: ['ai', 'replica'], brand: manifest.ui.brand, display: manifest.ui.display }).then(async (host) => {
   window.clearTimeout(alone)
-  const phrase = withPhrases(await loadPhrases(UPSTREAM, host.init.locale), PHRASES, host.init.locale)
+  const phrases = withPhrases(await loadPhrases(UPSTREAM, host.init.locale), PHRASES, host.init.locale)
+  // A title the catalogs have only without its "…" ("Rasterize…") keeps the mark after its translation.
+  const phrase = (english: string) => {
+    const found = phrases(english)
+    if (found !== english || !english.endsWith('…')) return found
+    const bare = english.slice(0, -1)
+    const translated = phrases(bare)
+    return translated === bare ? english : `${translated}…`
+  }
   // No StrictMode: its doubled effects would open the document twice, in two engine workers.
   root.render(<App host={host} phrase={phrase} />)
 })

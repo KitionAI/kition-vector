@@ -174,3 +174,147 @@
   gap: 4px;
   font-size: 12px;
 }
+
+/* The command dialogs (plan 2026-11-25, stage 1): label column, fields, option boxes. */
+.vector-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 340px;
+  max-width: 460px;
+}
+
+.vector-dialog-fields,
+.vector-dialog-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vector-dialog-options {
+  padding-top: 6px;
+  border-top: 1px solid var(--kit-border);
+}
+
+.vector-dialog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.vector-dialog-row > .kui-choice {
+  flex: 1 1 auto;
+}
+
+.vector-dialog-row > .kui-choice > span,
+.vector-dialog-label {
+  flex: 0 0 120px;
+  overflow: hidden;
+  color: var(--kit-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vector-dialog-row > .kui-choice select {
+  max-width: none;
+  flex: 1 1 auto;
+}
+
+.vector-dialog-row > input.kui-field {
+  flex: 1 1 auto;
+}
+
+.vector-dialog-number,
+.vector-dialog-color {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.vector-dialog-number > input,
+.vector-dialog-color > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vector-dialog-unit {
+  flex: none;
+  min-width: 18px;
+  color: var(--kit-text-muted);
+  font-size: 12px;
+}
+
+.vector-dialog-swatch {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--kit-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.vector-dialog-copy {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vector-dialog-warning {
+  color: var(--kit-danger);
+  font-size: 12px;
+}
+
+/* Transform Each's reference point: the bounding box's nine points. */
+.vector-reference {
+  display: grid;
+  grid-template-columns: repeat(3, 14px);
+  gap: 4px;
+}
+
+.vector-reference-point {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid var(--kit-border);
+  border-radius: 2px;
+  background: var(--kit-surface);
+  cursor: pointer;
+}
+
+.vector-reference-point[aria-checked='true'] {
+  border-color: var(--kit-primary);
+  background: var(--kit-primary);
+}
+
+/* Help › Keyboard Shortcuts. */
+.vector-shortcuts {
+  max-height: 60vh;
+  overflow: auto;
+  font-size: 13px;
+}
+
+.vector-shortcuts h3 {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vector-shortcuts dl {
+  margin: 0;
+}
+
+.vector-shortcuts dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--kit-border);
+}
+
+.vector-shortcuts dd {
+  margin: 0;
+  color: var(--kit-text-muted);
+  white-space: nowrap;
+}
