@@ -1,0 +1,19 @@
+format: 1
+id: regressions/issue-pen-enter
+feature: vector.editor.canvas
+intent: >-
+  While the Pen draws a path, Enter ends it and Backspace or Delete takes back the last anchor placed, ahead of their
+  shortcuts. Before, Enter reached nobody (the next click went on with the same path) and Delete cleared the whole path.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 6)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-tools, test: enter_ends_the_path_and_backspace_takes_back_the_last_anchor }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-25"

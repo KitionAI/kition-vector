@@ -330,6 +330,9 @@ impl Tool for DirectSelectionTool {
                 vec![]
             }
             (PointerKind::Down, _) => {
+                // The anchor hovered before the press is no mark once the drag moves it (it would
+                // stay where the anchor was).
+                self.hover = None;
                 if let Some(c) = CornerDrag::hit(cx, ev, true) {
                     self.state = State::Corner(c);
                     return vec![];
@@ -759,6 +762,25 @@ mod tests {
         let off = ToolContext { highlight_anchors: false, ..cx(&d, &s, &p) };
         t.pointer(&off, &PointerEvent::new(PointerKind::Move, 102.0, 101.0));
         assert_eq!(big(&t, &off), None, "off");
+    }
+
+    /// The highlight of the anchor hovered before a press does not stay behind once the press
+    /// drags it away: after the release no mark is left where the anchor was (regression
+    /// issue-ghost-anchor, walkthrough 2026-11-25).
+    #[test]
+    fn no_highlight_stays_where_a_dragged_anchor_was() {
+        let (d, _) = doc_with_rect();
+        let s = Selection::default();
+        let p = paint();
+        let on = cx(&d, &s, &p);
+        let mut t = DirectSelectionTool::new(false);
+        t.pointer(&on, &PointerEvent::new(PointerKind::Move, 102.0, 101.0));
+        assert!(t.overlays(&on).iter().any(|o| matches!(o, Overlay::Anchor { size, .. } if *size > 5.0)), "hovered");
+        t.pointer(&on, &PointerEvent::new(PointerKind::Down, 101.0, 101.0));
+        t.pointer(&on, &PointerEvent::new(PointerKind::Drag, 140.0, 141.0));
+        t.pointer(&on, &PointerEvent::new(PointerKind::Up, 140.0, 141.0));
+        let left = t.overlays(&on).into_iter().any(|o| matches!(o, Overlay::Anchor { p, size, .. } if size > 5.0 && p == Point::new(100.0, 100.0)));
+        assert!(!left, "no highlight left at the anchor's old place");
     }
 
     #[test]

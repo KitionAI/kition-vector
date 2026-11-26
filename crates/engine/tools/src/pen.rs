@@ -286,8 +286,26 @@ impl Tool for PenTool {
             PointerKind::DoubleClick => vec![],
         }
     }
+    /// While a path is being drawn the Pen takes Enter (which ends it) and Backspace and Delete
+    /// (which take back its last anchor) ahead of their shortcuts: Delete would otherwise clear
+    /// the whole path, and Enter reach no one.
+    fn claims_key(&self, cx: &ToolContext, key: ToolKey) -> bool {
+        matches!(key, ToolKey::Enter | ToolKey::Backspace | ToolKey::Delete) && !self.busy() && self.active(cx).is_some()
+    }
     fn key(&mut self, cx: &ToolContext, key: ToolKey, _m: Mods) -> Vec<Action> {
         match key {
+            // Backspace or Delete while drawing takes back the last anchor placed, and the path
+            // goes on from the one before it; with a single anchor left the path goes.
+            ToolKey::Backspace | ToolKey::Delete if !self.busy() => {
+                let Some((id, ..)) = self.active(cx) else { return vec![] };
+                let Some((si, ai)) = last_anchor(cx, id) else { return vec![] };
+                self.snap.clear();
+                if ai == 0 {
+                    self.stop();
+                    return vec![Action::Exec("edit.delete".into(), json!({"ids": [id.0]}))];
+                }
+                vec![Action::Exec("path.removeAnchor".into(), json!({"id": id.0, "subpath": si, "anchor": ai}))]
+            }
             ToolKey::Enter | ToolKey::Escape => {
                 self.stop();
                 self.drag = None;
@@ -754,6 +772,38 @@ mod tests {
 
     /// The Pen goes on drawing the path it drew while that path stays selected (after a Cmd
     /// drag with Direct Selection), but never another open path selected meanwhile.
+    /// While drawing, Enter ends the path and Backspace (or Delete) takes back the last anchor,
+    /// ahead of their shortcuts (plan 2026-11-25, stage 2); with no path under way the keys are
+    /// the shortcuts' again.
+    #[test]
+    fn enter_ends_the_path_and_backspace_takes_back_the_last_anchor() {
+        let pts = [Point::new(10.0, 300.0), Point::new(60.0, 300.0), Point::new(60.0, 350.0)];
+        let (d, id, s) = drawing(kition_vector_geom::SubPath::polyline(&pts, false));
+        let p = paint();
+        let on = cx(&d, &s, &p);
+        let idle = PenTool::default();
+        for key in [ToolKey::Enter, ToolKey::Backspace, ToolKey::Delete] {
+            assert!(!idle.claims_key(&on, key), "no path under way: {key:?} stays the shortcut's");
+        }
+        let mut t = PenTool { drawing: true, ..PenTool::default() };
+        for key in [ToolKey::Enter, ToolKey::Backspace, ToolKey::Delete] {
+            assert!(t.claims_key(&on, key), "{key:?} while drawing");
+        }
+        assert_eq!(
+            t.key(&on, ToolKey::Backspace, Mods::default()),
+            vec![Action::Exec("path.removeAnchor".into(), json!({"id": id.0, "subpath": 0, "anchor": 2}))]
+        );
+        assert!(t.claims_key(&on, ToolKey::Enter), "the path goes on after a Backspace");
+        t.key(&on, ToolKey::Enter, Mods::default());
+        assert!(!t.claims_key(&on, ToolKey::Enter), "Enter ended the path");
+        // A single anchor left: Backspace removes the path.
+        let (d1, one, s1) = drawing(kition_vector_geom::SubPath::polyline(&pts[..1], false));
+        let single = cx(&d1, &s1, &p);
+        let mut t = PenTool { drawing: true, ..PenTool::default() };
+        assert_eq!(t.key(&single, ToolKey::Delete, Mods::default()), vec![Action::Exec("edit.delete".into(), json!({"ids": [one.0]}))]);
+        assert!(!t.claims_key(&single, ToolKey::Enter));
+    }
+
     #[test]
     fn the_pen_draws_on_the_path_it_began_only() {
         let (mut d, a, s) = drawing(kition_vector_geom::SubPath::polyline(&[Point::new(10.0, 300.0), Point::new(60.0, 300.0)], false));

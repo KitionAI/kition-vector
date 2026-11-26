@@ -11,6 +11,8 @@ export type VectorNode = {
   fill: string | null
   stroke: string | null
   strokeWidth: number | null
+  /** The stroke's width points, `[t, left, right]` (the sides as factors of half the weight), or null for a uniform stroke. */
+  widthPoints: number[][] | null
   children: VectorNode[]
 }
 
@@ -26,9 +28,15 @@ export type VectorInfo = {
   objects: number
   paint: { fill: string | null; stroke: string | null; strokeWidth: number; fillActive: boolean }
   units: string
+  /** The drawing's point at document pixel (0, 0): the extent's top-left (the pasteboard grows it). */
+  origin: readonly [number, number]
+  /** The isolated group or layer, or null. */
+  isolation: number | null
+  /** The keys the active tool takes now, ahead of their shortcuts (Delete on a selected gradient stop). */
+  toolKeys: readonly string[]
 }
 
-type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; children?: InspectedNode[] }
+type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: { widthPoints?: number[][] | null }; children?: InspectedNode[] }
 
 function nodeOf(node: InspectedNode): VectorNode {
   return {
@@ -41,6 +49,7 @@ function nodeOf(node: InspectedNode): VectorNode {
     fill: typeof node.fill === 'string' ? node.fill : null,
     stroke: typeof node.stroke === 'string' ? node.stroke : null,
     strokeWidth: typeof node.strokeWidth === 'number' ? node.strokeWidth : null,
+    widthPoints: Array.isArray(node.strokeOptions?.widthPoints) ? node.strokeOptions.widthPoints : null,
     children: (node.children ?? []).map(nodeOf),
   }
 }
@@ -55,6 +64,9 @@ export function describe(info: KitEngineInfo): VectorInfo {
     artboards?: Array<Bounds & { name: string }>
     paint?: Partial<VectorInfo['paint']>
     units?: string
+    origin?: [number, number]
+    isolation?: number | null
+    toolKeys?: string[]
   }
   const layers = (inspected.layers ?? []).map(nodeOf)
   const selection = inspected.selection ?? []
@@ -77,7 +89,20 @@ export function describe(info: KitEngineInfo): VectorInfo {
     objects: count(layers),
     paint: selected ? { ...paint, fill: selected.fill, stroke: selected.stroke, strokeWidth: selected.strokeWidth ?? paint.strokeWidth } : paint,
     units: inspected.units ?? 'Points',
+    origin: Array.isArray(inspected.origin) && inspected.origin.length === 2 ? [Number(inspected.origin[0]) || 0, Number(inspected.origin[1]) || 0] : [0, 0],
+    isolation: typeof inspected.isolation === 'number' ? inspected.isolation : null,
+    toolKeys: Array.isArray(inspected.toolKeys) ? inspected.toolKeys.filter((key): key is string => typeof key === 'string') : [],
   }
+}
+
+/** The node `id` and the names from its layer down to it, or null. */
+export function nodePath(layers: readonly VectorNode[], id: number): { node: VectorNode; names: string[] } | null {
+  for (const node of layers) {
+    if (node.id === id) return { node, names: [node.name] }
+    const inside = nodePath(node.children, id)
+    if (inside) return { node: inside.node, names: [node.name, ...inside.names] }
+  }
+  return null
 }
 
 export const MENU_ORDER = ['File', 'Edit', 'Object', 'Type', 'Select', 'Effect', 'View', 'Window', 'Help']
@@ -103,6 +128,8 @@ export const HIDDEN_TOOLS = [
   'columnGraph', 'stackedColumnGraph', 'barGraph', 'stackedBarGraph', 'lineGraph', 'areaGraph', 'scatterGraph', 'pieGraph', 'radarGraph',
   'symbolSprayer', 'symbolShifter', 'symbolScruncher', 'symbolSizer', 'symbolSpinner', 'symbolStainer', 'symbolScreener', 'symbolStyler',
   'perspectiveGrid', 'perspectiveSelection', 'rotateView', 'printTiling',
+  // Touch Type has no engine tool yet: on the rail it would do nothing (plan 2026-11-25, stage 2).
+  'touchType',
 ]
 
 export type Swatch = { name: string; kind: string; color?: unknown; hex?: string }

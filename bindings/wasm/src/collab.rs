@@ -117,7 +117,10 @@ impl VectorDocument {
     pub fn execute_as(&mut self, command: &str, params: Value, origin: &Origin) -> Result<Value, String> {
         self.pass.reset();
         self.refuse_unknown(command, &params)?;
-        self.session.execute_as(command, &params, origin).map_err(engine_error)
+        let answer = self.session.execute_as(command, &params, origin).map_err(engine_error);
+        // As `execute`: the command may change the keys the active tool takes.
+        self.after_command();
+        answer
     }
 
     /// Every blob the drawing's replica references or can still bring back, as one buffer a

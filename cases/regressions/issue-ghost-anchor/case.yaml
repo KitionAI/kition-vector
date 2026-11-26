@@ -1,0 +1,19 @@
+format: 1
+id: regressions/issue-ghost-anchor
+feature: vector.editor.canvas
+intent: >-
+  Direct Selection leaves no anchor mark behind: after anchors are dragged, no highlight stays where the hovered anchor
+  was. Before, the anchor hovered before the press stayed marked at its old place once the drag had moved it.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 4)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-tools, test: no_highlight_stays_where_a_dragged_anchor_was }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-25"

@@ -1,0 +1,22 @@
+format: 1
+id: regressions/issue-bounds-shift
+feature: vector.editor.canvas
+intent: >-
+  The Transform section's X, Y, W and H set the selection's top-left and size, as the fields show them: X 100 puts the
+  left edge at 100 and nothing else moves. Before, the fields ran about the selection's centre, so each value moved the
+  object by half its size (an ellipse at 400 with X 100 landed at 10), and H 0 flattened it to a line; now a width or
+  height that is not above 0 runs nothing.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 11)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, --test-name-pattern, issue-bounds-shift, web/src/canvas/canvas.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+since: "2026-11-25"

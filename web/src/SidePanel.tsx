@@ -1,12 +1,19 @@
 import { AlignCenterHorizontalIcon as AlignCenterHorizontal, AlignCenterVerticalIcon as AlignCenterVertical, AlignEndHorizontalIcon as AlignEndHorizontal, AlignEndVerticalIcon as AlignEndVertical, AlignStartHorizontalIcon as AlignStartHorizontal, AlignStartVerticalIcon as AlignStartVertical, CombineIcon as Combine, SquircleIcon as Squircle, SquaresExcludeIcon as SquaresExclude, SquaresIntersectIcon as SquaresIntersect, SquaresSubtractIcon as SquaresSubtract, SquareSplitHorizontalIcon as SquareSplitHorizontal } from '@kition/tessera/icons/react'
 import { IconButton, PanelSection, useEngineQuery, useKitEditor, useReadOnly } from '@kition/sdk/editor'
 import { LayersSection } from './LayersSection'
+import { boundsParams, type BoundsKey } from './canvas/bounds'
 import type { Swatch, VectorInfo } from './vector'
 
 const round = (value: number) => Math.round(value * 100) / 100
 
-/** A number field that sets the selection's bounds when it changes (X, Y, W, H). */
-function BoundsField({ label, value, onSet }: { label: string; value: number; onSet: (value: number) => void }) {
+/** The editor's workspace, where the keyboard goes back to once a field is done. */
+export const toWorkspace = (from: Element) => (from.closest('.kui-app') as HTMLElement | null)?.focus({ preventScroll: true })
+
+/**
+ * A number field that sets the selection's bounds when it changes (X, Y, W, H). Enter commits it
+ * and gives the keyboard back to the canvas; a value refused (W or H not above 0) shows the old one.
+ */
+function BoundsField({ label, value, onSet }: { label: string; value: number; onSet: (value: number) => boolean }) {
   const readOnly = useReadOnly()
   return (
     <label className="vector-field">
@@ -18,11 +25,13 @@ function BoundsField({ label, value, onSet }: { label: string; value: number; on
         defaultValue={round(value)}
         disabled={readOnly}
         onKeyDown={(event) => {
-          if (event.key === 'Enter') event.currentTarget.blur()
+          if (event.key === 'Enter') toWorkspace(event.currentTarget)
         }}
         onBlur={(event) => {
-          const next = Number(event.currentTarget.value)
-          if (Number.isFinite(next) && next !== round(value)) onSet(next)
+          const field = event.currentTarget
+          const next = Number(field.value)
+          if (field.value.trim() === '' || next === round(value)) return
+          if (!onSet(next)) field.value = String(round(value))
         }}
         data-testid={`vector-bounds-${label}`}
       />
@@ -38,8 +47,17 @@ function TransformSection({ info }: { info: VectorInfo }) {
     <PanelSection title={p('Transform')} testId="vector-transform">
       {bounds ? (
         <div className="vector-fields">
-          {(['x', 'y', 'width', 'height'] as const).map((key) => (
-            <BoundsField key={key} label={key === 'width' ? 'W' : key === 'height' ? 'H' : key.toUpperCase()} value={bounds[key]} onSet={(value) => void run('object.setBounds', { ...bounds, [key]: value })} />
+          {(['x', 'y', 'width', 'height'] as const satisfies readonly BoundsKey[]).map((key) => (
+            <BoundsField
+              key={key}
+              label={key === 'width' ? 'W' : key === 'height' ? 'H' : key.toUpperCase()}
+              value={bounds[key]}
+              onSet={(value) => {
+                const params = boundsParams(key, value)
+                if (params) void run('object.setBounds', params)
+                return params !== null
+              }}
+            />
           ))}
         </div>
       ) : (
@@ -81,7 +99,7 @@ function AppearanceSection({ info }: { info: VectorInfo }) {
               if (Number.isFinite(weight) && weight !== strokeWidth) void run('stroke.set', { weight })
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') event.currentTarget.blur()
+              if (event.key === 'Enter') toWorkspace(event.currentTarget)
             }}
             data-testid="vector-stroke-width"
           />

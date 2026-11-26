@@ -1,0 +1,25 @@
+format: 1
+id: vector.editor.canvas/canvas-rules
+feature: vector.editor.canvas
+intent: >-
+  The canvas's rules hold without a browser (plan 2026-11-25, stage 2): a key the active tool takes goes to it before
+  the shortcuts; the arrows nudge, Shift ten times as far and Alt a copy; X, D, /, comma and period run their
+  commands; Cmd+1, Cmd+0 and Cmd+Alt+0 zoom; every dialog a tool asks for is titled and labelled in Chinese and runs in
+  the built engine with its starting values as one step; the transform tools hand their dialogs only the point they
+  chose; the right-click menu follows the selection; a wheel notch zooms by at most 1.2 times. The binding's own
+  rules (the extent, a drag's origin and repaint, the keys a tool takes, the cursors) are its unit tests in bindings/wasm.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/canvas/canvas.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 120
+since: "2026-11-25"

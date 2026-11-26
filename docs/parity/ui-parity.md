@@ -1,6 +1,6 @@
 # UI and interaction parity
 
-> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-17 · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-25 · **Target:** Adobe Illustrator 2026 (30.x)
 
 How Kition Vector's tools, handles, snapping and panels behave next to Illustrator's. A vector illustrator's
 trust is in the details: where a handle lands, what Shift and Alt do mid-drag, what a smart guide snaps to,
@@ -48,7 +48,7 @@ tools, never checked side by side) isn't captured row by row.
 | Click an open path's end to continue it; click another path's end to join | done | |
 | Rubber Band preview | done | Preferences option |
 | Auto Add/Delete on a selected path; Shift or the preference disables it | done | |
-| Pen cursors (new path ×, continue /, close o, add +, delete −, convert ^) | partial | vector cursors exist; not every state verified |
+| Pen cursors (new path ×, continue /, close o, add +, delete −, convert ^) | partial | the web editor draws all seven, and the cursors follow Shift, Alt and Cmd (`bindings/wasm/src/cursors.rs`, 2026-11-25); not every state verified by hand |
 | Each anchor snaps to Smart Guides and construction angles | done | `DrawSnap` |
 | Curvature tool: click/drag points, double-click or Alt-click for a corner, temporary Direct Selection, point conversion | partial | modifiers requested |
 | Add/Delete/Anchor Point tools; Anchor Point tool drags segments to reshape | done | |

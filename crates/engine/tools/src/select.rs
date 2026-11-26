@@ -156,13 +156,17 @@ enum BoxHit {
     Rotate,
 }
 
+/// How far (screen points) outside a corner of the bounding box a press still rotates: a ring
+/// wide enough to find by hand (at 18 it was about 8 points past the handle, plan 2026-11-25).
+const ROTATE_REACH: f64 = 28.0;
+
 /// The bounding-box handle or rotate zone under `p`.
 fn box_hit(cx: &ToolContext, b: &OrientedBox, p: Point) -> Option<BoxHit> {
     let (tol, lp) = (cx.tol(5.0), b.to_local(p));
     if let Some(h) = hit_handle(b.rect, lp, tol) {
         return Some(BoxHit::Handle(h));
     }
-    in_rotate_zone(b.rect, lp, tol, cx.tol(18.0)).map(|_| BoxHit::Rotate)
+    in_rotate_zone(b.rect, lp, tol, cx.tol(ROTATE_REACH)).map(|_| BoxHit::Rotate)
 }
 
 /// How near (screen points) the pointer must come to an object's centre or anchor for Smart Guides

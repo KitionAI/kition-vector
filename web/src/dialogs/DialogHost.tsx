@@ -12,6 +12,22 @@ import { ColorBalanceDialog } from './ColorBalanceDialog'
 import { MoveDialog, ReflectDialog, RotateDialog, ScaleDialog, ShearDialog, TransformEachDialog } from './TransformDialogs'
 
 /**
+ * A dialog made for a tool's request (plan 2026-11-25, stage 2, `canvas/toolDialogs.ts`): its
+ * fields, the values they start from, and how their values become `command`'s parameters.
+ */
+export type AskedDialog = {
+  command: string
+  /** The dialog's title, in the editor's language. */
+  title: string
+  /** What the dialog remembers its last OK'd values by. */
+  memory: string
+  fields: readonly ParamField[]
+  start: Record<string, unknown>
+  build: (values: Record<string, unknown>) => Record<string, unknown>
+  previewing: boolean
+}
+
+/**
  * The dialog host (plan 2026-11-25, stage 1). Every way to run a command as a person does (a menu
  * row, a ribbon button, Home's buttons, a shortcut, a panel's "…" row, and from stage 2 a tool's
  * dialog request) goes through `invoke`, which opens the command's dialog when it has one
@@ -29,6 +45,8 @@ export type Dialogs = {
   open: (command: string, values?: Record<string, unknown>) => boolean
   /** Whether `command` opens a dialog. */
   asks: (command: string) => boolean
+  /** Opens a dialog made for a tool's request; false when a dialog is open already or the command cannot run now. */
+  ask: (dialog: AskedDialog) => boolean
   /** Runs an Effect menu row (`kit:effect.<id>`, Apply Last Effect, Last Effect…). */
   effectRow: (row: string) => void
   /** File › New…'s dialog. */
@@ -44,7 +62,7 @@ export const DialogsProvider = DialogsContext.Provider
 export function useDialogs(): Dialogs {
   const own = useContext(DialogsContext)
   const { run } = useKitEditor()
-  return own ?? { invoke: (command) => void run(command), open: () => false, asks: () => false, effectRow: () => undefined, newDocument: () => undefined, documentSetup: () => undefined }
+  return own ?? { invoke: (command) => void run(command), open: () => false, asks: () => false, ask: () => false, effectRow: () => undefined, newDocument: () => undefined, documentSetup: () => undefined }
 }
 
 /** The dialog of `command`, or null: its purpose-built one, or the generic one when it has parameters to ask. */
@@ -74,6 +92,7 @@ type Open =
   | { serial: number; kind: 'effect'; effect: EffectEntry; values?: Record<string, unknown> }
   | { serial: number; kind: 'newDocument'; presets: NewPresets | null }
   | { serial: number; kind: 'documentSetup'; setup: DocumentSetup }
+  | { serial: number; kind: 'asked'; dialog: AskedDialog }
 
 /** A dialog to show, before the host numbers it. */
 type Unserialed<T> = T extends unknown ? Omit<T, 'serial'> : never
@@ -172,6 +191,13 @@ export function VectorDialogs({ api, info, effects, onEffectApplied }: { api: Re
         if (!openDialog(id)) void latest.current.editor.run(id)
       },
       asks: (id) => routeOf(latest.current.editor.byId.get(id)) !== null,
+      ask: (dialog) => {
+        const { editor: now, ui: uiNow } = latest.current
+        const command = now.byId.get(dialog.command)
+        if (blocked() || !command || !now.enabled(dialog.command) || uiNow.state(`command:${dialog.command}`, command.menu).denied) return false
+        show({ kind: 'asked', dialog })
+        return true
+      },
       effectRow: (row) => {
         const catalog = latest.current.effects
         const id = effectOfRow(row)
@@ -215,6 +241,10 @@ export function VectorDialogs({ api, info, effects, onEffectApplied }: { api: Re
         return <NewDocumentDialog presets={open.presets} onClose={close} />
       case 'documentSetup':
         return <DocumentSetupDialog setup={open.setup} title={words.t('dialog.documentSetup')} onClose={close} />
+      case 'asked': {
+        const { dialog: asked } = open
+        return <ParamsDialog command={asked.command} memory={asked.memory} scope={asked.command} title={asked.title} fields={asked.fields} start={asked.start} build={asked.build} previewing={asked.previewing} onClose={close} />
+      }
       case 'effect': {
         const { effect } = open
         return (

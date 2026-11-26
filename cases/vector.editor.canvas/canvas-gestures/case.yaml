@@ -1,0 +1,30 @@
+format: 1
+id: vector.editor.canvas/canvas-gestures
+feature: vector.editor.canvas
+intent: >-
+  The canvas works by hand (plan 2026-11-25, stage 2). The editor takes the keyboard when the drawing opens and gets it
+  back after Enter in a panel field and after a button; X 100 puts the left edge at 100 and W keeps it there, H 0 is
+  refused; the arrows nudge 1 pt and 10 with Shift; an object moved off the artboard stays drawn on the pasteboard while
+  the artboard stays put on the screen and the object keeps its own coordinates; a click with the Rectangle tool asks
+  its size and draws it there; Alt-click with Rotate opens Rotate…; Delete on a selected gradient stop removes the stop
+  and keeps the object; the Pen takes back its last anchor with Backspace and ends the path with Enter; Cmd+Enter ends
+  typed text and V then picks the Selection tool; X and a click on a proxy bring it to the front; a right click opens
+  the canvas menu and its Group groups; a double-click isolates a group with a bar naming it and Escape leaves; Cmd+1 is
+  actual size and a wheel notch zooms by at most 1.2 times; every tool is on screen at 1280 by 720 and in Classic.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (panel fields moved objects, keys lost, art off the artboard vanished, tool dialogs dropped)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/canvas.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 240
+since: "2026-11-25"

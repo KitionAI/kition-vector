@@ -5,11 +5,12 @@
 //! Kition Vector opens: SVG, PDF, AI, EPS), and [`KitTools`] for Kition Vector's own tools, so the
 //! host runs the engine's selection, pen, shape, and type tools unchanged.
 //!
-//! Document pixels are points, measured from the top-left of the artboards' union.
+//! Document pixels are points, measured from the top-left of the drawing's extent: the artboards'
+//! union, grown to take in art that lies off them (the pasteboard, [`pasteboard`]).
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 
 mod address;
 pub mod agent_text;
@@ -17,6 +18,7 @@ pub mod check;
 mod collab;
 #[cfg(test)]
 mod conformance;
+mod cursors;
 pub mod document_text;
 mod files;
 pub mod gate;
@@ -34,7 +36,7 @@ use kition_vector_engine::{Session, command_specs};
 use kition_vector_engine::{UiRequest, ViewInfo};
 use kition_vector_geom::{Affine, Point, Rect};
 use kition_vector_render::{RenderOptions, Renderer};
-use kition_vector_tools::{Cursor, Mods, Overlay, PointerEvent, PointerKind, ToolKey};
+use kition_vector_tools::{Mods, Overlay, PointerEvent, PointerKind, ToolKey};
 use serde_json::{Value, json};
 
 /// One open Kition Vector drawing.
@@ -49,12 +51,64 @@ pub struct VectorDocument {
     snapshots: RefCell<Vec<(Value, kition_vector_engine::editor_state::EditorSnapshot)>>,
     /// What the steps of a run the guard is asking about select ([`pass`]).
     pass: pass::Pass,
+    /// The extent while a tool's gesture lasts: its top-left stays put, so the document pixels a
+    /// drag goes on sending keep meaning the same points ([`VectorDocument::bounds`]).
+    held: Cell<Option<Rect>>,
+    /// The modifier keys of the last pointer event: the cursor shows what they make a click do.
+    mods: Mods,
+    /// The keys the active tool takes now ahead of their shortcuts (`toolKeys` in `inspect()`).
+    claims: Vec<&'static str>,
+    /// The area the last tool event changed, when only the moved selection's ([`KitTools::take_damage`]).
+    damage: Option<kition_kit::tools::ToolDamage>,
+    /// The view's zoom the last tool event came at.
+    zoom: f64,
 }
 
 /// The places in `inspect()` that are the editing session, not the drawing (Kit Process Protocol
 /// section 7a): what an agent's call saves and puts back, and kition-headless's volatile keys.
 pub const EDITOR_STATE: &[&str] =
-    &["/currentLayer", "/layerRows", "/isolation", "/selection", "/selectionBounds", "/selectionRotation", "/target", "/tool", "/paint"];
+    &["/currentLayer", "/layerRows", "/isolation", "/selection", "/selectionBounds", "/selectionRotation", "/target", "/tool", "/toolKeys", "/paint"];
+
+/// The keys a tool may take ahead of their shortcuts (`Tool::claims_key`), as the page names them.
+const CLAIMABLE: &[(&str, ToolKey)] = &[
+    ("Enter", ToolKey::Enter),
+    ("Backspace", ToolKey::Backspace),
+    ("Delete", ToolKey::Delete),
+    ("ArrowUp", ToolKey::Up),
+    ("ArrowDown", ToolKey::Down),
+    ("ArrowLeft", ToolKey::Left),
+    ("ArrowRight", ToolKey::Right),
+    ("Tab", ToolKey::Tab),
+    ("Home", ToolKey::Home),
+    ("End", ToolKey::End),
+    ("[", ToolKey::BracketLeft),
+    ("]", ToolKey::BracketRight),
+];
+
+/// How far past the artboards art off them may take the extent (points, each side): the
+/// pasteboard's size.
+const PASTEBOARD_REACH: f64 = 16_384.0;
+/// The extent grows past the artboards in steps of this many points, so art nudged about off them
+/// seldom moves the document's origin.
+const PASTEBOARD_STEP: f64 = 72.0;
+/// The margin kept around art off the artboards (points), for its anti-aliased edges.
+const PASTEBOARD_MARGIN: f64 = 18.0;
+
+/// The area the canvas shows: the artboards `boards`, grown on each side where `art` lies past
+/// them, by whole [`PASTEBOARD_STEP`]s taking in a [`PASTEBOARD_MARGIN`], at most
+/// [`PASTEBOARD_REACH`]. Art on the artboards leaves them as they are.
+fn pasteboard(boards: Rect, art: Option<Rect>) -> Rect {
+    let Some(art) = art.filter(|art| [art.x0, art.y0, art.x1, art.y1].iter().all(|v| v.is_finite())) else { return boards };
+    let grow = |past: f64| {
+        if past <= 0.0 { 0.0 } else { (((past + PASTEBOARD_MARGIN) / PASTEBOARD_STEP).ceil() * PASTEBOARD_STEP).min(PASTEBOARD_REACH) }
+    };
+    Rect::new(
+        boards.x0 - grow(boards.x0 - art.x0),
+        boards.y0 - grow(boards.y0 - art.y0),
+        boards.x1 + grow(art.x1 - boards.x1),
+        boards.y1 + grow(art.y1 - boards.y1),
+    )
+}
 
 fn engine_error(error: impl std::fmt::Display) -> String {
     error.to_string()
@@ -79,6 +133,11 @@ impl VectorDocument {
             hover: None,
             snapshots: RefCell::new(Vec::new()),
             pass: pass::Pass::default(),
+            held: Cell::new(None),
+            mods: Mods::default(),
+            claims: Vec::new(),
+            damage: None,
+            zoom: 1.0,
         }
     }
 
@@ -86,12 +145,44 @@ impl VectorDocument {
         self.session.active().ok_or_else(|| "no document is open".to_owned())
     }
 
-    /// The artboards' union in points: the area document pixels cover.
-    fn bounds(&self) -> Rect {
+    /// The artboards' union in points.
+    fn artboards(&self) -> Rect {
         let Ok(state) = self.active() else { return Rect::new(0.0, 0.0, 612.0, 792.0) };
         let mut boards = state.doc.artboards.iter().map(|board| board.rect);
         let first = boards.next().unwrap_or(Rect::new(0.0, 0.0, 612.0, 792.0));
         boards.fold(first, |all, board| all.union(board))
+    }
+
+    /// The area document pixels cover, in points: the artboards and the art off them
+    /// ([`pasteboard`]). While a gesture lasts its top-left holds where the gesture began (the
+    /// page goes on sending the drag in those pixels); it may still grow right and down.
+    fn bounds(&self) -> Rect {
+        let live = pasteboard(self.artboards(), self.active().ok().and_then(|state| state.doc.art_bounds()));
+        match self.held.get() {
+            Some(held) => Rect::new(held.x0, held.y0, live.x1.max(held.x0 + 1.0), live.y1.max(held.y0 + 1.0)),
+            None => live,
+        }
+    }
+
+    /// The keys the active tool takes ahead of their shortcuts now, asked after every event and
+    /// command, for `inspect()`.
+    fn ask_claims(&mut self, zoom: f64) {
+        let view = Self::view(zoom);
+        self.zoom = view.zoom;
+        let session = &mut self.session;
+        self.claims = CLAIMABLE.iter().filter(|(_, key)| session.tool_claims_key(*key, view)).map(|(name, _)| *name).collect();
+    }
+
+    /// After a command: it may change the keys the active tool takes (the artboards a Delete
+    /// removes, a gradient stop selected).
+    pub(crate) fn after_command(&mut self) {
+        self.ask_claims(self.zoom);
+    }
+
+    /// The visual bounds of the selected objects, in points.
+    fn selected_bounds(&self) -> Option<Rect> {
+        let state = self.active().ok()?;
+        state.doc.bounds_of(&state.selection.objects, true)
     }
 
     fn origin(&self) -> Point {
@@ -105,7 +196,8 @@ impl VectorDocument {
         let state = self.active()?;
         let origin = self.origin();
         let view = Affine::scale(scale) * Affine::translate((-(origin.x + x), -(origin.y + y)));
-        let options = RenderOptions { artboards: true, ..Default::default() };
+        // In isolation mode everything around the isolated group draws dimmed.
+        let options = RenderOptions { artboards: true, isolated: state.isolation, ..Default::default() };
         let rendered =
             self.renderer.try_borrow_mut().map_err(|_| "the renderer is busy".to_owned())?.render(&state.doc, width, height, view, &options);
         Ok(rendered.to_straight())
@@ -127,7 +219,9 @@ impl VectorDocument {
         engine.extend(self.session.overlays(view));
         engine.extend(self.hover.and_then(|at| selection::hover(&self.session, at, view.zoom)));
         let overlays = engine.into_iter().filter_map(|overlay| overlay_out(overlay, origin)).collect();
-        let cursor = at.map_or_else(|| "default".to_owned(), |point| cursor_css(self.session.cursor(point, Mods::default(), view)));
+        let mods = self.mods;
+        let cursor = at.map_or_else(|| "default".to_owned(), |point| cursors::css(self.session.cursor(point, mods, view)));
+        self.ask_claims(zoom);
         ToolResponse {
             requests: requests.into_iter().map(request_out).collect(),
             overlays,
@@ -244,43 +338,6 @@ fn overlay_out(overlay: Overlay, origin: Point) -> Option<ToolOverlay> {
             ToolOverlay::Line { ax, ay, bx, by, color, dashed: false }
         }
     })
-}
-
-/// The engine's cursor as a CSS cursor name.
-fn cursor_css(cursor: Cursor) -> String {
-    match cursor {
-        Cursor::Move => "move",
-        Cursor::Crosshair
-        | Cursor::Pen
-        | Cursor::PenAdd
-        | Cursor::PenDelete
-        | Cursor::PenClose
-        | Cursor::PenContinue
-        | Cursor::PenJoin
-        | Cursor::PenConvert
-        | Cursor::Slice
-        | Cursor::Width
-        | Cursor::WidthAdd
-        | Cursor::WidthPoint
-        | Cursor::Blend
-        | Cursor::BlendObject
-        | Cursor::AddStop
-        | Cursor::RemoveStop => "crosshair",
-        Cursor::ResizeH => "ew-resize",
-        Cursor::ResizeV => "ns-resize",
-        Cursor::ResizeNwSe => "nwse-resize",
-        Cursor::ResizeNeSw => "nesw-resize",
-        Cursor::Text => "text",
-        Cursor::Hand => "grab",
-        Cursor::HandGrab => "grabbing",
-        Cursor::ZoomIn => "zoom-in",
-        Cursor::ZoomOut => "zoom-out",
-        Cursor::Eyedropper => "copy",
-        Cursor::NotAllowed => "not-allowed",
-        Cursor::Rotate | Cursor::RotateToward(_) | Cursor::CornerRadius => "grab",
-        _ => "default",
-    }
-    .to_owned()
 }
 
 fn key_in(key: &str) -> Option<ToolKey> {
@@ -403,7 +460,9 @@ impl KitDocument for VectorDocument {
     fn execute(&mut self, command: &str, params: Value) -> Result<Value, String> {
         self.pass.reset();
         self.refuse_unknown(command, &params)?;
-        self.session.execute(command, &params).map_err(engine_error)
+        let answer = self.session.execute(command, &params).map_err(engine_error);
+        self.after_command();
+        answer
     }
 
     /// The drawing as JSON: artboards, layer tree with bounds, selection, history.
@@ -418,6 +477,8 @@ impl KitDocument for VectorDocument {
             object.insert("canUndo".into(), Value::Bool(can_undo));
             object.insert("canRedo".into(), Value::Bool(can_redo));
             object.insert("origin".into(), json!([origin.x, origin.y]));
+            // The keys the active tool takes now ahead of their shortcuts (the editor gives them to it).
+            object.insert("toolKeys".into(), json!(self.claims));
             if !links.is_empty() {
                 object.insert("links".into(), Value::Array(links));
             }
@@ -637,9 +698,14 @@ impl VectorDocument {
         let state = self.active()?;
         let mut scratch = Session::new();
         scratch.host_files_only = self.session.host_files_only;
+        // The paint new art gets and the proxy in front: the inspect's `paint` reports them.
+        scratch.paint = self.session.paint.clone();
+        scratch.fill_active = self.session.fill_active;
         scratch.add_document((*state.doc).clone(), None);
         if let Some(copy) = scratch.active_mut() {
             copy.selection = state.selection.clone();
+            // The isolated group too: the inspect reports it (isolation mode on the canvas).
+            copy.isolation = state.isolation;
             copy.revision = state.revision;
             copy.history = state.history.clone();
         }
@@ -673,11 +739,17 @@ impl KitTools for VectorDocument {
             return Err(format!("no tool {id}"));
         }
         self.session.select_tool(id, Self::view(zoom)).map_err(engine_error)?;
+        self.held.set(None);
         Ok(self.respond(Vec::new(), None, zoom))
     }
 
     fn pointer(&mut self, event: &ToolPointer) -> Result<ToolResponse, String> {
         let at = self.to_engine(event.x, event.y);
+        // A gesture keeps the origin it began with (see `bounds`).
+        if event.action == PointerAction::Down && self.held.get().is_none() {
+            self.held.set(Some(self.bounds()));
+        }
+        self.mods = mods_in(event.mods);
         let kind = match event.action {
             PointerAction::Down => PointerKind::Down,
             PointerAction::Drag => PointerKind::Drag,
@@ -686,15 +758,27 @@ impl KitTools for VectorDocument {
             PointerAction::DoubleClick => PointerKind::DoubleClick,
         };
         self.hover = (event.action == PointerAction::Move).then_some(at);
-        let engine_event = PointerEvent { kind, pos: at, mods: mods_in(event.mods), pressure: event.pressure.clamp(0.0, 1.0) };
-        let requests = self.session.pointer(&engine_event, Self::view(event.zoom)).map_err(engine_error)?;
-        Ok(self.respond(requests, Some(at), event.zoom))
+        let engine_event = PointerEvent { kind, pos: at, mods: self.mods, pressure: event.pressure.clamp(0.0, 1.0) };
+        // A drag that moves, scales or rotates the selection changes only the pixels under it,
+        // where it was and where it is now: the page repaints just that ([`Self::damage_of`]).
+        let before = (kind == PointerKind::Drag && self.session.tool_transforming()).then(|| self.selected_bounds()).flatten();
+        let (revision, extent) = (self.revision(), self.bounds());
+        let answer = self.session.pointer(&engine_event, Self::view(event.zoom)).map_err(engine_error);
+        self.damage = before.and_then(|before| self.damage_of(before, revision, extent));
+        if !self.session.tool_busy() {
+            self.held.set(None);
+        }
+        Ok(self.respond(answer?, Some(at), event.zoom))
     }
 
     fn key(&mut self, key: &str, mods: ToolMods, zoom: f64) -> Result<ToolResponse, String> {
         let Some(engine_key) = key_in(key) else { return Ok(self.respond(Vec::new(), None, zoom)) };
-        let requests = self.session.tool_key(engine_key, mods_in(mods), Self::view(zoom)).map_err(engine_error)?;
-        Ok(self.respond(requests, None, zoom))
+        let requests = self.session.tool_key(engine_key, mods_in(mods), Self::view(zoom)).map_err(engine_error);
+        // An Escape that dropped the gesture ends what it held.
+        if !self.session.tool_busy() {
+            self.held.set(None);
+        }
+        Ok(self.respond(requests?, None, zoom))
     }
 
     fn text(&mut self, text: &str, zoom: f64) -> Result<ToolResponse, String> {
@@ -706,6 +790,64 @@ impl KitTools for VectorDocument {
         let at = self.to_engine(x, y);
         self.respond(Vec::new(), Some(at), zoom)
     }
+
+    fn take_damage(&mut self) -> Option<kition_kit::tools::ToolDamage> {
+        self.damage.take()
+    }
+}
+
+/// Points of margin around a moved selection's repaint: anti-aliased edges and hairlines.
+const DAMAGE_MARGIN: f64 = 4.0;
+
+impl VectorDocument {
+    /// The document pixels a drag of the selection changed, from its visual bounds `before` the
+    /// event to now; `None` (repaint everything) unless the drawing changed and everything that
+    /// changed is the moved art: no blend, text wrap, envelope or symbol that other art follows,
+    /// and no growth of the extent (its pixels moved).
+    fn damage_of(&self, before: Rect, revision: u64, extent: Rect) -> Option<kition_kit::tools::ToolDamage> {
+        if self.revision() == revision || !self.session.tool_transforming() || self.bounds() != extent {
+            return None;
+        }
+        let state = self.active().ok()?;
+        if !local_edits(&state.doc) {
+            return None;
+        }
+        let after = self.selected_bounds()?;
+        let origin = self.origin();
+        let area = before.union(after).inflate(DAMAGE_MARGIN, DAMAGE_MARGIN);
+        let bounds = self.bounds();
+        if !(area.x0.is_finite() && area.y0.is_finite() && area.x1.is_finite() && area.y1.is_finite()) {
+            return None;
+        }
+        Some(kition_kit::tools::ToolDamage {
+            x0: (area.x0.max(bounds.x0) - origin.x).floor(),
+            y0: (area.y0.max(bounds.y0) - origin.y).floor(),
+            x1: (area.x1.min(bounds.x1) - origin.x).ceil(),
+            y1: (area.y1.min(bounds.y1) - origin.y).ceil(),
+        })
+    }
+}
+
+/// Whether moving art in `doc` changes the pixels of that art alone: none of its art is drawn from
+/// other art (a blend's steps, type wrapping round art, an envelope, a symbol instance, a live
+/// paint group, an opacity mask), which a moved object would redraw elsewhere.
+fn local_edits(doc: &kition_vector_doc::Document) -> bool {
+    fn plain(node: &kition_vector_doc::Node) -> bool {
+        use kition_vector_doc::NodeKind;
+        let own = matches!(
+            node.kind,
+            NodeKind::Layer { .. }
+                | NodeKind::Group { .. }
+                | NodeKind::Path { .. }
+                | NodeKind::Compound { .. }
+                | NodeKind::Text(_)
+                | NodeKind::Image(_)
+        ) && node.mask.is_none()
+            && node.wrap.is_none()
+            && !node.region_paint;
+        own && node.children().into_iter().flatten().all(|child| plain(child))
+    }
+    doc.layers.iter().all(|layer| plain(layer))
 }
 
 kition_kit::export_kit_document!(VectorDocument as "VectorDocument");
@@ -1035,6 +1177,86 @@ mod tests {
         assert!(answer["data"].as_str().is_some_and(|data| data.starts_with("iVBORw0KGgo")), "{answer}");
         let refused = doc.execute("file.exportBytes", json!({ "format": "svg", "path": "/tmp/x.svg" })).err().unwrap_or_default();
         assert!(refused.contains("path"), "{refused}");
+    }
+
+    fn press(doc: &mut VectorDocument, action: PointerAction, x: f64, y: f64) -> ToolResponse {
+        doc.pointer(&ToolPointer { action, x, y, mods: ToolMods::default(), pressure: 1.0, zoom: 1.0 }).unwrap()
+    }
+
+    /// Art off the artboards stays drawn (plan 2026-11-25, stage 2): the extent takes it in, the
+    /// origin moving by whole steps, while the drawing's own coordinates, the ones commands and
+    /// `inspect()` give, stay what they were.
+    #[test]
+    fn art_off_the_artboards_is_on_the_canvas_in_its_own_coordinates() {
+        let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        assert_eq!((doc.width(), doc.height()), (200, 100), "art on the artboard leaves the extent as it was");
+        doc.execute("shape.rectangle", json!({ "x": -150, "y": 20, "width": 40, "height": 40 })).unwrap();
+        let inspected = doc.inspect().unwrap();
+        let x0 = inspected["origin"][0].as_f64().unwrap();
+        assert_eq!(inspected["origin"][1].as_f64(), Some(0.0), "nothing above the artboard: the top stays");
+        assert!(x0 <= -150.0 - PASTEBOARD_MARGIN && (x0 / PASTEBOARD_STEP).fract() == 0.0, "the origin moved left by whole steps: {x0}");
+        assert_eq!(doc.width(), (200.0 - x0) as u32);
+        assert_eq!(inspected["selectionBounds"]["x"].as_f64(), Some(-150.0), "the drawing's coordinates are its own");
+        // The rectangle is drawn on the pasteboard; around it nothing is (the backdrop shows).
+        let (cx, cy) = (-130.0 - x0, 40.0);
+        let pixels = doc.render(cx - 1.0, cy - 1.0, 1.0, 2, 2).unwrap();
+        assert!(pixels[3] > 0, "the rectangle off the artboard is drawn: {:?}", &pixels[..4]);
+        let empty = doc.render(cx + 40.0, cy, 1.0, 2, 2).unwrap();
+        assert_eq!(empty[3], 0, "the pasteboard itself is clear");
+        let board = doc.render(-x0 + 5.0, 5.0, 1.0, 1, 1).unwrap();
+        assert_eq!(board, vec![255, 255, 255, 255], "the artboard is white where it was");
+    }
+
+    /// A drag keeps the origin it began with, so its pixels go on meaning the same points; the
+    /// release lets the extent take in where the art went.
+    #[test]
+    fn a_drag_off_the_artboard_keeps_its_origin_until_the_release() {
+        let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        doc.select_tool("selection", 1.0).unwrap();
+        press(&mut doc, PointerAction::Down, 45.0, 25.0);
+        press(&mut doc, PointerAction::Drag, 0.0, 25.0);
+        press(&mut doc, PointerAction::Drag, -100.0, 25.0);
+        assert_eq!(doc.origin(), Point::new(0.0, 0.0), "the origin holds while the drag lasts");
+        press(&mut doc, PointerAction::Up, -100.0, 25.0);
+        let bounds = doc.inspect().unwrap()["selectionBounds"].clone();
+        assert_eq!(bounds["x"].as_f64().map(f64::round), Some(-125.0), "moved by the drag: {bounds}");
+        assert!(doc.origin().x < -125.0, "after the release the extent takes the rectangle in: {:?}", doc.origin());
+    }
+
+    /// A drag that moves the selection names the area it changed (where the art was and is), and
+    /// the page repaints only that.
+    #[test]
+    fn a_drag_of_the_selection_repaints_only_where_it_was_and_is() {
+        let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        doc.select_tool("selection", 1.0).unwrap();
+        press(&mut doc, PointerAction::Down, 45.0, 25.0);
+        press(&mut doc, PointerAction::Drag, 55.0, 30.0);
+        let _ = doc.take_damage();
+        press(&mut doc, PointerAction::Drag, 75.0, 35.0);
+        let damage = doc.take_damage().expect("the moved rectangle's area");
+        assert!(damage.x0 <= 30.0 && damage.y0 <= 15.0 && damage.x1 >= 100.0 && damage.y1 >= 50.0, "{damage:?}");
+        assert!(damage.x1 - damage.x0 < 120.0, "not the whole drawing: {damage:?}");
+        assert!(doc.take_damage().is_none(), "taken once");
+        press(&mut doc, PointerAction::Up, 75.0, 35.0);
+        assert!(doc.take_damage().is_none(), "the release repaints everything");
+    }
+
+    /// While the Pen draws a path it takes Enter and Backspace ahead of their shortcuts, and says
+    /// so in `inspect()`; once Enter ended the path the keys are the shortcuts' again.
+    #[test]
+    fn the_keys_a_tool_takes_are_in_the_inspect() {
+        let mut doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        doc.select_tool("pen", 1.0).unwrap();
+        let keys = |doc: &VectorDocument| doc.inspect().unwrap()["toolKeys"].clone();
+        assert_eq!(keys(&doc), json!([]));
+        for (x, y) in [(120.0, 60.0), (160.0, 80.0)] {
+            press(&mut doc, PointerAction::Down, x, y);
+            press(&mut doc, PointerAction::Up, x, y);
+        }
+        let taken = keys(&doc);
+        assert!(taken.as_array().is_some_and(|keys| keys.contains(&json!("Enter")) && keys.contains(&json!("Backspace"))), "{taken}");
+        doc.key("Enter", ToolMods::default(), 1.0).unwrap();
+        assert_eq!(keys(&doc), json!([]), "the path ended");
     }
 
     #[test]

@@ -1,0 +1,20 @@
+format: 1
+id: regressions/issue-pasteboard
+feature: vector.editor.canvas
+intent: >-
+  Art off the artboards stays drawn: the document the canvas shows takes in the pasteboard where art lies, by whole
+  steps, while the drawing's coordinates that commands and the inspect give stay its own. Before, the canvas covered
+  the artboards' union only, and an object dragged off the artboard vanished, leaving its outline.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (plan section 0, root cause 4)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: art_off_the_artboards_is_on_the_canvas_in_its_own_coordinates }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-25"
