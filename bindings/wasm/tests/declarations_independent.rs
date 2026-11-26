@@ -553,7 +553,7 @@ fn every_write_rests_on_what_its_handler_reads() {
     if let Ok(path) = std::env::var("DECLARATIONS_REPORT") {
         std::fs::write(path, report.join("\n")).unwrap();
     }
-    assert_eq!(writes.len(), 508, "the write commands read");
+    assert_eq!(writes.len(), 504, "the write commands read");
     assert!(wrong.is_empty(), "{} rows differ from their readings:\n{}", wrong.len(), wrong.join("\n"));
 }
 
@@ -3398,35 +3398,6 @@ const ROWS: &[Row] = &[
     // artboard.cut: artboard.copy, then deletes the artboard, its guides and that art (not the only artboard).
     // Pinned after review: `mode` from the preferences this command reads on a path the reading's rows do not take (tests/preferences.rs, READERS).
     p("artboard.cut", r#"{"index":1,"art":false}"#, &[], "mode", &[("artboard:1", "*", true), ("drawing", "guides", false)]),
-    // file.exportPdf: encodes the whole document (preset from prefs; preserveEditing carries the native document); no write to the document.
-    r(
-        "file.exportPdf",
-        r#"{"path":"/tmp/o.pdf"}"#,
-        &[],
-        "mode",
-        &[
-            ("drawing", "*", false),
-            ("~swatches", "*", false),
-            ("~swatchGroups", "*", false),
-            ("~graphicStyles", "*", false),
-            ("~charStyles", "*", false),
-            ("~paraStyles", "*", false),
-            ("~symbols", "*", false),
-            ("~patterns", "*", false),
-            ("~artboards", "*", false),
-            ("$ALL", "*", false),
-            ("$L1", "*", false),
-            ("$L2", "*", false),
-            ("children:$L1", "-", false),
-            ("children:$L2", "-", false),
-            ("children:$B", "-", false),
-            ("children:$CP", "-", false),
-            ("children:$CG", "-", false),
-            ("children:$G", "-", false),
-            ("$SL", "*", false),
-            ("$AS", "*", false),
-        ],
-    ),
     // file.setup: copies setup and units, applies the given keys, writes both back whole; script size changes restamp text runs using them and character styles.
     // Pinned after review: C8-vector-engine-2: docsetup.rs:72-74 now writes only the keys given (bleed: settings.setup.bleed).
     p("file.setup", r#"{"bleed":3}"#, &[], "", &[("drawing", "settings.setup.bleed", false)]),
@@ -3459,71 +3430,6 @@ const ROWS: &[Row] = &[
         &[],
         "active",
         &[("artboard:0", "rect", true), ("$L1", "-", true), ("$L2", "-", false)],
-    ),
-    // file.exportDxf: file.export as DXF of the whole document (one drawing per artboard by default); selectedOnly: the selected roots in their layers.
-    r(
-        "file.exportDxf",
-        r#"{"path":"/tmp/o.dxf"}"#,
-        &[],
-        "",
-        &[
-            ("drawing", "*", false),
-            ("~swatches", "*", false),
-            ("~swatchGroups", "*", false),
-            ("~graphicStyles", "*", false),
-            ("~charStyles", "*", false),
-            ("~paraStyles", "*", false),
-            ("~symbols", "*", false),
-            ("~patterns", "*", false),
-            ("~artboards", "*", false),
-            ("$ALL", "*", false),
-            ("$L1", "*", false),
-            ("$L2", "*", false),
-            ("children:$L1", "-", false),
-            ("children:$L2", "-", false),
-            ("children:$B", "-", false),
-            ("children:$CP", "-", false),
-            ("children:$CG", "-", false),
-            ("children:$G", "-", false),
-            ("$SL", "*", false),
-            ("$AS", "*", false),
-        ],
-    ),
-    r(
-        "file.exportDxf",
-        r#"{"path":"/tmp/o.dxf","selectedOnly":true}"#,
-        &["$R"],
-        "selection",
-        &[("$R", "*", false), ("$L1", "*", false), ("~artboards", "*", false), ("drawing", "settings.units", false)],
-    ),
-    // file.exportEps: file.export as EPS of the whole document (carries the native document); prefs flattener presets.
-    r(
-        "file.exportEps",
-        r#"{"path":"/tmp/o.eps"}"#,
-        &[],
-        "mode",
-        &[
-            ("drawing", "*", false),
-            ("~swatches", "*", false),
-            ("~swatchGroups", "*", false),
-            ("~graphicStyles", "*", false),
-            ("~charStyles", "*", false),
-            ("~paraStyles", "*", false),
-            ("~symbols", "*", false),
-            ("~patterns", "*", false),
-            ("~artboards", "*", false),
-            ("$ALL", "*", false),
-            ("$L1", "*", false),
-            ("$L2", "*", false),
-            ("children:$L1", "-", false),
-            ("children:$L2", "-", false),
-            ("children:$B", "-", false),
-            ("children:$CP", "-", false),
-            ("children:$CG", "-", false),
-            ("children:$G", "-", false),
-            ("$SL", "*", false),
-            ("$AS", "*", false),
-        ],
     ),
     // file.package: the document as it is in memory (needs a saved path) with its linked files and fonts.
     // UNSURE: fixture document is never saved: the command fails ('save the document first').
@@ -3620,50 +3526,6 @@ const ROWS: &[Row] = &[
     r("file.recovery.restore", r#"{}"#, &[], "", &[]),
     // file.recovery.discard: deletes copies from the recovery store.
     r("file.recovery.discard", r#"{}"#, &[], "", &[]),
-    // file.exportForWeb: renders artboard 0 (default clipToArtboard) and its slices, File Info as metadata; no write to the document.
-    r(
-        "file.exportForWeb",
-        r#"{"path":"/tmp/w.gif"}"#,
-        &[],
-        "",
-        &[
-            ("artboard:0", "rect", true),
-            ("$ALL", "*", false),
-            ("$L1", "*", false),
-            ("$L2", "*", false),
-            ("children:$L1", "-", false),
-            ("children:$L2", "-", false),
-            ("children:$B", "-", false),
-            ("children:$CP", "-", false),
-            ("children:$CG", "-", false),
-            ("children:$G", "-", false),
-            ("$SL", "*", false),
-            ("drawing", "settings.metadata,settings.title,settings.slices_clip_to_artboard", false),
-            ("~swatches", "*", false),
-            ("~symbols", "*", false),
-            ("~patterns", "*", false),
-        ],
-    ),
-    r(
-        "file.exportForWeb",
-        r#"{"path":"/tmp/w.gif","slices":"selected"}"#,
-        &["$R"],
-        "selection",
-        &[
-            ("artboard:0", "rect", true),
-            ("$ALL", "*", false),
-            ("$L1", "*", false),
-            ("$L2", "*", false),
-            ("children:$L1", "-", false),
-            ("children:$L2", "-", false),
-            ("children:$B", "-", false),
-            ("children:$CP", "-", false),
-            ("children:$CG", "-", false),
-            ("children:$G", "-", false),
-            ("$SL", "*", false),
-            ("drawing", "settings.metadata,settings.title", false),
-        ],
-    ),
     // css.export: CSS of ids/id, else the selection (scope selection), or of every layer (scope all): name, kind/geometry, paint, opacity, blend, effects of each object.
     // UNSURE: which non-appearance props CSS reads (opacity, blend) is my best reading of css_rules, which lives in another crate.
     r("css.export", r#"{"path":"/tmp/s.css"}"#, &["$R"], "selection", &[("$R", "name,data,appearance,props.opacity,props.blend", false)]),

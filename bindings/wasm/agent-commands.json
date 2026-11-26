@@ -1161,10 +1161,64 @@
     ],
     "type": "string"
    }
+  },
+  "output": {
+   "additionalProperties": true,
+   "properties": {
+    "bytes": {
+     "type": "number"
+    },
+    "dataBase64": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array"
+    },
+    "format": {
+     "type": "string"
+    },
+    "linked": {
+     "type": "array"
+    },
+    "path": {
+     "type": "json"
+    },
+    "warnings": {
+     "type": "array"
+    }
+   },
+   "type": "object"
   }
  },
  "file.exportEps": {
-  "description": "Writes the document as EPS with a PostScript level, preview and transparency options, or answers the data."
+  "description": "Writes the document as EPS with a PostScript level, preview and transparency options, or answers the data.",
+  "output": {
+   "additionalProperties": true,
+   "properties": {
+    "bytes": {
+     "type": "number"
+    },
+    "dataBase64": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array"
+    },
+    "format": {
+     "type": "string"
+    },
+    "linked": {
+     "type": "array"
+    },
+    "path": {
+     "type": "json"
+    },
+    "warnings": {
+     "type": "array"
+    }
+   },
+   "type": "object"
+  }
  },
  "file.exportForOffice": {
   "description": "Writes one artboard as a PNG at a chosen resolution for office documents and slides, or answers its data when no path is given.",
@@ -1223,6 +1277,27 @@
    "width": {
     "type": "number"
    }
+  },
+  "output": {
+   "additionalProperties": true,
+   "properties": {
+    "bytes": {
+     "type": "number"
+    },
+    "files": {
+     "type": "array"
+    },
+    "height": {
+     "type": "number"
+    },
+    "path": {
+     "type": "json"
+    },
+    "width": {
+     "type": "number"
+    }
+   },
+   "type": "object"
   }
  },
  "file.exportForWeb.preview": {
@@ -1323,6 +1398,33 @@
    "viewAfterSaving": {
     "type": "boolean"
    }
+  },
+  "output": {
+   "additionalProperties": true,
+   "properties": {
+    "bytes": {
+     "type": "number"
+    },
+    "dataBase64": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array"
+    },
+    "format": {
+     "type": "string"
+    },
+    "linked": {
+     "type": "array"
+    },
+    "path": {
+     "type": "json"
+    },
+    "warnings": {
+     "type": "array"
+    }
+   },
+   "type": "object"
   }
  },
  "file.exportSelection": {
