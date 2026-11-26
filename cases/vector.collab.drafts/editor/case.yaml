@@ -1,0 +1,30 @@
+format: 1
+id: vector.collab.drafts/editor
+feature: vector.collab.drafts
+intent: >-
+  In the editor, through the development host (`?replica=1&checkpoints=1`, the sample drawing): the
+  person adds a layer with the Layers panel's New Layer button; an agent's draft draws an ellipse
+  on the first layer (`ai/run` on the draft); the draft's comparison (`draft/compare`) lists it and
+  the drawing does not hold it; the person renames the new layer meanwhile; the person accepts the
+  draft (`draft/merge`, the agent's origin): the Layers panel shows the ellipse's row and the new
+  name. One Edit › Undo takes back the ellipse only, Edit › Redo brings it back. A checkpoint
+  recorded with a label at a save, a layer added after it, the checkpoint restored
+  (`replica/restore`): the drawing has the checkpoint's layers, and one Undo brings the later layer
+  back.
+layer: gate
+dimension: function
+source:
+  kind: synthetic
+  from: web/tests/drafts.mjs
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, web/tests/drafts.mjs, chromium]
+  - exec:
+      cmd: [node, web/tests/drafts.mjs, webkit]
+expected:
+  - { actual: "out:exec", compare: exit, value: 0 }
+since: "2026-11-26"
+timeout_s: 300
+requires: [chromium, webkit]

@@ -24,6 +24,7 @@
     "test:view": "node tests/view.mjs chromium && node tests/view.mjs webkit",
     "test:files": "node tests/files.mjs chromium && node tests/files.mjs webkit",
     "test:rewalk": "node tests/rewalk.mjs chromium && node tests/rewalk.mjs webkit",
+    "test:drafts": "node tests/drafts.mjs chromium && node tests/drafts.mjs webkit",
     "test:contract": "node ../../kition-sdk/tools/check-manifest.mjs ../kit.json --module public/engine"
   },
   "dependencies": {
