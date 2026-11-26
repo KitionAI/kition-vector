@@ -575,6 +575,9 @@ mod tests {
         let mut draft = VectorDocument::open_with_replica("Logo.kvector", &[], &doc.snapshot().unwrap(), &doc.blobs().unwrap()).unwrap();
         let notes = layer_named(&draft, "Notes");
         draft.execute("guide.add", json!({ "vertical": true, "pos": 120, "layer": notes })).unwrap();
+        // The ellipse goes on the first layer, which stays.
+        let first = draft.session.active().unwrap().doc.layers.iter().find(|l| l.name.as_deref() != Some("Notes")).map(|l| l.id.0).unwrap();
+        draft.execute("layer.setCurrent", json!({ "id": first })).unwrap();
         draft.execute("shape.ellipse", json!({ "x": 300, "y": 200, "width": 30, "height": 30 })).unwrap();
         let changes = draft.export_changes(&base).unwrap();
         let notes = layer_named(&doc, "Notes");
