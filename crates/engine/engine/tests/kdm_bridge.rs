@@ -444,7 +444,7 @@ fn an_agents_draft_merges_as_one_step_of_the_persons_undo() {
     let [person, agents] = replica_scopes(&a);
     let (mine, theirs) = (history_of(&mut a, None), history_of(&mut a, Some(agent.clone())));
     assert_eq!(theirs, (0, 0), "the agent has no step yet");
-    a.merge_changes(&changes, &agent).unwrap();
+    assert_eq!(a.merge_changes(&changes, &agent).unwrap().0, Some(UndoScope::Person), "the replica's step is the person's");
     assert_eq!(siblings(doc(&a), "A"), vec!["A", "B", "D"], "the draft's rectangle is in the drawing");
     assert_holds(&a, "merged");
     let (merged_hash, merged_view) = (a.state_hash().unwrap(), canonical(doc(&a)));

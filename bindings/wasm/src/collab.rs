@@ -154,14 +154,19 @@ impl VectorDocument {
     /// person, even when `origin` is an agent's (the person accepted the draft, KitModel M12a;
     /// `mergeChanges`, as `kition-sdk`'s `export_kit_session!` answers it): the engine's drawing
     /// follows, and the person's Undo takes the whole draft back. Add the draft's blobs first.
-    /// Answers `{"damage", "summary"}`, `summary` the `StateDiff` of the replicated state before
-    /// and after. A refused merge changes nothing and fails with the KDM's message.
+    /// Answers `{"damage", "summary", "scope"}`, `summary` the `StateDiff` of the replicated state
+    /// before and after, `scope` the undo scope the merge's step went to (`"person"`, or `null`
+    /// for none). A refused merge changes nothing and fails with the KDM's message.
     pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<Value, String> {
         self.pass.reset();
         let before = self.replicated_state()?;
-        let damage = self.session.merge_changes(bytes, origin).map_err(engine_error)?;
+        let (scope, damage) = self.session.merge_changes(bytes, origin).map_err(engine_error)?;
         let after = self.replicated_state()?;
-        Ok(json!({ "damage": damage, "summary": kition_kit::kdm::diff::diff_states(&before, &after).to_json() }))
+        Ok(json!({
+            "damage": damage,
+            "summary": kition_kit::kdm::diff::diff_states(&before, &after).to_json(),
+            "scope": scope.map(|scope| scope.as_str()),
+        }))
     }
 
     /// What merging a draft's changes would change in the drawing now, as `StateDiff` JSON;
@@ -522,7 +527,8 @@ mod tests {
         let changes = draft_changes(&mut doc);
         let state = doc.replicated_state().unwrap();
         let agent = Origin::agent("agent:helper");
-        doc.merge_changes(&changes, &agent).unwrap();
+        let answer = doc.merge_changes(&changes, &agent).unwrap();
+        assert_eq!(answer["scope"], json!("person"), "{answer}");
         let merged = doc.replicated_state().unwrap();
         assert!(doc.execute_as("edit.undo", json!({}), &agent).is_err(), "the agent's Undo has nothing to take");
         assert_eq!(doc.replicated_state().unwrap(), merged);
@@ -619,7 +625,7 @@ mod tests {
         for reply in [
             json!({ "target": node, "note": format!("about {node}") }),
             json!({ "objects": objects }),
-            json!({ "changed": Value::Object([(node.clone(), json!({ "by": node }))].into_iter().collect()) }),
+            json!({ "changed": Value::Object([(node.clone(), json!({ "objectId": node }))].into_iter().collect()) }),
         ] {
             let shown: Value = serde_json::from_str(&doc.model_reply(&reply.to_string()).unwrap()).unwrap();
             assert_eq!(shown, whole(&doc, &reply), "the same tool ids as the whole drawing's");

@@ -146,6 +146,10 @@ const VIEWING: &[&str] = &[
     "file.export",
     "file.exportSelection",
     "file.exportForOffice",
+    "file.exportPdf",
+    "file.exportEps",
+    "file.exportDxf",
+    "file.exportForWeb",
     "file.saveCopy",
     "edit.copy",
     "edit.findNext",
@@ -957,8 +961,19 @@ mod tests {
         let doc = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
         let commands = doc.commands();
         let flag = |id: &str| commands.iter().find(|command| command.id == id).map(|command| command.mutates);
-        for id in ["shape.rectangle", "arrange.group", "edit.undo", "edit.redo", "edit.cut", "file.new", "file.save", "command.batch", "select.save"]
-        {
+        for id in [
+            "shape.rectangle",
+            "arrange.group",
+            "edit.undo",
+            "edit.redo",
+            "edit.cut",
+            "file.new",
+            "file.save",
+            "command.batch",
+            "select.save",
+            // Export for Screens remembers its settings in the drawing.
+            "file.exportForScreens",
+        ] {
             assert_eq!(flag(id), Some(true), "{id} changes the drawing");
         }
         for id in [
@@ -968,6 +983,10 @@ mod tests {
             "edit.copy",
             "file.export",
             "file.exportBytes",
+            "file.exportPdf",
+            "file.exportEps",
+            "file.exportDxf",
+            "file.exportForWeb",
             "file.saveCopy",
             "layer.setCurrent",
             "file.inspect",
@@ -994,6 +1013,10 @@ mod tests {
             ("paint.toggleActive", json!({})),
             ("file.export", json!({ "format": "svg" })),
             ("file.exportBytes", json!({ "format": "png", "scale": 2, "background": "white", "artboard": 0 })),
+            ("file.exportPdf", json!({})),
+            ("file.exportEps", json!({})),
+            ("file.exportDxf", json!({})),
+            ("file.exportForWeb", json!({ "format": "png24" })),
         ] {
             assert!(!doc.commands().iter().any(|command| command.id == id && command.mutates), "{id}");
             let _ = doc.execute(id, params);

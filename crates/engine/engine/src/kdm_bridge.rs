@@ -532,28 +532,27 @@ impl Session {
     /// made the draft (the person accepted it, KitModel M12a, as the replica records it): local edits
     /// not written yet are written first, a gesture in progress is cut short, the document and its
     /// selection follow the replica, and the step undoes the whole draft. Add the draft's blobs
-    /// first ([`Session::add_blobs`]). A refused merge changes nothing.
-    pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<Damage> {
-        self.take_in(UndoScope::Person, "Merge Draft", |kdm| kdm.merge_changes(bytes, origin))
+    /// first ([`Session::add_blobs`]). Answers the undo scope the step went to (the replica's) and
+    /// the damage. A refused merge changes nothing.
+    pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<(Option<UndoScope>, Damage)> {
+        self.take_in("Merge Draft", |kdm| kdm.merge_changes(bytes, origin))
     }
 
     /// Writes the state a snapshot holds (a checkpoint of this drawing, `replica/restore`) over the
     /// active document by object id, as one undo step of `origin`'s scope, taken in as a merged
     /// draft is ([`Session::merge_changes`]). Nothing changes when the states are equal.
     pub fn restore_state(&mut self, snapshot: &[u8], origin: &Origin) -> Result<Damage> {
-        self.take_in(scope_of(origin), "Restore Version", |kdm| kdm.restore_state(snapshot, origin))
+        self.take_in("Restore Version", |kdm| kdm.restore_state(snapshot, origin)).map(|(_, damage)| damage)
     }
 
     /// One transaction `write` makes on the active document's replica, taken into the document as
-    /// a command's step: the view follows the replica, and the history of `scope` gets the step
-    /// (its undo step the replica's, which the replica records in the same scope) when the
-    /// transaction is one.
+    /// a command's step: the view follows the replica, and the history of the scope the replica
+    /// recorded the step in gets it (its undo step the replica's), when it is one.
     fn take_in(
         &mut self,
-        scope: UndoScope,
         label: &str,
-        write: impl FnOnce(&mut VectorSession) -> kdm_model::kition_kit::session::Result<(u32, Damage)>,
-    ) -> Result<Damage> {
+        write: impl FnOnce(&mut VectorSession) -> kdm_model::kition_kit::session::Result<(Option<UndoScope>, Damage)>,
+    ) -> Result<(Option<UndoScope>, Damage)> {
         // A gesture cut short belongs to the step on top, as for undo.
         self.doc_mut()?.undo_interaction();
         let kdm = self.active_kdm()?;
@@ -568,19 +567,19 @@ impl Session {
         } else if changed {
             st.detach_kdm();
         }
-        let steps = result.as_ref().map_or(0, |(steps, _)| *steps);
-        if follow && steps > 0 {
+        let scope = result.as_ref().ok().and_then(|(scope, _)| *scope);
+        if follow && let Some(scope) = scope {
             let own = st.history_scope;
             st.use_scope(scope);
             let mut entry = crate::HistoryEntry::new(label, before, selection);
-            entry.steps = steps;
+            entry.steps = 1;
             st.push_undo(entry);
             // The step is written already: the bridge has nothing of it left to record.
             st.mark();
             st.use_scope(own);
         }
         st.trim_kdm();
-        result.map(|(_, damage)| damage).map_err(kdm_error)
+        result.map_err(kdm_error)
     }
 
     /// Opens another replica's snapshot (with the blobs it references) as a new document, a
