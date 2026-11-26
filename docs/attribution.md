@@ -10,6 +10,8 @@ Generated-in-code art is original and has no file to list. This covers the defau
 
 **Optional build input: kition-fonts.** Native builds made with `KITION_FONTS_DIR=<kition-fonts checkout>` embed every font in its `fonts/manifest.txt` (per-file authors and licences in its [`ATTRIBUTION.md`](https://github.com/KitionAI/kition-fonts/blob/main/ATTRIBUTION.md)): today Droid Sans Fallback (Apache-2.0) and, under the SIL Open Font License 1.1, Inter, Lora, JetBrains Mono, Bricolage Grotesque, Carlito, Caladea, Tinos, Cousine, Arimo, Noto Color Emoji, Ma Shan Zheng, BIZ UDPGothic, BIZ UDMincho and Noto Sans Arabic. Web builds made with it embed only BIZ UDPGothic Regular. They are not files in this repository; kition-fonts' `ATTRIBUTION.md` lists them. Builds without `KITION_FONTS_DIR` embed none of them.
 
+**Fonts the web editor serves (not files in this repository).** `web/scripts/build-engine.sh` copies these kition-fonts folders unmodified, each with its licence file, into the git-ignored `web/public/fonts/` and writes their lines of kition-fonts' manifest beside them (plan 2026-11-25, stage 5): Droid Sans Fallback (Apache-2.0; the editor's lazy Chinese face) and, under the SIL Open Font License 1.1, Lora, Bricolage Grotesque, Arimo, Tinos, Cousine and Ma Shan Zheng (the font menu's served families). Per-file authors, sources and licences: kition-fonts' [`ATTRIBUTION.md`](https://github.com/KitionAI/kition-fonts/blob/main/ATTRIBUTION.md).
+
 | Asset | Author | Source | Licence | Notes |
 |---|---|---|---|---|
 | `assets/fonts/Inter-Medium.ttf` | Rasmus Andersson / The Inter Project Authors | https://github.com/rsms/inter | OFL-1.1 (`assets/fonts/OFL-Inter.txt`) | Open-source typeface, not product iconography or artwork |

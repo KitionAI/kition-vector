@@ -386,6 +386,8 @@ fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<V
     let selected = item.targets(s, p)?;
     let ids = super::graph::paint_targets(&s.doc()?.doc, &selected);
     let label = if fill { "Fill Color" } else { "Stroke Color" };
+    // Characters selected in the type being edited take the paint, not the whole type object.
+    let range = edited_range(s, p);
     edit_items_then(
         s,
         &ids,
@@ -394,10 +396,25 @@ fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<V
         label,
         fill,
         |n, index| {
+            let node = n.id;
             if index.is_none()
                 && let NodeKind::Text(t) = &mut n.kind
             {
                 let (xf, lb) = (t.xf, t.local_bounds());
+                if let Some((_, a, b)) = range.filter(|(id, _, _)| *id == node) {
+                    kition_vector_text::edit::style_range(&mut t.runs, a, b, |style| {
+                        if fill {
+                            style.fill = place_run_paint(&paint, p, xf, lb);
+                        } else {
+                            if !paint.is_none() {
+                                run_stroke_weight(style);
+                            }
+                            let bounds = kition_vector_doc::appearance::stroke_paint_bounds(lb, style.stroke_width);
+                            style.stroke = place_run_paint(&paint, p, xf, bounds);
+                        }
+                    });
+                    return Ok(());
+                }
                 for r in &mut t.runs {
                     if !fill && !paint.is_none() {
                         run_stroke_weight(&mut r.style);
@@ -433,6 +450,24 @@ fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<V
     }
     s.remember_paint(&paint);
     ok()
+}
+
+/// The characters selected in the type the Type tool edits (`(id, start, end)`, bytes), when a
+/// paint command acts on the selection (no `ids` or `item` given) and some are selected: the paint
+/// goes to them, as Illustrator colours selected characters.
+fn edited_range(s: &Session, p: &Value) -> Option<(NodeId, usize, usize)> {
+    if !s.tool_wants_text() || p.get("ids").is_some() || p.get("item").is_some() {
+        return None;
+    }
+    let options = s.tool_options();
+    let id = NodeId(options.get("editing")?.as_u64()?);
+    let offset = |key: &str| options.get(key).and_then(Value::as_u64).and_then(|v| usize::try_from(v).ok());
+    let len = match &s.doc().ok()?.doc.node(id)?.kind {
+        NodeKind::Text(t) => t.plain_text().len(),
+        _ => return None,
+    };
+    let (a, b) = (offset("start")?.min(len), offset("end")?.min(len));
+    (a < b).then_some((id, a, b))
 }
 
 /// A type run's stroke; a painted stroke on a run without one gets 1 pt.

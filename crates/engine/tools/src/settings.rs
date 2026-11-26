@@ -14,6 +14,9 @@ type Row = (&'static [&'static str], Option<&'static str>, &'static [&'static st
 /// The Liquify tools.
 pub const LIQUIFY: &[&str] = &["warp", "twirl", "pucker", "bloat", "scallop", "crystallize", "wrinkle"];
 
+/// The Type tools.
+pub const TYPE: &[&str] = &["type", "areaType", "typeOnPath", "verticalType", "verticalAreaType", "verticalTypeOnPath"];
+
 /// The Symbolism tools.
 pub const SYMBOLISM: &[&str] =
     &["symbolSprayer", "symbolShifter", "symbolScruncher", "symbolSizer", "symbolSpinner", "symbolStainer", "symbolScreener", "symbolStyler"];
@@ -23,6 +26,8 @@ const ROWS: &[Row] = &[
     (LIQUIFY, Some("liquify"), &["width", "height", "angle", "intensity", "usePressure", "showBrush"]),
     (LIQUIFY, None, &["detail", "simplify", "simplifyOn", "rate", "complexity", "horizontal", "vertical", "affectAnchors", "affectIn", "affectOut"]),
     (SYMBOLISM, Some("symbolism"), &["diameter", "intensity", "density"]),
+    // What new type is set in (the Character panel with no type selected).
+    (TYPE, Some("type"), &["newFont", "newStyle", "newSize"]),
     (&["mirrorCut"], None, &["axis", "keep"]),
     (&["pinWarp"], None, &["showMesh", "expand"]),
     (&["arc"], None, &["closed"]),

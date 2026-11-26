@@ -1,4 +1,5 @@
 import type { KitEngineInfo } from '@kition/sdk/editor'
+import { typingOf, type Typing } from './type/typing.ts'
 
 /** One row of the Layers panel: a layer or an object in it. */
 export type VectorNode = {
@@ -22,6 +23,8 @@ export type VectorNode = {
   printable: boolean
   preview: boolean
   dimImages: number | null
+  /** A type object's characters, or null. */
+  text: string | null
   children: VectorNode[]
 }
 
@@ -69,9 +72,11 @@ export type VectorInfo = {
   redo: string[]
   /** Paste Remembers Layers (the Layers panel menu's option). */
   pasteRemembersLayers: boolean
+  /** What the Type tool edits and the type panels act on (plan 2026-11-25, stage 5). */
+  typing: Typing
 }
 
-type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; template?: boolean; printable?: boolean; preview?: boolean; dimImages?: number | null; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: Partial<StrokeOptions> & { widthPoints?: number[][] | null }; bounds?: Bounds; children?: InspectedNode[] }
+type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; template?: boolean; printable?: boolean; preview?: boolean; dimImages?: number | null; text?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: Partial<StrokeOptions> & { widthPoints?: number[][] | null }; bounds?: Bounds; children?: InspectedNode[] }
 
 /** The stroke options of `node`, with the engine's defaults where it leaves one out. */
 function strokeOptionsOf(options: InspectedNode['strokeOptions']): StrokeOptions | null {
@@ -109,6 +114,7 @@ function nodeOf(node: InspectedNode): VectorNode {
     printable: node.printable !== false,
     preview: node.preview !== false,
     dimImages: typeof node.dimImages === 'number' ? node.dimImages : null,
+    text: typeof node.text === 'string' ? node.text : null,
     children: (node.children ?? []).map(nodeOf),
   }
 }
@@ -132,6 +138,7 @@ export function describe(info: KitEngineInfo): VectorInfo {
     history?: unknown[]
     redo?: unknown[]
     pasteRemembersLayers?: boolean
+    typing?: unknown
   }
   const layers = (inspected.layers ?? []).map(nodeOf)
   const selection = inspected.selection ?? []
@@ -163,6 +170,7 @@ export function describe(info: KitEngineInfo): VectorInfo {
     history: Array.isArray(inspected.history) ? inspected.history.map(String) : [],
     redo: Array.isArray(inspected.redo) ? inspected.redo.map(String) : [],
     pasteRemembersLayers: inspected.pasteRemembersLayers === true,
+    typing: typingOf(inspected.typing),
   }
 }
 

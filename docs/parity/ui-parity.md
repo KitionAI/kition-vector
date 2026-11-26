@@ -157,6 +157,9 @@ frame's options row (`web/src/panels/ControlBar.tsx`) and its own Color Picker (
 | Layers panel: tree, eye, lock, target, selection square, rename, drag (restack, into a layer or group, Alt copies), Shift/Cmd selection, panel and row menus | partial | no thumbnails; only the rows in view are drawn |
 | Artboards panel: list, rename, new, duplicate, delete, reorder, Artboard Options (preset, size, orientation, position); status bar artboard navigation | partial | no Rename Artboards for several, Switch Orientation or Delete Empty Artboards commands |
 | History panel: steps done and undone, go back or forward | partial | steps back by undoing one at a time (no jump in the engine) |
+| Character panel: font family (searchable, previewed, recently used), style, size, leading, kerning, tracking, scales, baseline shift, rotation, colour, caps, super/subscript, underline, strikethrough | partial | acts on the selected characters, else the whole type; previews only fonts the page has loaded |
+| Paragraph panel: seven alignments, indents, space before and after, hyphenation | partial | no Paragraph panel menu (composer, hanging punctuation) in the editor |
+| Type on the canvas: caret, selection, double/triple-click, Cmd+A, copy/paste of characters, input method composition at the caret | partial | the input method is caught in the editor (kit-editor's text field moved to the caret) |
 | Blend panel (30.7) | missing | `blend.options` exists |
 | SVG Interactivity, Retype, Comments, Version History panels | missing | the last two are cloud features (out of scope) |
 | Preferences: every option acts | partial | ~17 stored but unused |

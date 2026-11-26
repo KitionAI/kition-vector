@@ -52,13 +52,19 @@ import { StopPicker, type PickStop } from './gradient/StopPicker'
 import { ControlBar } from './panels/ControlBar'
 import { usePaintPicker, useProxies } from './panels/usePaint'
 import { VectorDock } from './panels/dock'
-import { DEFAULT_SHOWN, shownOf, windowCommand, windowRows, windowShown, windowTab, type DockTabs } from './panels/dockModel'
+import { DEFAULT_SHOWN, groupOf, shownOf, windowCommand, windowRows, windowShown, windowTab, type DockTabs } from './panels/dockModel'
 import { ArtboardNavProvider, ArtboardNavigator, type ArtboardNav } from './artboards/nav'
+import { blinkingCaret } from './type/caret'
+import { useTypeEditing } from './type/useTypeEditing'
+import { useDrawingFonts } from './type/useDrawingFonts'
+import { RevealPanel } from './type/TypeSection'
 
 /** The view tools are the host's (the Zoom tool Kition Vector's own, with its marquee); the engine's other tools run in the engine. */
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: VECTOR_ZOOM_TOOL }
 const HIDDEN = new Set(HIDDEN_TOOLS)
 const round = (value: number) => Math.round(value * 100) / 100
+/** The engine's overlays as the editor draws them: readouts on two lines, a blinking text caret. */
+const DRAW_OVERLAY = blinkingCaret(drawReadout)
 /** Menus kept in a read-only document. */
 const VIEW_MENUS = ['View', 'Window', 'Help']
 /** File › Document Setup…'s shortcut, as the reference's. */
@@ -119,11 +125,13 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   // double-click) opens its dialog (plan 2026-11-25, stage 2: `canvas/toolDialogs.ts`).
   const onToolDialog = useRef<(name: string, params: unknown) => void>(() => undefined)
   const stopPicker = useRef<PickStop | null>(null)
-  const toolOptions = useMemo(() => ({ initial: 'selection', hostTools: HOST_TOOLS, hidden: HIDDEN, onDialog: (name: string, params: unknown) => onToolDialog.current(name, params), drawOverlay: drawReadout }), [])
+  const toolOptions = useMemo(() => ({ initial: 'selection', hostTools: HOST_TOOLS, hidden: HIDDEN, onDialog: (name: string, params: unknown) => onToolDialog.current(name, params), drawOverlay: DRAW_OVERLAY }), [])
   const tools = useEngineTools(session.tool, doc != null, change, toolOptions)
   const canvas = useRef<KitCanvasHandle>(null)
   const viewMemory = useRef<RasterView | null>(null)
   const [zoom, setZoom] = useState(1)
+  // Moves with every change of the view: what is laid over the canvas follows it.
+  const [viewTick, setViewTick] = useState(0)
   const bounds = state?.selectionBounds
   const { commands } = editor
   const [exporting, setExporting] = useState(false)
@@ -220,6 +228,12 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
     if (active instanceof HTMLTextAreaElement && active.classList.contains('kui-text-sink')) workspace()?.focus({ preventScroll: true })
   }, [typing])
 
+  // Text typed on the canvas: an input method's composition in place, its candidate window at the
+  // caret, copy and paste of characters, triple-click timing, the blinking caret (stage 5).
+  const typeEditing = useTypeEditing({ info: state, wantsText: tools.wantsText, activeTool: tools.active, tool: session.tool, refresh: tools.refresh, canvas, view: viewTick })
+  // The fonts the drawing needs: the editor's lazy Chinese face once text wants it, served families it names.
+  useDrawingFonts(doc)
+
   // Art off the artboards widens the extent and may move its origin: the view moves with it, so
   // the drawing stays where it is on the screen.
   const origin = state?.origin
@@ -279,6 +293,16 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   }
   const windowNow = useRef(windowRow)
   windowNow.current = windowRow
+  // A panel brought forward (Properties' Character and Paragraph buttons): its group shown, its tab in front.
+  const revealPanel = useCallback(
+    (tab: string) => {
+      const group = groupOf(tab)
+      if (!group) return
+      setShown({ ...shownNow.current, [group]: true })
+      window.setTimeout(() => dock.current?.showTab(tab), 0)
+    },
+    [setShown],
+  )
   const shownNow = useRef(shown)
   shownNow.current = shown
 
@@ -327,9 +351,9 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   }, [menuAt, state])
 
   /** Gives `key` to the active tool, which takes it now (`toolKeys`), and shows its answer. */
-  const toTool = (key: string, mods: { shift: boolean; alt: boolean }) => {
+  const toTool = (key: string, mods: { shift: boolean; alt: boolean; command?: boolean }) => {
     const zoom = canvas.current?.view()?.zoom ?? 1
-    void session.tool('toolKey', [key, JSON.stringify({ shift: mods.shift, alt: mods.alt, command: false, control: false, space: false }), zoom], true).then(() => tools.refresh())
+    void session.tool('toolKey', [key, JSON.stringify({ shift: mods.shift, alt: mods.alt, command: mods.command === true, control: false, space: false }), zoom], true).then(() => tools.refresh())
   }
   const singleKeys = useMemo(() => singleKeyCommands(commands.filter((command) => !isHiddenEverywhere(command.id))), [commands])
   const isolationPath = state?.isolation != null ? (nodePath(state.layers, state.isolation)?.names ?? []) : null
@@ -408,6 +432,8 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           zoom={zoom}
           hiddenCommands={isHiddenEverywhere}
           onKeyDown={(event) => {
+            // An input method's keys are its own while it composes.
+            if (event.key === 'Process' || (event as { nativeEvent?: KeyboardEvent }).nativeEvent?.isComposing) return false
             const plain = !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey
             // Escape a busy tool did not take deselects (which also ends a pen path, as the path being
             // drawn is the one selected), then leaves isolation mode; taken (default prevented) only
@@ -437,6 +463,9 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
                   break
                 case 'endText':
                   toTool('Escape', { shift: false, alt: false })
+                  break
+                case 'textKey':
+                  toTool(own.key, { shift: event.shiftKey, alt: event.altKey, command: true })
                   break
                 case 'nudge':
                   void editor.run('object.nudge', { dx: own.dx, dy: own.dy, big: own.big, copy: own.copy })
@@ -504,10 +533,27 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
             </div>
           }
           options={state ? <ControlBar info={state} /> : null}
-          panels={state ? <VectorDock info={state} shown={shown} dock={dock} /> : null}
+          panels={
+            state ? (
+              <RevealPanel.Provider value={revealPanel}>
+                <VectorDock info={state} shown={shown} dock={dock} />
+              </RevealPanel.Provider>
+            ) : null
+          }
         >
           <div className="kui-row" ref={region}>
-            <KitDocumentCanvas canvas={canvas} viewMemory={viewMemory} framed={false} initialArea={initialArea} decorateUnder={marks} onView={(view) => setZoom(view.zoom)}>
+            <KitDocumentCanvas
+              canvas={canvas}
+              viewMemory={viewMemory}
+              framed={false}
+              initialArea={initialArea}
+              decorateUnder={marks}
+              animated={typeEditing.collapsed}
+              onView={(view) => {
+                setZoom(view.zoom)
+                setViewTick((tick) => tick + 1)
+              }}
+            >
               {isolationPath ? <IsolationBar path={isolationPath} onExit={exitIsolation} /> : null}
             </KitDocumentCanvas>
           </div>

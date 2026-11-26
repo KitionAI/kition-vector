@@ -28,6 +28,7 @@ mod pass;
 mod place;
 mod rests;
 mod selection;
+mod typing;
 
 use kition_kit::raster::{self, Frame};
 use kition_kit::tools::{KitTools, PointerAction, ToolInfo, ToolMods, ToolOverlay, ToolPointer, ToolRequest, ToolResponse};
@@ -62,12 +63,25 @@ pub struct VectorDocument {
     damage: Option<kition_kit::tools::ToolDamage>,
     /// The view's zoom the last tool event came at.
     zoom: f64,
+    /// What the Type tool edits (`typing` in `inspect()`), kept with `claims`.
+    editing: typing::Editing,
 }
 
 /// The places in `inspect()` that are the editing session, not the drawing (Kit Process Protocol
 /// section 7a): what an agent's call saves and puts back, and kition-headless's volatile keys.
-pub const EDITOR_STATE: &[&str] =
-    &["/currentLayer", "/layerRows", "/isolation", "/selection", "/selectionBounds", "/selectionRotation", "/target", "/tool", "/toolKeys", "/paint"];
+pub const EDITOR_STATE: &[&str] = &[
+    "/currentLayer",
+    "/layerRows",
+    "/isolation",
+    "/selection",
+    "/selectionBounds",
+    "/selectionRotation",
+    "/target",
+    "/tool",
+    "/toolKeys",
+    "/paint",
+    "/typing",
+];
 
 /// The keys a tool may take ahead of their shortcuts (`Tool::claims_key`), as the page names them.
 const CLAIMABLE: &[(&str, ToolKey)] = &[
@@ -138,6 +152,7 @@ impl VectorDocument {
             claims: Vec::new(),
             damage: None,
             zoom: 1.0,
+            editing: typing::Editing::default(),
         }
     }
 
@@ -164,13 +179,14 @@ impl VectorDocument {
         }
     }
 
-    /// The keys the active tool takes ahead of their shortcuts now, asked after every event and
-    /// command, for `inspect()`.
+    /// The keys the active tool takes ahead of their shortcuts now, and what the Type tool edits,
+    /// asked after every event and command, for `inspect()`.
     fn ask_claims(&mut self, zoom: f64) {
         let view = Self::view(zoom);
         self.zoom = view.zoom;
         let session = &mut self.session;
         self.claims = CLAIMABLE.iter().filter(|(_, key)| session.tool_claims_key(*key, view)).map(|(name, _)| *name).collect();
+        self.editing = typing::editing(session, view);
     }
 
     /// After a command: it may change the keys the active tool takes (the artboards a Delete
@@ -479,6 +495,9 @@ impl KitDocument for VectorDocument {
             object.insert("origin".into(), json!([origin.x, origin.y]));
             // The keys the active tool takes now ahead of their shortcuts (the editor gives them to it).
             object.insert("toolKeys".into(), json!(self.claims));
+            // What the Type tool edits, and the attributes the Character and Paragraph panels show.
+            let state = self.active()?;
+            object.insert("typing".into(), typing::report(&state.doc, &state.selection, &self.editing, origin));
             if !links.is_empty() {
                 object.insert("links".into(), Value::Array(links));
             }
@@ -767,7 +786,17 @@ impl KitTools for VectorDocument {
         // where it was and where it is now: the page repaints just that ([`Self::damage_of`]).
         let before = (kind == PointerKind::Drag && self.session.tool_transforming()).then(|| self.selected_bounds()).flatten();
         let (revision, extent) = (self.revision(), self.bounds());
+        let selecting = kition_vector_tools::catalog::is_selection_tool(self.session.tool_id());
         let answer = self.session.pointer(&engine_event, Self::view(event.zoom)).map_err(engine_error);
+        // A selection tool's double-click on type edits it with the caret where it was clicked:
+        // the Type tool takes over at once and gets the click (plan 2026-11-25, stage 5).
+        if kind == PointerKind::DoubleClick
+            && selecting
+            && let Ok(requests) = &answer
+            && requests.iter().any(|request| matches!(request, UiRequest::SwitchTool(id) if id == "type"))
+        {
+            self.caret_at(at, event.zoom).map_err(engine_error)?;
+        }
         self.damage = before.and_then(|before| self.damage_of(before, revision, extent));
         if !self.session.tool_busy() {
             self.held.set(None);
@@ -776,6 +805,11 @@ impl KitTools for VectorDocument {
     }
 
     fn key(&mut self, key: &str, mods: ToolMods, zoom: f64) -> Result<ToolResponse, String> {
+        // The page's requests of the Type tool (an input method's marked text, …): see `typing`.
+        if let Some(body) = key.strip_prefix(typing::REQUEST) {
+            let requests = typing::request(&mut self.session, body, Self::view(zoom))?;
+            return Ok(self.respond(requests, None, zoom));
+        }
         let Some(engine_key) = key_in(key) else { return Ok(self.respond(Vec::new(), None, zoom)) };
         let requests = self.session.tool_key(engine_key, mods_in(mods), Self::view(zoom)).map_err(engine_error);
         // An Escape that dropped the gesture ends what it held.
@@ -797,6 +831,18 @@ impl KitTools for VectorDocument {
 
     fn take_damage(&mut self) -> Option<kition_kit::tools::ToolDamage> {
         self.damage.take()
+    }
+}
+
+impl VectorDocument {
+    /// Chooses the Type tool and clicks at `at`, which puts the caret there in the type under it.
+    fn caret_at(&mut self, at: Point, zoom: f64) -> kition_vector_engine::Result<()> {
+        let view = Self::view(zoom);
+        self.session.switch_tool("type", view)?;
+        for kind in [PointerKind::Down, PointerKind::Up] {
+            self.session.pointer(&PointerEvent { kind, pos: at, mods: Mods::default(), pressure: 1.0 }, view)?;
+        }
+        Ok(())
     }
 }
 
@@ -854,6 +900,41 @@ fn local_edits(doc: &kition_vector_doc::Document) -> bool {
     doc.layers.iter().all(|layer| plain(layer))
 }
 
+/// Adds a font file's faces to the engine's (engine contract E9: the editor's `lazyFonts`, a
+/// served family picked in the font menu, a file the person loads): text in a family it names, or
+/// with characters no other face has (Chinese in a web build, which embeds no CJK face), is set in
+/// them from then on. Answers how many faces it added (none for bytes that are not a font).
+pub fn add_font(bytes: &[u8]) -> usize {
+    kition_vector_text::FontDb::global().add_font(bytes.to_vec())
+}
+
+/// Whether text laid out since the last call had a character no face covers (it drew as a missing
+/// glyph); the call clears it (engine contract E9a: the editor loads its `lazyFonts` then).
+pub fn wants_fonts() -> bool {
+    kition_vector_text::FontDb::global().take_wanted()
+}
+
+impl VectorDocument {
+    /// [`add_font`], then the drawing's type laid out again in what it added (no history step; a
+    /// saved drawing stays saved): `{faces, families}`, the families that were new.
+    pub fn add_face(&mut self, bytes: &[u8]) -> Value {
+        let before = kition_vector_text::FontDb::global().family_list();
+        let faces = add_font(bytes);
+        let families: Vec<String> =
+            kition_vector_text::FontDb::global().family_list().iter().filter(|family| !before.contains(family)).cloned().collect();
+        if faces > 0 {
+            self.refresh_type();
+        }
+        json!({ "faces": faces, "families": families })
+    }
+
+    /// Lays the drawing's type out again in the fonts there are now (after fonts were added): its
+    /// bounds follow the faces it is set in. No history step; a saved drawing stays saved.
+    pub fn refresh_type(&mut self) -> bool {
+        self.session.execute("text.rescanFonts", &json!({})).is_ok()
+    }
+}
+
 kition_kit::export_kit_document!(VectorDocument as "VectorDocument");
 kition_kit::export_kit_tools!(VectorDocument as "VectorDocument");
 
@@ -876,8 +957,32 @@ pub mod web {
         kition_vector_engine::Origin::decode(origin).ok_or_else(|| error(format!("origin is not [kind, principal, label]: {origin}")))
     }
 
+    /// Adds a font file's faces (the editor's `lazyFonts`: Chinese in a web build); answers how many.
+    #[wasm_bindgen(js_name = addFont, wasm_bindgen = kition_kit::wasm_bindgen)]
+    pub fn add_font(bytes: &[u8]) -> u32 {
+        u32::try_from(crate::add_font(bytes)).unwrap_or(u32::MAX)
+    }
+
+    /// Whether text laid out since the last call drew a missing glyph; the call clears it.
+    #[wasm_bindgen(js_name = wantsFonts, wasm_bindgen = kition_kit::wasm_bindgen)]
+    pub fn wants_fonts() -> bool {
+        crate::wants_fonts()
+    }
+
     #[wasm_bindgen(js_class = "VectorDocument", wasm_bindgen = kition_kit::wasm_bindgen)]
     impl WebDocument {
+        /// Adds a font file's faces and lays the drawing's type out again in them: `{faces, families}` as JSON.
+        #[wasm_bindgen(js_name = addFace)]
+        pub fn add_face(&mut self, bytes: &[u8]) -> String {
+            self.0.add_face(bytes).to_string()
+        }
+
+        /// Lays the drawing's type out again in the fonts there are now (after the editor's `lazyFonts` came).
+        #[wasm_bindgen(js_name = refreshType)]
+        pub fn refresh_type(&mut self) -> bool {
+            self.0.refresh_type()
+        }
+
         pub fn version(&mut self) -> Result<Vec<u8>, JsError> {
             self.0.version().map_err(error)
         }

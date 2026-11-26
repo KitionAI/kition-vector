@@ -371,3 +371,59 @@ fn layout_cache_follows_fonts_added_later() {
     assert!(FontDb::global().add_font(font) > 0, "the test font is new to this process");
     assert!(!Arc::ptr_eq(&before, &tool.layout(t)), "a font added after the layout must refresh it");
 }
+
+/// What new type is set in (the Character panel with no type selected): a click's `text.add` and a
+/// path's `text.addInPath` take the family, style and size given; null gives them back to the
+/// engine's defaults. Every Type tool keeps them (one store), as options that persist.
+#[test]
+fn new_type_takes_the_family_style_and_size_set_for_it() {
+    let (d, _) = crate::testutil::doc_with_rect();
+    let (sel, p) = (Selection::default(), paint());
+    let c = cx(&d, &sel, &p);
+    let mut tool = TypeTool::new("type");
+    tool.set_option("newFont", &json!("Source Serif 4"));
+    tool.set_option("newStyle", &json!("Regular"));
+    tool.set_option("newSize", &json!(36));
+    assert_eq!(tool.options()["newSize"], json!(36.0));
+    tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 400.0, 420.0));
+    let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 400.0, 420.0));
+    assert!(
+        acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.add" && v["font"] == "Source Serif 4" && v["style"] == "Regular" && v["size"] == 36.0)),
+        "{acts:?}"
+    );
+    tool.set_option("newSize", &Value::Null);
+    tool.set_option("newFont", &json!("  "));
+    tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 400.0, 460.0));
+    let acts = tool.pointer(&c, &PointerEvent::new(PointerKind::Up, 400.0, 460.0));
+    assert!(
+        acts.iter().any(|a| matches!(a, Action::Exec(cmd, v) if cmd == "text.add" && v.get("size").is_none() && v.get("font").is_none())),
+        "{acts:?}"
+    );
+    let stores: Vec<_> = crate::settings::stores("verticalAreaType").collect();
+    assert!(stores.iter().any(|(store, keys)| *store == "type" && keys.contains(&"newSize")), "{stores:?}");
+}
+
+/// The page tells the tool when a press comes after a pause (`resetClicks`): a third press then
+/// places the caret, where a quick one selects the paragraph.
+#[test]
+fn a_press_after_a_pause_counts_clicks_afresh() {
+    let (d, id) = doc_with_text("One two\nthree");
+    let (sel, p) = (Selection { objects: vec![id], ..Default::default() }, paint());
+    let c = cx(&d, &sel, &p);
+    let at = Point::new(105.0, 95.0);
+    let mut tool = TypeTool::new("type");
+    tool.start_editing(id, 0);
+    let press = |tool: &mut TypeTool, kind: PointerKind| tool.pointer(&c, &PointerEvent::new(kind, at.x, at.y));
+    for kind in [PointerKind::Down, PointerKind::Up, PointerKind::Down, PointerKind::Up, PointerKind::DoubleClick] {
+        press(&mut tool, kind);
+    }
+    assert!(tool.sel().0 < tool.sel().1, "a double-click selects a word");
+    tool.set_option("resetClicks", &json!(true));
+    press(&mut tool, PointerKind::Down);
+    press(&mut tool, PointerKind::Up);
+    assert_eq!(tool.sel().0, tool.sel().1, "after a pause the third press puts the caret, it selects no paragraph");
+    for kind in [PointerKind::Down, PointerKind::Up, PointerKind::DoubleClick, PointerKind::Down, PointerKind::Up] {
+        press(&mut tool, kind);
+    }
+    assert_eq!(tool.sel(), (0, 7), "a quick third press selects the paragraph");
+}

@@ -12,6 +12,8 @@ import { PathfinderSection, QuickActions } from './PathfinderSection'
 import { StrokeSection } from './StrokeSection'
 import { SwatchesSection } from './SwatchesSection'
 import { TransformSection } from './TransformSection'
+import { CharacterPanel, ParagraphPanel } from '../type/TypePanels'
+import { TypeSection } from '../type/TypeSection'
 
 /** The dock's width in CSS pixels. */
 export const DOCK_WIDTH = 264
@@ -25,6 +27,7 @@ function PropertiesPanel({ info }: { info: VectorInfo }) {
   return (
     <div className="vector-panel-scroll" data-testid="vector-properties-panel">
       <TransformSection info={info} />
+      <TypeSection info={info} />
       <AppearanceSection info={info} />
       <StrokeSection info={info} />
       <GradientSection info={info} />
@@ -35,7 +38,7 @@ function PropertiesPanel({ info }: { info: VectorInfo }) {
   )
 }
 
-/** Each tab's content. Stage 5's Character and Paragraph panels add a line each here. */
+/** Each tab's content. */
 const CONTENT: Readonly<Record<string, (info: VectorInfo) => ReactNode>> = {
   properties: (info) => <PropertiesPanel info={info} />,
   align: (info) => (
@@ -48,6 +51,8 @@ const CONTENT: Readonly<Record<string, (info: VectorInfo) => ReactNode>> = {
       <PathfinderSection info={info} />
     </div>
   ),
+  character: (info) => <CharacterPanel info={info} />,
+  paragraph: (info) => <ParagraphPanel info={info} />,
   layers: (info) => <LayersPanel info={info} />,
   artboards: (info) => <ArtboardsPanel info={info} />,
   swatches: (info) => (

@@ -1060,3 +1060,147 @@ button.vector-proxy:focus-visible {
 .vector-color-field-hex input {
   width: 76px;
 }
+
+/* Type (plan 2026-11-25, stage 5): the font menu, the Character and Paragraph panels, the control bar's type fields. */
+.vector-font-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vector-font-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vector-font-menu {
+  width: 280px;
+  padding: 0;
+}
+
+.vector-font-menu .kui-command-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.vector-font-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vector-font-row[data-current='true'] {
+  font-weight: 600;
+}
+
+.vector-font-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.vector-font-sample {
+  color: var(--kit-text-muted);
+  font-size: 14px;
+}
+
+.vector-font-state {
+  flex-shrink: 0;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+}
+
+.vector-font-load {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-top: 1px solid var(--kit-border);
+  background: none;
+  color: var(--kit-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.vector-font-load:hover {
+  background: var(--kit-primary-soft);
+}
+
+.vector-type-family {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 0 12px 6px;
+}
+
+.vector-type-style .kui-select,
+.vector-type-style select {
+  width: 100%;
+}
+
+.vector-type-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 0;
+  font-size: 12px;
+}
+
+.vector-type-toggles,
+.vector-type-align {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.vector-type-align {
+  padding: 0 12px 8px;
+}
+
+.vector-type-toggles [data-active='true'],
+.vector-type-align [data-active='true'] {
+  background: var(--kit-primary-soft);
+  color: var(--kit-primary);
+}
+
+.vector-type-more {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px 0;
+}
+
+.vector-hint {
+  margin: 0 12px 8px;
+  color: var(--kit-text-muted);
+  font-size: 12px;
+}
+
+.vector-control-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vector-control-type .vector-font-trigger {
+  width: 160px;
+}
+
+.vector-control-type .vector-type-style {
+  width: 110px;
+}
+
+.vector-control-bar .vector-control-type .vector-field {
+  width: 96px;
+}

@@ -1,0 +1,34 @@
+format: 1
+id: vector.editor.type/type-gestures
+feature: vector.editor.type
+intent: >-
+  Type works by hand (plan 2026-11-25, stage 5). A click with the Type tool places point type with
+  its placeholder selected and typing replaces it; Home, Shift+Right, End and Cmd+Left move and
+  select; a double-click selects a word and a quick triple-click its paragraph, a click after a pause
+  only places the caret; Cmd+A selects the text, not other objects; Cmd+C and Cmd+V copy and paste
+  characters; with "world" selected, a size from the control bar and a fill from Appearance go to
+  "world" only, one step each; Escape ends editing and V picks the Selection tool; a Selection-tool
+  double-click puts the caret where it was clicked and typing inserts there; Properties' Character
+  button opens the Character panel, whose font menu searches, loads a served family when it is
+  chosen and lists it as recently used, and sets tracking and underline; the Paragraph panel aligns
+  centre and sets space before; an input method's composition shows in the text at the caret with the
+  hidden text field there, its commit lands once and a composition given up leaves nothing; Chinese
+  draws with the lazily loaded Chinese face; a typing session is one undo step; with nothing selected
+  the control bar's size is new type's; a drag makes area type and a click on a path type on it.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (findings section 7: range colour recolours everything, a double-click selects a word, no font or size controls, composition invisible)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/type.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"

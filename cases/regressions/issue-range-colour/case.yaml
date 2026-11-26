@@ -1,0 +1,22 @@
+format: 1
+id: regressions/issue-range-colour
+feature: vector.editor.type
+intent: >-
+  A fill given while characters are selected in the type being edited colours those characters
+  only. Before, paint.setFill painted every run of the type object, so two characters selected and
+  red chosen in the panel turned the whole text red (walkthrough 2026-11-25, findings section 7). The
+  panels read the selected characters' colour, and with the type selected but not edited the colour
+  is the whole object's again.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 7, shot 07-range-colour)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: type_editing }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

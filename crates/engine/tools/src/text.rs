@@ -89,6 +89,11 @@ pub struct TypeTool {
     clicks: (Option<Point>, u8),
     /// Styled copy of the last copied range (pasting the same plain text keeps its styles).
     clipboard: Vec<TextRun>,
+    /// What new type is set in (the Character panel with no type selected): the family, its
+    /// style and the size; None leaves each to the engine's default.
+    new_font: Option<String>,
+    new_style: Option<String>,
+    new_size: Option<f64>,
     cache: Mutex<Option<CachedLayout>>,
 }
 
@@ -282,10 +287,9 @@ impl TypeTool {
             let on_path = self.mode == Mode::OnPath;
             if let Some(pid) = Self::path_at(cx, start, !on_path) {
                 let mode = if on_path { "onPath" } else { "area" };
-                out.push(Action::Exec(
-                    "text.addInPath".into(),
-                    json!({"path": pid.0, "mode": mode, "text": "", "at": [start.x, start.y], "vertical": self.vertical, "placeholder": cx.placeholder_text}),
-                ));
+                let mut params = json!({"path": pid.0, "mode": mode, "text": "", "at": [start.x, start.y], "vertical": self.vertical, "placeholder": cx.placeholder_text});
+                self.new_type_style(&mut params);
+                out.push(Action::Exec("text.addInPath".into(), params));
                 out.push(Action::Notify("text.editNew".into()));
                 return out;
             }
@@ -297,9 +301,23 @@ impl TypeTool {
         };
         params["vertical"] = json!(self.vertical);
         params["placeholder"] = json!(cx.placeholder_text);
+        self.new_type_style(&mut params);
         out.push(Action::Exec("text.add".into(), params));
         out.push(Action::Notify("text.editNew".into()));
         out
+    }
+
+    /// New type's family, style and size (`text.add`'s), where they were set.
+    fn new_type_style(&self, params: &mut Value) {
+        if let Some(font) = &self.new_font {
+            params["font"] = json!(font);
+        }
+        if let Some(style) = &self.new_style {
+            params["style"] = json!(style);
+        }
+        if let Some(size) = self.new_size {
+            params["size"] = json!(size);
+        }
     }
 
     fn overflow_marker(t: &TextObject, lay: &TextLayout, cx: &ToolContext, o: &mut Vec<Overlay>) {
@@ -680,21 +698,33 @@ impl Tool for TypeTool {
         }
     }
     /// `{editing, start, end, caret, anchor, typing, composing}` — the Character panel styles
-    /// `start..end`.
+    /// `start..end` — and what new type is set in, `{newFont, newStyle, newSize}` (null: the
+    /// engine's default).
     fn options(&self) -> Value {
-        match self.editing {
+        let mut out = match self.editing {
             Some(id) => {
                 // Offsets may exceed the text after Select All; callers clamp to the text length.
                 let (a, b) = self.sel();
                 json!({"editing": id.0, "start": a, "end": b, "caret": self.caret, "anchor": self.anchor, "typing": self.typing.is_some(), "composing": self.preedit.is_some()})
             }
             None => json!({"editing": null}),
-        }
+        };
+        out["newFont"] = json!(self.new_font);
+        out["newStyle"] = json!(self.new_style);
+        out["newSize"] = json!(self.new_size);
+        out
     }
     /// `select {start, end}` / `selectAll` / `copy` (with `runs` of the selection) /
-    /// `commitTyping` (the caller commits the engine interaction).
+    /// `commitTyping` (the caller commits the engine interaction) / `resetClicks` (the next press
+    /// starts a new click count: the page saw the pause after a double-click) / `newFont`,
+    /// `newStyle`, `newSize` (what new type is set in; null for the default).
     fn set_option(&mut self, key: &str, v: &Value) {
+        let name = |v: &Value| v.as_str().map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned);
         match key {
+            "resetClicks" => self.clicks = (None, 0),
+            "newFont" => self.new_font = name(v),
+            "newStyle" => self.new_style = name(v),
+            "newSize" => self.new_size = v.as_f64().filter(|s| s.is_finite() && *s > 0.0).map(|s| s.clamp(0.1, 1296.0)),
             "commitTyping" | "endTyping" => {
                 self.typing = None;
                 self.preedit = None;

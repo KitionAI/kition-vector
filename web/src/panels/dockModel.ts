@@ -8,8 +8,8 @@ import type { MenuRow } from '@kition/sdk/editor'
  * Window row in `WINDOW_TABS` if it has one.
  */
 
-/** The dock's groups, top to bottom. Character and Paragraph (stage 5) come as a group of their own. */
-export const DOCK_GROUPS = ['properties', 'layers', 'swatches', 'history'] as const
+/** The dock's groups, top to bottom. Character and Paragraph (stage 5) are a group of their own. */
+export const DOCK_GROUPS = ['properties', 'character', 'layers', 'swatches', 'history'] as const
 export type DockGroupId = (typeof DOCK_GROUPS)[number]
 
 /**
@@ -20,6 +20,7 @@ export type DockGroupId = (typeof DOCK_GROUPS)[number]
  */
 export const DOCK_TABS: Readonly<Record<DockGroupId, readonly string[]>> = {
   properties: ['properties', 'align', 'pathfinder'],
+  character: ['character', 'paragraph'],
   layers: ['layers', 'artboards'],
   swatches: ['swatches'],
   history: ['history'],
@@ -30,6 +31,8 @@ export const TAB_LABELS: Readonly<Record<string, string>> = {
   properties: 'Properties',
   align: 'Align',
   pathfinder: 'Pathfinder',
+  character: 'Character',
+  paragraph: 'Paragraph',
   layers: 'Layers',
   artboards: 'Artboards',
   swatches: 'Swatches',
@@ -43,20 +46,21 @@ export const TAB_LABELS: Readonly<Record<string, string>> = {
  */
 export const GROUP_SIZES: Readonly<Record<DockGroupId, { defaultHeight: number; compactHeight: number; minHeight?: number; preferredFill?: number }>> = {
   properties: { defaultHeight: 380, compactHeight: 200, minHeight: 120 },
+  character: { defaultHeight: 330, compactHeight: 180, minHeight: 110 },
   layers: { defaultHeight: 280, compactHeight: 160, minHeight: 120, preferredFill: 240 },
   swatches: { defaultHeight: 150, compactHeight: 96, minHeight: 72 },
   history: { defaultHeight: 180, compactHeight: 110, minHeight: 80, preferredFill: 160 },
 }
 
-/** The groups shown in a new workspace: History waits for Window › History. */
-export const DEFAULT_SHOWN: Readonly<Record<DockGroupId, boolean>> = { properties: true, layers: true, swatches: true, history: false }
+/** The groups shown in a new workspace: Character and Paragraph wait for Window (or Properties' Character button), History for Window › History. */
+export const DEFAULT_SHOWN: Readonly<Record<DockGroupId, boolean>> = { properties: true, character: false, layers: true, swatches: true, history: false }
 
 /**
  * The tabs the Window menu lists, in its order. Pathfinder has no row of its own: Window ›
  * Pathfinder is the submenu of its ten commands (stage 1's menu test keeps it), and its tab is
  * next to Properties.
  */
-export const WINDOW_TABS = ['align', 'artboards', 'history', 'layers', 'properties', 'swatches'] as const
+export const WINDOW_TABS = ['align', 'artboards', 'character', 'history', 'layers', 'paragraph', 'properties', 'swatches'] as const
 
 const WINDOW_ROW = 'kit:window.'
 

@@ -1,4 +1,5 @@
-import { IconButton, useKitEditor, useReadOnly } from '@kition/sdk/editor'
+import { IconButton, useKitEditor, useKitTools, useReadOnly } from '@kition/sdk/editor'
+import { FamilyAndStyle, SizeField } from '../type/TypePanels'
 import { paintView } from '../color/paint'
 import type { VectorInfo } from '../vector'
 import { ALIGN } from './AlignSection'
@@ -11,7 +12,8 @@ import { useLive } from './useLive'
  * The control bar (plan 2026-11-25, stage 3), in the frame's tool-options row: the fill and stroke
  * (each chip opens the Color Picker), the stroke weight, and with objects selected their opacity
  * and the six Align buttons (one object aligns to its artboard). With nothing selected the fill,
- * stroke and weight are what the next object drawn gets.
+ * stroke and weight are what the next object drawn gets. With type selected or edited, and with a
+ * Type tool chosen, its font family, style and size come first (stage 5).
  */
 export function ControlBar({ info }: { info: VectorInfo }) {
   const { run, phrase: p, t } = useKitEditor()
@@ -21,11 +23,19 @@ export function ControlBar({ info }: { info: VectorInfo }) {
   const picker = usePaintPicker()
   const live = useLive()
   const count = info.selection.length
+  const active = useKitTools()?.active ?? ''
+  const typeControls = info.typing.character !== null || (count === 0 && /type/i.test(active))
   const weight = (value: number) => ({ weight: Math.round(value * 1000) / 1000 })
   const opacity = (value: number) => ({ opacity: Math.round(value * 100) / 100 })
   return (
     <div className="vector-control-bar" data-testid="vector-control-bar">
       <span className="vector-control-what">{count ? t('selectedCount', { count }) : t('control.newArt')}</span>
+      {typeControls ? (
+        <span className="vector-control-type" data-testid="vector-control-type">
+          <FamilyAndStyle info={info} compact prefix="vector-control" />
+          <SizeField info={info} prefix="vector-control" />
+        </span>
+      ) : null}
       <span className="vector-control-item">
         <span className="vector-field-label">{t('fill')}</span>
         <PaintChip view={paintView(proxies?.fill, proxies?.fillMixed === true)} label={t('fill')} onOpen={() => picker('fill', proxies?.fill)} disabled={readOnly} testId="vector-control-fill" />

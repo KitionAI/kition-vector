@@ -1,0 +1,22 @@
+format: 1
+id: vector.editor.type/type-fonts
+feature: vector.editor.type
+intent: >-
+  Fonts the editor gives the engine (plan 2026-11-25, stage 5): a font file's faces join the
+  families `text.fontList` names and the drawing's type is laid out again in them without a history
+  step; the same file again adds nothing and bytes that are not a font add nothing; text with
+  characters no face has asks for more fonts once (the editor's lazy Chinese face), and once the
+  Chinese face is in nothing is missing.
+layer: gate
+source:
+  kind: probe
+  from: gap-panels-dialogs 2026-11-25 section 6 (four Latin families, no addFont)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: add_face }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

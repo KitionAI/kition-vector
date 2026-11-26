@@ -1,0 +1,27 @@
+format: 1
+id: vector.editor.type/type-rules
+feature: vector.editor.type
+intent: >-
+  The type rules hold without a browser (plan 2026-11-25, stage 5): what the engine reports of the
+  Type tool reads as the editor expects; character attributes go to the selected characters, else
+  the whole type, else new type (family, style and size); paragraph attributes go to the paragraphs
+  the selection or the caret touches; paint labels and byte offsets read right; the font menu lists
+  served families with their state, a missing family kept, the recently used first; the caret blinks
+  each half period; Cmd with the caret keys goes to the text; every type string has Chinese. In the
+  built engine: a size and a colour given to selected characters style them only; an input method's
+  marked text and new type's size are Type requests; a served family given joins the families.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (findings section 7)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/type/type.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 180
+since: "2026-11-26"

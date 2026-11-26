@@ -13,7 +13,7 @@
     "class": "VectorDocument",
     "contract": 2,
     "crate": "kition-vector-kit",
-    "editorState": ["/currentLayer", "/layerRows", "/isolation", "/selection", "/selectionBounds", "/selectionRotation", "/target", "/tool", "/toolKeys", "/paint"]
+    "editorState": ["/currentLayer", "/layerRows", "/isolation", "/selection", "/selectionBounds", "/selectionRotation", "/target", "/tool", "/toolKeys", "/paint", "/typing"]
   },
   "formats": [
     {

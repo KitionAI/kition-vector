@@ -19,6 +19,15 @@ Third-party material
   License 1.1 (below).
 - JetBrains Mono (assets/fonts/JetBrainsMono-Regular.ttf): Copyright 2020 The JetBrains Mono Project
   Authors, SIL Open Font License 1.1 (below).
+- Fonts the web editor serves from web/public/fonts/ (not in this repository: web/scripts/build-engine.sh
+  copies them unmodified from KitionAI/kition-fonts, each folder with its licence file beside it):
+  - Droid Sans Fallback: Copyright Google Corporation 2006 and The Android Open Source Project
+    2005-2008, Apache License 2.0 (its NOTICE and LICENSE beside it).
+  - Arimo, Tinos, Cousine: Copyright 2026 The Arimo, Tinos and Cousine Project Authors (Steve Matteson).
+  - Lora: Copyright 2011 The Lora Project Authors, Reserved Font Name "Lora".
+  - Bricolage Grotesque: Copyright 2022 The Bricolage Grotesque Project Authors.
+  - Ma Shan Zheng: Copyright 2018 The Ma Shan Zheng Project Authors.
+  All but Droid Sans Fallback: SIL Open Font License 1.1 (each font's own OFL.txt beside it).
 - Foxit standard-14 substitute fonts (compiled in through hayro-interpret): Copyright 2014 PDFium
   Authors, original code copyright 2014 Foxit Software Inc., BSD-3-Clause (below).
 - Adobe CMap resources (compiled in through hayro-cmap): Copyright 1990-2023 Adobe, BSD-3-Clause

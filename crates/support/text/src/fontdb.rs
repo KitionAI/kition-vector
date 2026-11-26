@@ -353,6 +353,9 @@ pub struct FontDb {
     /// The installed fonts are not used (a kit draws only its bundled fonts and those its host
     /// adds, so a render is the same on every machine): no scan, no system fallback.
     no_system: AtomicBool,
+    /// Text laid out since [`FontDb::take_wanted`] last asked had a character no loaded face
+    /// covers (drawn as a missing glyph): a host with more fonts to give may give them now.
+    wanted: AtomicBool,
 }
 
 /// Where a database's system font scan looks: folders (read with their subfolders) and font files.
@@ -1425,7 +1428,15 @@ impl FontDb {
             #[cfg(not(target_arch = "wasm32"))]
             stamp: Mutex::new(None),
             no_system: AtomicBool::new(false),
+            wanted: AtomicBool::new(false),
         }
+    }
+
+    /// Whether text laid out since the last call had a character no loaded face covers (it drew
+    /// as a missing glyph); the call clears it. A web build asks it to load the fonts its host
+    /// serves for such text only when a drawing needs them (engine contract E9a, `wantsFonts`).
+    pub fn take_wanted(&self) -> bool {
+        self.wanted.swap(false, Ordering::Relaxed)
     }
 
     /// Use the installed system fonts, or not (`false`: only the bundled fonts and the fonts added
@@ -1966,6 +1977,9 @@ impl FontDb {
         #[cfg(not(target_arch = "wasm32"))]
         if self.system_fallback(c) {
             return self.loaded_fallback(c, exclude);
+        }
+        if !c.is_control() && !c.is_whitespace() {
+            self.wanted.store(true, Ordering::Relaxed);
         }
         None
     }

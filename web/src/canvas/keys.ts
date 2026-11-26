@@ -10,7 +10,9 @@
  * - The single-key commands the shortcuts the frame binds leave out: X (fill or stroke in front),
  *   D (default colours), / (none), "," and "." (last colour, last gradient).
  * - Cmd+1 shows the drawing at actual size, Cmd+0 fits the artboards, Cmd+Alt+0 fits everything.
- * - Cmd+Enter ends the text being typed (as Escape does).
+ * - Cmd+Enter ends the text being typed (as Escape does); Cmd with an arrow, Home, End, Backspace
+ *   or Delete moves or deletes by words, lines and paragraphs in it (kit-editor gives the Type tool
+ *   only the keys without Cmd).
  * - "+" picks the Add Anchor Point tool (Shift is part of the key on most layouts).
  */
 export type KeyLike = { key: string; code: string; metaKey: boolean; ctrlKey: boolean; altKey: boolean; shiftKey: boolean }
@@ -21,6 +23,7 @@ export type CanvasKey =
   | { kind: 'command'; id: string }
   | { kind: 'zoom'; to: 'actual' | 'artboards' | 'all' }
   | { kind: 'endText' }
+  | { kind: 'textKey'; key: string }
   | { kind: 'pickTool'; id: string }
 
 export type KeyContext = {
@@ -36,6 +39,9 @@ export type KeyContext = {
   toolLetter: (key: string, shift: boolean) => boolean
 }
 
+/** The keys that move or delete by words, lines and paragraphs with Cmd held in the text being typed. */
+const TEXT_KEYS: ReadonlySet<string> = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Backspace', 'Delete'])
+
 const ARROWS: Readonly<Record<string, readonly [-1 | 0 | 1, -1 | 0 | 1]>> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
 /** What `event` does on the canvas, or null when the editor's shortcuts are to have it. */
@@ -43,6 +49,7 @@ export function canvasKey(event: KeyLike, context: KeyContext): CanvasKey | null
   const command = event.metaKey || event.ctrlKey
   if (command) {
     if (context.editingText && event.key === 'Enter' && !event.altKey) return { kind: 'endText' }
+    if (context.editingText && TEXT_KEYS.has(event.key)) return { kind: 'textKey', key: event.key }
     if (event.code === 'Digit1' && !event.altKey && !event.shiftKey) return { kind: 'zoom', to: 'actual' }
     if (event.code === 'Digit0' && !event.shiftKey) return { kind: 'zoom', to: event.altKey ? 'all' : 'artboards' }
     return null

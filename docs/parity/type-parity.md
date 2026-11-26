@@ -1,11 +1,16 @@
 # Type parity
 
-> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-17 · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-11-17 · **Last updated:** 2026-11-26 · **Target:** Adobe Illustrator 2026 (30.x)
 
 Type is Illustrator's largest single area by use (weight 13 of 105 across "Type core" and "Type advanced" in
 [target-app-parity.md](target-app-parity.md)). This checklist lists the features one by one. Status is from the
 code and tests (`crates/support/text`, `crates/engine/engine/src/cmd/type*.rs`, `textstyles.rs`, `crates/engine/tools/src/text.rs`)
 against Illustrator's public documentation; **estimated** unless noted.
+
+The in-page editor (`web/src/type/`, 2026-11-26, plan stage 5, feature `vector.editor.type`) now reaches these by hand:
+point, area and path type on the canvas, the caret and selection keys, the Character and Paragraph panels with a font
+menu, character attributes on selected characters, an input method's composition at the caret, and fonts loaded beyond
+the engine's own (served families, a font file, a lazily loaded Chinese face).
 
 ## Summary
 

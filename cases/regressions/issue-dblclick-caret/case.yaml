@@ -1,0 +1,20 @@
+format: 1
+id: regressions/issue-dblclick-caret
+feature: vector.editor.type
+intent: >-
+  A Selection-tool double-click on type edits it with the caret where it was clicked and nothing
+  selected, so typing inserts there. Before, it chose the Type tool and selected the word clicked,
+  and the next keys replaced it ("Hello" became "!!"; walkthrough 2026-11-25, findings section 7).
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 7, shot 07-dblclick-edit)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: type_editing }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"
