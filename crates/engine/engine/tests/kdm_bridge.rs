@@ -534,6 +534,53 @@ fn a_draft_moving_the_object_the_person_moved_meanwhile_is_refused() {
     assert_eq!(history_of(&mut a, None), history, "and makes no undo step");
 }
 
+/// The label of the session's next Undo (the person's).
+fn undo_label(s: &Session) -> Option<String> {
+    s.active().unwrap().history.undo.last().map(|entry| entry.label.clone())
+}
+
+/// Data model 6.6 D9 (regressions/issue-merge-changing-nothing): the person deletes the layer
+/// "Notes" (a named step) while an agent's draft adds a guide on it; the drawing's repair takes the
+/// guide away again, so the merge changes nothing and records nothing: the state, the version, the
+/// drawing, both histories and the next Undo's name stay, and that Undo takes back the person's
+/// deletion exactly.
+#[test]
+fn a_draft_the_repair_takes_back_entirely_records_nothing() {
+    let mut a = new_session();
+    let agent = Origin::agent("agent:helper");
+    let (mut b, base) = draft_of(&mut a);
+    b.set_origin(Some(agent.clone()));
+    let notes = named(doc(&b), "Notes");
+    b.execute("guide.add", &json!({"vertical": true, "pos": 120, "layer": notes})).unwrap();
+    assert_eq!(doc(&b).guides.len(), 1, "the draft's guide is on Notes");
+    let changes = b.export_changes(&base).unwrap();
+
+    let (hash_before, view_before) = (a.state_hash().unwrap(), canonical(doc(&a)));
+    let notes = named(doc(&a), "Notes");
+    a.execute("layer.delete", &json!({"id": notes})).unwrap();
+    let label = undo_label(&a);
+    assert!(label.is_some(), "the deletion is a named step");
+    let (version, hash, view) = (a.version().unwrap(), a.state_hash().unwrap(), canonical(doc(&a)));
+    let scopes = replica_scopes(&a);
+    let (mine, theirs) = (history_of(&mut a, None), history_of(&mut a, Some(agent.clone())));
+
+    let (scope, _) = a.merge_changes(&changes, &agent).unwrap();
+    assert_eq!(scope, None, "a merge that changes nothing records no step");
+    assert_eq!(a.version().unwrap(), version, "the version stays");
+    assert_eq!(a.state_hash().unwrap(), hash, "the state stays");
+    assert!(canonical(doc(&a)) == view, "the drawing stays");
+    assert!(doc(&a).guides.is_empty(), "no guide on the deleted layer");
+    assert_eq!(replica_scopes(&a), scopes, "the replica's histories stay");
+    assert_eq!(history_of(&mut a, None), mine, "the person's history stays");
+    assert_eq!(history_of(&mut a, Some(agent)), theirs, "the agents' history stays");
+    assert_eq!(undo_label(&a), label, "the next Undo is still the deletion");
+
+    a.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(a.state_hash().unwrap(), hash_before, "Undo takes back the person's deletion exactly");
+    assert!(canonical(doc(&a)) == view_before, "and the engine's drawing before it");
+    assert_holds(&a, "deletion undone");
+}
+
 #[test]
 fn a_file_newer_than_its_stored_replica_wins_on_open() {
     let mut a = new_session();

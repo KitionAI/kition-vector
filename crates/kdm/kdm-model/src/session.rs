@@ -210,10 +210,9 @@ impl VectorSession {
     /// ([`VectorSession::add_blobs`]). Answers the undo scope the step went to and the damage. A
     /// refused merge, or one whose repair fails, changes nothing.
     pub fn merge_changes(&mut self, bytes: &[u8], origin: &Origin) -> Result<(Option<UndoScope>, Damage)> {
-        let before = self.replica.version();
         let merged =
             self.replica.merge_changes_repaired(bytes, origin, |tx, changed| crate::validate::validate(tx, changed).map(|_| ())).map_err(kit_err)?;
-        self.took_in(&before, merged.scope)
+        self.took_in(merged.scope)
     }
 
     /// Writes the state `snapshot` holds (a snapshot or content of this drawing, as a host's
@@ -232,28 +231,36 @@ impl VectorSession {
         if now == then {
             return Ok((None, Damage::None));
         }
-        let before = self.replica.version();
-        let result = self.replica.transact(origin, |tx| {
+        // A restore whose repair takes back all it wrote records nothing: no change, no step.
+        let result = self.replica.transact_unless_unchanged(origin, |tx| {
             kition_kit::session::write_state(tx, &schema, &now, &then).map_err(crate::kdm_err)?;
             // The drawing's validation reads the whole state, not the objects changed.
             crate::validate::validate(tx, &BTreeSet::new()).map(|_| ())
         });
-        if let Err(error) = result {
-            self.replica.take_changed();
-            return Err(kit_err(error));
+        match result {
+            Ok(((), changed)) => self.took_in(UndoScope::of(origin.kind).filter(|_| changed)),
+            Err(error) => {
+                self.replica.take_changed();
+                Err(kit_err(error))
+            }
         }
-        self.took_in(&before, UndoScope::of(origin.kind))
     }
 
-    /// After a merge or a restore wrote one transaction (its repair in it) since `before`: patches
-    /// the view as an import does, and counts the transaction as an undo step of `scope` (`None`:
-    /// a `system` or `import` one, no undo step). A failed view load is the error, as an import's
-    /// is: the transaction stays ([`VectorSession::view_loaded`] tells whether the view followed).
-    fn took_in(&mut self, before: &Version, scope: Option<UndoScope>) -> Result<(Option<UndoScope>, Damage)> {
-        let wrote = self.replica.version() != *before;
+    /// The replicated state merging `bytes` (a draft's changes) would give, the drawing's repair
+    /// included as [`VectorSession::merge_changes`] runs it (`Replica::merged_state_repaired`), so
+    /// a draft's preview is what accepting it gives. Nothing changes.
+    pub fn merged_state(&self, bytes: &[u8]) -> Result<serde_json::Value> {
+        self.replica.merged_state_repaired(bytes, |tx, changed| crate::validate::validate(tx, changed).map(|_| ())).map_err(kit_err)
+    }
+
+    /// After a merge or a restore wrote its one transaction (its repair in it): patches the view
+    /// as an import does, and counts the transaction as an undo step of `scope`, the scope the
+    /// replica recorded the step in (`None`: no step, for a `system` or `import` origin or a merge
+    /// or restore that changed nothing). A failed view load is the error, as an import's is: the
+    /// transaction stays ([`VectorSession::view_loaded`] tells whether the view followed).
+    fn took_in(&mut self, scope: Option<UndoScope>) -> Result<(Option<UndoScope>, Damage)> {
         let (damage, moved) = self.settle();
         self.log_added(moved.added.iter().cloned());
-        let scope = scope.filter(|_| wrote);
         if let Some(scope) = scope {
             self.index.push_step(scope, moved);
         }

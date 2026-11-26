@@ -172,12 +172,13 @@ impl VectorDocument {
         }))
     }
 
-    /// What merging a draft's changes would change in the drawing now, as `StateDiff` JSON;
-    /// nothing changes. Refuses what [`VectorDocument::merge_changes`] refuses.
+    /// What merging a draft's changes would change in the drawing now, the drawing's repair of
+    /// the merged state included, as `StateDiff` JSON; nothing changes. Refuses what [`VectorDocument::merge_changes`] refuses.
     pub fn compare_changes(&self, bytes: &[u8]) -> Result<Value, String> {
         let kdm = self.session.kdm().ok_or("the drawing has no replica, so no draft of it")?;
         let before = kdm.replica().state_json().map_err(engine_error)?;
-        let after = kdm.replica().merged_state(bytes).map_err(engine_error)?;
+        // The drawing's repair runs on the preview's copy: the preview is what accepting gives.
+        let after = kdm.merged_state(bytes).map_err(engine_error)?;
         Ok(kition_kit::kdm::diff::diff_states(&before, &after).to_json())
     }
 
@@ -554,6 +555,42 @@ mod tests {
         let answer = doc.merge_changes(&changes, &Origin::person("person:local")).unwrap();
         assert_eq!(answer["summary"], preview, "the comparison named what the merge did: {answer}");
         assert!(doc.compare_changes(b"not changes").is_err());
+    }
+
+    /// The id of the drawing's layer named `name`.
+    fn layer_named(doc: &VectorDocument, name: &str) -> u64 {
+        let d = &doc.session.active().unwrap().doc;
+        d.layers.iter().find(|l| l.name.as_deref() == Some(name)).map(|l| l.id.0).unwrap_or_else(|| panic!("no layer {name}"))
+    }
+
+    /// regressions/issue-draft-preview-repaired: the preview runs the drawing's repair. A draft
+    /// adds an ellipse and a guide on the layer "Notes", which is deleted here meanwhile; the
+    /// merge's repair drops the guide on the deleted layer, and the preview names what the merge
+    /// does (the ellipse alone), not what the draft's changes alone would.
+    #[test]
+    fn comparing_a_draft_runs_the_drawings_repair() {
+        let mut doc = VectorDocument::open("Logo.kvector", &fixture()).unwrap();
+        doc.execute("layer.new", json!({ "name": "Notes" })).unwrap();
+        let base = doc.version().unwrap();
+        let mut draft = VectorDocument::open_with_replica("Logo.kvector", &[], &doc.snapshot().unwrap(), &doc.blobs().unwrap()).unwrap();
+        let notes = layer_named(&draft, "Notes");
+        draft.execute("guide.add", json!({ "vertical": true, "pos": 120, "layer": notes })).unwrap();
+        draft.execute("shape.ellipse", json!({ "x": 300, "y": 200, "width": 30, "height": 30 })).unwrap();
+        let changes = draft.export_changes(&base).unwrap();
+        let notes = layer_named(&doc, "Notes");
+        doc.execute("layer.delete", json!({ "id": notes })).unwrap();
+        let guides = doc.session.active().unwrap().doc.guides.len();
+
+        let kdm = doc.session.kdm().unwrap();
+        let now = kdm.replica().state_json().unwrap();
+        let unrepaired = kition_kit::kdm::diff::diff_states(&now, &kdm.replica().merged_state(&changes).unwrap()).to_json();
+        let preview = doc.compare_changes(&changes).unwrap();
+        assert_ne!(preview, unrepaired, "the repair changes what the merge does");
+        let merged = doc.session.kdm().unwrap().merged_state(&changes).unwrap();
+        let answer = doc.merge_changes(&changes, &Origin::person("person:local")).unwrap();
+        assert_eq!(answer["summary"], preview, "the preview named what the merge did: {answer}");
+        assert_eq!(doc.replicated_state().unwrap(), merged, "the preview's merged state is the state after merging");
+        assert_eq!(doc.session.active().unwrap().doc.guides.len(), guides, "the guide on the deleted layer went");
     }
 
     /// An earlier state (a checkpoint's snapshot) is written over the drawing by object id as one

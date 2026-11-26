@@ -188,10 +188,11 @@ export function VectorFileIo({
       const bounds = now.current.selection()
       const longer = bounds ? Math.max(bounds.width, bounds.height, 1) : 1
       const scale = Math.max(0.05, Math.min(2, 4096 / longer))
-      // Whether it can run is asked of the engine now: right after Cmd+A the editor's own list of
-      // enabled commands may not have caught up yet (re-walk 2026-11-26: Cmd+A, Cmd+C wrote nothing).
+      // Whether it can run is asked of the engine now, in the order of the input: right after Cmd+A
+      // the editor's own list of enabled commands may not have caught up yet (re-walk 2026-11-26:
+      // Cmd+A, Cmd+C wrote nothing).
       const { editor: e, ui: u } = now.current
-      const done = e.enabledNow(command).then((ok) => (ok && !u.state(`command:${command}`, e.byId.get(command)?.menu).denied ? run(command) : null))
+      const done: Promise<string | null> = u.state(`command:${command}`, e.byId.get(command)?.menu).denied ? Promise.resolve(null) : e.runWhenEnabled(command)
       const content = done.then(async (answer) => {
         if (answer === null) throw new Error('nothing copied')
         const copy = await copied(scale)
