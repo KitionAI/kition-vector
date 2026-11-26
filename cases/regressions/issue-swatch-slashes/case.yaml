@@ -1,0 +1,22 @@
+format: 1
+id: regressions/issue-swatch-slashes
+feature: vector.editor.paint
+intent: >-
+  Every swatch draws as what it is. Before, about 19 of the 52 default swatches (the greys K=10 to K=90, the gradients,
+  patterns) were drawn as a red slash, as if they were None: the panel read grey colours by a key the engine does not
+  use and had nothing to draw a gradient from. Now greys show their colour and gradient swatches their ramp
+  (swatch.list answers a gradient's stops); only [None] is a slash.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 8)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, --test-name-pattern, issue-swatch-slashes, web/src/panels/paint.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+since: "2026-11-25"

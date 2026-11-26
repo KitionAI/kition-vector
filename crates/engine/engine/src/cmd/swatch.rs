@@ -55,7 +55,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Swatches",
             [],
             None,
-            "{group?: name (only that colour group's swatches)} → {swatches: [{name, kind: \"none\"|\"color\"|\"gradient\"|\"pattern\", group, global, spot, color?, hex?, tintOf?: base swatch of a tint swatch, tint?: its %, gradient?, pattern?}] (the built-in [Registration] after None: it prints on every plate and can't be edited, moved or deleted), groups: [{name, swatches: [names]}]}",
+            "{group?: name (only that colour group's swatches)} → {swatches: [{name, kind: \"none\"|\"color\"|\"gradient\"|\"pattern\", group, global, spot, color?, hex?, tintOf?: base swatch of a tint swatch, tint?: its %, gradient?: linear|radial|freeform, angle?, stops?: [{offset, color, hex, opacity, midpoint}] (a gradient's), pattern?}] (the built-in [Registration] after None: it prints on every plate and can't be edited, moved or deleted), groups: [{name, swatches: [names]}]}",
             has_doc,
             swatch_list
         ),
@@ -584,6 +584,14 @@ pub(super) fn swatch_json(sw: &Swatch, group: Option<&str>) -> Value {
         Paint::Gradient(g) => {
             v["kind"] = json!("gradient");
             v["gradient"] = json!(g.gradient.kind.label().to_lowercase());
+            // Its stops and angle, so a panel draws the swatch as the gradient it is.
+            v["angle"] = json!(g.angle);
+            v["stops"] = g
+                .gradient
+                .stops
+                .iter()
+                .map(|stop| json!({"offset": stop.offset, "color": stop.color, "hex": stop.color.to_hex(), "opacity": stop.opacity, "midpoint": stop.midpoint}))
+                .collect();
         }
         Paint::Pattern { pattern, .. } => {
             v["kind"] = json!("pattern");

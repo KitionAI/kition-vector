@@ -1,0 +1,31 @@
+format: 1
+id: vector.editor.paint/paint-gestures
+feature: vector.editor.paint
+intent: >-
+  Colour and properties work by hand (plan 2026-11-25, stage 3). A fill typed as hex, a stroke weight, Dashed line and
+  a dash, and an opacity each leave one history step and the panel reads them back; Opacity's label scrubbed leaves one
+  step; the Color Picker opened from the Fill proxy shows a colour dragged in its square on the canvas at once and OK
+  leaves one step, Cancel puts the fill back with no step, None shows as None in the field and chip; the swatches draw
+  greys as colours and gradients as ramps, and a click on the Sunset gradient swatch fills with it; the Gradient panel
+  adds a stop, drags one, recolours one in the picker without losing the gradient, reverses and goes radial, a step
+  each; a stop double-clicked on the canvas opens the picker; X reads 50+25 and Tab moves to Y; the centre reference
+  point measures X from the centre; Shift+X swaps; a swatch paints the stroke when it is in front; New Swatch starts
+  from the fill and makes a global swatch; Align to the artboard, a word when nothing moved, Distribute; Pathfinder's
+  ten; the eyedropper's click and Shift-click; the control bar's weight; no colour-input warnings.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (no colour picker, gradient colours impossible, swatches as red slashes, None and gradients shown black, fields without arithmetic or Tab)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/paint.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 300
+since: "2026-11-25"

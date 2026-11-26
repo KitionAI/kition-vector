@@ -1,0 +1,22 @@
+format: 1
+id: regressions/issue-paint-black
+feature: vector.editor.paint
+intent: >-
+  None and gradients show as what they are. Before, a stroke of None and a gradient fill showed as black colour
+  wells in the panel (and the colour inputs warned about "None" and "Linear gradient"); now a paint is drawn as a
+  colour, a gradient's ramp, None's slash, a pattern's mark or a mixed selection's question mark, and the hex field
+  names what it is instead of a colour it is not.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 8)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, --test-name-pattern, issue-paint-black, web/src/panels/paint.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+since: "2026-11-25"

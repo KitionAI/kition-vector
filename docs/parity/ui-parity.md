@@ -138,12 +138,20 @@ Layers panel.
 
 ## Panels, Control bar, Properties, context menus
 
-The editor in `web/` shows a side panel with Transform, Appearance, Swatches, Align and Pathfinder sections and a
-Layers panel (`web/src/SidePanel.tsx`, `web/src/LayersSection.tsx`), in the host's frame.
+The editor in `web/` shows a side panel with Transform, Appearance, Stroke, Gradient, quick actions, Align,
+Pathfinder, Layers and Swatches sections (`web/src/SidePanel.tsx`, `web/src/panels/`, `web/src/gradient/`), a control
+bar in the frame's options row (`web/src/panels/ControlBar.tsx`) and its own Color Picker (`web/src/color/`), in the
+host's frame (2026-11-25, plan stage 3).
 
 | Behaviour | Status | Notes |
 |---|---|---|
-| Properties panel per context (every selection type's Quick Actions) | partial | |
+| Properties panel per context (every selection type's Quick Actions) | partial | Transform, Appearance, Stroke, Gradient and a few quick actions for any selection; not per selection type |
+| Color Picker: field and hue strip, HSB, RGB, CMYK, hex, None, new over current | done | live on the canvas, one history step on OK; no Lab, web-safe colours or canvas eyedropper |
+| Gradient panel: type, angle, stops (add, drag, delete, colour, opacity, location), midpoints, reverse | done | aspect ratio only through the Gradient tool |
+| Stroke panel: weight, cap, corner, limit, align, dashes and gaps, arrowheads, width profile | partial | no arrowhead scale or swap |
+| Swatches panel: previews, apply to fill or stroke, new, options, colour groups, delete, global mark | partial | pattern swatches show a mark, not their tile; no list view or libraries |
+| Align panel: align, distribute, distribute spacing, Align To (selection, key object, artboard) | done | |
+| Control bar: fill, stroke, weight, opacity, align | partial | the active tool's options are not shown |
 | Blend panel (30.7) | missing | `blend.options` exists |
 | SVG Interactivity, Retype, Comments, Version History panels | missing | the last two are cloud features (out of scope) |
 | Preferences: every option acts | partial | ~17 stored but unused |

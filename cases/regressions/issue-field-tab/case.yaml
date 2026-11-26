@@ -1,0 +1,24 @@
+format: 1
+id: regressions/issue-field-tab
+feature: vector.editor.paint
+intent: >-
+  Tab moves from one panel field to the next. Before, a value typed into X and Tab set it but the keyboard fell to the
+  page's body (the field was drawn anew for its new value), so Y was never reached; now Tab sets X and Y has the
+  keyboard (the browser test's "X takes 50+25 as 75, and Tab moves on to Y").
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 11)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/paint.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 300
+since: "2026-11-25"

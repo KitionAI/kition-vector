@@ -354,3 +354,21 @@ fn a_group_from_a_mesh_holds_its_point_colours() {
     let names = r["swatches"].as_array().unwrap();
     assert!(names.contains(&json!("R=255 G=0 B=0")) && names.contains(&json!("R=255 G=255 B=255")), "{r}");
 }
+
+/// The Swatches panel draws a gradient swatch as its gradient: `swatch.list` answers its stops
+/// (offset, colour, hex, opacity, midpoint) and angle, not just its kind.
+#[test]
+fn gradient_swatches_list_their_stops() {
+    let mut s = session();
+    let list = run(&mut s, "swatch.list", json!({}));
+    let sunset = list["swatches"].as_array().unwrap().iter().find(|w| w["name"] == "Sunset").unwrap();
+    assert_eq!(sunset["kind"], "gradient");
+    let stops = sunset["stops"].as_array().unwrap();
+    assert!(stops.len() >= 2, "{sunset}");
+    assert_eq!(stops[0]["offset"], json!(0.0));
+    assert!(stops.iter().all(|stop| stop["hex"].as_str().is_some_and(|hex| hex.len() == 7) && stop["opacity"].is_number()), "{sunset}");
+    assert!(sunset["angle"].is_number());
+    // Solid colours keep their own form.
+    let red = list["swatches"].as_array().unwrap().iter().find(|w| w["name"] == "Red").unwrap();
+    assert!(red.get("stops").is_none() && red["hex"].is_string());
+}

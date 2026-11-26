@@ -1,0 +1,20 @@
+format: 1
+id: regressions/issue-field-arithmetic
+feature: vector.editor.paint
+intent: >-
+  The panels' number fields read arithmetic and lengths with units. Before, 50+25 typed into a field became 0; now it
+  is 75, and 10 mm in a field in points is 28.35.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 11)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, --test-name-pattern, issue-field-arithmetic, web/src/panels/paint.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+since: "2026-11-25"

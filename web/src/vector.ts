@@ -13,7 +13,26 @@ export type VectorNode = {
   strokeWidth: number | null
   /** The stroke's width points, `[t, left, right]` (the sides as factors of half the weight), or null for a uniform stroke. */
   widthPoints: number[][] | null
+  /** The Stroke panel's options of the object (cap, join, dashes, arrowheads, profile), or null for a layer. */
+  strokeOptions: StrokeOptions | null
+  /** The object's bounds in the drawing's points, or null. */
+  bounds: Bounds | null
   children: VectorNode[]
+}
+
+/** An object's stroke options as `inspect()` reports them (`stroke.set`'s parameters). */
+export type StrokeOptions = {
+  cap: string
+  join: string
+  miterLimit: number
+  align: string
+  dash: number[] | null
+  dashOffset: number
+  alignDashes: boolean
+  startArrow: string | null
+  endArrow: string | null
+  arrowAlign: string
+  profile: string
 }
 
 export type Bounds = { x: number; y: number; width: number; height: number }
@@ -34,9 +53,29 @@ export type VectorInfo = {
   isolation: number | null
   /** The keys the active tool takes now, ahead of their shortcuts (Delete on a selected gradient stop). */
   toolKeys: readonly string[]
+  /** The selection's rotation in degrees (its bounding box's angle; 0 for none). */
+  rotation: number
 }
 
-type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: { widthPoints?: number[][] | null }; children?: InspectedNode[] }
+type InspectedNode = { id?: number; name?: string; kind?: string; visible?: boolean; locked?: boolean; color?: string; fill?: string | null; stroke?: string | null; strokeWidth?: number; strokeOptions?: Partial<StrokeOptions> & { widthPoints?: number[][] | null }; bounds?: Bounds; children?: InspectedNode[] }
+
+/** The stroke options of `node`, with the engine's defaults where it leaves one out. */
+function strokeOptionsOf(options: InspectedNode['strokeOptions']): StrokeOptions | null {
+  if (!options) return null
+  return {
+    cap: options.cap ?? 'butt',
+    join: options.join ?? 'miter',
+    miterLimit: typeof options.miterLimit === 'number' ? options.miterLimit : 10,
+    align: options.align ?? 'center',
+    dash: Array.isArray(options.dash) ? options.dash.filter((value): value is number => typeof value === 'number') : null,
+    dashOffset: typeof options.dashOffset === 'number' ? options.dashOffset : 0,
+    alignDashes: options.alignDashes === true,
+    startArrow: typeof options.startArrow === 'string' ? options.startArrow : null,
+    endArrow: typeof options.endArrow === 'string' ? options.endArrow : null,
+    arrowAlign: options.arrowAlign ?? 'extend',
+    profile: options.profile ?? 'uniform',
+  }
+}
 
 function nodeOf(node: InspectedNode): VectorNode {
   return {
@@ -50,6 +89,8 @@ function nodeOf(node: InspectedNode): VectorNode {
     stroke: typeof node.stroke === 'string' ? node.stroke : null,
     strokeWidth: typeof node.strokeWidth === 'number' ? node.strokeWidth : null,
     widthPoints: Array.isArray(node.strokeOptions?.widthPoints) ? node.strokeOptions.widthPoints : null,
+    strokeOptions: strokeOptionsOf(node.strokeOptions),
+    bounds: node.bounds && typeof node.bounds.x === 'number' ? node.bounds : null,
     children: (node.children ?? []).map(nodeOf),
   }
 }
@@ -67,6 +108,7 @@ export function describe(info: KitEngineInfo): VectorInfo {
     origin?: [number, number]
     isolation?: number | null
     toolKeys?: string[]
+    selectionRotation?: number
   }
   const layers = (inspected.layers ?? []).map(nodeOf)
   const selection = inspected.selection ?? []
@@ -92,7 +134,21 @@ export function describe(info: KitEngineInfo): VectorInfo {
     origin: Array.isArray(inspected.origin) && inspected.origin.length === 2 ? [Number(inspected.origin[0]) || 0, Number(inspected.origin[1]) || 0] : [0, 0],
     isolation: typeof inspected.isolation === 'number' ? inspected.isolation : null,
     toolKeys: Array.isArray(inspected.toolKeys) ? inspected.toolKeys.filter((key): key is string => typeof key === 'string') : [],
+    rotation: typeof inspected.selectionRotation === 'number' && Number.isFinite(inspected.selectionRotation) ? inspected.selectionRotation : 0,
   }
+}
+
+/** The selected objects (not layers), in the layers' order. */
+export function selectedNodes(info: Pick<VectorInfo, 'layers' | 'selection'>): VectorNode[] {
+  const out: VectorNode[] = []
+  const walk = (nodes: readonly VectorNode[]) => {
+    for (const node of nodes) {
+      if (node.kind !== 'Layer' && info.selection.includes(node.id)) out.push(node)
+      walk(node.children)
+    }
+  }
+  walk(info.layers)
+  return out
 }
 
 /** The node `id` and the names from its layer down to it, or null. */
@@ -132,4 +188,3 @@ export const HIDDEN_TOOLS = [
   'touchType',
 ]
 
-export type Swatch = { name: string; kind: string; color?: unknown; hex?: string }

@@ -52,17 +52,18 @@ const NOT_BUILT: Readonly<Record<string, string>> = {
  * The Window menu's panel commands (the engine lists each panel's own menu under Window): they act
  * on a panel's current row or option, and come back in that panel's menu when the panel is built
  * (stages 3 and 4); Window then lists the panels. Pathfinder's rows stay: they act on the
- * selection, and the side panel has only six of the ten until stage 3.
+ * selection, and stage 1's menu test keeps them under Window (the side panel has all ten since
+ * stage 3).
  */
 const PANELS: Readonly<Record<string, string>> = {
-  Align: 'Align panel commands: the side panel aligns; distribute and Align To come with the Align panel (stage 3).',
+  Align: 'Align panel commands: Properties › Align aligns, distributes, spaces and chooses what to align to.',
   'Magic Wand': 'Magic Wand panel options: the panel is not built.',
-  Transparency: 'Transparency panel commands: opacity masks and blending come with the Transparency panel (stage 3).',
-  Stroke: 'Stroke panel options: they come with the Stroke panel (stage 3).',
+  Transparency: 'Transparency panel commands: Properties › Appearance sets the opacity and blending mode; opacity masks need a Transparency panel of their own, not built yet.',
+  Stroke: 'Stroke panel options: Properties › Stroke sets every one of them on the selection.',
   Appearance: 'Appearance panel commands: they act on the panel’s current fill or stroke, which comes with the Appearance panel.',
   'Graphic Styles': 'Graphic Styles panel commands: they act on the panel’s current style; graphic styles come after the launch.',
-  Swatches: 'Swatches panel commands: they act on the panel’s current swatch, which comes with the Swatches panel (stage 3).',
-  Gradient: 'Gradient panel options: they come with the Gradient panel (stage 3).',
+  Swatches: 'Swatches panel commands: they act on the panel’s picked swatches; the Swatches panel’s own buttons (new, options, colour group, delete) run them.',
+  Gradient: 'Gradient panel options: Properties › Gradient edits the gradient’s type, angle and stops.',
   Layers: 'Layers panel commands: they act on the panel’s current rows, which come with the Layers panel (stage 4).',
   Artboards: 'Artboards panel commands: they act on the panel’s current artboard, which comes with the Artboards panel (stage 4).',
   Type: 'Character and paragraph style commands: styles come after the launch.',

@@ -1,0 +1,26 @@
+format: 1
+id: vector.editor.paint/paint-rules
+feature: vector.editor.paint
+intent: >-
+  The paint rules hold without a browser (plan 2026-11-25, stage 3): CMYK follows RGB and keeps numbers typed; every
+  colour model shows as hex; a paint shows as what it is (None, a gradient's ramp with its midpoints, a pattern, mixed);
+  a picked colour is sent as hex, CMYK or None; the gradient draft adds, moves, removes, recolours and reverses stops
+  and keeps a stop's own colour model; fields read arithmetic and units; a live gesture leaves exactly one step and a
+  cancelled one none, never undoing someone else's step; dashes, align-to and swatch previews; every label has Chinese;
+  and in the built engine every swatch applies, the Gradient panel's edits keep the gradient, and the Stroke,
+  Appearance and Align panels' parameters run.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/panels/paint.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 120
+since: "2026-11-25"

@@ -1,0 +1,21 @@
+format: 1
+id: regressions/issue-gradient-swatch
+feature: vector.editor.paint
+intent: >-
+  A click on a gradient swatch fills with the gradient. Before, the Swatches panel sent the swatch's colour, which a
+  gradient swatch has none of, and the engine refused it ("invalid parameters for paint.setFill: give color, none,
+  swatch or gradient"), so a coloured gradient could not be made at all; now every swatch is sent by its name.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 8, the logo task's step 3)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, --test-name-pattern, issue-gradient-swatch, web/src/panels/paint.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+since: "2026-11-25"

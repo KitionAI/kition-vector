@@ -410,3 +410,465 @@ button.vector-proxy:focus-visible {
 .vector-isolation-sep {
   margin-right: 4px;
 }
+
+/* Colour, paint and the panels (plan 2026-11-25, stage 3). */
+:root {
+  /* A checkerboard behind what has transparency (a gradient stop's opacity). */
+  --vector-checker: repeating-conic-gradient(color-mix(in srgb, var(--kit-text) 14%, transparent) 0 25%, transparent 0 50%);
+}
+
+.vector-field input.kui-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.vector-field[data-wide] {
+  grid-column: span 2;
+}
+
+.vector-field-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* A label that drags its field's value. */
+.vector-field-label[data-scrub] {
+  cursor: ew-resize;
+  user-select: none;
+}
+
+.vector-field-unit {
+  flex: none;
+  min-width: 10px;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+}
+
+.vector-field .kui-choice {
+  flex: 1;
+  min-width: 0;
+}
+
+.vector-field .kui-choice select {
+  max-width: none;
+  flex: 1;
+  min-width: 0;
+}
+
+/* A paint chip: a colour, a gradient's ramp, None's slash, a pattern's mark, a mixed "?". */
+.vector-chip {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--kit-text) 28%, transparent);
+  border-radius: 3px;
+  background: var(--kit-surface);
+  color: var(--kit-text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.vector-chip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.vector-chip:focus-visible {
+  outline: 2px solid var(--kit-primary);
+  outline-offset: 1px;
+}
+
+.vector-chip-paint[data-none],
+.vector-proxy-fill[data-none] {
+  background-color: var(--kit-surface);
+  background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--kit-danger) calc(50% - 1px), var(--kit-danger) calc(50% + 1px), transparent calc(50% + 1px));
+}
+
+.vector-chip[data-kind='pattern'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--kit-text-muted);
+}
+
+/* A stroke chip is a ring: the paint shows round a hollow middle. */
+.vector-chip[data-stroke]::after {
+  position: absolute;
+  inset: 5px;
+  border: 1px solid color-mix(in srgb, var(--kit-text) 28%, transparent);
+  background: var(--kit-surface);
+  content: '';
+}
+
+.vector-paint-field input.kui-field::placeholder {
+  color: var(--kit-text-muted);
+  font-style: italic;
+}
+
+.vector-proxy[data-kind='mixed'] {
+  color: var(--kit-text);
+  font-size: 12px;
+}
+
+/* Transform: the reference grid beside the fields. */
+.vector-transform {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 12px;
+}
+
+.vector-transform .vector-reference {
+  flex: none;
+  grid-template-columns: repeat(3, 10px);
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.vector-transform .vector-reference-point {
+  width: 10px;
+  height: 10px;
+}
+
+.vector-transform .vector-fields {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0;
+}
+
+.vector-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.vector-dashes {
+  display: grid;
+  grid-column: span 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 6px;
+}
+
+.vector-dashes .vector-field {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+/* Gradient: the ramp, its stops under it, the midpoints' diamonds. */
+.vector-gradient,
+.vector-gradient-none {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.vector-gradient .vector-fields {
+  padding: 0;
+}
+
+.vector-gradient-ramp {
+  padding: 0 7px;
+}
+
+.vector-gradient-bar {
+  height: 20px;
+  background-size: auto, 8px 8px;
+  border: 1px solid var(--kit-border);
+  border-radius: 3px;
+}
+
+.vector-gradient-row {
+  position: relative;
+  height: 18px;
+  cursor: copy;
+}
+
+.vector-gradient-row[data-removing='true'] {
+  opacity: 0.5;
+}
+
+.vector-gradient-stop {
+  position: absolute;
+  top: 3px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border: 1px solid var(--kit-text-muted);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--kit-surface);
+  cursor: grab;
+}
+
+.vector-gradient-stop[data-selected='true'] {
+  border-color: var(--kit-primary);
+  box-shadow: 0 0 0 2px var(--kit-primary);
+}
+
+.vector-gradient-midpoint {
+  position: absolute;
+  top: -5px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  padding: 0;
+  border: 1px solid var(--kit-text-muted);
+  background: var(--kit-surface);
+  transform: rotate(45deg);
+  cursor: ew-resize;
+}
+
+/* Swatches: chips in a grid, a global swatch's corner, the picked ones ringed. */
+.vector-swatches {
+  grid-template-columns: repeat(auto-fill, 20px);
+}
+
+.vector-swatch {
+  position: relative;
+  display: inline-flex;
+}
+
+.vector-swatch .vector-chip {
+  width: 20px;
+  height: 20px;
+}
+
+.vector-swatch[data-global]::after {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 0;
+  height: 0;
+  border-width: 0 0 7px 7px;
+  border-style: solid;
+  border-color: transparent transparent var(--kit-surface) transparent;
+  filter: drop-shadow(0 0 0.5px var(--kit-text));
+  content: '';
+  pointer-events: none;
+}
+
+.vector-swatch[data-spot]::before {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 1;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--kit-text);
+  content: '';
+  pointer-events: none;
+}
+
+.vector-swatch[data-picked] .vector-chip {
+  outline: 2px solid var(--kit-primary);
+  outline-offset: 1px;
+}
+
+.vector-swatch-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.vector-swatch-group-name {
+  padding: 0 12px;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+}
+
+.vector-swatch-actions {
+  display: inline-flex;
+}
+
+/* Align and Pathfinder: captioned rows of buttons. */
+.vector-align {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vector-align-caption {
+  padding: 0 12px;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+}
+
+.vector-align .vector-field {
+  padding: 4px 12px 0;
+}
+
+.vector-align-spacing {
+  align-items: center;
+}
+
+.vector-align-spacing .vector-field {
+  flex: 1;
+  padding: 0 0 0 4px;
+}
+
+/* The control bar, in the frame's tool-options row. */
+.vector-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0 12px;
+  overflow-x: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.vector-control-what {
+  color: var(--kit-text-muted);
+}
+
+.vector-control-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--kit-text-muted);
+}
+
+.vector-control-bar .vector-field {
+  width: 120px;
+}
+
+.vector-control-align {
+  display: inline-flex;
+}
+
+/* The Color Picker: square, hue strip, then the colours and fields. */
+.vector-color-dialog {
+  display: flex;
+  gap: 12px;
+}
+
+.vector-color-square {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border: 1px solid var(--kit-border);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.vector-color-square-mark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -6px 0 0 -6px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #000;
+  pointer-events: none;
+}
+
+.vector-color-hue {
+  position: relative;
+  width: 18px;
+  height: 220px;
+  border: 1px solid var(--kit-border);
+  background: linear-gradient(to top, #f00 0%, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00 100%);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.vector-color-hue-mark {
+  position: absolute;
+  right: -3px;
+  left: -3px;
+  height: 4px;
+  margin-top: -3px;
+  border: 1px solid var(--kit-text);
+  background: var(--kit-surface);
+  pointer-events: none;
+}
+
+.vector-color-square:focus-visible,
+.vector-color-hue:focus-visible {
+  outline: 2px solid var(--kit-primary);
+  outline-offset: 2px;
+}
+
+.vector-color-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 190px;
+}
+
+.vector-color-compare {
+  display: grid;
+  grid-template-columns: 48px auto;
+  grid-template-rows: auto 24px 24px auto;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.vector-color-compare-label {
+  grid-column: 1;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.vector-color-compare-new,
+.vector-color-compare-current {
+  grid-column: 1;
+  width: 48px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--kit-border);
+}
+
+.vector-color-compare-current {
+  cursor: pointer;
+}
+
+.vector-color-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vector-color-group {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 4px 6px;
+}
+
+.vector-color-group[data-group='cmyk'] {
+  grid-template-columns: repeat(2, auto);
+}
+
+.vector-color-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.vector-color-field-label {
+  width: 12px;
+  color: var(--kit-text-muted);
+}
+
+.vector-color-field input {
+  width: 48px;
+  min-width: 0;
+}
+
+.vector-color-field-unit {
+  width: 12px;
+  color: var(--kit-text-muted);
+  font-size: 11px;
+}
+
+.vector-color-field-hex input {
+  width: 76px;
+}

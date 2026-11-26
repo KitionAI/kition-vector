@@ -15,6 +15,7 @@ const KINDS: ReadonlyArray<readonly [string, RegExp]> = [
   ['locked', /\blocked\b/i],
   ['noText', /no text objects? (?:is |are )?selected|select (?:a |the )?(?:text|type) objects?|select text|no text is being edited|is not type\b|select (?:area|point) type|no type selected/i],
   ['noOpacityMask', /opacity mask/i],
+  ['noKeyObject', /no key object/i],
   ['wrongKind', /select (?:a|an) (?:clip group|region paint group|image trace|image|shaper group|graph|repeat|blend|envelope|mesh|symbol|wrap object|slice)|select an image|not a (?:clip group|blend|envelope|mesh)/i],
   ['emptyResult', /produced an empty result|empty result/i],
   ['nothingToDo', /nothing to (?:\w+)|nothing is hidden|no previous transform|no guides|no (?:datasets|data sets|variables?)\b|no saved|(?:document|object|selection) has no \w+|nothing (?:was )?changed/i],

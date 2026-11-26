@@ -45,6 +45,11 @@ import { CanvasMenu, IsolationBar } from './canvas/CanvasMenu'
 import { VECTOR_ZOOM_TOOL, wheelFactor } from './canvas/zoomTool'
 import { artboardMarks, drawReadout } from './canvas/decorations'
 import { VectorToolRail } from './canvas/VectorToolRail'
+import { ColorPickerOutlet, ColorPickerProvider } from './color/ColorPickerHost'
+import { paintView } from './color/paint'
+import { StopPicker, type PickStop } from './gradient/StopPicker'
+import { ControlBar } from './panels/ControlBar'
+import { usePaintPicker, useProxies } from './panels/usePaint'
 
 /** The view tools are the host's (the Zoom tool Kition Vector's own, with its marquee); the engine's other tools run in the engine. */
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: VECTOR_ZOOM_TOOL }
@@ -101,6 +106,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   // A tool's dialog request (a shape tool's click, an Alt-click with Rotate, a gradient stop's
   // double-click) opens its dialog (plan 2026-11-25, stage 2: `canvas/toolDialogs.ts`).
   const onToolDialog = useRef<(name: string, params: unknown) => void>(() => undefined)
+  const stopPicker = useRef<PickStop | null>(null)
   const toolOptions = useMemo(() => ({ initial: 'selection', hostTools: HOST_TOOLS, hidden: HIDDEN, onDialog: (name: string, params: unknown) => onToolDialog.current(name, params), drawOverlay: drawReadout }), [])
   const tools = useEngineTools(session.tool, doc != null, change, toolOptions)
   const canvas = useRef<KitCanvasHandle>(null)
@@ -161,15 +167,16 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       else dialogs.ask({ ...dialog, title: t(`toolDialog.${name}`), memory: `tool:${name}` })
     }
     if (name !== 'gradientStop') return open(null)
-    // The stop's colour, to start from: the gradient behind the active proxy.
+    // A gradient stop's colour: the Color Picker on it, starting from the stop's colour in the
+    // gradient behind the active proxy (plan 2026-11-25, stage 3).
     const index = typeof (params as { index?: unknown })?.index === 'number' ? (params as { index: number }).index : 0
     void editor
       .query<{ fill?: { gradient?: { stops?: Array<{ color?: unknown }> } }; stroke?: { gradient?: { stops?: Array<{ color?: unknown }> } }; fillActive?: boolean }>('paint.proxies', {})
       .then((proxies) => {
         const paint = proxies?.fillActive === false ? proxies?.stroke : proxies?.fill
-        open(hexOf(paint?.gradient?.stops?.[index]?.color))
+        stopPicker.current?.(index, hexOf(paint?.gradient?.stops?.[index]?.color))
       })
-      .catch(() => open(null))
+      .catch(() => stopPicker.current?.(index, null))
   }
 
   // The keyboard is the editor's from the start, and never falls to the page's body: after a
@@ -323,6 +330,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   return (
     <KitEditorProvider editor={editor} tools={tools}>
       <DialogsProvider value={dialogs}>
+        <ColorPickerProvider>
         <EditorFrame
           tabs={tabs}
           defaultTab="home"
@@ -421,6 +429,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
               {state ? <Proxies info={state} readOnly={host.readOnly === true} /> : null}
             </div>
           }
+          options={state ? <ControlBar info={state} /> : null}
           panels={state ? <SidePanel info={state} /> : null}
         >
           <div className="kui-row" ref={region}>
@@ -441,40 +450,40 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           <VectorDialogs api={dialogApi} info={state} effects={effects} onEffectApplied={setLastEffect} />
           {exporting && state ? <ExportDialog info={state} onClose={() => setExporting(false)} /> : null}
           {help ? <HelpDialog topic={help} version={manifest.version} own={ownShortcuts} onClose={() => setHelp(null)} /> : null}
+          <ColorPickerOutlet />
+          <StopPicker api={stopPicker} />
         </EditorFrame>
+        </ColorPickerProvider>
       </DialogsProvider>
     </KitEditorProvider>
   )
 }
 
-const isNone = (color: string | null) => color == null || color === 'None' || color === 'none'
-
 /**
- * The Fill and Stroke proxies at the foot of the rail (plan 2026-11-25, stage 2): a click brings
- * one to the front (what the swatches and the colour fields paint), a double-click picks its
- * colour (the system's picker until stage 3's own); Swap, Default and None below them.
+ * The Fill and Stroke proxies at the foot of the rail (plan 2026-11-25, stages 2 and 3): each shows
+ * its paint as it is (a colour, a gradient's ramp, None's slash, a mixed selection's "?"); a click
+ * brings one to the front (what the swatches and the colour fields paint), a double-click opens the
+ * Color Picker on it; Swap, Default and None below them.
  */
 function Proxies({ info, readOnly }: { info: VectorInfo; readOnly: boolean }) {
   const { run, t } = useKitEditor()
-  const picker = useRef<HTMLInputElement>(null)
-  const [picking, setPicking] = useState<'fill' | 'stroke'>('fill')
-  const { fill, stroke, fillActive } = info.paint
+  const proxies = useProxies(info)
+  const picker = usePaintPicker()
+  const { fillActive } = info.paint
+  const fill = paintView(proxies?.fill, proxies?.fillMixed === true)
+  const stroke = paintView(proxies?.stroke, proxies?.strokeMixed === true)
+  const background = (view: ReturnType<typeof paintView>) => (view.kind === 'color' ? view.hex : view.kind === 'gradient' ? view.css : undefined)
   const pick = (which: 'fill' | 'stroke') => {
-    if (readOnly) return
-    setPicking(which)
-    const input = picker.current
-    if (!input) return
-    const current = which === 'fill' ? fill : stroke
-    input.value = current && /^#[0-9a-f]{6}$/i.test(current) ? current : '#000000'
-    input.click()
+    if (!readOnly) picker(which, which === 'fill' ? proxies?.fill : proxies?.stroke)
   }
   return (
     <div className="vector-proxies">
       <button
         type="button"
         className="vector-proxy vector-proxy-fill"
-        style={{ background: isNone(fill) ? undefined : (fill ?? undefined) }}
-        data-none={isNone(fill) || undefined}
+        style={{ background: background(fill) }}
+        data-none={fill.kind === 'none' || undefined}
+        data-kind={fill.kind}
         title={t('fill')}
         aria-label={t('fill')}
         aria-pressed={fillActive}
@@ -482,12 +491,15 @@ function Proxies({ info, readOnly }: { info: VectorInfo; readOnly: boolean }) {
         onClick={() => void run('paint.toggleActive', { fill: true })}
         onDoubleClick={() => pick('fill')}
         data-testid="vector-proxy-fill"
-      />
+      >
+        {fill.kind === 'mixed' ? '?' : null}
+      </button>
       <button
         type="button"
         className="vector-proxy vector-proxy-stroke"
-        style={{ borderColor: isNone(stroke) ? undefined : (stroke ?? undefined) }}
-        data-none={isNone(stroke) || undefined}
+        style={stroke.kind === 'color' ? { borderColor: stroke.hex } : stroke.kind === 'gradient' ? { borderImage: `${stroke.css} 1` } : undefined}
+        data-none={stroke.kind === 'none' || undefined}
+        data-kind={stroke.kind}
         title={t('stroke')}
         aria-label={t('stroke')}
         aria-pressed={!fillActive}
@@ -495,15 +507,9 @@ function Proxies({ info, readOnly }: { info: VectorInfo; readOnly: boolean }) {
         onClick={() => void run('paint.toggleActive', { fill: false })}
         onDoubleClick={() => pick('stroke')}
         data-testid="vector-proxy-stroke"
-      />
-      <input
-        ref={picker}
-        type="color"
-        className="vector-proxy-picker"
-        tabIndex={-1}
-        aria-hidden="true"
-        onChange={(event) => void run(picking === 'fill' ? 'paint.setFill' : 'paint.setStroke', { color: event.target.value })}
-      />
+      >
+        {stroke.kind === 'mixed' ? '?' : null}
+      </button>
       <span className="vector-proxy-actions">
         <IconButton icon={ArrowLeftRight} label={t('swapColors')} disabled={readOnly} onClick={() => void run('paint.swap', {})} data-testid="vector-proxy-swap" />
         <IconButton icon={RotateCcw} label={t('defaultColors')} disabled={readOnly} onClick={() => void run('paint.default', {})} data-testid="vector-proxy-default" />

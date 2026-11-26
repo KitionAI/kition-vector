@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import { Checkbox, Choice, ColorPicker, GradientSlider, parseHex, rgbToHex, useKitEditor } from '@kition/sdk/editor'
+import { Checkbox, Choice, GradientSlider, parseHex, rgbToHex, useKitEditor } from '@kition/sdk/editor'
+import { useColorPicker } from '../color/ColorPickerHost'
 
 /**
  * The dialogs' controls, on kit-editor's: a slider row (label, track, value to type), a drop-down,
@@ -39,33 +40,41 @@ export function FieldRow({ label, children, htmlFor }: { label: string; children
   )
 }
 
-/** A colour: its swatch opens the picker under the row (stage 3 brings the full Color Picker), and its hex code can be typed. */
+/** A colour: its swatch opens the Color Picker (over the dialog), and its hex code can be typed. */
 export function ColorRow({ label, value, onChange, testId }: { label: string; value: string; onChange: (value: string) => void; testId?: string }) {
   const { t } = useKitEditor()
-  const [open, setOpen] = useState(false)
+  const pick = useColorPicker()
   const [typing, setTyping] = useState<string | null>(null)
-  const rgb = parseHex(value) ?? [0, 0, 0]
   return (
-    <>
-      <FieldRow label={label}>
-        <span className="vector-dialog-color">
-          <button type="button" className="vector-dialog-swatch" style={{ background: value }} aria-label={t('dialog.pickColor')} aria-expanded={open} onClick={() => setOpen((shown) => !shown)} data-testid={testId ? `${testId}-swatch` : undefined} />
-          <input
-            className="kui-field tabular-nums"
-            type="text"
-            value={typing ?? value}
-            onBlur={() => setTyping(null)}
-            onChange={(event) => {
-              setTyping(event.target.value)
-              const next = parseHex(event.target.value)
-              if (next) onChange(rgbToHex(next))
-            }}
-            data-testid={testId}
-          />
-        </span>
-      </FieldRow>
-      {open ? <ColorPicker value={rgb} onChange={(next) => onChange(rgbToHex(next))} testId={testId ? `${testId}-picker` : undefined} /> : null}
-    </>
+    <FieldRow label={label}>
+      <span className="vector-dialog-color">
+        <button
+          type="button"
+          className="vector-dialog-swatch"
+          style={{ background: value }}
+          aria-label={t('dialog.pickColor')}
+          onClick={() => {
+            const hex = parseHex(value) ? rgbToHex(parseHex(value) ?? [0, 0, 0]) : '#000000'
+            void pick?.({ title: label, value: { kind: 'color', hex } }).then((picked) => {
+              if (picked?.kind === 'color') onChange(picked.hex)
+            })
+          }}
+          data-testid={testId ? `${testId}-swatch` : undefined}
+        />
+        <input
+          className="kui-field tabular-nums"
+          type="text"
+          value={typing ?? value}
+          onBlur={() => setTyping(null)}
+          onChange={(event) => {
+            setTyping(event.target.value)
+            const next = parseHex(event.target.value)
+            if (next) onChange(rgbToHex(next))
+          }}
+          data-testid={testId}
+        />
+      </span>
+    </FieldRow>
   )
 }
 
