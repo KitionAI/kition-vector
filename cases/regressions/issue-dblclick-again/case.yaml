@@ -1,0 +1,21 @@
+format: 1
+id: regressions/issue-dblclick-again
+feature: vector.editor.type
+intent: >-
+  Type just edited (typed into, Escape, V) and double-clicked again with the Selection tool at the
+  same place gets the caret there again. Before, the Type tool still counted its last clicks there,
+  so the click the double-click handed it was a second one and selected the word, which the next key
+  replaced (re-walk 2026-11-26: "Hello" became "??!!llo").
+layer: gate
+source:
+  kind: issue
+  from: re-walk 2026-11-26 (findings-rewalk, area 7)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: type_editing }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

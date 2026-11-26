@@ -46,6 +46,7 @@ import { CanvasMenu, IsolationBar } from './canvas/CanvasMenu'
 import { VECTOR_ZOOM_TOOL, wheelFactor } from './canvas/zoomTool'
 import { artboardMarks, drawReadout } from './canvas/decorations'
 import { VectorToolRail } from './canvas/VectorToolRail'
+import { TOOL_DIALOGS } from './canvas/railActions'
 import { ColorPickerOutlet, ColorPickerProvider } from './color/ColorPickerHost'
 import { paintView } from './color/paint'
 import { StopPicker, type PickStop } from './gradient/StopPicker'
@@ -564,6 +565,11 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
               }
               return true
             }
+            // Enter with a Selection or transform tool opens its dialog on the selection (Move…, Rotate…), as the reference's does.
+            if (plain && event.key === 'Enter' && state?.selection.length && !tools.wantsText && !host.readOnly) {
+              const command = TOOL_DIALOGS[tools.active ?? '']
+              if (command && dialogs.open(command)) return true
+            }
             if (plain) return false
             // Cmd+S on a drawing read from SVG, PDF or EPS saves a .kvector beside it, never over the file.
             if (!native && shortcutMatches('Cmd+S', event)) {
@@ -624,7 +630,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           }
           rail={
             <div className="vector-rail">
-              <VectorToolRail hidden={HIDDEN_TOOLS} />
+              <VectorToolRail hidden={HIDDEN_TOOLS} onView={(to) => zoomNow.current(to)} />
               {state ? <Proxies info={state} readOnly={host.readOnly === true} /> : null}
             </div>
           }
@@ -683,7 +689,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           />
           <VectorDialogs api={dialogApi} info={state} effects={effects} onEffectApplied={setLastEffect} />
           {exporting && state ? <ExportDialog info={state} busy={busy} onClose={() => setExporting(false)} /> : null}
-          {state ? <VectorFileIo api={fileIo} area={region} canvas={canvas} origin={state.origin} busy={busy} editing={() => typingNow.current} /> : null}
+          {state ? <VectorFileIo api={fileIo} area={region} canvas={canvas} origin={state.origin} busy={busy} editing={() => typingNow.current} selection={() => stateNow.current?.selectionBounds ?? null} /> : null}
           {help ? <HelpDialog topic={help} version={manifest.version} own={ownShortcuts} onClose={() => setHelp(null)} /> : null}
           <ColorPickerOutlet />
           <StopPicker api={stopPicker} />

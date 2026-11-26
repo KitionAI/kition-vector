@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Grid3x3Icon as Grid3x3 } from '@kition/tessera/icons/react'
 import { useKitEditor, useReadOnly } from '@kition/sdk/editor'
 import { normalHex } from '../color/colorMath'
@@ -63,6 +63,13 @@ export function PanelNumber({
   const [scrubbing, setScrubbing] = useState<number | null>(null)
   const typingNow = useRef(typing)
   typingNow.current = typing
+  // The value the last Up or Down asked for, until the drawing answers with it: a second press
+  // before then steps on from it, not from the value shown (re-walk 2026-11-26: two quick presses
+  // stepped once and left two history steps).
+  const stepped = useRef<number | null>(null)
+  useEffect(() => {
+    stepped.current = null
+  }, [value])
   const clampTo = (next: number) => Math.min(max, Math.max(min, next))
   const shown = scrubbing ?? value
   const text = typing ?? (shown === null ? '' : formatNumber(shown, decimals))
@@ -101,7 +108,11 @@ export function PanelNumber({
       event.preventDefault()
       setTyping(null)
       typingNow.current = null
-      set(value + (event.key === 'ArrowUp' ? 1 : -1) * step * (event.shiftKey ? 10 : 1))
+      const base = stepped.current ?? value
+      const next = clampTo(base + (event.key === 'ArrowUp' ? 1 : -1) * step * (event.shiftKey ? 10 : 1))
+      if (Math.abs(next - base) < 10 ** -(decimals + 2)) return
+      stepped.current = next
+      onSet(next)
     }
   }
 

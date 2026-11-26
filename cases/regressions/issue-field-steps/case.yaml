@@ -1,0 +1,25 @@
+format: 1
+id: regressions/issue-field-steps
+feature: vector.editor.paint
+intent: >-
+  Two quick presses of the Up arrow in a Properties number field (H) step the value twice, one
+  history step each, and Cmd+Z takes the last one back. Before, the second press stepped from the
+  value still shown (the drawing had not answered yet): 75 became 76 with two history steps, and a
+  Cmd+Z seemed to do nothing (re-walk 2026-11-26, out/rewalk/11-panels).
+layer: gate
+source:
+  kind: issue
+  from: re-walk 2026-11-26 (findings-rewalk, area 11)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/rewalk.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 300
+since: "2026-11-26"

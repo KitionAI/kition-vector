@@ -86,6 +86,31 @@ fn a_selection_tools_double_click_puts_the_caret_where_it_was_clicked() {
     assert_eq!(typing(&doc)["editing"], id);
 }
 
+/// Editing the same type again (re-walk 2026-11-26, regressions/issue-dblclick-again): type edited,
+/// Escape, V, and a double-click at the same place a moment later put the caret there again. Before,
+/// the Type tool still counted its last clicks there, so the click the double-click hands it was its
+/// second and selected the word, which the next key replaced.
+#[test]
+fn a_second_double_click_on_type_just_edited_puts_the_caret_again() {
+    let mut doc = VectorDocument::create("type.kvector", 600, 400).unwrap();
+    let id = run(&mut doc, "text.add", json!({ "x": 50, "y": 100, "text": "Hello world", "size": 24 }))["id"].clone();
+    for round in 0..2 {
+        doc.select_tool("selection", 1.0).unwrap();
+        for action in [PointerAction::Down, PointerAction::Up, PointerAction::Down, PointerAction::Up, PointerAction::DoubleClick] {
+            press(&mut doc, action, 70.0, 95.0);
+        }
+        assert_eq!(doc.tool(), "type");
+        let shown = typing(&doc);
+        assert_eq!(shown["editing"], id, "round {round}");
+        assert_eq!(shown["start"], shown["end"], "round {round}: a caret, not the word: {shown}");
+        KitTools::text(&mut doc, "!", 1.0).unwrap();
+        doc.key("Escape", ToolMods::default(), 1.0).unwrap();
+    }
+    let text = text_of(&doc, &id);
+    assert_eq!(text.replace('!', ""), "Hello world", "{text}");
+    assert_eq!(text.matches('!').count(), 2, "{text}");
+}
+
 #[test]
 fn an_input_methods_marked_text_shows_in_place_and_its_commit_lands_once() {
     let mut doc = VectorDocument::create("type.kvector", 600, 400).unwrap();

@@ -1,0 +1,26 @@
+format: 1
+id: regressions/issue-tool-dialogs
+feature: vector.editor.canvas
+intent: >-
+  A double-click on the Rotate, Scale, Reflect or Shear tool of the rail opens its dialog on the
+  selection, the Selection tool's (and Enter with it) opens Move…, a double-click on the Zoom tool
+  shows 100% and on the Hand tool fits the artboard, as the reference's do. Before, the re-walk of
+  2026-11-26 (out/rewalk/09-transform) found no dialog on any of these double-clicks: numbers could
+  only be given through the Object menu.
+layer: gate
+source:
+  kind: issue
+  from: re-walk 2026-11-26 (findings-rewalk, area 9)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/rewalk.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 300
+since: "2026-11-26"

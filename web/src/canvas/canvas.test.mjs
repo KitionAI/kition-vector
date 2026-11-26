@@ -158,3 +158,14 @@ test('each dialog a tool asks for runs in the engine with its starting values', 
     assert.equal(JSON.parse(doc.inspect()).history.length, before + 1, `${name} is one step`)
   }
 })
+
+test('the rail\'s double-clicks and Enter open the tools\' dialogs, Hand and Zoom set the view (re-walk 2026-11-26)', async () => {
+  const { TOOL_DIALOGS, railDoubleClick } = await import('./railActions.ts')
+  assert.deepEqual(railDoubleClick('vector-tool-rotate'), { kind: 'dialog', command: 'object.rotate' })
+  assert.deepEqual(railDoubleClick('vector-tool-selection'), { kind: 'dialog', command: 'object.move' })
+  assert.deepEqual(railDoubleClick('vector-tool-hand'), { kind: 'view', to: 'fitArtboard' })
+  assert.deepEqual(railDoubleClick('vector-tool-zoom'), { kind: 'view', to: 'actualSize' })
+  assert.equal(railDoubleClick('vector-tool-pen'), null)
+  assert.equal(railDoubleClick(null), null)
+  assert.equal(TOOL_DIALOGS.shear, 'object.shear')
+})

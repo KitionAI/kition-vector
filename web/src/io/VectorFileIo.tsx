@@ -93,6 +93,7 @@ export function VectorFileIo({
   origin,
   busy,
   editing,
+  selection,
 }: {
   api: RefObject<FileIo | null>
   /** The canvas area: where files drop and the drop mark shows. */
@@ -103,6 +104,8 @@ export function VectorFileIo({
   busy: Busy
   /** Text is being typed on the canvas: its own clipboard keys win. */
   editing: () => boolean
+  /** The selection's bounds in points (what a copy holds), or null. */
+  selection: () => { width: number; height: number } | null
 }) {
   const editor = useKitEditor()
   const { t, host } = editor
@@ -113,8 +116,8 @@ export function VectorFileIo({
   // The fingerprint of the text the editor last put on the system clipboard ('' when that write
   // failed): a paste of it is the engine's own paste, which keeps swatches, styles and layers.
   const ownCopy = useRef<string | null>(null)
-  const now = useRef({ editor, ui, hostPick, editing, origin })
-  now.current = { editor, ui, hostPick, editing, origin }
+  const now = useRef({ editor, ui, hostPick, editing, origin, selection })
+  now.current = { editor, ui, hostPick, editing, origin, selection }
 
   useLayoutEffect(() => {
     const surfaceBox = () => area.current?.querySelector('[data-testid="kit-canvas-surface"]')?.getBoundingClientRect() ?? null
@@ -164,12 +167,15 @@ export function VectorFileIo({
     }
 
     // ---------- the system clipboard ----------
-    /** The copy as other applications take it: SVG markup, a type-only copy's words, a PNG at twice its size. */
-    const copied = async (): Promise<Copied> => {
+    /**
+     * The copy as other applications take it: SVG markup, a type-only copy's words, a PNG at twice
+     * its size (at most 4096 pixels on its longer side, so a large copy is on the clipboard at once).
+     */
+    const copied = async (scale: number): Promise<Copied> => {
       const [svg, text, png] = await Promise.all([
         query<{ svg?: string | null }>('clipboard.exportSvg'),
         query<{ text?: string | null }>('clipboard.exportText'),
-        query<{ dataBase64?: string | null }>('clipboard.exportPng', { scale: 2 }),
+        query<{ dataBase64?: string | null }>('clipboard.exportPng', { scale }),
       ])
       return { svg: svg?.svg ?? null, text: text?.text ?? null, png: png?.dataBase64 ? fromBase64(png.dataBase64) : null }
     }
@@ -179,10 +185,16 @@ export function VectorFileIo({
       return supports ? supports(type) : type !== 'image/svg+xml'
     }
     const copy = (command: string) => {
-      const done = run(command)
+      const bounds = now.current.selection()
+      const longer = bounds ? Math.max(bounds.width, bounds.height, 1) : 1
+      const scale = Math.max(0.05, Math.min(2, 4096 / longer))
+      // Whether it can run is asked of the engine now: right after Cmd+A the editor's own list of
+      // enabled commands may not have caught up yet (re-walk 2026-11-26: Cmd+A, Cmd+C wrote nothing).
+      const { editor: e, ui: u } = now.current
+      const done = e.enabledNow(command).then((ok) => (ok && !u.state(`command:${command}`, e.byId.get(command)?.menu).denied ? run(command) : null))
       const content = done.then(async (answer) => {
         if (answer === null) throw new Error('nothing copied')
-        const copy = await copied()
+        const copy = await copied(scale)
         const text = copiedText(copy)
         ownCopy.current = text ? fingerprint(text) : ''
         return copy
@@ -286,7 +298,7 @@ export function VectorFileIo({
       if (!command || event.altKey || event.defaultPrevented || isEditable(event.target) || !idle()) return
       if ((event.code === 'KeyC' || event.code === 'KeyX') && !event.shiftKey) {
         const id = event.code === 'KeyC' ? 'edit.copy' : 'edit.cut'
-        if (!allowed(id)) return
+        if (id === 'edit.cut' && host.readOnly) return
         event.preventDefault()
         event.stopPropagation()
         copy(id)

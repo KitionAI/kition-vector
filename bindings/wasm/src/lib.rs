@@ -921,9 +921,12 @@ impl VectorDocument {
     }
 
     /// Chooses the Type tool and clicks at `at`, which puts the caret there in the type under it.
+    /// The click is a first one: the Type tool forgets the clicks it counted when it last edited
+    /// there, which would make this one select a word (re-walk 2026-11-26).
     fn caret_at(&mut self, at: Point, zoom: f64) -> kition_vector_engine::Result<()> {
         let view = self.view(zoom);
         self.session.switch_tool("type", view)?;
+        self.session.set_tool_option("resetClicks", &serde_json::json!(true));
         for kind in [PointerKind::Down, PointerKind::Up] {
             self.session.pointer(&PointerEvent { kind, pos: at, mods: Mods::default(), pressure: 1.0 }, view)?;
         }
