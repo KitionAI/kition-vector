@@ -1,0 +1,26 @@
+format: 1
+id: vector.editor.view/view-state
+feature: vector.editor.view
+intent: >-
+  The editor's view is the session's (plan 2026-11-25, stage 6): `View:` requests set the View
+  menu's toggles without a revision, an undo step or a dirty drawing, refuse a toggle they do not
+  know, and inspect reports them with the engine's own view states (Lock Guides, the transparency
+  grid); Outline draws paths as thin lines on white, Pixel Preview shows each point as a square of
+  its colour at 1:1, the transparency grid replaces the artboard's white with two colours; a moved
+  selection snaps to another's edge with Smart Guides on and goes where the pointer puts it with them
+  off; hiding the bounding box and the edges hides the selection's overlays; a guide dragged out of
+  a ruler shows while over the canvas, is made where it is released there (one undo step) and is
+  not made when released over the ruler.
+layer: gate
+source:
+  kind: probe
+  from: gap-canvas-tools 2026-11-25 section 3 (ViewInfo { zoom, ..default })
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: view_state }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

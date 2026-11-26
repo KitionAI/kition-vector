@@ -32,6 +32,13 @@ pub struct MenuState {
     pub slices_locked: bool,
 }
 
+impl Session {
+    /// View → Hide Slices and View → Lock Slices: whether each is on (the editor's check marks).
+    pub fn slice_view(&self) -> (bool, bool) {
+        (self.menu.slices_hidden, self.menu.slices_locked)
+    }
+}
+
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(

@@ -686,6 +686,14 @@ const ROWS: ReadonlyArray<readonly [string, string, string]> = [
   ['para.spaceAfter', 'After', '段后'],
   ['para.spaceAfterTitle', 'Space after paragraph', '段后间距'],
   ['para.hyphenate', 'Hyphenate', '连字'],
+  ['view.zoomOut', 'Zoom out', '缩小'],
+  ['view.zoomIn', 'Zoom in', '放大'],
+  ['view.fit', 'Fit', '适合'],
+  ['view.zoomField', 'Zoom: click to type a percentage', '缩放：单击输入百分比'],
+  ['view.scrollHorizontal', 'Scroll horizontally', '水平滚动'],
+  ['view.scrollVertical', 'Scroll vertically', '垂直滚动'],
+  ['view.rulerTop', 'Horizontal ruler: drag down for a guide', '水平标尺：向下拖出参考线'],
+  ['view.rulerLeft', 'Vertical ruler: drag right for a guide', '垂直标尺：向右拖出参考线'],
 ]
 
 for (const [key, en, zh] of ROWS) {
@@ -711,5 +719,6 @@ export const PHRASES: Record<string, Record<string, string>> = {
     History: '历史记录',
     Character: '字符',
     Paragraph: '段落',
+    'Show Corner Widget': '显示边角构件',
   },
 }

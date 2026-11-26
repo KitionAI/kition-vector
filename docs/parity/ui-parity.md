@@ -92,6 +92,9 @@ tools, never checked side by side) isn't captured row by row.
 | Ruler guides as Layers rows: shown, hidden, locked and deleted with their layer; rows dragged to another layer | done | `guide.setLayer`; guides from older files go on a layer |
 | Alt swaps a ruler guide's orientation while dragging | missing | |
 | Global and video rulers | missing | |
+| Editor (`web/`): View menu toggles with checks and keys (Outline, Pixel Preview, edges, bounding box, corner widget, Smart Guides, rulers, guides, grid, the three snaps), the transparency grid, Proof Colors and Overprint Preview drawn | partial | the toggles are the editor session's (`View:` requests), not engine commands; Grids In Back not followed (the grid draws over the art) |
+| Editor: rulers in the document's unit with the pointer marked; guides dragged out of them shown as they go; a moved selection snapping onto guides with Smart Guides and Snap to Point on | partial | no ruler unit menu or movable zero point |
+| Editor: typed zoom percentage, Alt+wheel zoom, scrollbars, View's zoom rows | done | |
 
 ## Transform handles, bounding box, Free Transform
 

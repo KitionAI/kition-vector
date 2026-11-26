@@ -1,0 +1,29 @@
+format: 1
+id: vector.editor.view/view-rules
+feature: vector.editor.view
+intent: >-
+  The view rules hold without a browser (plan 2026-11-25, stage 6): the View menu lists Kition's
+  own toggles and zooms among the engine's view commands in the reference's order, each translated;
+  its check marks are the toggles' and the engine view commands' states; its keys (Cmd+Y, Cmd+Alt+Y,
+  Cmd+U, Cmd+H, Cmd+Shift+B, Cmd+R, Cmd+;, Cmd+', Cmd+Shift+', Cmd+Alt+') are read by key position;
+  Outline and Pixel Preview are not kept across sessions; a typed zoom reads `150`, `33.3 %` and
+  `12,5%` and stays within 1% to 6400%; the rulers' label steps are 1, 2 or 5 times a power of ten;
+  the scrollbars show only while the extent is not all in view. In the built engine: the toggles are
+  no edit and inspect reports them; Outline, Pixel Preview and the transparency grid change the
+  pixels; Smart Guides off leave a dragged object where the pointer puts it; Show Bounding Box and
+  Show Edges hide the selection's overlays; a guide out of a ruler is one undo step.
+layer: gate
+source:
+  kind: probe
+  from: gap-canvas-tools 2026-11-25 sections 3 and 5 (view toggles always the defaults, no rulers, grid or guides drawn)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, --test, web/src/view/view.test.mjs]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+timeout_s: 180
+since: "2026-11-26"

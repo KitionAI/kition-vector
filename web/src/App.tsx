@@ -58,6 +58,11 @@ import { blinkingCaret } from './type/caret'
 import { useTypeEditing } from './type/useTypeEditing'
 import { useDrawingFonts } from './type/useDrawingFonts'
 import { RevealPanel } from './type/TypeSection'
+import { useView } from './view/useView'
+import { both, viewMarks } from './view/decorations'
+import { Ruler, type RulerDrag } from './view/Rulers'
+import { CanvasScrollbars, ZoomField } from './view/ZoomField'
+import { isToggle, viewChecked, viewKey, viewRowOf, viewRows, type ViewZoom } from './view/model'
 
 /** The view tools are the host's (the Zoom tool Kition Vector's own, with its marquee); the engine's other tools run in the engine. */
 const HOST_TOOLS = { hand: HAND_TOOL, zoom: VECTOR_ZOOM_TOOL }
@@ -132,6 +137,19 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   const [zoom, setZoom] = useState(1)
   // Moves with every change of the view: what is laid over the canvas follows it.
   const [viewTick, setViewTick] = useState(0)
+  // The View menu's toggles, the canvas window, the ruler guides (plan 2026-11-25, stage 6).
+  const view = useView({
+    doc,
+    info: state,
+    inspectedView: session.info?.inspected?.view,
+    tool: session.tool as (name: 'toolKey', args: unknown[], settled?: boolean) => Promise<unknown>,
+    refreshTools: tools.refresh,
+    canvas,
+    query: editor.query,
+    revision: change.revision,
+  })
+  const viewNow = useRef(view)
+  viewNow.current = view
   const bounds = state?.selectionBounds
   const { commands } = editor
   const [exporting, setExporting] = useState(false)
@@ -279,6 +297,27 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
     [active],
   )
   const marks = useMemo(() => (state ? artboardMarks({ boards: state.artboards, current: active, origin: state.origin }) : null), [state?.artboards, state?.origin, active])
+  // Over the art, under the engine's overlays: the grid, the pixel grid, the guides (stage 6).
+  const { toggles, looks, guides } = view
+  const viewDecoration = useMemo(
+    () => (state && (toggles.grid || toggles.pixelPreview || guides?.length) ? viewMarks({ origin: state.origin, looks, grid: toggles.grid, pixelPreview: toggles.pixelPreview, guides }) : null),
+    [state?.origin, looks, toggles.grid, toggles.pixelPreview, guides],
+  )
+  const underArt = useMemo(() => both(marks, viewDecoration), [marks, viewDecoration])
+  /** The View menu's zoom rows (and Cmd+1, Cmd+0, Cmd+Alt+0). */
+  const zoomView = (to: ViewZoom) => {
+    if (to === 'zoomIn') canvas.current?.zoomBy(1.25)
+    else if (to === 'zoomOut') canvas.current?.zoomBy(1 / 1.25)
+    else if (to === 'actualSize') canvas.current?.zoomTo(1)
+    else if (to === 'fitAll' || !boards) canvas.current?.fit()
+    else nav.show(active)
+  }
+  const zoomNow = useRef(zoomView)
+  zoomNow.current = zoomView
+  /** A guide dragged out of a ruler (unless the drawing is read-only). */
+  const onRulerGuide = (drag: RulerDrag) => {
+    if (!host.readOnly) view.rulerDrag(drag)
+  }
 
   // The panel dock and the Window menu's panel rows (plan 2026-11-25, stage 4): which groups show
   // is kept in the kit's store, the dock keeps each group's tab, height and collapse.
@@ -306,14 +345,15 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
   const shownNow = useRef(shown)
   shownNow.current = shown
 
-  // Cmd (Ctrl) with the mouse wheel zooms at the pointer by at most 1.2 times a notch (the canvas's
+  // Cmd (Ctrl) or Alt with the mouse wheel zooms at the pointer by at most 1.2 times a notch (the canvas's
   // own would take 2.7 times); a trackpad's pinch, in small steps, zooms as smoothly as before.
   const region = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const element = region.current
     if (!element) return undefined
     const wheel = (event: WheelEvent) => {
-      if (!(event.ctrlKey || event.metaKey) || !(event.target instanceof HTMLCanvasElement)) return
+      // Cmd (Ctrl) or Alt with the wheel zooms (the reference's Alt+wheel).
+      if (!(event.ctrlKey || event.metaKey || event.altKey) || !(event.target instanceof HTMLCanvasElement)) return
       const view = canvas.current?.view()
       if (!view) return
       event.preventDefault()
@@ -365,6 +405,8 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       if (windowTab(command)) return windowNow.current(command)
       if (command === HELP_SHORTCUTS) return setHelp('shortcuts')
       if (command === HELP_ABOUT) return setHelp('about')
+      const row = viewRowOf(command)
+      if (row) return isToggle(row) ? viewNow.current.toggle(row) : zoomNow.current(row)
     },
     [dialogs],
   )
@@ -406,6 +448,9 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
     const panelRows = windowRows().map((row) => ({ ...row, label: phrase(row.label) }))
     const withEffects = engineTabs.map((tab) => {
       if (tab.id === 'Effect' && tab.menu) return { ...tab, menu: { ...tab.menu, rows: [...effectMenu.slice(0, 2), ...tab.menu.rows, ...effectMenu.slice(2)] as MenuRow[] } }
+      // View lists its own toggles and zooms among the engine's view commands, with check marks.
+      if (tab.id === 'View' && tab.menu)
+        return { ...tab, menu: { ...tab.menu, rows: viewRows(tab.menu.rows), checked: (command: string) => viewChecked(command, viewNow.current.toggles, viewNow.current.engine) } }
       if (tab.id === 'Window' && tab.menu) return { ...tab, menu: { ...tab.menu, rows: [...panelRows, ...tab.menu.rows] as MenuRow[], checked: (command: string) => windowShown(shownNow.current, command, (group) => dock.current?.activeTab(group) ?? null) } }
       return tab
     })
@@ -418,7 +463,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
       ...withEffects,
       { id: 'Help', label: phrase('Help'), view: true, menu: { rows: helpRows, onKitCommand: kitCommand, primary: [HELP_SHORTCUTS] } },
     ]
-  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName, shown])
+  }, [commands, phrase, t, dialogs, kitCommand, effects, lastName, shown, view.toggles, view.engine])
 
   return (
     <KitEditorProvider editor={editor} tools={tools}>
@@ -429,7 +474,8 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
           tabs={tabs}
           defaultTab="home"
           canvas={canvas}
-          zoom={zoom}
+          // The status bar's zoom is the editor's own (a typed percentage), in `statusEnd`.
+          zoom={null}
           hiddenCommands={isHiddenEverywhere}
           onKeyDown={(event) => {
             // An input method's keys are its own while it composes.
@@ -443,6 +489,12 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
               if (state.selection.length) void editor.run('edit.deselectAll', {})
               else if (state.isolation !== null) exitIsolation()
               else return false
+              return true
+            }
+            // The View menu's own keys (Cmd+Y Outline, Cmd+U Smart Guides, Cmd+R rulers…, stage 6).
+            const viewToggle = viewKey(event)
+            if (viewToggle) {
+              view.toggle(viewToggle)
               return true
             }
             // The canvas's own keys (`canvas/keys.ts`): what the tool takes now, the arrows, the
@@ -478,9 +530,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
                   break
                 case 'zoom': {
                   // Cmd+0 fits the active artboard, Cmd+Alt+0 everything.
-                  if (own.to === 'actual') canvas.current?.zoomTo(1)
-                  else if (own.to === 'all' || !boards) canvas.current?.fit()
-                  else nav.show(active)
+                  zoomView(own.to === 'actual' ? 'actualSize' : own.to === 'all' ? 'fitAll' : 'fitArtboard')
                   break
                 }
               }
@@ -524,6 +574,7 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
                 </span>
               ) : null}
               {state ? <ArtboardNavigator info={state} /> : null}
+              {state ? <ZoomField zoom={zoom} canvas={canvas} onFit={() => canvas.current?.fit()} labels={{ out: t('view.zoomOut'), in: t('view.zoomIn'), fit: t('view.fit'), field: t('view.zoomField') }} /> : null}
             </span>
           }
           rail={
@@ -541,20 +592,37 @@ export function App({ host, phrase }: { host: HostConnection; phrase: Phrases })
             ) : null
           }
         >
-          <div className="kui-row" ref={region}>
+          <div className="kui-row vector-canvas-area" ref={region} data-rulers={view.toggles.rulers && state ? true : undefined}>
+            {view.toggles.rulers && state ? (
+              <>
+                <div className="vector-ruler-corner" />
+                <Ruler axis="x" canvas={canvas} area={region} tick={viewTick} origin={state.origin} unit={state.units} label={t('view.rulerTop')} onGuide={onRulerGuide} />
+                <Ruler axis="y" canvas={canvas} area={region} tick={viewTick} origin={state.origin} unit={state.units} label={t('view.rulerLeft')} onGuide={onRulerGuide} />
+              </>
+            ) : null}
             <KitDocumentCanvas
               canvas={canvas}
               viewMemory={viewMemory}
               framed={false}
               initialArea={initialArea}
-              decorateUnder={marks}
+              decorateUnder={underArt}
               animated={typeEditing.collapsed}
-              onView={(view) => {
-                setZoom(view.zoom)
+              onView={(canvasView) => {
+                setZoom(canvasView.zoom)
                 setViewTick((tick) => tick + 1)
+                view.onView(canvasView)
               }}
             >
               {isolationPath ? <IsolationBar path={isolationPath} onExit={exitIsolation} /> : null}
+              {session.info ? (
+                <CanvasScrollbars
+                  view={viewTick >= 0 ? (canvas.current?.view() ?? null) : null}
+                  width={session.info.width}
+                  height={session.info.height}
+                  canvas={canvas}
+                  labels={{ horizontal: t('view.scrollHorizontal'), vertical: t('view.scrollVertical') }}
+                />
+              ) : null}
             </KitDocumentCanvas>
           </div>
           <CanvasMenu

@@ -369,8 +369,8 @@ impl Targets {
     }
 
     /// These targets and the ruler guides, when they are shown (and so unlocked to the selection
-    /// tools): they pull a point into line where they run.
-    fn with_rulers(mut self, cx: &ToolContext) -> Self {
+    /// tools): they pull a point, and a moved selection's edges and centre, into line where they run.
+    pub(crate) fn with_rulers(mut self, cx: &ToolContext) -> Self {
         if cx.guides {
             self.rulers = cx
                 .doc
@@ -681,8 +681,25 @@ impl Targets {
                 .filter(|(d, ..)| d.abs() <= tol)
                 .min_by(|a, b| a.0.abs().total_cmp(&b.0.abs()))
         };
-        let best_x = nearest(&self.xs, |r| [r.x0, r.center().x, r.x1]);
-        let best_y = nearest(&self.ys, |r| [r.y0, r.center().y, r.y1]);
+        // The ruler guides running past the rectangles count as lines too, merged into the
+        // targets' sorted lines (only when there are guides: the lines are not copied otherwise).
+        let with_rulers = |lines: &[(f64, Point, Kind)], vertical: bool| {
+            if self.rulers.is_empty() {
+                return None;
+            }
+            let mut all = lines.to_vec();
+            all.extend(
+                self.rulers
+                    .iter()
+                    .filter(|g| g.vertical == vertical)
+                    .filter_map(|g| rects.iter().find_map(|r| g.line_at(r.center(), tol + (if vertical { r.height() } else { r.width() }) / 2.0))),
+            );
+            all.sort_by(|a, b| a.0.total_cmp(&b.0));
+            Some(all)
+        };
+        let (xs, ys) = (with_rulers(&self.xs, true), with_rulers(&self.ys, false));
+        let best_x = nearest(xs.as_deref().unwrap_or(&self.xs), |r| [r.x0, r.center().x, r.x1]);
+        let best_y = nearest(ys.as_deref().unwrap_or(&self.ys), |r| [r.y0, r.center().y, r.y1]);
         let mut d = Vec2::ZERO;
         let mut ov = vec![];
         if let Some((dx, from, x, r)) = best_x {

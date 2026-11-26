@@ -1,0 +1,30 @@
+format: 1
+id: vector.editor.view/view-gestures
+feature: vector.editor.view
+intent: >-
+  The view works by hand (plan 2026-11-25, stage 6). Cmd+Y shows the art as outlines (the fill
+  goes) and View › Outline is checked, Cmd+Y again brings the fill back; View › Show Transparency
+  Grid (Cmd+Shift+D) shows its cells on the artboard, checked, and takes them away again; Cmd+R shows
+  the rulers and a guide dragged out of the top ruler shows as it goes and is made where it is
+  released; a rectangle moved to within a few points of the guide snaps onto it, and with Smart
+  Guides off (Cmd+U) stays where the pointer puts it; View › Smart Guides shows its check; Cmd+'
+  draws the grid and takes it away; the toggles add no undo step; a zoom typed in the status bar
+  lands on it; zoomed in, scrollbars show and scroll the view, and go when fitted; Alt with the wheel
+  zooms.
+layer: gate
+source:
+  kind: probe
+  from: walkthrough 2026-11-25 (findings section 2: toggles without effect or checks, no typed zoom, no scrollbars, no Alt+wheel, no rulers, grid or outline)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [pnpm, --dir, web, exec, node, tests/view.mjs, chromium]
+expected:
+  - actual: out:exec
+    compare: exit
+    value: 0
+tags: [browser]
+requires: [chromium]
+timeout_s: 400
+since: "2026-11-26"

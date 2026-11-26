@@ -76,13 +76,36 @@ fn path(path: BezPath, color: [u8; 3], width: f32) -> Overlay {
     Overlay::Path { path, color, width, dashed: false }
 }
 
+/// What of the selection the View menu shows.
+#[derive(Clone, Copy, Debug)]
+pub struct Shown {
+    /// View › Show Bounding Box: the Selection tool's box and its handles.
+    pub bounding_box: bool,
+    /// View › Show Edges: the selected objects' outlines, anchors and handles.
+    pub edges: bool,
+}
+
 /// The selection's overlays.
-pub fn overlays(session: &Session) -> Vec<Overlay> {
+pub fn overlays(session: &Session, shown: Shown) -> Vec<Overlay> {
     let mut out = Vec::new();
     let Some(st) = session.active() else { return out };
     if st.selection.is_empty() {
         return out;
     }
+    if shown.edges {
+        edges(session, st, &mut out);
+    }
+    // The Selection tool's bounding box with its eight handles; hidden while a drag transforms.
+    let show_box = shown.bounding_box && session.tool_id() == "selection" && !session.tool_transforming() && st.selection.anchors.is_empty();
+    if show_box {
+        bounding_box(session, st, &mut out);
+    }
+    out
+}
+
+/// The selected objects' outlines (the key object's heavier), anchors and the selected anchors'
+/// handles.
+fn edges(session: &Session, st: &kition_vector_engine::DocState, out: &mut Vec<Overlay>) {
     let tool = session.tool_id();
     let direct = kition_vector_tools::catalog::edits_anchors(tool);
     let anchor = |direct: bool| if direct { 5.0 } else { 4.0 };
@@ -123,10 +146,11 @@ pub fn overlays(session: &Session) -> Vec<Overlay> {
             out.push(Overlay::Handle { p: h, color });
         }
     }
-    // The Selection tool's bounding box with its eight handles; hidden while a drag transforms.
-    let show_box = tool == "selection" && !session.tool_transforming() && st.selection.anchors.is_empty();
-    if show_box
-        && let Some(b) = session.transform_box(&st.selection.objects)
+}
+
+/// The Selection tool's bounding box with its eight handles.
+fn bounding_box(session: &Session, st: &kition_vector_engine::DocState, out: &mut Vec<Overlay>) {
+    if let Some(b) = session.transform_box(&st.selection.objects)
         && let Some(first) = st.selection.objects.first()
     {
         let color = st.doc.layer_color(*first);
@@ -140,11 +164,10 @@ pub fn overlays(session: &Session) -> Vec<Overlay> {
             out.push(Overlay::Anchor { p: b.to_doc() * h.pos(b.rect), color, filled: false, size: 6.0 });
         }
     }
-    out
 }
 
 /// The outline of the object a selection tool would pick at `at`, unless it is selected.
-pub fn hover(session: &Session, at: Point, zoom: f64) -> Option<Overlay> {
+pub fn hover(session: &Session, at: Point, zoom: f64, outline_view: bool) -> Option<Overlay> {
     let tool = session.tool_id();
     if session.tool_busy() || !matches!(tool, "selection" | "directSelection" | "groupSelection") {
         return None;
@@ -153,7 +176,8 @@ pub fn hover(session: &Session, at: Point, zoom: f64) -> Option<Overlay> {
     let prefs = &session.prefs;
     let options = kition_vector_doc::hit::HitOptions {
         tol: prefs.selection_tolerance / zoom.max(1e-6),
-        outline: false,
+        // In Outline view a fill is not there to pick: only the paths are.
+        outline: outline_view,
         path_only: prefs.object_selection_by_path_only,
         type_path_only: prefs.type_selection_by_path_only,
         scope: st.isolation,

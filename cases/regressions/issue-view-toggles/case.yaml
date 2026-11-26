@@ -1,0 +1,23 @@
+format: 1
+id: regressions/issue-view-toggles
+feature: vector.editor.view
+intent: >-
+  View › Show Transparency Grid (Cmd+Shift+D) changes what the canvas shows, and the View menu's
+  toggles show their state. Before, the command flipped the drawing's setting but the canvas drew the
+  artboard white all the same and the menu row had no check, so the menu and the shortcut seemed to
+  do nothing (walkthrough 2026-11-25, findings section 2, shot 02-view-menu); Proof Colors and
+  Overprint Preview were not drawn either. Now the transparency grid replaces the artboard's white
+  and the row is checked while it shows.
+layer: gate
+source:
+  kind: issue
+  from: walkthrough 2026-11-25 (findings section 2, shot 02-view-menu)
+  license: owned
+input: []
+steps:
+  - cargo-test: { package: kition-vector-kit, test: view_state }
+expected:
+  - actual: out:cargo-test
+    compare: exit
+    value: 0
+since: "2026-11-26"

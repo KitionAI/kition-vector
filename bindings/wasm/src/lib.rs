@@ -29,6 +29,7 @@ mod place;
 mod rests;
 mod selection;
 mod typing;
+mod viewing;
 
 use kition_kit::raster::{self, Frame};
 use kition_kit::tools::{KitTools, PointerAction, ToolInfo, ToolMods, ToolOverlay, ToolPointer, ToolRequest, ToolResponse};
@@ -65,6 +66,10 @@ pub struct VectorDocument {
     zoom: f64,
     /// What the Type tool edits (`typing` in `inspect()`), kept with `claims`.
     editing: typing::Editing,
+    /// The View menu's toggles (`view` in `inspect()`, [`viewing`]).
+    toggles: viewing::Toggles,
+    /// Where the canvas window is, as the page last said.
+    screen: Option<viewing::Screen>,
 }
 
 /// The places in `inspect()` that are the editing session, not the drawing (Kit Process Protocol
@@ -81,6 +86,7 @@ pub const EDITOR_STATE: &[&str] = &[
     "/toolKeys",
     "/paint",
     "/typing",
+    "/view",
 ];
 
 /// The keys a tool may take ahead of their shortcuts (`Tool::claims_key`), as the page names them.
@@ -153,6 +159,8 @@ impl VectorDocument {
             damage: None,
             zoom: 1.0,
             editing: typing::Editing::default(),
+            toggles: viewing::Toggles::default(),
+            screen: None,
         }
     }
 
@@ -182,7 +190,7 @@ impl VectorDocument {
     /// The keys the active tool takes ahead of their shortcuts now, and what the Type tool edits,
     /// asked after every event and command, for `inspect()`.
     fn ask_claims(&mut self, zoom: f64) {
-        let view = Self::view(zoom);
+        let view = self.view(zoom);
         self.zoom = view.zoom;
         let session = &mut self.session;
         self.claims = CLAIMABLE.iter().filter(|(_, key)| session.tool_claims_key(*key, view)).map(|(name, _)| *name).collect();
@@ -207,20 +215,68 @@ impl VectorDocument {
     }
 
     /// `width × height` straight-alpha pixels of the area at document pixel (`x`, `y`), `scale`
-    /// screen pixels per point, artboards white as on screen.
+    /// screen pixels per point, as on screen: artboards white (or the transparency grid), the
+    /// View menu's Outline, Pixel Preview, Proof Colors and Overprint Preview.
     fn draw(&self, x: f64, y: f64, scale: f64, width: u32, height: u32) -> Result<Vec<u8>, String> {
+        let mut pixels = if self.toggles.pixel_preview && scale > 1.0 {
+            self.pixel_preview(x, y, scale, width, height)?
+        } else {
+            self.draw_art(x, y, scale, width, height)?
+        };
+        let state = self.active()?;
+        if viewing::transparency_grid(state) && !self.toggles.outline {
+            let dpr = self.screen.map_or(1.0, |screen| scale / screen.zoom);
+            viewing::checker_under(&mut pixels, viewing::Tile { x, y, scale, width, height }, &state.doc, self.origin(), dpr);
+        }
+        Ok(kition_vector_render::Rendered { width, height, pixels }.to_straight())
+    }
+
+    /// The art of the area as [`Self::draw`] shows it, premultiplied, without the transparency grid.
+    fn draw_art(&self, x: f64, y: f64, scale: f64, width: u32, height: u32) -> Result<Vec<u8>, String> {
         let state = self.active()?;
         let origin = self.origin();
         let view = Affine::scale(scale) * Affine::translate((-(origin.x + x), -(origin.y + y)));
-        // In isolation mode everything around the isolated group draws dimmed.
-        let options = RenderOptions { artboards: true, isolated: state.isolation, ..Default::default() };
+        let outline = self.toggles.outline;
+        let options = RenderOptions {
+            // Outline shows the paths on white everywhere (the page draws the artboards' edges);
+            // the transparency grid is drawn under the art in place of the artboards' white.
+            artboards: !viewing::transparency_grid(state),
+            outline,
+            background: outline.then_some([255; 4]),
+            // In isolation mode everything around the isolated group draws dimmed.
+            isolated: state.isolation,
+            proof: kition_vector_render::proof::active_proof(),
+            overprint_preview: kition_vector_render::proof::overprint_preview_on(),
+            ..Default::default()
+        };
         let rendered =
             self.renderer.try_borrow_mut().map_err(|_| "the renderer is busy".to_owned())?.render(&state.doc, width, height, view, &options);
-        Ok(rendered.to_straight())
+        Ok(rendered.pixels)
     }
 
-    fn view(zoom: f64) -> ViewInfo {
-        ViewInfo { zoom: if zoom.is_finite() && zoom > 0.0 { zoom } else { 1.0 }, ..ViewInfo::default() }
+    /// Pixel Preview zoomed in: the art drawn at one pixel per point over the whole points the
+    /// area covers, each shown as a square of `scale` screen pixels.
+    fn pixel_preview(&self, x: f64, y: f64, scale: f64, width: u32, height: u32) -> Result<Vec<u8>, String> {
+        let (x0, y0) = (x.floor(), y.floor());
+        let span = |from: f64, size: u32| ((from + f64::from(size) / scale).ceil() - from.floor()).clamp(1.0, f64::from(MAX_RENDER_SIDE)) as u32;
+        let (w, h) = (span(x, width), span(y, height));
+        let art = self.draw_art(x0, y0, 1.0, w, h)?;
+        let column = |i: u32| ((x + (f64::from(i) + 0.5) / scale).floor() - x0).clamp(0.0, f64::from(w - 1)) as usize;
+        let columns: Vec<usize> = (0..width).map(column).collect();
+        let mut out = Vec::with_capacity(width as usize * height as usize * 4);
+        for j in 0..height {
+            let row = ((y + (f64::from(j) + 0.5) / scale).floor() - y0).clamp(0.0, f64::from(h - 1)) as usize;
+            for col in &columns {
+                let at = (row * w as usize + col) * 4;
+                out.extend_from_slice(art.get(at..at + 4).unwrap_or(&[0; 4]));
+            }
+        }
+        Ok(out)
+    }
+
+    /// What the tools see of the view at `zoom`: the View menu's toggles and the canvas window.
+    fn view(&self, zoom: f64) -> ViewInfo {
+        viewing::info(&self.toggles, self.screen.as_ref(), self.origin(), zoom)
     }
 
     fn to_engine(&self, x: f64, y: f64) -> Point {
@@ -229,11 +285,12 @@ impl VectorDocument {
     }
 
     fn respond(&mut self, requests: Vec<UiRequest>, at: Option<Point>, zoom: f64) -> ToolResponse {
-        let view = Self::view(zoom);
+        let view = self.view(zoom);
         let origin = self.origin();
-        let mut engine = selection::overlays(&self.session);
+        let shown = selection::Shown { bounding_box: self.toggles.bounding_box, edges: self.toggles.edges };
+        let mut engine = selection::overlays(&self.session, shown);
         engine.extend(self.session.overlays(view));
-        engine.extend(self.hover.and_then(|at| selection::hover(&self.session, at, view.zoom)));
+        engine.extend(self.hover.and_then(|at| selection::hover(&self.session, at, view.zoom, self.toggles.outline)));
         let overlays = engine.into_iter().filter_map(|overlay| overlay_out(overlay, origin)).collect();
         let mods = self.mods;
         let cursor = at.map_or_else(|| "default".to_owned(), |point| cursors::css(self.session.cursor(point, mods, view)));
@@ -498,6 +555,8 @@ impl KitDocument for VectorDocument {
             // What the Type tool edits, and the attributes the Character and Paragraph panels show.
             let state = self.active()?;
             object.insert("typing".into(), typing::report(&state.doc, &state.selection, &self.editing, origin));
+            // The View menu's toggles and how the page draws the grid and the guides (stage 6).
+            object.insert("view".into(), viewing::report(&self.toggles, &self.session, state));
             if !links.is_empty() {
                 object.insert("links".into(), Value::Array(links));
             }
@@ -761,7 +820,8 @@ impl KitTools for VectorDocument {
         if kition_vector_tools::tool_info(id).is_none() {
             return Err(format!("no tool {id}"));
         }
-        self.session.select_tool(id, Self::view(zoom)).map_err(engine_error)?;
+        let view = self.view(zoom);
+        self.session.select_tool(id, view).map_err(engine_error)?;
         self.held.set(None);
         Ok(self.respond(Vec::new(), None, zoom))
     }
@@ -787,7 +847,8 @@ impl KitTools for VectorDocument {
         let before = (kind == PointerKind::Drag && self.session.tool_transforming()).then(|| self.selected_bounds()).flatten();
         let (revision, extent) = (self.revision(), self.bounds());
         let selecting = kition_vector_tools::catalog::is_selection_tool(self.session.tool_id());
-        let answer = self.session.pointer(&engine_event, Self::view(event.zoom)).map_err(engine_error);
+        let view = self.view(event.zoom);
+        let answer = self.session.pointer(&engine_event, view).map_err(engine_error);
         // A selection tool's double-click on type edits it with the caret where it was clicked:
         // the Type tool takes over at once and gets the click (plan 2026-11-25, stage 5).
         if kind == PointerKind::DoubleClick
@@ -805,13 +866,20 @@ impl KitTools for VectorDocument {
     }
 
     fn key(&mut self, key: &str, mods: ToolMods, zoom: f64) -> Result<ToolResponse, String> {
+        // The page's requests about the view (the View menu's toggles, the canvas window, a guide
+        // dragged out of a ruler): see `viewing`.
+        if let Some(body) = key.strip_prefix(viewing::REQUEST) {
+            return self.view_request(body, zoom);
+        }
         // The page's requests of the Type tool (an input method's marked text, …): see `typing`.
         if let Some(body) = key.strip_prefix(typing::REQUEST) {
-            let requests = typing::request(&mut self.session, body, Self::view(zoom))?;
+            let view = self.view(zoom);
+            let requests = typing::request(&mut self.session, body, view)?;
             return Ok(self.respond(requests, None, zoom));
         }
         let Some(engine_key) = key_in(key) else { return Ok(self.respond(Vec::new(), None, zoom)) };
-        let requests = self.session.tool_key(engine_key, mods_in(mods), Self::view(zoom)).map_err(engine_error);
+        let view = self.view(zoom);
+        let requests = self.session.tool_key(engine_key, mods_in(mods), view).map_err(engine_error);
         // An Escape that dropped the gesture ends what it held.
         if !self.session.tool_busy() {
             self.held.set(None);
@@ -820,7 +888,8 @@ impl KitTools for VectorDocument {
     }
 
     fn text(&mut self, text: &str, zoom: f64) -> Result<ToolResponse, String> {
-        let requests = self.session.tool_text(text, Self::view(zoom)).map_err(engine_error)?;
+        let view = self.view(zoom);
+        let requests = self.session.tool_text(text, view).map_err(engine_error)?;
         Ok(self.respond(requests, None, zoom))
     }
 
@@ -835,9 +904,25 @@ impl KitTools for VectorDocument {
 }
 
 impl VectorDocument {
+    /// A request about the view ([`viewing::REQUEST`]): set toggles, say where the canvas window
+    /// is, or drag a guide out of a ruler (shown as it goes, made where it is released over the
+    /// canvas: one undo step).
+    fn view_request(&mut self, body: &str, zoom: f64) -> Result<ToolResponse, String> {
+        match viewing::request(body)? {
+            viewing::Request::Set(set) => self.toggles.set(&set)?,
+            viewing::Request::Screen(screen) => self.screen = Some(screen),
+            viewing::Request::Ruler { vertical, kind, x, y, on_canvas, shift } => {
+                let event = viewing::ruler_event(kind, self.to_engine(x, y), shift);
+                let view = self.view(zoom);
+                self.session.ruler_guide(vertical, &event, on_canvas, view).map_err(engine_error)?;
+            }
+        }
+        Ok(self.respond(Vec::new(), None, zoom))
+    }
+
     /// Chooses the Type tool and clicks at `at`, which puts the caret there in the type under it.
     fn caret_at(&mut self, at: Point, zoom: f64) -> kition_vector_engine::Result<()> {
-        let view = Self::view(zoom);
+        let view = self.view(zoom);
         self.session.switch_tool("type", view)?;
         for kind in [PointerKind::Down, PointerKind::Up] {
             self.session.pointer(&PointerEvent { kind, pos: at, mods: Mods::default(), pressure: 1.0 }, view)?;

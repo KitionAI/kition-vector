@@ -90,7 +90,10 @@ impl MoveSnap {
     pub(crate) fn new(cx: &ToolContext) -> Self {
         Self {
             bounds: selection_bounds(cx),
-            targets: (cx.smart_guides && !cx.snap_to_grid).then(|| Targets::for_move(cx)),
+            // With Snap to Point on, the ruler guides pull the moved selection's edges and centre
+            // too, as they pull a drawn point.
+            targets: (cx.smart_guides && !cx.snap_to_grid)
+                .then(|| if cx.snap_to_point { Targets::for_move(cx).with_rulers(cx) } else { Targets::for_move(cx) }),
             points: if cx.snap_to_grid { None } else { Targets::snap_to_point(cx, &cx.selection.objects) },
         }
     }
@@ -576,6 +579,22 @@ mod tests {
         let a = t.pointer(&cx, &ev(PointerKind::Down, 150.0, 150.0));
         assert_eq!(a, vec![Action::Exec("select.set".into(), json!({"ids": [id.0]}))]);
         assert!(t.pointer(&cx, &ev(PointerKind::Up, 150.0, 150.0)).is_empty());
+    }
+
+    /// With Smart Guides and Snap to Point on, a moved selection's edge snaps onto a ruler guide
+    /// (plan 2026-11-25, stage 6); with Snap to Point off it goes where the pointer puts it.
+    #[test]
+    fn a_moved_selection_snaps_onto_a_ruler_guide() {
+        let (mut d, id) = doc_with_rect();
+        d.guides.push(kition_vector_doc::Guide::new(true, 330.0));
+        let mut s = Selection::default();
+        s.add(id);
+        let p = paint();
+        let moved = |cx: &ToolContext| MoveSnap::new(cx).snap(cx, Point::new(150.0, 150.0), Vec2::new(127.5, 0.0)).0;
+        assert_eq!(moved(&cx(&d, &s, &p)), Vec2::new(130.0, 0.0), "the right edge onto the guide at 330");
+        assert_eq!(moved(&ToolContext { snap_to_point: false, ..cx(&d, &s, &p) }), Vec2::new(127.5, 0.0));
+        let hidden = ToolContext { guides: false, ..cx(&d, &s, &p) };
+        assert_eq!(moved(&hidden), Vec2::new(127.5, 0.0), "hidden guides pull nothing");
     }
 
     /// A press on a ruler guide picks it over the art, and drags it.

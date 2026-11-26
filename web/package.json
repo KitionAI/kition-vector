@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node --test src/exporting.test.mjs src/dialogs/dialogs.test.mjs src/dialogs/menuRows.test.mjs src/canvas/canvas.test.mjs src/panels/paint.test.mjs src/layers/layers.test.mjs src/type/type.test.mjs",
+    "test:unit": "node --test src/exporting.test.mjs src/dialogs/dialogs.test.mjs src/dialogs/menuRows.test.mjs src/canvas/canvas.test.mjs src/panels/paint.test.mjs src/layers/layers.test.mjs src/type/type.test.mjs src/view/view.test.mjs",
     "test:flow": "node tests/flow.mjs chromium && node tests/flow.mjs webkit",
     "test:modes": "node tests/modes.mjs chromium && node tests/modes.mjs webkit",
     "test:focus": "node tests/focus.mjs chromium && node tests/focus.mjs webkit",
@@ -21,6 +21,7 @@
     "test:paint": "node tests/paint.mjs chromium && node tests/paint.mjs webkit",
     "test:layers": "node tests/layers.mjs chromium && node tests/layers.mjs webkit",
     "test:type": "node tests/type.mjs chromium && node tests/type.mjs webkit",
+    "test:view": "node tests/view.mjs chromium && node tests/view.mjs webkit",
     "test:contract": "node ../../kition-sdk/tools/check-manifest.mjs ../kit.json --module public/engine"
   },
   "dependencies": {

@@ -33,6 +33,7 @@ const NEVER: Readonly<Record<string, string>> = {
  */
 const NOT_BUILT: Readonly<Record<string, string>> = {
   'file.place': 'Needs a file picked through the host (stage 7); the engine refuses it without one.',
+  'view.printTiling': 'Shows the pages of the print settings on the canvas, which the canvas does not draw (the Print Tiling tool is off the rail); printing goes through the host.',
   'file.newFromTemplate': 'Needs a template file picked through the host; the engine refuses it without one.',
   'file.setUnits': "Kition's own File › Document Setup… row sets the units with the rest of the document's settings.",
   'recolor.apply': 'Recolor Artwork needs a colour-mapping dialog of its own, cut for the launch (plan section 1).',
@@ -43,8 +44,8 @@ const NOT_BUILT: Readonly<Record<string, string>> = {
   'text.insertInline': 'Inserts a symbol into text: symbols are cut for the launch (plan section 1).',
   'graph.setData': "Graphs are cut for the launch (their tools are off the rail); the data sheet is not built.",
   'graph.setType': "Graphs are cut for the launch (their tools are off the rail); the graph type dialog is not built.",
-  'view.saved.new': 'Saves the current view, which the editor does not hand to the engine yet (stage 6, views).',
-  'view.saved.edit': 'Needs the list of saved views, which the editor does not show yet (stage 6, views).',
+  'view.saved.new': 'Saves the current view, which the editor does not hand to the engine yet: saved views are not built in the editor (plan 2026-11-25, stage 6 left them out).',
+  'view.saved.edit': 'Needs the list of saved views, which the editor does not show: saved views are not built in the editor (plan 2026-11-25, stage 6 left them out).',
   'select.editSaved': 'Needs the list of saved selections to choose from, not built yet; Select › Recall Selection recalls the last one.',
 }
 
