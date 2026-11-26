@@ -60,8 +60,6 @@ export type VectorInfo = {
   toolKeys: readonly string[]
   /** The selection's rotation in degrees (its bounding box's angle; 0 for none). */
   rotation: number
-  /** The layer new art goes into (the Layers panel's current layer), or null. */
-  currentLayer: number | null
   /** The Layers panel's highlighted rows, in the order they were clicked (what its buttons act on). */
   layerRows: number[]
   /** The layer, group or object targeted through its target circle, or null. */
@@ -129,7 +127,6 @@ export function describe(info: KitEngineInfo): VectorInfo {
     isolation?: number | null
     toolKeys?: string[]
     selectionRotation?: number
-    currentLayer?: number | null
     layerRows?: number[]
     target?: number | null
     history?: unknown[]
@@ -161,7 +158,6 @@ export function describe(info: KitEngineInfo): VectorInfo {
     isolation: typeof inspected.isolation === 'number' ? inspected.isolation : null,
     toolKeys: Array.isArray(inspected.toolKeys) ? inspected.toolKeys.filter((key): key is string => typeof key === 'string') : [],
     rotation: typeof inspected.selectionRotation === 'number' && Number.isFinite(inspected.selectionRotation) ? inspected.selectionRotation : 0,
-    currentLayer: typeof inspected.currentLayer === 'number' ? inspected.currentLayer : null,
     layerRows: Array.isArray(inspected.layerRows) ? inspected.layerRows.filter((id): id is number => typeof id === 'number') : [],
     target: typeof inspected.target === 'number' ? inspected.target : null,
     history: Array.isArray(inspected.history) ? inspected.history.map(String) : [],

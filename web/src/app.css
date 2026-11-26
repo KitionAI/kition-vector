@@ -236,10 +236,6 @@
   font-weight: 600;
 }
 
-.vector-layer-row[data-current='true'] .vector-layer-name::after {
-  content: ' ◂';
-  color: var(--kit-text-muted);
-}
 
 /* The target circle: a ring, doubled when the row is targeted or selected. */
 .vector-layer-target {

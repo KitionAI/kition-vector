@@ -706,9 +706,9 @@ impl VectorDocument {
             copy.selection = state.selection.clone();
             // The isolated group too: the inspect reports it (isolation mode on the canvas).
             copy.isolation = state.isolation;
-            // The current layer and the Layers panel's highlighted rows: the inspect reports them
-            // (`currentLayer`, `layerRows`), and the panel draws them.
-            copy.active_layer = state.active_layer;
+            // The Layers panel's highlighted rows: the inspect reports them (`layerRows`), and the
+            // panel draws them. (Not the current layer: `tests/context.rs` asks for the scratch
+            // session's own, plan 2026-11-25 section 10, stage 4.)
             copy.layer_rows = state.layer_rows.clone();
             copy.revision = state.revision;
             copy.history = state.history.clone();

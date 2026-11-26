@@ -301,7 +301,7 @@ try {
 
   // ---------- New sublayer, duplicate, delete, the menus ----------
   await kit.getByTestId(`vector-layer-name-${layer1.id}`).click()
-  await until(async () => (await details()).currentLayer === layer1.id)
+  await until(async () => (await details()).layerRows.includes(layer1.id))
   before = (await childrenOf(layer1.id)).length
   await kit.getByTestId('vector-new-sublayer').click()
   await until(async () => (await childrenOf(layer1.id)).length === before + 1)

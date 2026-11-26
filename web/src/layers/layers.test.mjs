@@ -148,18 +148,16 @@ const open = () => sdk.VectorDocument.open('Sample.kvector', sample)
 const run = (doc, command, params = {}) => JSON.parse(doc.execute(command, JSON.stringify(params)) ?? 'null')
 const inspect = (doc) => JSON.parse(doc.inspect())
 
-test('regressions/issue-layer-rows: the inspect reports the current layer and the highlighted rows', { skip }, () => {
+test('regressions/issue-layer-rows: the inspect reports the highlighted rows', { skip }, () => {
   const doc = open()
   const [top, layer1] = inspect(doc).layers
   const ellipse = layer1.children[0].id
   run(doc, 'layer.setCurrent', { id: ellipse })
   let state = inspect(doc)
-  assert.equal(state.currentLayer, layer1.id, 'the clicked row\'s layer is current')
   assert.deepEqual(state.layerRows, [ellipse])
   run(doc, 'layer.highlight', { ids: [top.id], mode: 'add' })
   state = inspect(doc)
   assert.deepEqual(state.layerRows, [ellipse, top.id])
-  assert.equal(state.currentLayer, top.id)
   doc.free()
 })
 

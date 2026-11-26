@@ -259,7 +259,7 @@ export function LayersPanel({ info }: { info: VectorInfo }) {
   }
 
   /** Layer Options… (a layer) or the object's options (name, show, lock) for the highlighted row. */
-  const options = (id: number | null = info.layerRows.at(-1) ?? info.currentLayer) => {
+  const options = (id: number | null = panelRow(info)) => {
     const node = id === null ? null : findNode(info.layers, id)
     if (!node || readOnly) return
     dialogs.ask(layerOptionsDialog(node as VectorNode, phrase(node.kind === 'Layer' ? 'Layer Options' : 'Options'), 'layer.options'))
@@ -285,7 +285,7 @@ export function LayersPanel({ info }: { info: VectorInfo }) {
     }
   }
   const optionsLabel = () => {
-    const id = info.layerRows.at(-1) ?? info.currentLayer
+    const id = panelRow(info)
     const node = id === null ? null : findNode(info.layers, id)
     return node && node.kind !== 'Layer' ? `${phrase('Options')}…` : phrase(byId.get('layer.setProps')?.title ?? 'Layer Options…')
   }
@@ -336,7 +336,6 @@ export function LayersPanel({ info }: { info: VectorInfo }) {
                 aria-selected={chosen}
                 aria-expanded={row.expandable ? row.expanded : undefined}
                 data-selected={chosen}
-                data-current={isLayer && info.currentLayer === node.id ? 'true' : undefined}
                 data-drop={drop?.target === node.id ? drop.place : undefined}
                 data-hidden={!node.visible || row.hiddenAbove ? 'true' : undefined}
                 style={{ top: index * ROW_HEIGHT, height: ROW_HEIGHT }}
@@ -490,7 +489,23 @@ export function LayersPanel({ info }: { info: VectorInfo }) {
 
 /** Whether the highlighted rows' layer (else the current layer) is a template: Template's check mark. */
 function isTemplate(info: VectorInfo) {
-  const id = info.layerRows.at(-1) ?? info.currentLayer
+  const id = panelRow(info)
   const node = id === null ? null : findNode(info.layers, id)
   return node?.kind === 'Layer' ? (node as VectorNode).template : false
+}
+
+/**
+ * The row the panel's Options and Template act on: the last highlighted row, else the layer of the
+ * first selected object, else the top layer (the engine's own fallback is its current layer, which
+ * the inspect does not report yet: plan 2026-11-25 section 10, stage 4).
+ */
+function panelRow(info: VectorInfo): number | null {
+  const last = info.layerRows.at(-1)
+  if (last !== undefined) return last
+  const first = info.selection[0]
+  if (first !== undefined) {
+    const above = ancestorsOf(info.layers, first)
+    if (above?.length) return above[0]
+  }
+  return info.layers[0]?.id ?? null
 }
