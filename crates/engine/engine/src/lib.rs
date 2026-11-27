@@ -922,6 +922,11 @@ pub struct Session {
     /// by path, linked files are read through the host, and the folders the preferences name
     /// (Data Recovery, templates, plug-ins, fonts) are off.
     pub host_files_only: bool,
+    /// The host opened the session's documents read-only (a viewer's session, Kit UI protocol
+    /// UI-K7; the editor says so through the engine's `setReadOnly`): a command that only produces
+    /// output leaves the documents alone, so Export for Screens exports without remembering its
+    /// settings. Editing commands are refused by the editor, not here.
+    pub read_only: bool,
     /// The check a command run by another command passes first ([`Session::may_run`]): the host's
     /// gate for whom the outer call runs (an agent may not run from inside a batch what it may not
     /// run directly). `None`: everything may run.
@@ -988,6 +993,7 @@ impl Session {
             link_scan: None,
             origin: None,
             host_files_only: false,
+            read_only: false,
             step_gate: None,
         }
     }

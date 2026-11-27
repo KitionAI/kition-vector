@@ -129,7 +129,7 @@ function hexOf(color: unknown): string | null {
 
 export function App({ host, phrase }: { host: HostConnection; phrase: Phrases }) {
   const t = useMemo(() => createKitStrings(CATALOGS, host.init.locale), [host])
-  const manifestNow = useMemo(engineManifest, [])
+  const manifestNow = useMemo(() => engineManifest(host.readOnly === true), [host])
   const session = useKitSession(host, manifestNow, describe)
   // The engine's errors in the editor's words (plan 2026-11-25, stage 1: `io/errors.ts`).
   const editorOptions = useMemo(() => ({ report: (title: string, error: unknown) => void toast('error', title || t('error.title'), errorMessage(t, error)) }), [t])

@@ -235,6 +235,27 @@ fn zip_archives_store_their_files() {
     assert!(super::zip::entries(&broken).is_err(), "the CRC catches a changed byte");
 }
 
+/// Exporting is a read: a read-only session exports and leaves the document as it was (no
+/// remembered settings, nothing unsaved, the same bytes).
+#[test]
+fn a_read_only_session_exports_without_remembering_its_settings() {
+    let mut s = session(2);
+    s.doc_mut().unwrap().mark_saved();
+    s.read_only = true;
+    let bytes = kition_vector_format::save(&s.doc().unwrap().doc, false);
+    let revision = s.doc().unwrap().revision;
+    let r = export(&mut s, json!({"range": "2", "prefix": "p-", "formats": [{"format": "png", "scale": "2x"}]}));
+    assert_eq!(files(&r).len(), 1, "one file: {:?}", names(&r));
+    assert_eq!(s.execute("file.exportSettings", &json!({})).unwrap()["settings"], json!({}));
+    assert!(!s.doc().unwrap().is_dirty(), "nothing unsaved");
+    assert_eq!(s.doc().unwrap().revision, revision, "the document did not change");
+    assert_eq!(kition_vector_format::save(&s.doc().unwrap().doc, false), bytes, "the same bytes");
+    // The same session editing again remembers them.
+    s.read_only = false;
+    export(&mut s, json!({"range": "2"}));
+    assert_eq!(s.execute("file.exportSettings", &json!({})).unwrap()["settings"], json!({"range": "2"}));
+}
+
 #[test]
 fn the_document_remembers_its_export_settings() {
     let mut s = session(2);

@@ -1021,6 +1021,13 @@ impl VectorDocument {
     pub fn refresh_type(&mut self) -> bool {
         self.session.execute("text.rescanFonts", &json!({})).is_ok()
     }
+
+    /// Whether the host opened the drawing read-only (a viewer's session, Kit UI protocol UI-K7;
+    /// the editor's manifest `setup` calls it): commands that only produce output, which a viewer
+    /// runs, then leave the drawing as it was (Export for Screens does not remember its settings).
+    pub fn set_read_only(&mut self, read_only: bool) {
+        self.session.read_only = read_only;
+    }
 }
 
 kition_kit::export_kit_document!(VectorDocument as "VectorDocument");
@@ -1069,6 +1076,12 @@ pub mod web {
         #[wasm_bindgen(js_name = refreshType)]
         pub fn refresh_type(&mut self) -> bool {
             self.0.refresh_type()
+        }
+
+        /// Whether the host opened the drawing read-only: output commands then leave it as it was.
+        #[wasm_bindgen(js_name = setReadOnly)]
+        pub fn set_read_only(&mut self, read_only: bool) {
+            self.0.set_read_only(read_only);
         }
 
         pub fn version(&mut self) -> Result<Vec<u8>, JsError> {
@@ -1312,7 +1325,9 @@ mod tests {
             "file.save",
             "command.batch",
             "select.save",
-            // Export for Screens remembers its settings in the drawing.
+            // Export for Screens remembers its settings in the drawing when the session edits it
+            // (a read-only session's runs, as the read-only rules let `file.export*` through, and
+            // leaves the drawing alone: `a_viewer_exports_for_screens_and_the_drawing_stays`).
             "file.exportForScreens",
         ] {
             assert_eq!(flag(id), Some(true), "{id} changes the drawing");
@@ -1365,6 +1380,30 @@ mod tests {
         }
         doc.execute("arrange.group", json!({})).unwrap();
         assert_ne!(doc.version().unwrap(), before, "an edit commits");
+    }
+
+    #[test]
+    fn a_viewer_exports_for_screens_and_the_drawing_stays() {
+        let params = json!({ "formats": [{ "format": "png", "scale": 2 }], "prefix": "v-" });
+        let mut viewer = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        viewer.set_read_only(true);
+        let (version, bytes) = (viewer.version().unwrap(), viewer.save(None).unwrap());
+        let answer = viewer.execute("file.exportForScreens", params.clone()).unwrap();
+        assert!(answer["files"].as_array().is_some_and(|files| !files.is_empty()), "{answer}");
+        assert_eq!(viewer.version().unwrap(), version, "the replica gained nothing");
+        assert_eq!(viewer.save(None).unwrap(), bytes, "the drawing's bytes are as they were");
+        assert!(!viewer.dirty(), "nothing unsaved");
+        assert_eq!(viewer.execute("file.exportSettings", json!({})).unwrap()["settings"], json!({}));
+
+        // An editing session remembers the settings in the drawing, as before.
+        let mut editor = VectorDocument::open("Drawing.kvector", &fixture()).unwrap();
+        let version = editor.version().unwrap();
+        editor.execute("file.exportForScreens", params).unwrap();
+        assert_ne!(editor.version().unwrap(), version, "the settings are document data");
+        assert_eq!(
+            editor.execute("file.exportSettings", json!({})).unwrap()["settings"],
+            json!({ "formats": [{ "format": "png", "scale": 2 }], "prefix": "v-" })
+        );
     }
 
     #[test]

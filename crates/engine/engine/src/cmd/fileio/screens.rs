@@ -317,10 +317,13 @@ impl Output {
 }
 
 /// File → Export for Screens: [`export`], with the params remembered in the document
-/// (`file.exportSettings`).
+/// (`file.exportSettings`) when the session edits it. Exporting is a read: a read-only session
+/// ([`Session::read_only`]) exports and leaves the document as it was.
 pub(super) fn export_for_screens(s: &mut Session, p: &Value) -> Result<Value> {
     let r = export(s, p)?;
-    remember(s, p);
+    if !s.read_only {
+        remember(s, p);
+    }
     Ok(r)
 }
 
