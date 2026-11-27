@@ -1,0 +1,27 @@
+format: 1
+id: regressions/issue-type-drag-repeat
+feature: vector.editor.type
+intent: >-
+  A drag with the Type tool makes area type and the text typed next goes into it, every time:
+  test:type's "a drag with the Type tool makes area type" failed three times in CI on WebKit since
+  kition-sdk d2b39aa (the new type's text did not start with "Area") and passed on rerun.
+  web/tests/type-drag-repeat.mjs runs that step with the step before it, each round from a fresh
+  page load, up to 20 rounds on WebKit and 20 on Chromium within a time budget, asserts what
+  test:type asserts each time, and on a failure prints the tool and editor state before the press,
+  every pointer and key event the editor's frame received, every message to and from the engine's
+  worker and when the Type tool's button showed it chosen.
+layer: gate
+dimension: function
+source:
+  kind: issue
+  from: Kition Vector CI on GitHub's Linux runners (web/tests/type.mjs)
+  license: owned
+input: []
+steps:
+  - exec:
+      cmd: [node, web/tests/type-drag-repeat.mjs, "webkit,chromium", "20"]
+expected:
+  - { actual: "out:exec", compare: exit, value: 0 }
+since: "2026-11-26"
+timeout_s: 600
+requires: [chromium, webkit]

@@ -21,6 +21,7 @@
     "test:paint": "node tests/paint.mjs chromium && node tests/paint.mjs webkit",
     "test:layers": "node tests/layers.mjs chromium && node tests/layers.mjs webkit",
     "test:type": "node tests/type.mjs chromium && node tests/type.mjs webkit",
+    "test:type-drag-repeat": "node tests/type-drag-repeat.mjs webkit,chromium 20",
     "test:view": "node tests/view.mjs chromium && node tests/view.mjs webkit",
     "test:files": "node tests/files.mjs chromium && node tests/files.mjs webkit",
     "test:rewalk": "node tests/rewalk.mjs chromium && node tests/rewalk.mjs webkit",
