@@ -178,7 +178,7 @@ impl Agent {
         answer
     }
 
-    /// `command` run directly, as `commands.execute` runs it for the agent.
+    /// `command` run directly, as `command.execute` runs it for the agent.
     fn run(&mut self, id: &str, command: &str, value: Value) -> Result<Value, String> {
         let answer =
             self.kit.execute(id, command, params(value), Origin::Agent).map(|done| done.result.unwrap_or(Value::Null)).map_err(|e| e.to_string());

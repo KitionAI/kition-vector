@@ -23,6 +23,6 @@ kition-vector-engine = { workspace = true }
 image = { workspace = true }
 # outside.rs: the agent drives the kit through the kits' MCP tools while another program rewrites the file.
 kition-kits = { workspace = true }
-# document.identity and document.fork through the real process (tests/identity.rs).
+# file.identity and file.fork through the real process (tests/identity.rs).
 kition-kit-host = { workspace = true }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

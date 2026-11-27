@@ -1,4 +1,4 @@
-//! `document.identity` and `document.fork` (Kit Process Protocol section 5.6, KitModel M7a)
+//! `file.identity` and `file.fork` (Kit Process Protocol section 5.6, KitModel M7a)
 //! through the real `kition-vector` process. A `.kvector` embeds no replica: it holds the drawing's
 //! document model as JSON (`kition_vector_format`), and the kit makes a replica under a new
 //! document id each time it opens a file. So a drawing carries no identity, a byte copy carries
@@ -47,7 +47,7 @@ async fn a_drawing_carries_no_identity_and_forks_as_the_same_bytes() {
     let bytes = drawing();
     std::fs::write(dir.join("Logo.kvector"), &bytes).unwrap();
     let kit = launch(&dir).await;
-    assert!(kit.serves("document.identity"), "{}", kit.capabilities());
+    assert!(kit.serves("file.identity"), "{}", kit.capabilities());
 
     // The file carries no identity, and neither does a byte copy of it.
     assert_eq!(kit.identity("Logo.kvector", LIMIT).await.unwrap().doc_id, None, "a .kvector embeds no replica");

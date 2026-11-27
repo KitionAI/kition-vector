@@ -103,7 +103,7 @@ features:
     gap: Engine tests merge a draft, compare it first, restore a version, answer receipts, the object model and reply ids, and test:contract checks the built engine exports them; test:drafts drives a draft's comparison and merge, Undo and Redo, and a checkpoint's restore in the editor. No editor test of a refused draft or a reload yet.
     since: "2026-11-25"
   - id: vector.document.identity
-    title: "A host reads the document id a .kvector carries (none: it embeds no replica) and forks it as the same bytes (document.identity, document.fork; Kit Process Protocol 5.6)"
+    title: "A host reads the document id a .kvector carries (none: it embeds no replica) and forks it as the same bytes (file.identity, file.fork; Kit Process Protocol 5.6)"
     dimension: [platform, data-safety]
     priority: P1
     status: has

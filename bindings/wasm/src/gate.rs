@@ -2,7 +2,7 @@
 //! as a `command` operation of the object model's `model.batch`, or as a step of a command that
 //! runs others (`command.batch`, Reselect, Draw in Perspective, a tool's action).
 //!
-//! kition-headless refuses, for `commands.execute`, a command that is not listed for the agent: one
+//! kition-headless refuses, for `command.execute`, a command that is not listed for the agent: one
 //! that names files (its schema types a parameter `file`), or whose id is not a protocol id. The
 //! pinned kition-sdk does not check `model.batch`'s commands, nor can it see the steps a kit's own
 //! command runs; [`may_run`] applies the same rules there. Every call the headless kit runs for
